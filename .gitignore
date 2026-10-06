@@ -5,6 +5,10 @@
 !.gitignore
 !README.md
 
+# Conserver data/ (données de l'éditeur RPG Maker)
+!/data/
+!/data/**
+
 # Conserver js/plugins/ et js/plugins.js
 !/js/
 /js/*
