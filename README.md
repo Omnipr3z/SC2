@@ -1,298 +1,190 @@
+# SimCraft Engine (SCE) - V2 (SC4)
+![Simcraft Engine](https://img.shields.io/badge/Engine-Simcraft%20V2-blue)  
+![Version](https://img.shields.io/badge/Version-2.0.0--alpha-orange)  
+![Status](https://img.shields.io/badge/Status-Active%20Refactoring-brightgreen)  
+![RPG Maker MZ](https://img.shields.io/badge/Compatibility-RPG%20Maker%20MZ-red)
 
+# Licence
 
-# Plan de dev
-- Hub_Hero: un hub pour gérer les differentes entité associé aux  Game_Hero facilement
-- Bitmap_Composite: Le script qui snap les images des diferentes parties du body pour composé les images du sprite
-- Sprite_Hero: Un sprite custom chargé d'animer le sprite du heros à l'ecran (Gestion des frames, directions, decoupe de l'image...)
-- Character_Hero: l'animateur le sprite l'ecoute et reagit en fonction. Il doit pouvoir être utilisé en remplacement du character_base de RMMZ correspondant à l'objet (Game_Player, Game_Follower, Event_Character, Game_Vehicle, ...). Pour la première version, j'utiliserai que le Game_Player pour tester mais le but est de pouvoir l'utiliser pour tous les personnages. Il sera aussi utilisé pour les PNJ et certain events.
-- Game_Hero: Une version herité de Game_Actor adapté aux persos custom. Les actor doivent être géré par ce Game_Hero et non par le Game_Actor de RMMZ quand il ont le flag `Hero` dans les notetags. De plus, les sprites des heros doivent être géré par le Character_Hero et non par le Sprite_Character de RMMZ.
-- Pour les events, je pense à les associé à un actor pour gérer les personnages custom, ou soit il faut revoir comment fonctionnent les events et y integrer la possibilité d'utiliser les entités custom. Pour l'instant, je vais faire simple et me focus sur le Game_Player.
+![Licence CC BY-NC-SA 4.0](https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png)
 
-# Strategie de Surcharge
-Dans Game_Actors, lors de la création d'un acteur, le syteme scan les notetags et si il a le flag Hero (toute casse de caractères) dans son notetag, il va instancier le Game_Hero.
-Pour le Sprite et le character il va utiliser le Character_Hero, qui lui même utilisera le Sprite_Hero et le Bitmap_Composite lors du chargement de la map, pour générer l'image du personnage.
+Ce projet est sous licence **Creative Commons Attribution - Non Commercial - Share Alike 4.0 International (CC BY-NC-SA 4.0)**.
 
-## Configuration des personnages
-Un personnage sera défini par son notetag, qui indiquera l'ensemble des informations necessaires au Character_Hero pour fonctionner.
+Voir le texte complet ici : [https://creativecommons.org/licenses/by-nc-sa/4.0/](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-### Flag Hero
-Ce notetag définira que le personnage est un hero et donc géré par le Game_Hero.
-```
-<Hero> 
-```
-Les autres personnages fonctionne avec la version native de RMMZ.
+### **Restrictions Supplémentaires**
+En plus des termes de la licence CC BY-NC-SA 4.0, l’utilisation de ce code est soumise aux conditions suivantes :
 
-### Race
-Ce notetag définira la race du personnage.
-```
-<Race: [RACE_NAME]> 
-```
-Où RACE_NAME sera une chaine de caractere identifiant la race et donc les parties du corps du personnage et leur agencement. Par exemple "Human". 
+1. **Conservation de l’En-Tête** :
+   - **Tous les fichiers** doivent conserver **intact** l’en-tête original (bannière ASCII, auteur, licence, etc.).
+   - **Interdiction formelle** de supprimer, modifier ou altérer l’en-tête, sous peine de violation de licence.
 
-### Sex
-Ce notetag définira le sexe du personnage.
-```
-<Sex: [SEX_NAME]> 
-```
-Où SEX_NAME sera une chaine de caractere identifiant le sexe du personnage. Par exemple "Male".
-
-## Selection de l'image de base du composite
-
-L'image de base du composite est défini par la race et le sexe du personnage.
-
-```img/characters/composite/[RACE_NAME]_[SEX_NAME]_[ACTION_NAME].png```
-
-Où RACE_NAME sera une chaine de caractere identifiant la race et SEX_NAME sera une chaine de caractere identifiant le sexe du personnage. Par exemple "human_male".
-
-Pour l'instant, on ne va pas se focus sur l'action. Pour commencer, on va ce focus sur l'action "walk" par defaut, plus tard, on pourra ajouter d'autres actions.
-
-De meme, on verra après pour la gestion des paperdoll d'equipements, on utilise le bitmap composite pour créer une image de composite sans autre couche que celle de base pour le moment. ON ajoutera les autres features après.
-
-## Structure de l'image
-
-La structure de l'image est la suivante:
-- une image de 8 lignes de 3 frames (pied gauche en avant, pied centré, pied droit en avant) de 96*96 pixels.
-
-    - chaque ligne correspond à une direction.
-    - chaque colonne correspond à un frame.
-    - la frame du milieu (index 1) est la frame de repos.
-
-| Ligne (Index) | Direction | Nom | Orientation |
-|---------------|-----------|-----|-------------|
-| 0             | 2         | Bas (South) | Face caméra (standard RMMZ) |
-| 1             | 4         | Gauche (West) | Profil gauche (standard RMMZ) |
-| 2             | 6         | Droite (East) | Profil droit (standard RMMZ) |
-| 3             | 8         | Haut (North) | Dos caméra (standard RMMZ) |
-| 4             | 1         | Bas-Gauche (South-West) | Diagonale avant-gauche |
-| 5             | 3         | Bas-Droite (South-East) | Diagonale avant-droite |
-| 6             | 7         | Haut-Gauche (North-West) | Diagonale arrière-gauche |
-| 7             | 9         | Haut-Droite (North-East) | Diagonale arrière-droite |
-
-# Mechanique de controle du personnage
-
-Pour l'instant, je vais testé sur un seul perso, celui du Game_Player. Il faut donc adapter les control du joueur pour qu'il gère les 8 directions et les 3 frames par direction. De plus, il faudra penser à l'event camera et à la manière de gérer les collisions et les mouvements du joueur. Pour l'instant on laisse le système de base.
-
-# Indications IA
-
-- Je ne veux pas de structure lourde comme pour l'ancienne version de SCE. Va au plus simple, au plus efficient. Privilégie des solutions légères, rapides et modulaires. Évite la complexité inutile, le sur-engin, et tout ce qui n'est pas strictement nécessaire au bon fonctionnement du système. Ne rajoute pas de couches d'abstraction ou de fonctionnalités supplémentaires si ce n'est pas indispensable. Je vais penser les differentes fonctionnalités et l'archi globale au fur et à mesure et te demander de les implémenter au fur et à mesure. Grace à ça, tu pourras me proposer de nouvelle chose en tenant compte de l'architecture mise en place et de ses limites.
-
-
-
-# ETAPE 2
-
-## Le Paperdoll & le Bitmap_Composite
-
-Le Paperdoll est le système de gestion des images des personnages. Il est composé de plusieurs parties combiné par le Bitmap_Composite.
-
-Pour ce faire on va reprendre la classe de l'ancienne version (C:\SERVER\htdocs\SimCraft\SCE\project\js\plugins\simcraft\core\componants\Bitmap_Composite.js) en la copiant dans le dossier actuel et en l'adaptant à la nouvelle logique. Il faudra l'adapter aux standards de RMMZ (import d'image, gestion des bitmaps, etc...). Il faudra aussi l'adapter au contexte actuel. C'est à dire qu'il faudra l'adapter au 8 directions (au lieu de 4), à la séparation des differentes images d'actions (walk, wait, run, etc...) . On va commencer par l'action "walk" par defaut. Pour l'instant, on ne va pas se focus sur les autres actions. On verra après pour comment gérer les actions, mais le but est de pouvoir l'adapter par la suite (a voir pour la gestion du cache).
-
-L'image de base, celle qu'on a implémenté precedement est le corps du personnage. Son zindex est 50 (Par defaut) pour pouvoir ajouter des couches derrière et devant dans le futur. On va partir du principe que les différentes parties du corps sont stockées dans des fichiers .png separés et organisés de la meme maniere que l'image de base.
-
-L'organisation des images est la suivante:
-- une image de 8 lignes de 4 frames (pied gauche en avant, pied centré, pied droit en avant, pied gauche en arriere?) de 96*96 pixels.
-
-    - chaque ligne correspond à une direction.
-    - chaque colonne correspond à un frame.
-    - la frame du milieu (index 1) est la frame de repos.
-
-### Face
-
-Pour commencer on va ajouter un notetag au hero pour définir l'utilisation d'un visage du personnage:
-```
-<Face>
-```
-Si cette note tag est presente, le personnage utilisera une image de visage au dessus de l'image de base (zindex 60). Le nom du fichier et son chemin et defini comme suit :
-```
-img/characters/composite/faces/[ACTOR_ID]_[ACTION_NAME].png
-```
-Où ACTOR_ID sera l'id de l'acteur et ACTION_NAME sera une chaine de caractere identifiant l'action. Par defaut, l'action est "walk". On verra plus tard la gestion des action.
-
-J'ai créé l'image face de l'acteur 1 : img/characters/composite/faces/1_walk.png.
-
-### Equipements
-
-Les equipements devront etre géré de la meme maniere, c'est à dire que chaque equipement devra avoir une image et etre défini par un notetag dans la base de données des armes et armures. Les vetements devront etre géré de la meme maniere, c'est à dire que chaque vetement devra avoir une image et etre défini par un notetag dans la base de données des vetements.
-
-Comme pour l'ancienne version, on va utilisé les notetags des armes et armures pour définir le chemin et le nom des images et on va utilisé les notetags des vetements pour définir le chemin et le nom des images. 
-
-Les notetags sont de la forme suivante:
-```
-<visual_equip: [FILENAME], [zindex]>
-
-```
-Un meme equipement peut avoir plusieurs couches (ex: une armure et un vetement, ou plusieurs couches de vetements). On va utiliser des notetags différents pour chaque couche. Pour que le bitmap composite puisse les assembler dans le bon ordre, on utilise le zindex.
-
-Où FILENAME sera une chaine de caractere identifiant le nom du fichier image.
-
-Pour recomposer le chemin vers les images des differentes couches, on va procéder comme suit:
-```
-img/characters/composite/equipments/[RACE_NAMED]_[SEX_NAME]_[FILENAME]_[ACTION_NAME].png
-```
-Où RACE_NAMED sera le nom de la race de l'acteur, SEX_NAME sera le sexe de l'acteur, FILENAME sera le nom du fichier image et ACTION_NAME sera une chaine de caractere identifiant l'action. Par defaut, l'action est "walk". On verra plus tard la gestion des actions.
-
-J'ai créé l'image pour l'armure de l'acteur 1 : img/characters/composite/equipments/human_male_flak_walk.png.
-
-J'ai mit les balises dans le notetag dans l'editeur de RMMZ
-
-## Norme
-Le But etant de recréer de l'ordre dans le SC4, il faut qu'on se mette d'accord sur plusieurs choses:
-- Chaque fichier .js devra etre commenté de facon à comprendre son utilité et son fonctionnement.
-- Les fichiers contiennent uniquement une classe et sont nommés de facon cohérente avec la classe qu'il contiennent. Pour les patches et les surcharge des classes natives, on utilisera un seul fichier "SC4_[FILENAME]_Patches.js" et on mettra dedans tout les patches pour les differentes classes (en les ordonnant par classe).
-Où FILENAME sera le nom du fichier natif patché. Par exemple, "RMMZ_windows_Patches.js" ou "RMMZ_objects_Patches.js".
-
-# ETAPE 3
-
-## COntrole des directions du personnage
-
-Le clic gauche permet de se deplacer et nativement il permet d'ouvrir le menu. Mais je souhaite modifier ce comportement. Je veux que le clic gauche permette de se deplacer et que le clic droit permette d'orienter le personnage vers la position cliqué (direction fixe sans deplacement).
-
-(je sais pas si tu as corrigé l'inversion tout à l'heure, il faut que je change le clic gauche et le clic droit dans le cas contraire)
-Je precise:
-- le menu ne s'ouvre plus avec le clic.
-- il faut pouvoir recuperer la position du clic gauche et du clic droit.
-- si l'acteur est en mouvement (automatique via clic gauche) vers une direction, le clic droit stop ce mouvement et oriente le personnage vers la direction de la position du curseur.
-- Lorsque la direction est fixé par le clic droit (en le maintenant enfoncé), le clic gauche ne deplace plus le personnage. Il peut néanmoins se deplacer avec les touches directionnelles mais il reste orienté vers vers la direction du curseur en se deplacant.
-- Dans l'etape suivante nous feront une action spéciale avec le clic gauche quand le clic droit est maintenu enfoncé au lieu d'indiqué le lieu de deplacement. En gros, il faut ajouter une fonction qui permet de vérifier si le clic droit est maintenu enfoncé et si c'est le cas, on utilise le clic gauche pour faire autre chose. Sinon, on utilise le clic gauche pour deplacer le personnage vers la position cliquée.
-- Le clic gauche sera la touche pour faire une attaque dans la direction du clic droit maintenu.
-
-## Indication
-Pour l'instant, on ne se focus pas sur le déplacement ou l'orientation pas l'action d'attaque.
-
-
-
-# ETAPE 4
-
-## Action d'attaque
-
-Bon on va faire une action d'attaque.
-
-L'action d'attaque utilise une autre image composite pour l'acteur.
-```
-<visual_attack>
-<duration>[DURATION]</duration>
-<frames>[NUMBER]</frames>
-<action_name>[ACTION_NAME]</action_name>
-</visual_attack>
-```
-Où NUMBER sera le nombre de tiles de l'action d'attaque (par defaut 4, mais on peut en utiliser moins ou plus) et ACTION_NAME sera une chaine de caractere identifiant le nom du fichier image. Si ACTION_NAME n'est pas défini, on utilisera "atk" par defaut. DURATION sera le nombre de frames que dure chaque tile de l'action d'attaque. Par defaut, c'est 4 frames.
-
-J'ai créé l'image pour l'action d'attaque de l'acteur 1 : img/characters/composite/human_male_atk.png
-
-Et son equipement dedié pour le papperdoll : img/characters/composite/equipments/human_male_flak_atk.png
-
-Et la face dedié pour le papperdoll : img/characters/composite/faces/1_atk.png
-
-Lorsque la touche d'atk (clic droit maintenu + clic gauche) est pressée, le personnage doit effectuer son action d'attaque. Pour cela il faut déjà :
-- arrêter le mouvement du personnage (qu'il soit en mouvement ou non)
-- orienter le personnage vers la position cliquée
-- effectuer son action d'attaque
-
-
-Le sprite lors de l'action d'attaque affiche les tuiles de l'image d'attaque avec le pattern 0 à (NUMBER - 1) et la direction correspondante à la direction du personnage. A la fin de l'action d'attaque, le personnage doit revenir à son etat de repos (pattern 0) et sa direction doit rester la meme.
-
-# ETAPE 5
-
-## FOLLOWER
-
-C'est deja ok mais je voudrais un petit ajustement.
-
-Je voudrais pouvoir controler les actions des followers via des commande de mouvement /appel de script (this.playAction({action: "[ACTION_NAME]", duration: [DURATION], frames: [NUMBER]}))
-
-Exemple de commande :
-```
-this.playAction({action: "atk", duration: 4, frames: 4})
+2. **Obligation d’Afficher le Splash Screen** :
+   - Tout projet commercial utilisant ce code **doit afficher le logo "Sim Craft Engine"** au démarrage du jeu.
+   - Le logo, disponible dans le dossier `/DOC/logo.png` (ou équivalent V2), doit rester visible pendant **au moins 3 secondes**.
+
+3. **Attribution Claire** :
+   - Tout projet dérivé doit **mentionner explicitement** :
+     - Le nom **"Sim Craft Engine"** dans les crédits.
+     - Un lien vers le dépôt officiel : [https://github.com/Omnipr3z/SC2](https://github.com/Omnipr3z/SC2) (ou dépôt d'origine [SCE](https://github.com/Omnipr3z/SCE)).
+
+Ces scripts sont conçus pour fonctionner avec le moteur RPG Maker MZ et restent soumis à la **licence propriétaire de Gotcha Gotcha Games / Degica**.
+
+Par conséquent, **l'utilisation de ces scripts nécessite que vous possédiez une copie légale de RPG Maker MZ**.  
+Ils ne peuvent pas être redistribués séparément ou utilisés en dehors du cadre autorisé par la licence utilisateur du logiciel.
+
+Veuillez consulter le [EULA officiel de RPG Maker MZ](https://www.rpgmakerweb.com/eula) pour plus d'informations.
+
+[![Licence RPG Maker MZ](https://img.shields.io/badge/Licence-RPG_Maker_MZ_EULA-red)](https://www.rpgmakerweb.com/eula)
+
+---
+
+# QU'EST-CE QUE SIMCRAFT ENGINE V2 (SC4)
+
+**SimCraft Engine V2** est la réécriture complète et la modernisation du sous-moteur modulaire SimCraft pour **RPG Maker MZ**.
+
+> ⚡ **Refacto V2 : Légèreté, Modularité & Performance**  
+> Contrairement à l'architecture monolithique de la première version, la V2 a été repensée dès le départ avec des principes stricts :
+> - **Architecture légère et découplée** : aucun sur-engin inutile ni couche d'abstraction superflue.
+> - **Surcharges chirurgicales** : les extensions du moteur RPG Maker MZ sont concentrées dans des fichiers de patchs dédiés (`SC4_rmmz_*_Patches.js`).
+> - **Approche incrémentale et orientée ARPG** : intégration fluide entre les mécanismes de simulation, le rendu graphique avancé et les interactions en temps réel.
+
+---
+
+# FONCTIONNALITÉS IMPLÉMENTÉES (V2)
+
+Seules les fonctionnalités d'ores et déjà refaites et opérationnelles dans cette V2 sont listées ci-dessous :
+
+### 1. 🎨 Système Paperdoll & Rendu Composite Dynamique (`Bitmap_Composite`)
+- **Génération multi-couches en temps réel** : assemblage automatique du corps de base, du visage (`<Face>`), des armures, équipements et vêtements (`<visual_equip: FILENAME, zindex>`).
+- **Spritesheets 96x96 pixels & 8 directions** : prise en charge complète des 8 orientations (cardinales et diagonales).
+- **Organisation par action** : séparation propre des feuilles d'animation par état (`walk`, `run`, `atk`, `hurt`, `down`, etc.).
+- **Cache haute performance** : clé de cache composite intelligente évitant tout recalcul inutile tout en permettant les recompositions à chaud.
+
+### 2. 🕹️ Déplacement 8 Directions & Mode Visée Libre
+- **Déplacement fluide en 8 directions** au clavier comme à la souris (clic gauche).
+- **Mode de visée au clic droit maintenu** : orientation instantanée du héros vers la position du curseur souris sans interrompre ni altérer la trajectoire de marche au clavier.
+- **Séparation contextuelle des clics** :
+  - *Clic droit maintenu* : visée / orientation.
+  - *Clic gauche seul* : déplacement vers la cible / interaction.
+  - *Clic droit maintenu + Clic gauche* : déclenchement de l'action d'attaque orientée.
+
+### 3. ⚔️ Moteur d'Actions & Animations Paramétrables (`playAction`)
+- **API universelle d'animation** : méthode `playAction({ action, duration, frames })` exécutable sur le joueur, les compagnons ou les événements de carte.
+- **Attaque personnalisée (`<visual_attack>`)** : balise XML paramétrable sur l'acteur ou les armes (durée par frame, nombre de frames, nom de l'action).
+- **Transitions propres** : verrouillage temporaire pendant l'action puis retour automatique à l'état de repos (`walk`).
+
+### 4. 👥 Compagnons d'Équipe (Followers) Avancés
+- **Intégration Paperdoll complète** sur tous les membres de la troupe d'accompagnement.
+- **Orientation 8 directions** synchronisée avec le moteur de déplacement.
+- **Support des actions animées** : capacité à déclencher des poses et actions scriptées (`this.playAction`) sur les suiveurs.
+
+### 5. 🎭 Événements Acteurs (Actor Events) & Gestion d'Équipe Dynamique
+- **Association Événement-Acteur** via le notetag `<actor: [ACTOR_ID]>` sur la page active ou la note de l'événement.
+- **Rendu graphique adaptatif** : affichage en Paperdoll composite si l'acteur est un héros configuré, ou en character standard RMMZ dans le cas contraire.
+- **Recrutement interactif (`joinPlayerParty()`)** : l'événement sur carte marche physiquement jusqu'à la position d'incorporation dans la formation avant d'intégrer l'équipe.
+- **Renvoi dynamique des compagnons** : dialogue interactif avec le compagnon permettant de lui demander de rester ; l'événement carte réapparaît immédiatement sur la tuile exacte du compagnon libéré.
+- **Gestion intelligente de la présence sur carte** : masquage automatique de l'événement lorsque l'acteur est présent dans l'équipe (sauf présence du notetag `<actor_visible>`).
+
+### 6. 🏃 Course Dynamique (Dash / Run)
+- Bascule automatique et instantanée de l'action `walk` à l'action `dash` (spritesheets `run`) pour le joueur et les followers dès que la course est active.
+- Prise en charge sur les événements acteurs avec bascule automatique basée sur la vitesse de déplacement configurée.
+
+### 7. 🥊 Combat ARPG en Temps Réel (`FightManager`) - Phase 1 : Mêlée à Mains Nues
+- **Gestionnaire centralisé `window.$fightManager`** : indexation et surveillance dynamique des acteurs et ennemis de la carte courante.
+- **Rôles et affiliations par notetags** :
+  - `<role: neutral/hostile/ally/civilian>`
+  - `<enemy: [ENNEMY_ID]>` : lie un événement hostile à un battler `Game_Enemy` avec ses statistiques et compétences RMMZ.
+  - `<attackId: [SKILL_ID]>` : compétence utilisée lors de l'attaque (par défaut ID 1).
+- **Combat au corps-à-corps sans arme** : résolution en temps réel des dégâts par le moteur natif (`Game_Action`) lors d'une attaque au contact direct face à un ennemi hostile (par clic ou touche d'action).
+- **Retours physiques et visuels complets** :
+  - L'ennemi pivote automatiquement pour faire face à l'attaquant (direction verrouillée).
+  - Déclenchement de l'animation de compétence (`$gameTemp.requestAnimation`).
+  - Réaction d'impact `hurt` (3 frames) avec recul physique (**knockback**) d'une case.
+  - Réaction de mort `down` (3 frames) avec activation automatique de l'interrupteur local `C` pour le traitement des états de cadavre / butin dans l'éditeur.
+
+---
+
+# ARCHITECTURE & FICHIERS DU PROJET
+
+L'ensemble des développements V2 est concentré dans les répertoires suivants :
+
+```text
+SC4/
+├── data/                               # Données du projet RPG Maker MZ
+├── img/characters/composite/           # Banques de spritesheets Paperdoll (bases, faces, équipements)
+├── js/
+│   ├── plugins.js                      # Configuration d'activation des plugins
+│   └── plugins/
+│       ├── Bitmap_Composite.js         # Moteur de composition multi-couches
+│       ├── Character_Hero.js           # Contrôleur d'animation et de transitions
+│       ├── FightManager.js             # Singleton du système de combat ARPG temps réel
+│       ├── Game_Hero.js                # Extension de Game_Actor pour héros composites
+│       ├── Hub_Hero.js                 # Façade d'accès aux entités composites
+│       ├── Sprite_Hero.js              # Sprite custom 8 directions & gestion des actions
+│       ├── SC4_rmmz_core_Patches.js    # Patchs sur le core RMMZ (ImageManager, etc.)
+│       ├── SC4_rmmz_objects_Patches.js # Patchs sur les Game_Objects (Player, Follower, Event, etc.)
+│       ├── SC4_rmmz_scenes_Patches.js  # Patchs sur les scènes RMMZ
+│       └── SC4_rmmz_sprites_Patches.js # Patchs sur les classes de rendu Sprite
+├── WALKTROUGHT.md                      # Journal de bord détaillé et étapes d'implémentation
+└── README.md                           # Présentation générale du projet V2
 ```
 
-Où ID sera l'id de l'acteur du follower et ACTION_NAME sera le nom de l'action à effectuer...
+---
 
-- Lorsque l'acteur est dans la party, l'action s'execute sur lui
-- Lorsque l'acteur n'est pas dans la party, il ne se passe rien. Il faudra faire autrement pour les evenements acteurs.
+# DOCUMENTATION TECHNIQUE & ÉTAPES
 
-# ETAPE 6
+Pour consulter le journal de développement détaillé, les choix de conception, les structures d'images et les spécifications de chaque étape :
+- [Consulter le journal technique (WALKTROUGHT.md)](WALKTROUGHT.md)
 
-## EVENT ACTOR
+---
 
-Certains events pourrait incarner des actors avec un notetag dans la page active (<actor: [ACTOR_ID]>)
+# CONTACTS ET LIENS
 
-Pour les evenements acteurs, il faudra utiliser les images du personnage de la bdd avec le paperdoll si c'est un hero ou juste son character classic sinon.
+<span style="font-size:24px;">
+<!-- Website Icon -->
+<a href="https://pahernandezd3v.com" style="color:#555">
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 2048 2048" fill="#555">
+  <path d="M1024 0q141 0 272 36t245 103t207 160t160 208t103 245t37 272q0 141-36 272t-103 245t-160 207t-208 160t-245 103t-272 37q-141 0-272-36t-245-103t-207-160t-160-208t-103-244t-37-273q0-141 36-272t103-245t160-207t208-160T751 37t273-37m0 1920q123 0 237-32t214-90t182-141t140-181t91-214t32-238q0-123-32-237t-90-214t-141-182t-181-140t-214-91t-238-32q-123 0-237 32t-214 90t-182 141t-140 181t-91 214t-32 238q0 123 32 237t90 214t141 182t181 140t214 91t238 32m597-880l48-144h75l-85 256h-75l-48-144l-48 144h-75l-85-256h75l48 144l48-144h74zm-464-144h75l-85 256h-75l-48-144l-48 144h-75l-85-256h75l48 144l48-144h74l48 144zm-512 0h75l-85 256h-75l-48-144l-48 144h-75l-85-256h75l48 144l48-144h74l48 144z"/>
+</svg> https://pahernandezd3v.com</a> <span style="font-size:16px;">**(en cours de maintenance)**</span>
+<br><br>
+<!-- Discord Icon -->
+<a href="https://discord.gg/2U3mqfKG" style="color:#5865f2">
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256">
+  <g fill="none">
+    <rect width="256" height="256" fill="#5865f2" rx="60"/>
+    <g clip-path="url(#SVGYhWcPcwn)">
+      <path fill="#fff" d="M197.308 64.797a165 165 0 0 0-40.709-12.627a.62.62 0 0 0-.654.31c-1.758 3.126-3.706 7.206-5.069 10.412c-15.373-2.302-30.666-2.302-45.723 0c-1.364-3.278-3.382-7.286-5.148-10.412a.64.64 0 0 0-.655-.31a164.5 164.5 0 0 0-40.709 12.627a.6.6 0 0 0-.268.23c-25.928 38.736-33.03 76.52-29.546 113.836a.7.7 0 0 0 .26.468c17.106 12.563 33.677 20.19 49.94 25.245a.65.65 0 0 0 .702-.23c3.847-5.254 7.276-10.793 10.217-16.618a.633.633 0 0 0-.347-.881c-5.44-2.064-10.619-4.579-15.601-7.436a.642.642 0 0 1-.063-1.064a86 86 0 0 0 3.098-2.428a.62.62 0 0 1 .646-.088c32.732 14.944 68.167 14.944 100.512 0a.62.62 0 0 1 .655.08a80 80 0 0 0 3.106 2.436a.642.642 0 0 1-.055 1.064a102.6 102.6 0 0 1-15.609 7.428a.64.64 0 0 0-.339.889a133 133 0 0 0 10.208 16.61a.64.64 0 0 0 .702.238c16.342-5.055 32.913-12.682 50.02-25.245a.65.65 0 0 0 .26-.46c4.17-43.141-6.985-80.616-29.571-113.836a.5.5 0 0 0-.26-.238M94.834 156.142c-9.855 0-17.975-9.047-17.975-20.158s7.963-20.158 17.975-20.158c10.09 0 18.131 9.127 17.973 20.158c0 11.111-7.962 20.158-17.973 20.158m66.456 0c-9.855 0-17.974-9.047-17.974-20.158s7.962-20.158 17.974-20.158c10.09 0 18.131 9.127 17.974 20.158c0 11.111-7.884 20.158-17.974 20.158"/>
+    </g>
+    <defs>
+      <clipPath id="SVGYhWcPcwn">
+        <path fill="#fff" d="M28 51h200v154.93H28z"/>
+      </clipPath>
+    </defs>
+  </g>
+</svg> https://discord.gg/2U3mqfKG</a>
+<br><br>
+<!-- Patreon Icon -->
+<a href="https://www.patreon.com/c/omnipr3z" style="color:#FF424D">
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256">
+  <path fill="#FF424D" d="M232 93.17c0 41-29.69 52.47-53.55 61.67c-8.41 3.24-16.35 6.3-22.21 10.28c-11.39 7.72-18.59 21.78-25.55 35.38c-9.94 19.42-20.23 39.5-43.17 39.5c-12.91 0-24.61-11.64-33.85-33.66s-14.31-51-13.61-77.45c1.08-40.65 14.58-62.68 25.7-74c14.95-15.2 35.24-25.3 58.68-29.2c21.79-3.62 44.14-1.38 62.93 6.3C215.73 43.6 232 65.9 232 93.17"/>
+</svg> https://www.patreon.com/c/omnipr3z</a>
+<br><br>
+<!-- GitHub Icon -->
+<a href="https://github.com/Omnipr3z/SC2" style="color:#555">
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20">
+  <path fill="#555" d="M13.18 11.309c-.718 0-1.3.807-1.3 1.799c0 .994.582 1.801 1.3 1.801s1.3-.807 1.3-1.801c-.001-.992-.582-1.799-1.3-1.799m4.526-4.683c.149-.365.155-2.439-.635-4.426c0 0-1.811.199-4.551 2.08c-.575-.16-1.548-.238-2.519-.238c-.973 0-1.945.078-2.52.238C4.74 2.399 2.929 2.2 2.929 2.2c-.789 1.987-.781 4.061-.634 4.426C1.367 7.634.8 8.845.8 10.497c0 7.186 5.963 7.301 7.467 7.301l1.734.002l1.732-.002c1.506 0 7.467-.115 7.467-7.301c0-1.652-.566-2.863-1.494-3.871m-7.678 10.289h-.056c-3.771 0-6.709-.449-6.709-4.115c0-.879.31-1.693 1.047-2.369C5.537 9.304 7.615 9.9 9.972 9.9h.056c2.357 0 4.436-.596 5.664.531c.735.676 1.045 1.49 1.045 2.369c0 3.666-2.937 4.115-6.709 4.115m-3.207-5.606c-.718 0-1.3.807-1.3 1.799c0 .994.582 1.801 1.3 1.801s1.301-.807 1.301-1.801c0-.992-.582-1.799-1.301-1.799"/>
+</svg> https://github.com/Omnipr3z/SC2</a>
+<br><br>
+<!-- YouTube Icon -->
+<a href="https://www.youtube.com/@Omnipr3z" style="color:#FF0000">
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20">
+  <path fill="#FF0000" d="M10 2.3C.172 2.3 0 3.174 0 10s.172 7.7 10 7.7s10-.874 10-7.7s-.172-7.7-10-7.7m3.205 8.034l-4.49 2.096c-.393.182-.715-.022-.715-.456V8.026c0-.433.322-.638.715-.456l4.49 2.096c.393.184.393.484 0 .668"/>
+</svg> https://www.youtube.com/@Omnipr3z</a>
+</span>
+<br><br>
 
-Si la commande de mouvement /appel de script (this.playAction({actorId: [ACTOR_ID], action: "[ACTION_NAME]", duration: [DURATION], frames: [NUMBER]})) fait reference à cet actor et que celui ci n'est pas dans la party, l'action se lance sur l'event au lieu du follower.
+# Crédits
 
-De plus, si l'actor est dans l'équipe, l'event doit etre invisible (il faut un notetag pour le rendre visible <actor_visible> si besoin).
-
-## Indications
-
-Les character on surement des methode commune qui ont la meme logique entre le player, les followers, les events. Veille à utiliser les heritages des super classes et des classe parente quand c'est utile pour DRY.
-
-# ETAPE 7
-
-# Gestion de l'equipe
-
-Je voudrais pouvoir ajouter et retirer les membres de la party de manière dynamique.
-
-- Tout d'abord lorsque le player à un follower et qu'il se tourne vers sa direction, cela ne doit pas effectuer le mouvement directement mais lui faire face dans un premier temps, de meme lorsque on clique sur le follower jsute derriere le hero. Je voudrais pouvoir interagir avec le follower comme avec un event.
-
-- Lorsque je clique gauche sur le heros sans clic droit le follower le plus proche, un choix s'affiche :
-(on pettra plusieurs choix mais pour l'instant que 1) "Demander de rester"/"Ne rien faire".
-Lorsque le joueur choisit demander de rester:
-- Un event de cette map a le notag <actor:[ID_DU_FOLLOWER]: cet evtn teleporte est teleporté à la postion exact du follower (direction comprise mais que sur les axes x et y pas diagonal). Le follower est retiré de la party
-
-De meme sur pour l'event qui a le notag <actor:[ID_DU_HERO]>, j'aimerai un methode joinPlayerParty() qui, si l'actor n'est pas dans la party, ajoute l'actor à la party. Il faudrait qu'avant d'etre ajouté l'event se deplace jusqu'à la position ou le follower doit apparaitre (si il est deja dans la party, il ne se passe rien).
-
-- Aucun event ne porte le notetag avec l'ID du follower (un message s'affiche "je ne peux pas rester ici")
-
-# ETAPE 8
-
-# Course
-
-Je voudrais que lorsque le joueur est en train de courir (dash ou run je sais plus) au lieu d'utiliser walk il utilise l'action dash. Et de même pour le follower.
-
-Le events pas contre ca doit etre en fonction de la vitesse de deplacement parametré de l'event (rapide ou plus
- vite).
-
- J'ai créé les images d'action de course pour le hero :
- - img/characters/composite/human_male_run.png
- - img/characters/composite/equipments/human_male_flak_run.png
- - img/characters/composite/faces/1_run.png
-- img/characters/composite/faces/2_run.png
-
-# ETAPE 9
-
-## Combat / Gun Fight - Phase 1 : Punching-ball de mêlée à mains nues
-
-Système de combat ARPG en temps réel au corps-à-corps sans arme avec gestionnaire centralisé `FightManager` et ennemi punching-ball passif.
-
-### 1. Classe FightManager (`js/plugins/FightManager.js`)
-- Singleton accessible globalement via `window.$fightManager`.
-- Répertorie et indexe tous les `ActorEvent` présents sur la carte courante (`actorEvents()`).
-- Détecte les cibles hostiles vivantes au contact direct devant le joueur (`findHostileTargetInFront()`).
-- Historise et enregistre les résultats de combat (`lastResult()`, `resultsHistory()`).
-
-### 2. Notetags des événements (page active ou note d'événement)
-- `<actor:[ACTOR_ID]>` : Lie l'événement à un acteur du système SimCraft.
-- `<role:[neutral/hostile/ally/civilian]>` : Rôle d'interaction (par défaut `"neutral"`).
-- `<enemy:[ENNEMY_ID]>` : Si hostile, instancie un battler `Game_Enemy` avec ses statistiques issues de la base de données RMMZ (`$dataEnemies[ENNEMY_ID]`).
-
-### 3. Notetags dans la base de données des héros (`Actors.json`)
-- `<attackId:[SKILL_ID]>` : ID de la compétence utilisée pour l'attaque (par défaut `1` si omis).
-
-### 4. Déclenchement de l'attaque à mains nues
-- Condition : Le joueur n'est équipé d'aucune arme (`hasNoWeapons() === true`).
-- Déclenchement automatique lors de l'action `atk` (clic gauche / touche d'action) au contact direct d'un acteur hostile.
-- Résolution par le moteur natif de RMMZ via `Game_Action.prototype.apply` contre le `Game_Enemy`.
-
-### 5. Retours visuels et physiques
-- **Orientation** : L'événement ennemi fait face au joueur avec direction fixe (`turnTowardCharacter`, `setDirectionFix(true)`).
-- **Animation** : L'animation de la compétence (ex: animation 1) est jouée sur l'événement (`$gameTemp.requestAnimation`).
-- **Ennemi survivant** :
-  - `event.playAction({ action: "hurt", duration: 8, frames: 3 })`.
-  - Recul (knockback) d'une case en arrière avec direction fixe.
-  - Retour en `walk` pattern 1 (idle) et déverrouillage de la direction fixe à la fin de l'action.
-- **Ennemi vaincu (`isDead`)** :
-  - `event.playAction({ action: "down", duration: 10, frames: 3 })`.
-  - À la fin de l'action `down`, activation automatique de l'interrupteur local `C` (`$gameSelfSwitches.setValue([mapId, eventId, "C"], true)`).
-
-
-
-
-
+* Icônes réseaux sociaux des documentations : https://icon-sets.iconify.design/
+* Gotcha Gotcha Games / Degica pour RPG Maker MZ.

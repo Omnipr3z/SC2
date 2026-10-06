@@ -1,9 +1,11 @@
 # Ignorer tous les fichiers et dossiers par défaut
 /*
 
-# Ne pas ignorer .gitignore et README.md
+# Ne pas ignorer la configuration et la documentation
 !.gitignore
 !README.md
+!WALKTROUGHT.md
+!WALKTHROUGH.md
 
 # Conserver data/ (données de l'éditeur RPG Maker)
 !/data/
