@@ -1,0 +1,19 @@
+# Ignorer tous les fichiers et dossiers par défaut
+/*
+
+# Ne pas ignorer .gitignore et README.md
+!.gitignore
+!README.md
+
+# Conserver js/plugins/ et js/plugins.js
+!/js/
+/js/*
+!/js/plugins.js
+!/js/plugins/
+!/js/plugins/**
+
+# Conserver img/characters/
+!/img/
+/img/*
+!/img/characters/
+!/img/characters/**
