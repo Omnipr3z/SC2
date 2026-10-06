@@ -28,6 +28,24 @@ class Sprite_Hero extends Sprite_Character {
         this._currentAction = "walk";
         this._compositeEntry = null;
         this._lastCacheKey = "";
+        this._indicatorSprite = null;
+        this._fightGauges = null;
+    }
+
+    setCharacter(character) {
+        super.setCharacter(character);
+        this.setupCharacterChildren();
+    }
+
+    setupCharacterChildren() {
+        if (!this._indicatorSprite && typeof Sprite_CharacterIndicator !== "undefined") {
+            this._indicatorSprite = new Sprite_CharacterIndicator(this._character);
+            this.addChild(this._indicatorSprite);
+        }
+        if (!this._fightGauges && typeof Spriteset_FightGauges !== "undefined") {
+            this._fightGauges = new Spriteset_FightGauges(this._character);
+            this.addChild(this._fightGauges);
+        }
     }
 
     /**

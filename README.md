@@ -150,8 +150,50 @@ Seules les fonctionnalités d'ores et déjà refaites et opérationnelles dans c
   - Animation de compétence native RMMZ et résolution des dégâts via `Game_Action`.
   - Retours physiques sur la cible : orientation face à face, direction fixe, **knockback** d'une case, et animation `hurt` (3 frames).
   - Gestion du KO du joueur : animation `down` (3 frames) et bascule automatique sur l'écran **Game Over** si le groupe succombe.
+- **Mode Hurted & Suspension de l'IA** :
+  - Lors d'une blessure infligée par le joueur, l'ennemi passe dans l'état `AI_STATE_HURTED`.
+  - L'IA et le pathfinding sont intégralement suspendus pendant l'animation `hurt` (3 frames / 24 ticks).
+  - Le compteur d'attaque est réinitialisé à 0 dès le premier impact.
+  - À la fin de l'action `hurt`, l'IA reprend automatiquement son état précédent (`neutral`, `search` ou `engage`) sans rupture de comportement.
 - **Paramétrage dynamique par Notetags** :
   - Support sur les notes de BDD ennemis, notes d'événements et commentaires de page active (codes 108 / 408 avec priorité par page).
+
+### 10. 💡 Indicateurs Visuels d'État (`Sprite_CharacterIndicator`)
+- **Indicateurs animés au-dessus de la tête des ennemis** (`img/ui/indicator.png`, 3 frames de 32x32px par ligne) :
+  - **Transition NEUTRE ➔ ENGAGE** : Point d'exclamation jaune/blanc (Ligne 0).
+  - **Transition ENGAGE ➔ RECHERCHE** : Point d'interrogation rouge (Ligne 1).
+  - **Transition RECHERCHE ➔ NEUTRE** : Point d'interrogation jaune (Ligne 2).
+- **Animation fluide en 3 phases sur 60 frames (1 seconde)** :
+  - *Phase 1 (15 frames)* : apparition avec fondu (`opacity 0 -> 255`), zoom (`scale 0.1 -> 1.0`) et élévation de 10px.
+  - *Phase 2 (30 frames)* : maintien fixe au-dessus de la tête.
+  - *Phase 3 (15 frames)* : disparition avec fondu (`opacity 255 -> 0`), zoom (`scale 1.0 -> 1.5`) et élévation de 20px supplémentaires.
+- **File d'attente (Waitlist)** : gestion ordonnée des indicateurs successifs pour garantir l'affichage complet sans interruption prématurée.
+
+### 11. 📊 Jauges de Combat Ennemies (`Spriteset_FightGauges`)
+- **Affichage contextuel** : présent au-dessus des ennemis uniquement lorsqu'ils sont **vivants** et en mode **ENGAGEMENT (`engage`)**.
+- **Fond noir commun** (`Sprite_FightGaugeBase`, 50x16px avec bordure).
+- **Jauge d'Attack Timer** (`Sprite_FightGaugeAT`, 48x2px, blanche) :
+  - Positionnée en haut de la pile.
+  - Se remplit en temps réel selon le ratio `attackTimer / attackFrequency` (déclenche l'attaque à 100%).
+- **Jauge de Vie / HP** (`Sprite_FightGaugeHP`, 48x8px) :
+  - Positionnée au centre.
+  - Dégradé de couleur dynamique selon le pourcentage de PV restants :
+    * `> 80%` : Vert ➔ Vert
+    * `60% - 80%` : Orange ➔ Vert
+    * `40% - 60%` : Orange ➔ Orange
+    * `20% - 40%` : Rouge ➔ Orange
+    * `< 20%` : Rouge ➔ Rouge
+  - Effet de clignotement rouge vif / sombre (2 frames ON, 2 frames OFF) à moins de 10% de PV.
+- **Jauge de Mana / MP** (`Sprite_FightGaugeMP`, 48x4px, dégradé bleu) :
+  - Positionnée en bas de la pile, avec dégradé bleu clair à bleu foncé selon les MP restants.
+
+### 12. 🛠️ Outil de Débogage Statique (`DEBUGTOOL`)
+- **Classe statique `DEBUGTOOL`** accessible partout dans le code :
+  - `DEBUGTOOL.log(message, key)` : log avec localisation automatique du fichier et de la ligne appelante via la stack trace.
+  - `DEBUGTOOL.logFormat(data, formatMessage, key)` : formatage avancé pour tableaux (`%1`, `%2`) et objets (`%[propriete]`).
+- **Paramétrage via Plugin Manager** :
+  - Activation/Désactivation globale.
+  - Mode sélectif activable avec filtrage par liste blanche de clés (`allowedKeys`).
 
 ---
 
@@ -164,14 +206,18 @@ SC4/
 ├── data/                               # Données du projet RPG Maker MZ
 │   └── SC/
 │       └── INVENTORIES.json            # Base de données des inventaires initiaux
-├── img/characters/composite/           # Banques de spritesheets Paperdoll (bases, faces, équipements)
+├── img/
+│   ├── characters/composite/           # Banques de spritesheets Paperdoll (bases, faces, équipements)
+│   └── ui/
+│       └── indicator.png               # Planche d'indicateurs visuels (exclamation, ?, ?)
 ├── js/
 │   ├── plugins.js                      # Configuration d'activation des plugins
 │   └── plugins/
+│       ├── DEBUGTOOL.js                # Outil statique de logs et débogage conditionnel
 │       ├── Bitmap_Composite.js         # Moteur de composition multi-couches
 │       ├── Character_Hero.js           # Contrôleur d'animation et de transitions
 │       ├── Enemy_AI.js                 # Pont d'intégration Game_Event <-> IAManager
-│       ├── IAManager.js                # Classe parente d'IA modulaire (FSM, Cibles, Leash)
+│       ├── IAManager.js                # Classe parente d'IA modulaire (FSM, Cibles, Leash, Hurted)
 │       ├── IA_melee.js                 # IA spécialisée pour combat au corps-à-corps
 │       ├── IA_range.js                 # IA spécialisée pour combat à distance
 │       ├── FightManager.js             # Singleton du système de combat ARPG temps réel
@@ -181,12 +227,14 @@ SC4/
 │       ├── Hub_Hero.js                 # Façade d'accès aux entités composites
 │       ├── SC_DataManager.js          # Gestionnaire étendu de chargement et sauvegarde SC
 │       ├── Scene_Inventory.js          # Scène de gestion et transfert d'inventaires
-│       ├── Sprite_Hero.js              # Sprite custom 8 directions & gestion des actions
+│       ├── Sprite_Hero.js              # Sprite custom 8 directions & assemblage d'enfants
+│       ├── Sprite_CharacterIndicator.js # Composant d'indicateurs visuels au-dessus des têtes
+│       ├── Spriteset_FightGauges.js    # Ensemble des jauges de combat ennemies (HP, MP, AT)
 │       ├── SC4_rmmz_core_Patches.js    # Patchs sur le core RMMZ (TouchInput, etc.)
 │       ├── SC4_rmmz_objects_Patches.js # Patchs sur Game_Objects (Player, Follower, Event, etc.)
 │       ├── SC4_rmmz_scenes_Patches.js  # Patchs sur Scene_Map, Scene_Menu, etc.
 │       └── SC4_rmmz_sprites_Patches.js # Patchs sur les classes de rendu Sprite
-├── UNIT_TESTS/                         # Suite complète de tests unitaires automatisés (14 suites)
+├── UNIT_TESTS/                         # Suite complète de tests unitaires automatisés (15 suites)
 ├── WALKTROUGHT.md                      # Journal de bord détaillé et étapes d'implémentation
 └── README.md                           # Présentation générale du projet V2
 ```

@@ -18,11 +18,13 @@
 !/js/plugins/
 !/js/plugins/**
 
-# Conserver img/characters/
+# Conserver img/characters/ et img/ui/
 !/img/
 /img/*
 !/img/characters/
 !/img/characters/**
+!/img/ui/
+!/img/ui/**
 
 # Conserver les tests unitaires
 !/UNIT_TESTS/

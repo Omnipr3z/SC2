@@ -425,7 +425,83 @@ Lorsqu'il est en MODE_SEARCH_TARGET et que <AI_ZONE_ENGAEMENT_RANGE> est defini,
  Il faut anticiper que des IA qui pourraient se battre entre elles donc la target doit pouvoir etre defini dans le futur, mais on se focus sur le player pour l'instant.
 
 
-PAS TOUT DE SUITE
+### Indicateurs
+
+A l'instant ou le MODE de l'ennemi change de NEUTRE à ENGAGE, il faut qu'un point d'exlamation s'affiche au dessus de sa tete pendant 60 frames (1sec) puis disparait.
+
+A l'instant ou le MODE de l'ennemi passe de ENGAGE à RECHERCHE, il faut qu'un point d'interogation rouge s'affiche au dessus de sa tete pendant 60 frames (1sec) puis disparait.
+
+A l'instant ou le MODE de l'ennemi passe de RECHERCHE à NEUTRE, il faut qu'un point d'interogation jaune s'affiche au dessus de sa tete pendant 60 frames (1sec) puis disparait.
+
+Je vais utiliser l'image : img/ui/indicator composé de lignes (nombre ajustable pour les futur indicateur) de 3 frames de 32px * 32px.
+
+La ligne 1 c'est le point d'exclamation
+La 2 le point d'interrogation rouge
+La 3 le point d'interrogation jaune
+
+Il faut donc créer un Sprite_CharacterIndicator enfant (children) de chaque Sprite Hero par defaut invisible et inactif mais qui au moment ou l'event le necessite affiche la bonne ligne du sprite 8frames/tile. Le sprite reste au dessus du character au dessus de la tete de l'ennemi. il faut anticiper qu'il puisse y avoir plusieurs indicateurs d'affilé (waitlist) meme si pour le moment ce n'est pas le cas.
+
+Bonus: Une petite animation du sprite à l'apparition serait sympa:
+- Un fadeIn + zoom de 0.1 à 1 en apparition + mouvement vers le haut sur 10px sur 15frames
+- il reste  30 frames affiché au dessus de la tete de l'ennemi.
+- puis il disparait avec un fadeOut + zoom 1.5 mouvement vers le haut de 20px sur 15 frames.
+
+### Enemy gauges
+
+Au dessu de l'ennemi il faut plusieurs GAUGE qui s'affiche uniquement quand il est en mode ENGAGEMENT et vivant.
+
+Le BG des jauge est noir.
+
+Une jauge PV de l'ennemi (l48px * H8px) qui se remplit en fonction de la vie de l'ennemi. Elle sera definie par les data de l'ennemi (HP/HPmax) et Le systeme de Fight. La couleur de la jauge doit etre un gradient en fonction du pourcentage restant de vie:
+- > au dessu de 80%: vert -> vert
+- > au moins 60% et <80%: orange -> vert,
+- > au moins 40% et <60%: orange -> orange
+- > au moins 2% et <40%: rouge -> orange
+- > en dessous de 20%: rouge -> rouge
+
+En dessous collé à la precedente jauge, une jauge bleu (l48px * H4px) "Mana" (MP) qui se remplit en fonction des MP de l'ennemi. Elle sera definie par les data de l'ennemi (MP/MPmax) et Le systeme de Fight. La couleur de la jauge doit etre un gradient en fonction du pourcentage restant de vie:
+- > au dessu de 80%: bleu clair -> bleu clair
+- > au moins 60% et <80%: bleu -> bleu clair,
+- > au moins 40% et <60%: bleu -> bleu
+- > au moins 2% et <40%: bleu foncé -> bleu
+- > en dessous de 20%: bleu très foncé -> bleu foncé
+
+Afin de permettre au joueur de savoir quand l'ennemi va attaquer, on va ajouter une jauge blanche (l48px * H2px) "Attack Timer" (AT) à l'ennemi qui se remplit en fonction du temps qui passe (ATTACK_FREQUENCY).
+Juste au dessus coller 
+
+- La jauge AT se trouve au dessus de la tete de l'ennemi.
+- La jauge AT se remplit en fonction du temps qui passe.
+- Quand la jauge AT est pleine, l'ennemi attaque le joueur.
+
+PAS TOUT DE SUITE EN SUSPEND POUR LE MOMENT
+
+L'ensemble des jauge doit etre contenu dans un Spriteset_FightGauges enfant (children) de chaque Sprite_Hero (par defaut invisible et inactif) contenant lui meme les sprites des jauge distinctes (Sprite_FightGaugeBase, Sprite_FightGaugeHP, Sprite_FightGaugeMP, Sprite_FightGaugeAT). Le spriteset doit etre centrer au dessus du character.
+
+Bonus: Si la Gauge HP est en dessous de 10% ca serait bien que la jauge clignote en rouge/rougevif (2 frame on, 2 frame off).
+
+### AJUSTEMENT DU GUN FIGHT
+
+On a rencontré un bug avec l'attack du player sur l'ennemy parce que cette interaction s'execute en parallele de l'IA. Il faudrait integrer un mode Hurted lorsque le joueur touche l'ennemi comme ca pendant l'anim il suspend l'IA de l'enemy et à la fin de l'anim il reprend l'IA. Il faut donc que l'IA puisse etre interrompu par un Hurted et reprise à la fin du hurted en reprenant le mode precedent (NEUTRE, SEARCH_TARGET, ENGAGE).
+
+### DEBUG TOOL
+
+DEBUG TOOL 
+Afin de mieux gerer les log je veux créer un class static DEBUGTOOL.
+Au lieu d'appeler console log on Applera DEBUGTOOL.log([MESSAGE], [KEY] (facultatif))
+Dans les plugin parameter on doit pouvoir Activer/Désactiver les logs appelé dans cette methode (avec console log sous condition) ou activé en mode selectif. Et entré une liste de KEYS autorisées en mode selectif (seulement les log avec la Key en parametre de DEBUGTOOL.log(...) presente dans la liste du plugin parameter serait afficher).
+Il doit contenir aussi une methode logFormat([DATA], [FORMAT_MESSAGE])
+- DATA peut etre un array ou un objet
+- FORMAT_MESSAGE une chaine de caractères à formatter: ex: pour un array:"Nom: %1, Truc: %2") ou pour un objet "Machin: %[paramName], bidule: [autreParamName]"
+
+Dans le log ca serait bien d'avoir la ligne et le fichier ou DEBUG TOOL a été appelé (via le trace ?)
+
+Quand on rencontrera es bugs on pourra l'utiliser pour suivre les logs quand on aura un blocage
+
+Pour ne pas surcharger le code avec de ligen de log partout je porpose une norme d'ecriture : les log s'affiche en fin de ligne ou sur une ligne vide mais à partir de l'index horizontal  80c comme ca il seront afficher loin du code à droite
+
+
+
+ARRETES ICI pour l'instant on fera ca après.
 ### GEstion de couverture et ligne de vue
 
 La couche R des terrain sert à indiquer les zones "hautes" (couvrant la ligne de vue en position basse). Il faut donc l'utiliser pour déterminer si l'ennemi peut voir le joueur.

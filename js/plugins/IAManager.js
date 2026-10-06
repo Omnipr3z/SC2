@@ -25,6 +25,7 @@ const AI_STATE_NEUTRAL = "neutral";
 const AI_STATE_ENGAGE  = "engage";
 const AI_STATE_SEARCH  = "search";
 const AI_STATE_RETURN  = "return";
+const AI_STATE_HURTED  = "hurted";
 
 class IAManager {
     /**
@@ -43,6 +44,7 @@ class IAManager {
     initMembers() {
         this._mode = null;
         this._state = AI_STATE_NEUTRAL;
+        this._previousState = AI_STATE_NEUTRAL;
         this._target = null;
         this._baseSpeed = 2;
         this._engageSpeed = 4;
@@ -127,7 +129,22 @@ class IAManager {
     mode() { return this._mode; }
     state() { return this._state || AI_STATE_NEUTRAL; }
     setState(state) {
+        const oldState = this._state;
+        if (state === AI_STATE_HURTED && oldState !== AI_STATE_HURTED) {
+            this._previousState = oldState;
+        }
+
         this._state = state;
+
+        // Déclenchement automatique des indicateurs visuels au changement d'état :
+        if (oldState === AI_STATE_NEUTRAL && state === AI_STATE_ENGAGE) {
+            this.requestIndicator("exclamation"); // Ligne 1 : Point d'exclamation
+        } else if (oldState === AI_STATE_ENGAGE && state === AI_STATE_SEARCH) {
+            this.requestIndicator("question_red"); // Ligne 2 : Point d'interrogation rouge
+        } else if (oldState === AI_STATE_SEARCH && state === AI_STATE_NEUTRAL) {
+            this.requestIndicator("question_yellow"); // Ligne 3 : Point d'interrogation jaune
+        }
+
         if (!this._event || typeof this._event.setMoveSpeed !== "function") return;
         switch (state) {
             case AI_STATE_NEUTRAL:
@@ -143,6 +160,14 @@ class IAManager {
             case AI_STATE_RETURN:
                 this._event.setMoveSpeed(this._baseSpeed);
                 break;
+            case AI_STATE_HURTED:
+                break;
+        }
+    }
+
+    requestIndicator(type) {
+        if (this._event && typeof this._event.requestIndicator === "function") {
+            this._event.requestIndicator(type);
         }
     }
 
@@ -165,10 +190,24 @@ class IAManager {
 
     /**
      * Appelé lorsque l'ennemi subit une attaque ("hurt").
-     * L'attaque ennemie est interrompue et le compteur d'attaque est remis à zéro.
+     * L'attaque ennemie est interrompue, l'IA passe en Hurted (suspendue) et le compteur est remis à zéro.
      */
     onHurt() {
+        if (this._state !== AI_STATE_HURTED) {
+            this._previousState = this._state;
+        }
+        this.setState(AI_STATE_HURTED);
         this.resetAttackTimer();
+    }
+
+    /**
+     * Reprise de l'IA à la fin de l'animation de hurt.
+     */
+    onResumeFromHurt() {
+        const resumeState = (this._previousState && this._previousState !== AI_STATE_HURTED)
+            ? this._previousState
+            : AI_STATE_ENGAGE;
+        this.setState(resumeState);
     }
 
     /**
@@ -177,6 +216,7 @@ class IAManager {
      */
     canAttack() {
         if (!this._event) return false;
+        if (this._state === AI_STATE_HURTED) return false;
         if (this._event.isActing && this._event.isActing()) return false;
         return this._attackTimer >= this._attackFrequency;
     }
@@ -201,6 +241,16 @@ class IAManager {
         const battler = typeof this._event.battler === "function" ? this._event.battler() : null;
         if (battler && typeof battler.isDead === "function" && battler.isDead()) {
             return;
+        }
+
+        // 1b. GESTION DU MODE HURTED : IA suspendue pendant l'animation hurt
+        if (this._state === AI_STATE_HURTED) {
+            if (this._event.isActing && this._event.isActing() && typeof this._event.action === "function" && this._event.action() === "hurt") {
+                this.resetAttackTimer();
+                return;
+            }
+            // L'animation hurt est terminée -> reprise de l'état précédent
+            this.onResumeFromHurt();
         }
 
         // 2. OPTIMISATION PERFORMANCE : Ennemis hors écran mis en attente (MODE_NEUTRE)

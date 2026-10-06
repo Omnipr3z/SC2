@@ -218,10 +218,16 @@ class FightManager {
                         if (typeof targetEvent.setPattern === "function") {
                             targetEvent.setPattern(1);
                         }
+                        if (targetEvent._ai && typeof targetEvent._ai.onResumeFromHurt === "function") {
+                            targetEvent._ai.onResumeFromHurt();
+                        }
                     }
                 });
             } else {
                 targetEvent.setDirectionFix(false);
+                if (targetEvent._ai && typeof targetEvent._ai.onResumeFromHurt === "function") {
+                    targetEvent._ai.onResumeFromHurt();
+                }
             }
         } else {
             if (typeof targetEvent.playAction === "function") {
@@ -352,7 +358,7 @@ class FightManager {
                 enemyActionName = matchAction[1].toLowerCase();
             }
         }
-        if (typeof attackerEvent.playAction === "function") {
+        if (typeof attackerEvent.playAction === "function" && (!attackerEvent.isActing || !attackerEvent.isActing())) {
             attackerEvent.playAction({
                 action: enemyActionName,
                 duration: 4,

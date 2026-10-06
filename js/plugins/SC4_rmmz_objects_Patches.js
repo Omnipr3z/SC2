@@ -170,6 +170,14 @@
         this._actionFrameDuration = 4;
         this._actionDirection = 2;
         this._actionOnEnd = null;
+        this._indicatorQueue = [];
+    };
+
+    Game_CharacterBase.prototype.requestIndicator = function(type) {
+        if (!this._indicatorQueue) {
+            this._indicatorQueue = [];
+        }
+        this._indicatorQueue.push(type);
     };
 
     if (!Game_CharacterBase.prototype.isDashing) {
