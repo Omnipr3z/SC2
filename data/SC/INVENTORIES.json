@@ -1,0 +1,16 @@
+{
+  "A_1": [
+    { "item_id": 7, "quantity": 10 },
+    { "item_id": 8, "quantity": 5 }
+  ],
+  "A_2": [
+    { "item_id": 10, "quantity": 3 }
+  ],
+  "C_1": [
+    { "item_id": 7, "quantity": 10 },
+    { "item_id": 13, "quantity": 5 }
+  ],
+  "E_1": [
+    { "item_id": 7, "quantity": 2 }
+  ]
+}

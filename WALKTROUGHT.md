@@ -293,6 +293,145 @@ Système de combat ARPG en temps réel au corps-à-corps sans arme avec gestionn
   - À la fin de l'action `down`, activation automatique de l'interrupteur local `C` (`$gameSelfSwitches.setValue([mapId, eventId, "C"], true)`).
 
 
+# ETAPE 10
+
+## GESTION DES INVENTAIRES
+
+Dans le systeme de base de RMMZ, seul la game Party possede un inventaire.
+Il faudrait avoir des inventaires secondaires multiples.
+Ces inventaires sont attachés aux actors du systeme (Hero et Ennemi) à des events containers via un notetag :
+- inventory : inventaire de l'event (ex: <inventory>)
+- actor_inventory : inventaire de l'acteur (ex: <actor_inventory: 1>)
+- enemy_inventory : inventaire de l'ennemi (ex: <enemy_inventory: 1>)
+
+Lorsque l'acteur quitte la party, son inventaire est conservé et attaché à l'event container, mais il n'est plus accessible depuis la party.
+De meme, lorsque l'acteur rejoint la party, son inventaire est joint à la party et n'est plus attaché à l'event container.
+
+On doit pouvoir transferer le contenu d'un inventaire à l'autre dans une scene dedié.
+
+### Scene Inventory
+
+La scene inventory est une scene qui permet de gerer les inventaires des actors. 
+Elle est composée de 3 parties :
+- Inventaire du joueur (Game_Party)
+- Inventaire de l'acteur (Game_Actor) de l'Enemy ou du Container
+- une zone d'info sur l'item
+- une fenetre de commande pour choisir l'action à effectuer sur l'item selectionné.
+
+Elle permet de :
+- Ajouter des items dans l'inventaire
+- Retirer des items de l'inventaire
+- Transferer des items d'un inventaire à l'autre
+
+### Accessibilité
+
+Il doit y avoir un hub d'inventory Game_Inventories qui gere tous les inventaires. 
+Cet objet doit etre accessible globalement via $inventories.
+
+La methode inventory([INVENTORY_ID]) permet d'acceder à un inventaire (une classe Game_Inventory) créée à la volée.
+
+Au chargement certain inventory sont dejà rempli par un JSON (data/SC/INVENTORIES.json => $dataInventories) à charger en meme temps que les autres $dataFiles.
+
+```json
+{
+    "A_1":[
+        {"item_id": 1,"quantity": 10},
+        {"item_id": 2,"quantity": 20}
+    ]
+    "C_1":[
+        {"item_id": 1,"quantity": 10},
+        {"item_id": 2,"quantity": 20}
+    ]
+}
+```
+Convention our les ID d'inventaires : 
+- actor inventory : A_[ACTOR_ID]
+- enemy inventory : E_[ENEMY_ID]
+- container inventory : C_[EVENT_ID]
+
+Attention pour cette charge le code ne doit pas etre directement surchargé dans DataManager mais via une autre classe static appelé dans DataManager (SC_DataManager.js).
+Ca sera plus simple pour gérer les data propre à SC sans perturberle code natif.
+SC_DataManager appel ses propres methodes (qui complete les méthodes de DataManager) pour charger les données dans la surcharge de DataManager (ex : SC_DataManager.loadDatabase() appellé dans la methode DataManager.loadDatabase())
+Utilise le modele de ce que j'ai fait dans l'ancienne version de SCE (C:\SERVER\htdocs\SimCraft\SCE\project\js\plugins\simcraft\core\DataManager.js) en reprenant que ce qu'il faut.
+Tu vois que save et load doivent aussi etre implementé pour que $dataInventories ne se reinitilise pas à chaque partie chargé.
+
+Pour tous les autres cas, l'inventaire est créé à la volée vide par defaut (ou comprenant seulement les equips porté par l'acteur si c'est comme ça que les enregistre le code natif).
+
+La création de l'inventaire depend de son type :
+- actor inventory : vide par defaut (sauf equipement uniquement si necessaire)
+- container inventory : vide par defaut
+- enemy inventory : vide par defaut
+
+Le contenu des inventaires est ensuite chargé de $dataInventories si l'ID correspond 
+
+La methode $inventoriesopen([INVENTORY_ID]) permet d'ouvrir la scene inventory avec l'inventaire à ouvrir.
+
+L'inventaire doit etre accessible depuis le menu principal via le bouton "Inventory".
+L'acces au container / enemy inventaire se fait en interagissant avec l'event container / enemy.
+
+Soit :
+
+- followers : la commande "Demander de rester" (voir Etape 7) est suivi de la commande "Ouvrir l'inventaire" (celle des heros "A_[ACTOR_ID]")
+- container : une commande "Ouvrir l'inventaire" appelable via une interface simple ($inventories.open([INVENTORY_ID]))
+- enemy : sur le cadavre (celle de l'ennemi dans la page localswitch C) (directement dans la page appel de script)
+  - commande pour initialisé le contenu de l'inventaire ennemi en fonction du loot de l'ennemi =>$inventories.initEnnemyInventory(ENEMY_ID)
+    * Si il ya de des données dans $dataInventories pour l'ennemi "E_"+[ENEMY_ID] il est ajouté.
+    * Le loot supplémentaire des ennemis est defini dans les data vanilla des ennemis (butin/dropItems) et doit etre généré en fonction des probabilités puis ajouté à l'objet $inventories.inventory("E_"+[ENEMY_ID]). Une fois généré il ne doit plus etre modifié sauf par les interactions du joueur
+    * L'inventaire ennemi "E_"+[ENEMY_ID] est conservé tant que le joueur n'a pas ouvert l'inventaire et looté les items
+  - commande "Looter" =>$inventories.open([INVENTORY_ID]))
+  -Si l'inventaire et vidé par le joueur, il doit etre vidé de la liste des inventaire ($inventories.unset([INVENTORY_ID])), le character doit disparaitre (avec un fade si possible) et l'interupteur local D de son event doit etre activé (Cette page D contiendra des commande pour l'eventuel respawn ou d'autre truc on verra).
+
+
+# ETAPE 11
+
+## IA des enemy
+
+Les enemy n'ont pour l'instant quacune IA. Il faut leur ajouter une IA simple qui leur permet de se deplacer vers le joueur (plus tard vers une autre target aussi mais on verra après) quand il est à porté (dans le rayon d'action et dans le champ de vision). S'ils sont à portée de main et qu'il n'est pas KO, ils doivent attaquer la cible en fonction des data vanilla de l'enemi (actions).
+
+Si c'est possible d'utiliser le code natif de RPG Maker MZ pour l'IA des enemy, le mieux serait de le surcharger et de l'adapter à nos besoins (gestion des distances, engagement, perte de vue, etc.). Pour la resolution des attaque ont utilise la resolution native des action de combat.
+
+Dans les notetags de l'ennemi on pourra définir les config de l'ia :
+
+- <AI_MODE: [MODE]> : active l'ia
+    * range : attaque à distance (on ne l'utilisera pas pour l'instant on verra à l'etape Gunfight)
+    * melee : attaque au corps à corps
+- <AI_BASE_SPEED:[VALUE]> : vitesse de base de l'ennemi (défaut : 2 cases)
+- <AI_ATTACK_RANGE:[VALUE]> : distance à laquelle l'ennemi attaque le joueur (défaut : 1 case - melee)
+- <AI_ENGAGE_RANGE:[VALUE]> : distance à laquelle l'ennemi engage le joueur (défaut : 4 cases)
+- <AI_ENGAGE_SPEED:[VALUE]> : vitesse à laquelle l'ennemi engage le joueur (vitesse de deplacement de l'event) (défaut : 4)
+- <AI_SEARCH_RANGE:[VALUE]> : distance à laquelle l'ennemi oublie le joueur (défaut : 10 cases)
+- <AI_SEARCH_TIME:[VALUE]> : nombre de frames à laquelle l'ennemi oublie le joueur (défaut : 60 frames = 1 sec)
+- <AI_ATTACK_FREQUENCY:[VALUE]> : frequence d'attaque (nombre de frames entre chaque attaque (défaut : 240 frames = 4 sec))
+- <AI_BASE_POSITION:[x],[y]> : Position de base de l'ennemi (défaut : position de l'event)
+- <AI_ZONE_ENGAEMENT_RANGE:[VALUE]> : zone au dela de laquelle il arrete de poursuivre la cible et retourne à sa position de base. Si non defini alors il ne retourne pas à sa position de base quelque soit la disance.
+
+En dehors de toute interaction (hors portée/vue du joueur), l'ennemi se contente de suivre sa route definie par ses pas (events pages/route) MODE_NEUTRE
+
+Lorsqu'un ennemi est à portée d'engagement (ENGAGE_RANGE), il accelère (ENGAGE_SPEED) et se deplace vers le joueur (update Target > setTarget > move Toward...) en utilisant le systeme de pathfinding pour trouver le chemin le plus court vers le joueur. MODE_ENGAGE.
+
+Si il sort de la portée d'engagement mais qu'il est toujours en portée de recherche il passe en MODE_RECHERCHE
+
+Si il est à portée d'attaque (ATTACK_RANGE) et qu'il n'est pas dans le temps d'attente entre chaque attaque, il attaque le joueur. MODE_ATTACK
+
+Lorsqu'il attaque, il utilise les actions de l'ennemi définies dans les data vanilla (actions). il utilise l'animation d'action du character de l'event definie  dans les notetags de la competence utilisée (ou par defaut "atk"). L'animation de la compétence est jouée sur la cible de l'attaque (ici le player) et le character de la cible est animé avec l'action "hurt" (direction fixe, face à l'enemy, effectue un recule de un pas). SI l'attaque met le joueur à terre (KO), le character est mis en position KO c'est GameOver.
+
+EN MODE_RECHERCHE, si l'ennemi perd le joueur de vue (au delà de <AI_SEARCH_RANGE> cases), il continue à chercher le joueur pendant le temps defini par (<AI_FORGET_TIME> frames). Tant qu'il cherche sa cible (le player) il alterne aleatoirement mouvement vers le joueur (70%) et aleatoire (30%).
+Si au bout de ce temps il ne retrouve pas le joueur (au delà de <AI_ENGAGE_RANGE> cases),
+- si <AI_BASE_POSITION> est defini, il retourne à la position de base (en utilisant le pathfinding), puis il oublie le joueur puis retourne à son point de départ MODE_NEUTRE (mouvement defini par la mouve route de l'event).
+- si <AI_BASE_POSITION> n'est pas defini, il oublie le joueur et retourne à son point de départ neutre (mouvement defini par la mouve route de l'event).
+
+Lorsqu'il est en MODE_SEARCH_TARGET et que <AI_ZONE_ENGAEMENT_RANGE> est defini, si il atteint la distance <AI_ZONE_ENGAEMENT_RANGE> cases de la position de base (<AI_BASE_POSITION>), il arrete de chercher le joueur et retourne à son point de départ neutre (mouvement defini par la mouve route de l'event).
+
+ Il faut anticiper que des IA qui pourraient se battre entre elles donc la target doit pouvoir etre defini dans le futur, mais on se focus sur le player pour l'instant.
+
+
+PAS TOUT DE SUITE
+### GEstion de couverture et ligne de vue
+
+La couche R des terrain sert à indiquer les zones "hautes" (couvrant la ligne de vue en position basse). Il faut donc l'utiliser pour déterminer si l'ennemi peut voir le joueur.
+
+Il faut aussi gérer le cas ou le joueur se cache derrière un obstacle ou un autre ennemi (gestion de la ligne de vue). Si l'ennemi ne voit plus le joueur, il doit continuer à chercher le joueur pendant le temps defini par <AI:forget_time>.
+
 
 
 

@@ -97,7 +97,6 @@ class Bitmap_Composite {
                 destinationBitmap.blt(bitmap, 0, 0, bitmap.width, bitmap.height, 0, 0);
             }
         }
-        console.log(`[Bitmap_Composite] Composition terminée. Calques: ${this._layers.map(l => l.filename).join(", ")} (${destinationBitmap.width}x${destinationBitmap.height})`);
     }
 
     // ========================================================================
@@ -263,8 +262,6 @@ class Bitmap_Composite {
         // Planche 96x96 pixels : 3 colonnes de frames x 8 lignes de direction
         const destinationBitmap = new Bitmap(288, 768);
         composer.loadLayers();
-
-        console.log(`[Bitmap_Composite] getCompositeEntry créé : acteur #${hero.actorId()}, action="${action}", base="${baseFilename}", face="${faceFilename || 'aucune'}", calques=${composer._layers.length}`);
 
         const entry = {
             bitmap: destinationBitmap,

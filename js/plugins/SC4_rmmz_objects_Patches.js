@@ -86,12 +86,54 @@
     };
 
     if (typeof Game_Action !== "undefined") {
+        const _Game_Action_setSubject = Game_Action.prototype.setSubject;
+        Game_Action.prototype.setSubject = function(subject) {
+            _Game_Action_setSubject.call(this, subject);
+            this._customSubject = subject;
+        };
+
+        const _Game_Action_subject = Game_Action.prototype.subject;
+        Game_Action.prototype.subject = function() {
+            const orig = _Game_Action_subject.call(this);
+            if (!orig && this._customSubject) {
+                return this._customSubject;
+            }
+            return orig;
+        };
+
+        const _Game_Action_friendsUnit = Game_Action.prototype.friendsUnit;
+        Game_Action.prototype.friendsUnit = function() {
+            const s = this.subject();
+            if (s && typeof s.friendsUnit === "function") {
+                return s.friendsUnit();
+            }
+            return (s && s.isActor()) ? $gameParty : $gameTroop;
+        };
+
+        const _Game_Action_opponentsUnit = Game_Action.prototype.opponentsUnit;
+        Game_Action.prototype.opponentsUnit = function() {
+            const s = this.subject();
+            if (s && typeof s.opponentsUnit === "function") {
+                return s.opponentsUnit();
+            }
+            return (s && s.isActor()) ? $gameTroop : $gameParty;
+        };
+
         const _Game_Action_testApply = Game_Action.prototype.testApply;
         Game_Action.prototype.testApply = function(target) {
             if (this.isForOpponent() && target && target.isAlive()) {
                 return true;
             }
             return _Game_Action_testApply.call(this, target);
+        };
+    }
+
+    if (typeof Game_Enemy !== "undefined") {
+        Game_Enemy.prototype.friendsUnit = function() {
+            return (typeof $gameTroop !== "undefined" && $gameTroop) ? $gameTroop : null;
+        };
+        Game_Enemy.prototype.opponentsUnit = function() {
+            return (typeof $gameParty !== "undefined" && $gameParty) ? $gameParty : null;
         };
     }
 
@@ -218,14 +260,17 @@
             if (!options.action) actionName = cfg.actionName;
         }
 
-        const charLabel = (typeof Game_Player !== "undefined" && this instanceof Game_Player)
-            ? "Player"
-            : (typeof this.eventId === "function" ? `Event #${this.eventId()}` : "Character");
-        console.log(`[Action] playAction sur ${charLabel} : action="${actionName}", frames=${frames}, duration=${duration}, dir=${this._actionDirection}`);
+        // Déclenchement de l'action ATK pour le joueur et transmission au FightManager
+        if (typeof $gamePlayer !== "undefined" && this === $gamePlayer && actionName === "atk") {
+            const pActor = (typeof this.actor === "function" ? this.actor() : null) ||
+                           (typeof this.hero === "function" ? this.hero() : null) ||
+                           (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
+            const pActorId = pActor && typeof pActor.actorId === "function" ? pActor.actorId() : 1;
+            console.log(`Player ${pActorId} action ATK`);
 
-        // Déclenchement de la logique de combat si c'est le joueur qui attaque
-        if (typeof $gamePlayer !== "undefined" && this === $gamePlayer && actionName === "atk" && window.$fightManager) {
-            window.$fightManager.onPlayerAttack(this, this._actionDirection);
+            if (window.$fightManager) {
+                window.$fightManager.onPlayerAttack(this, this._actionDirection);
+            }
         }
 
         this._isActing = true;
@@ -249,11 +294,6 @@
             if (currentPattern < this._actionMaxFrames) {
                 this._actionPattern = currentPattern;
             } else {
-                const charLabel = (typeof Game_Player !== "undefined" && this instanceof Game_Player)
-                    ? "Player"
-                    : (typeof this.eventId === "function" ? `Event #${this.eventId()}` : "Character");
-                console.log(`[Action] Fin de l'action "${this._action}" sur ${charLabel}, retour à "walk"`);
-
                 this._isActing = false;
                 this._action = "walk";
                 this._actionPattern = 0;
@@ -683,10 +723,15 @@
         // Affichage du choix
         if (typeof $gameMessage !== "undefined" && $gameMessage) {
             $gameMessage.clear();
-            $gameMessage.setChoices(["Demander de rester", "Ne rien faire"], 0, 1);
+            $gameMessage.setChoices(["Demander de rester", "Ouvrir l'inventaire", "Ne rien faire"], 0, 2);
             $gameMessage.setChoiceCallback(n => {
                 if (n === 0) {
                     this.commandFollowerStay(follower);
+                } else if (n === 1) {
+                    const actorId = follower.actor().actorId();
+                    if (typeof $inventories !== "undefined" && $inventories) {
+                        $inventories.open("A_" + actorId);
+                    }
                 }
             });
         }
@@ -739,14 +784,8 @@
             const x1 = this.x;
             const y1 = this.y;
 
-            // 1. Clic gauche sur le joueur sans visée : interaction avec le follower le plus proche
+            // 1. Clic gauche sur le joueur : pas d'interaction automatique de fin de déplacement
             if (destX === x1 && destY === y1) {
-                if (!this.isAiming()) {
-                    const nearest = this.findNearestFollower();
-                    if (nearest) {
-                        return this.interactWithFollower(nearest);
-                    }
-                }
                 return this.triggerTouchActionD1(x1, y1);
             }
 
@@ -762,15 +801,33 @@
 
             if (clickedFollower && !this.isAiming()) {
                 if (absDx <= 1 && absDy <= 1) {
-                    return this.interactWithFollower(clickedFollower);
+                    let dirToFollower = 0;
+                    if (dx === 0 && dy > 0) dirToFollower = 2;
+                    else if (dx < 0 && dy === 0) dirToFollower = 4;
+                    else if (dx > 0 && dy === 0) dirToFollower = 6;
+                    else if (dx === 0 && dy < 0) dirToFollower = 8;
+                    else if (dx < 0 && dy > 0) dirToFollower = 1;
+                    else if (dx > 0 && dy > 0) dirToFollower = 3;
+                    else if (dx < 0 && dy < 0) dirToFollower = 7;
+                    else if (dx > 0 && dy < 0) dirToFollower = 9;
+
+                    // Ne déclenche l'interaction que si le joueur lui fait déjà face
+                    if (this.direction() === dirToFollower) {
+                        $gameTemp.clearDestination();
+                        return this.interactWithFollower(clickedFollower);
+                    } else {
+                        // Sinon, le joueur se tourne simplement vers lui au premier clic
+                        if (dirToFollower > 0) {
+                            this.setDirection(dirToFollower);
+                        }
+                        $gameTemp.clearDestination();
+                        return true;
+                    }
                 }
             }
 
             // 3. Si le joueur est adjacent à la case cliquée (orthogonale ou diagonale)
             if (absDx <= 1 && absDy <= 1) {
-                if (clickedFollower && !this.isAiming()) {
-                    return this.interactWithFollower(clickedFollower);
-                }
 
                 let dir = 0;
                 if (dx === 0 && dy > 0) dir = 2;
@@ -790,7 +847,6 @@
                     // Si un événement hostile vivant est cliqué au contact, déclenche une attaque !
                     const hostileTarget = events.find(e => e && typeof e.isHostile === "function" && e.isHostile() && e.battler && e.battler() && !e.battler().isDead());
                     if (hostileTarget) {
-                        console.log(`[Combat] Clic direct sur ennemi hostile Event #${hostileTarget.eventId()} au contact direct !`);
                         $gameTemp.clearDestination();
                         return this.performAttack();
                     }
@@ -841,7 +897,6 @@
             // Attaque si face à un ennemi hostile
             const hostileEvent = $gameMap.eventsXy(frontX, frontY).find(e => e && typeof e.isHostile === "function" && e.isHostile() && e.battler && e.battler() && !e.battler().isDead());
             if (hostileEvent) {
-                console.log(`[Combat] Touche OK face à ennemi hostile Event #${hostileEvent.eventId()} ! Déclenchement performAttack.`);
                 return this.performAttack();
             }
         }
@@ -909,7 +964,6 @@
         this._realY = this._y;
 
         const dir = this.isAiming() ? this.aimDirection() : this.direction();
-        console.log(`[Combat] ⚔️ performAttack : dir=${dir}, isAiming=${this.isAiming()}`);
         return this.playAction({ action: "atk", direction: dir });
     };
 
@@ -1024,20 +1078,35 @@
             this._role = "neutral";
             this._enemyId = 0;
             this._enemyBattler = null;
+            this._isContainer = false;
+            this._containerInventoryId = null;
+            this._hasActorInventory = false;
+            this._actorInventoryId = null;
+            this._hasEnemyInventory = false;
+            this._enemyInventoryId = null;
         };
 
         /**
-         * Extrait les notetags de l'acteur et du combat depuis la page active ou la note globale :
+         * Extrait les notetags de l'acteur, du combat et de l'inventaire :
          * - <actor: ID> : lie cet événement à l'acteur de la base de données
          * - <actor_visible> : force la visibilité même si l'acteur est dans l'équipe
          * - <role: "neutral"|"hostile"|"ally"|"civilian"> : rôle de l'entité
          * - <enemy: ID> : lie l'entité hostile à un ennemi de la base de données
+         * - <inventory> ou <inventory: ID> : conteneur avec inventaire
+         * - <actor_inventory: ID> : inventaire d'acteur lié
+         * - <enemy_inventory: ID> : inventaire d'ennemi lié
          */
         Game_Event.prototype.extractActorNotetag = function() {
             this._actorId = 0;
             this._actorVisible = false;
             this._role = "neutral";
             this._enemyId = 0;
+            this._isContainer = false;
+            this._containerInventoryId = null;
+            this._hasActorInventory = false;
+            this._actorInventoryId = null;
+            this._hasEnemyInventory = false;
+            this._enemyInventoryId = null;
 
             const parseNoteText = (text) => {
                 if (!text) return;
@@ -1057,6 +1126,23 @@
                 const matchEnemy = text.match(/<enemy:\s*\[?(\d+)\]?>/i);
                 if (matchEnemy) {
                     this._enemyId = Number(matchEnemy[1]);
+                }
+                const matchContainer = text.match(/<inventory(?::\s*([^>]+))?>/i);
+                if (matchContainer) {
+                    this._isContainer = true;
+                    if (matchContainer[1]) {
+                        this._containerInventoryId = matchContainer[1].trim();
+                    }
+                }
+                const matchActorInv = text.match(/<actor_inventory:\s*\[?(\d+)\]?>/i);
+                if (matchActorInv) {
+                    this._hasActorInventory = true;
+                    this._actorInventoryId = "A_" + Number(matchActorInv[1]);
+                }
+                const matchEnemyInv = text.match(/<enemy_inventory:\s*\[?(\d+)\]?>/i);
+                if (matchEnemyInv) {
+                    this._hasEnemyInventory = true;
+                    this._enemyInventoryId = "E_" + Number(matchEnemyInv[1]);
                 }
             };
 
@@ -1083,11 +1169,6 @@
                         this._enemyBattler = new Game_Enemy(this._enemyId, 0, 0);
                     }
                 }
-            }
-
-            if (this._actorId > 0 || this._role !== "neutral" || this._enemyId > 0) {
-                const evId = typeof this.eventId === "function" ? this.eventId() : (this._eventId || 0);
-                console.log(`[Event #${evId}] Notetags extraits : actorId=${this._actorId}, role="${this._role}", isHostile=${this.isHostile()}, enemyId=${this._enemyId}, battler=${Boolean(this._enemyBattler)}`);
             }
         };
 
@@ -1120,6 +1201,9 @@
         };
 
         Game_Event.prototype.battler = function() {
+            if (!this._enemyBattler && this._enemyId > 0 && typeof Game_Enemy !== "undefined" && typeof $dataEnemies !== "undefined" && $dataEnemies && $dataEnemies[this._enemyId]) {
+                this._enemyBattler = new Game_Enemy(this._enemyId, 0, 0);
+            }
             return this._enemyBattler || (this.actor ? this.actor() : null);
         };
 
@@ -1425,6 +1509,73 @@
                 return waiting;
             }
             return _Game_Interpreter_updateWaitMode ? _Game_Interpreter_updateWaitMode.call(this) : false;
+        };
+
+        /**
+         * Ouvre l'inventaire spécifié (ou de l'événement courant si conteneur)
+         * @param {string} [inventoryId=null]
+         */
+        Game_Interpreter.prototype.openInventory = function(inventoryId = null) {
+            if (typeof $inventories !== "undefined" && $inventories) {
+                const id = inventoryId || ("C_" + this._eventId);
+                $inventories.open(id, { eventId: this._eventId });
+                return true;
+            }
+            return false;
+        };
+
+        /**
+         * Initialise le butin d'un ennemi et ouvre son inventaire
+         * @param {number} [enemyId=1]
+         */
+        Game_Interpreter.prototype.openEnemyLoot = function(enemyId = 1) {
+            if (typeof $inventories !== "undefined" && $inventories) {
+                $inventories.initEnnemyInventory(enemyId);
+                $inventories.open("E_" + enemyId, { eventId: this._eventId });
+                return true;
+            }
+            return false;
+        };
+    }
+
+    // ========================================================================
+    // 9. Patches pour Game_Party (Synchronisation de l'inventaire lors de l'intégration)
+    // ========================================================================
+    if (typeof Game_Party !== "undefined") {
+        const _Game_Party_addActor = Game_Party.prototype.addActor;
+        Game_Party.prototype.addActor = function(actorId) {
+            _Game_Party_addActor.call(this, actorId);
+            if (typeof $inventories !== "undefined" && $inventories) {
+                const invId = "A_" + actorId;
+                if ($inventories.hasInventory(invId)) {
+                    const actorInv = $inventories.inventory(invId);
+                    for (const item of actorInv.items()) {
+                        const count = actorInv.numItems(item);
+                        if (count > 0) {
+                            this.gainItem(item, count);
+                        }
+                    }
+                    actorInv.clear();
+                }
+            }
+        };
+    }
+
+    // ========================================================================
+    // 10. Déclenchement automatique des conteneurs sur Game_Event
+    // ========================================================================
+    if (typeof Game_Event !== "undefined") {
+        const _Game_Event_start = Game_Event.prototype.start;
+        Game_Event.prototype.start = function() {
+            const list = this.list();
+            if (this._isContainer && (!list || list.length <= 1)) {
+                const invId = this._containerInventoryId || ("C_" + this.eventId());
+                if (typeof $inventories !== "undefined" && $inventories) {
+                    $inventories.open(invId, { eventId: this.eventId() });
+                    return;
+                }
+            }
+            _Game_Event_start.call(this);
         };
     }
 

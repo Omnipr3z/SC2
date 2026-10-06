@@ -23,3 +23,8 @@
 /img/*
 !/img/characters/
 !/img/characters/**
+
+# Conserver les tests unitaires
+!/UNIT_TESTS/
+!/UNIT_TESTS/**
+

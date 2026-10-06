@@ -77,11 +77,6 @@ class Sprite_Hero extends Sprite_Character {
             this._lastCacheKey = hero.getCompositeCacheKey(this._currentAction);
             this._compositeEntry = hero.getCompositeEntry(this._currentAction);
 
-            const charId = (typeof Game_Player !== "undefined" && this._character instanceof Game_Player)
-                ? "Player"
-                : (typeof this._character.eventId === "function" ? `Event #${this._character.eventId()}` : "Follower");
-            console.log(`[Sprite_Hero] setHeroBitmap (${charId}) : action="${this._currentAction}", cacheKey="${this._lastCacheKey}", isComposed=${this._compositeEntry ? this._compositeEntry.isComposed : false}`);
-
             if (this._compositeEntry) {
                 this.bitmap = this._compositeEntry.bitmap;
                 // Si déjà composé, force rafraîchissement immédiat de la frame
@@ -113,10 +108,6 @@ class Sprite_Hero extends Sprite_Character {
             if (composer && composer.isReady()) {
                 composer.bltComposite(this._compositeEntry.bitmap);
                 this._compositeEntry.isComposed = true;
-                const charId = (typeof Game_Player !== "undefined" && this._character instanceof Game_Player)
-                    ? "Player"
-                    : (typeof this._character.eventId === "function" ? `Event #${this._character.eventId()}` : "Follower");
-                console.log(`[Sprite_Hero] Composite prêt et assemblé pour ${charId} (action: "${this._currentAction}")`);
                 // Force le rafraîchissement immédiat de la frame
                 if (this._frame) {
                     this._frame.width = 0;

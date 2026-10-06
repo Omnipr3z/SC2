@@ -1,0 +1,485 @@
+//=============================================================================
+// RPG Maker MZ - IAManager.js
+//=============================================================================
+
+/*:
+ * @target MZ
+ * @plugindesc [SC4 v1.0.0] Classe parente de gestion de l'Intelligence Artificielle (FSM, Leash, Cible).
+ * @author SimCraft 4
+ *
+ * @help IAManager.js
+ *
+ * Classe de base modulaire pour l'IA des ennemis et entités de carte.
+ * Définit la machine à états finis (FSM) commune :
+ *  - MODE_NEUTRE ("neutral")   : suit sa route autonome à AI_BASE_SPEED.
+ *  - MODE_ENGAGE ("engage")    : poursuit la cible en pathfinding 8-dir à AI_ENGAGE_SPEED.
+ *  - MODE_RECHERCHE ("search") : recherche temporisée pendant AI_SEARCH_TIME.
+ *  - MODE_RETOUR_BASE ("return"): repli vers AI_BASE_POSITION en cas de leash ou d'abandon.
+ *
+ * Spécialisations :
+ *  - IA_Melee (IA_melee.js) : Combat rapproché au corps-à-corps.
+ *  - IA_Range (IA_range.js) : Combat à distance / armes à feu.
+ */
+
+const AI_STATE_NEUTRAL = "neutral";
+const AI_STATE_ENGAGE  = "engage";
+const AI_STATE_SEARCH  = "search";
+const AI_STATE_RETURN  = "return";
+
+class IAManager {
+    /**
+     * @param {Game_Event} event - L'événement contrôlé par cette instance d'IA
+     */
+    constructor(event) {
+        this._event = event;
+        this.initMembers();
+        this.extractNotetags();
+    }
+
+    event() {
+        return this._event;
+    }
+
+    initMembers() {
+        this._mode = null;
+        this._state = AI_STATE_NEUTRAL;
+        this._target = null;
+        this._baseSpeed = 2;
+        this._engageSpeed = 4;
+        this._attackRange = 1;
+        this._engageRange = 4;
+        this._searchRange = 10;
+        this._searchTime = 60;
+        this._attackFrequency = 240;
+        this._attackTimer = 0;       // Compteur qui avance vers attackFrequency
+        this._searchTimer = 0;
+        this._basePosition = null;
+        this._zoneEngagementRange = null;
+        this._lastKnownX = null;
+        this._lastKnownY = null;
+    }
+
+    extractNotetags() {
+        const ev = this._event && typeof this._event.event === "function" ? this._event.event() : null;
+        this._basePosition = {
+            x: ev ? ev.x : (this._event ? this._event.x : 0),
+            y: ev ? ev.y : (this._event ? this._event.y : 0)
+        };
+
+        const parseText = (text) => {
+            if (!text) return;
+            const matchMode = text.match(/<AI_MODE:\s*\[?([a-zA-Z0-9_-]+)\]?>/i);
+            if (matchMode) this._mode = matchMode[1].trim().toLowerCase();
+
+            const matchBaseSpeed = text.match(/<AI_BASE_SPEED:\s*\[?(\d+(?:\.\d+)?)\]?>/i);
+            if (matchBaseSpeed) this._baseSpeed = Number(matchBaseSpeed[1]);
+
+            const matchAtkRange = text.match(/<AI_ATTACK_RANGE:\s*\[?(\d+)\]?>/i);
+            if (matchAtkRange) this._attackRange = Number(matchAtkRange[1]);
+
+            const matchEngageRange = text.match(/<AI_ENGAGE_RANGE:\s*\[?(\d+)\]?>/i);
+            if (matchEngageRange) this._engageRange = Number(matchEngageRange[1]);
+
+            const matchEngageSpeed = text.match(/<AI_ENGAGE_SPEED:\s*\[?(\d+(?:\.\d+)?)\]?>/i);
+            if (matchEngageSpeed) this._engageSpeed = Number(matchEngageSpeed[1]);
+
+            const matchSearchRange = text.match(/<AI_SEARCH_RANGE:\s*\[?(\d+)\]?>/i);
+            if (matchSearchRange) this._searchRange = Number(matchSearchRange[1]);
+
+            const matchSearchTime = text.match(/<AI_(?:SEARCH|FORGET)_TIME:\s*\[?(\d+)\]?>/i);
+            if (matchSearchTime) this._searchTime = Number(matchSearchTime[1]);
+
+            const matchAtkFreq = text.match(/<AI_ATTACK_FREQUENCY:\s*\[?(\d+)\]?>/i);
+            if (matchAtkFreq) this._attackFrequency = Number(matchAtkFreq[1]);
+
+            const matchBasePos = text.match(/<AI_BASE_POSITION:\s*\[?(\d+)\]?\s*,\s*\[?(\d+)\]?>/i);
+            if (matchBasePos) {
+                this._basePosition = { x: Number(matchBasePos[1]), y: Number(matchBasePos[2]) };
+            }
+
+            const matchLeash = text.match(/<AI_ZONE_ENGA(?:E|GE)?MENT_RANGE:\s*\[?(\d+)\]?>/i);
+            if (matchLeash) this._zoneEngagementRange = Number(matchLeash[1]);
+        };
+
+        const enemyId = this._event && typeof this._event.enemyId === "function" ? this._event.enemyId() : (this._event ? this._event._enemyId : 0);
+        if (enemyId > 0 && typeof $dataEnemies !== "undefined" && $dataEnemies && $dataEnemies[enemyId]) {
+            parseText($dataEnemies[enemyId].note);
+        }
+
+        if (ev && ev.note) {
+            parseText(ev.note);
+        }
+
+        const page = this._event && typeof this._event.page === "function" ? this._event.page() : null;
+        if (page && page.list) {
+            for (const cmd of page.list) {
+                if (cmd.code === 108 || cmd.code === 408) {
+                    parseText(cmd.parameters[0]);
+                }
+            }
+        }
+
+        if (this._mode && this._state === AI_STATE_NEUTRAL && this._event && typeof this._event.setMoveSpeed === "function") {
+            this._event.setMoveSpeed(this._baseSpeed);
+        }
+    }
+
+    mode() { return this._mode; }
+    state() { return this._state || AI_STATE_NEUTRAL; }
+    setState(state) {
+        this._state = state;
+        if (!this._event || typeof this._event.setMoveSpeed !== "function") return;
+        switch (state) {
+            case AI_STATE_NEUTRAL:
+                this._event.setMoveSpeed(this._baseSpeed);
+                break;
+            case AI_STATE_ENGAGE:
+                this._event.setMoveSpeed(this._engageSpeed);
+                break;
+            case AI_STATE_SEARCH:
+                this._event.setMoveSpeed(this._engageSpeed);
+                this._searchTimer = this._searchTime;
+                break;
+            case AI_STATE_RETURN:
+                this._event.setMoveSpeed(this._baseSpeed);
+                break;
+        }
+    }
+
+    target() {
+        if (this._target && typeof this._target.x !== "undefined") {
+            return this._target;
+        }
+        if (typeof $gamePlayer !== "undefined" && $gamePlayer) {
+            return $gamePlayer;
+        }
+        return null;
+    }
+
+    setTarget(t) { this._target = t; }
+
+    basePosition() { return this._basePosition; }
+    attackTimer() { return this._attackTimer; }
+    attackFrequency() { return this._attackFrequency; }
+    resetAttackTimer() { this._attackTimer = 0; }
+
+    /**
+     * Appelé lorsque l'ennemi subit une attaque ("hurt").
+     * L'attaque ennemie est interrompue et le compteur d'attaque est remis à zéro.
+     */
+    onHurt() {
+        this.resetAttackTimer();
+    }
+
+    /**
+     * Détermine si l'ennemi est prêt et en mesure d'attaquer.
+     * @returns {boolean}
+     */
+    canAttack() {
+        if (!this._event) return false;
+        if (this._event.isActing && this._event.isActing()) return false;
+        return this._attackTimer >= this._attackFrequency;
+    }
+
+    distance8(x1, y1, x2, y2) {
+        const dx = (typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.deltaX === "function")
+            ? Math.abs($gameMap.deltaX(x1, x2))
+            : Math.abs(x1 - x2);
+        const dy = (typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.deltaY === "function")
+            ? Math.abs($gameMap.deltaY(y1, y2))
+            : Math.abs(y1 - y2);
+        return Math.max(dx, dy);
+    }
+
+    /**
+     * Mise à jour de l'IA à chaque frame.
+     */
+    update() {
+        if (!this._event) return;
+
+        // 1. Si l'ennemi est KO, l'IA s'arrête
+        const battler = typeof this._event.battler === "function" ? this._event.battler() : null;
+        if (battler && typeof battler.isDead === "function" && battler.isDead()) {
+            return;
+        }
+
+        // 2. OPTIMISATION PERFORMANCE : Ennemis hors écran mis en attente (MODE_NEUTRE)
+        if (typeof this._event.isNearTheScreen === "function" && !this._event.isNearTheScreen()) {
+            if (this._state !== AI_STATE_NEUTRAL) {
+                this.setState(AI_STATE_NEUTRAL);
+            }
+            return;
+        }
+
+        // 3. GESTION DU COMPTEUR D'ATTAQUE :
+        // - Si en train de subir une attaque ("hurt") : compteur remis à zéro
+        if (this._event.isActing && this._event.isActing() && typeof this._event.action === "function" && this._event.action() === "hurt") {
+            this.resetAttackTimer();
+            return;
+        }
+
+        // - Pendant l'animation d'attaque ("atk") : le compteur ne défile pas
+        if (this._event.isActing && this._event.isActing()) {
+            return;
+        }
+
+        // - Hors action : le compteur avance jusqu'à la fréquence d'attaque
+        if (this._attackTimer < this._attackFrequency) {
+            this._attackTimer++;
+        }
+
+        // Récupération de la cible
+        const target = this.target();
+        if (!target) return;
+
+        // Cible KO
+        const targetBattler = (typeof target.battler === "function" ? target.battler() : null) ||
+                              (typeof target.actor === "function" ? target.actor() : null) ||
+                              (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
+        if (targetBattler && typeof targetBattler.isDead === "function" && targetBattler.isDead()) {
+            if (this._state !== AI_STATE_NEUTRAL && this._state !== AI_STATE_RETURN) {
+                this.setState(this._basePosition ? AI_STATE_RETURN : AI_STATE_NEUTRAL);
+            }
+            return;
+        }
+
+        // Machine à états finis
+        switch (this._state) {
+            case AI_STATE_NEUTRAL:
+                this.updateNeutral(target);
+                break;
+            case AI_STATE_ENGAGE:
+                this.updateEngage(target);
+                break;
+            case AI_STATE_SEARCH:
+                this.updateSearch(target);
+                break;
+            case AI_STATE_RETURN:
+                this.updateReturn(target);
+                break;
+            default:
+                this.setState(AI_STATE_NEUTRAL);
+                break;
+        }
+    }
+
+    updateNeutral(target) {
+        if (this._event.moveSpeed() !== this._baseSpeed) {
+            this._event.setMoveSpeed(this._baseSpeed);
+        }
+
+        const dist = this.distance8(this._event.x, this._event.y, target.x, target.y);
+        if (dist <= this._engageRange) {
+            if (this._zoneEngagementRange !== null && this._basePosition) {
+                const targetDistToBase = this.distance8(target.x, target.y, this._basePosition.x, this._basePosition.y);
+                if (targetDistToBase > this._zoneEngagementRange) return;
+            }
+            this._lastKnownX = target.x;
+            this._lastKnownY = target.y;
+            this.setState(AI_STATE_ENGAGE);
+        }
+    }
+
+    updateEngage(target) {
+        if (this._event.isActing && this._event.isActing()) return;
+        if (this._event.moveSpeed() !== this._engageSpeed) {
+            this._event.setMoveSpeed(this._engageSpeed);
+        }
+
+        this._lastKnownX = target.x;
+        this._lastKnownY = target.y;
+
+        const dist = this.distance8(this._event.x, this._event.y, target.x, target.y);
+
+        // Rupture de Leash
+        if (this._zoneEngagementRange !== null && this._basePosition) {
+            const selfDistToBase = this.distance8(this._event.x, this._event.y, this._basePosition.x, this._basePosition.y);
+            const targetDistToBase = this.distance8(target.x, target.y, this._basePosition.x, this._basePosition.y);
+            if (selfDistToBase > this._zoneEngagementRange || targetDistToBase > this._zoneEngagementRange) {
+                this.setState(AI_STATE_RETURN);
+                return;
+            }
+        }
+
+        // Sortie du rayon d'engagement -> Recherche
+        if (dist > this._engageRange) {
+            this.setState(AI_STATE_SEARCH);
+            return;
+        }
+
+        // Portée d'attaque atteinte
+        if (dist <= this._attackRange) {
+            if (typeof this._event.turnTowardCharacter === "function") {
+                this._event.turnTowardCharacter(target);
+            }
+            if (this.canAttack()) {
+                this.executeAttack(target);
+            }
+            return;
+        }
+
+        // Déplacement vers la cible via pathfinding
+        this.updateEngageMovement(target);
+    }
+
+    updateEngageMovement(target) {
+        if (!this._event.isMoving()) {
+            const dir = (typeof this._event.findDirectionTo === "function")
+                ? this._event.findDirectionTo(target.x, target.y)
+                : 0;
+            if (dir > 0) {
+                if (typeof this._event.executeMove8Dir === "function") {
+                    this._event.executeMove8Dir(dir);
+                } else if (typeof this._event.moveStraight === "function") {
+                    this._event.moveStraight(dir);
+                }
+            }
+        }
+    }
+
+    /**
+     * Méthode à surcharger dans les classes dérivées (IA_Melee, IA_Range).
+     * @param {Game_CharacterBase} target 
+     */
+    executeAttack(target) {
+        // Implémenté par les sous-classes
+    }
+
+    updateSearch(target) {
+        if (this._event.isActing && this._event.isActing()) return;
+        this._searchTimer--;
+
+        if (this._zoneEngagementRange !== null && this._basePosition) {
+            const selfDistToBase = this.distance8(this._event.x, this._event.y, this._basePosition.x, this._basePosition.y);
+            if (selfDistToBase >= this._zoneEngagementRange) {
+                this.setState(AI_STATE_RETURN);
+                return;
+            }
+        }
+
+        const dist = this.distance8(this._event.x, this._event.y, target.x, target.y);
+        if (dist <= this._engageRange) {
+            let inLeash = true;
+            if (this._zoneEngagementRange !== null && this._basePosition) {
+                const targetDistToBase = this.distance8(target.x, target.y, this._basePosition.x, this._basePosition.y);
+                if (targetDistToBase > this._zoneEngagementRange) inLeash = false;
+            }
+            if (inLeash) {
+                this._lastKnownX = target.x;
+                this._lastKnownY = target.y;
+                this.setState(AI_STATE_ENGAGE);
+                return;
+            }
+        }
+
+        if (this._searchTimer <= 0) {
+            this.setState(this._basePosition ? AI_STATE_RETURN : AI_STATE_NEUTRAL);
+            if (!this._basePosition) this._target = null;
+            return;
+        }
+
+        if (!this._event.isMoving()) {
+            if (Math.random() < 0.7) {
+                const tx = this._lastKnownX !== null ? this._lastKnownX : target.x;
+                const ty = this._lastKnownY !== null ? this._lastKnownY : target.y;
+                const dir = (typeof this._event.findDirectionTo === "function") ? this._event.findDirectionTo(tx, ty) : 0;
+                if (dir > 0) {
+                    if (typeof this._event.executeMove8Dir === "function") this._event.executeMove8Dir(dir);
+                    else if (typeof this._event.moveStraight === "function") this._event.moveStraight(dir);
+                } else if (typeof this._event.moveRandom === "function") {
+                    this._event.moveRandom();
+                }
+            } else if (typeof this._event.moveRandom === "function") {
+                this._event.moveRandom();
+            }
+        }
+    }
+
+    updateReturn(target) {
+        if (this._event.isActing && this._event.isActing()) return;
+        if (this._event.moveSpeed() !== this._baseSpeed) {
+            this._event.setMoveSpeed(this._baseSpeed);
+        }
+
+        const dist = this.distance8(this._event.x, this._event.y, target.x, target.y);
+        if (dist <= this._engageRange) {
+            let inLeash = true;
+            if (this._zoneEngagementRange !== null && this._basePosition) {
+                const targetDistToBase = this.distance8(target.x, target.y, this._basePosition.x, this._basePosition.y);
+                if (targetDistToBase > this._zoneEngagementRange) inLeash = false;
+            }
+            if (inLeash) {
+                this._lastKnownX = target.x;
+                this._lastKnownY = target.y;
+                this.setState(AI_STATE_ENGAGE);
+                return;
+            }
+        }
+
+        const bx = this._basePosition ? this._basePosition.x : this._event.x;
+        const by = this._basePosition ? this._basePosition.y : this._event.y;
+        if (this._event.x === bx && this._event.y === by) {
+            this.setState(AI_STATE_NEUTRAL);
+            this._target = null;
+            this._lastKnownX = null;
+            this._lastKnownY = null;
+            return;
+        }
+
+        if (!this._event.isMoving()) {
+            const dir = (typeof this._event.findDirectionTo === "function") ? this._event.findDirectionTo(bx, by) : 0;
+            if (dir > 0) {
+                if (typeof this._event.executeMove8Dir === "function") this._event.executeMove8Dir(dir);
+                else if (typeof this._event.moveStraight === "function") this._event.moveStraight(dir);
+            } else if (this.distance8(this._event.x, this._event.y, bx, by) <= 1) {
+                this.setState(AI_STATE_NEUTRAL);
+                this._target = null;
+            }
+        }
+    }
+
+    /**
+     * Instancie automatiquement la classe d'IA appropriée pour un événement donné.
+     * @param {Game_Event} event 
+     * @returns {IAManager|null}
+     */
+    static create(event) {
+        if (!event) return null;
+        let mode = null;
+
+        const parseText = (t) => {
+            if (!t) return;
+            const m = t.match(/<AI_MODE:\s*\[?([a-zA-Z0-9_-]+)\]?>/i);
+            if (m) mode = m[1].trim().toLowerCase();
+        };
+
+        const ev = typeof event.event === "function" ? event.event() : null;
+        const enemyId = typeof event.enemyId === "function" ? event.enemyId() : (event._enemyId || 0);
+        if (enemyId > 0 && typeof $dataEnemies !== "undefined" && $dataEnemies && $dataEnemies[enemyId]) {
+            parseText($dataEnemies[enemyId].note);
+        }
+        if (ev && ev.note) parseText(ev.note);
+        const page = typeof event.page === "function" ? event.page() : null;
+        if (page && page.list) {
+            for (const cmd of page.list) {
+                if (cmd.code === 108 || cmd.code === 408) parseText(cmd.parameters[0]);
+            }
+        }
+
+        if (mode === "melee") {
+            if (typeof IA_Melee !== "undefined") return new IA_Melee(event);
+            return new IAManager(event);
+        } else if (mode === "range") {
+            if (typeof IA_Range !== "undefined") return new IA_Range(event);
+            return new IAManager(event);
+        }
+        return null;
+    }
+}
+
+// Enregistrement global
+window.IAManager = IAManager;
+window.AI_STATE_NEUTRAL = AI_STATE_NEUTRAL;
+window.AI_STATE_ENGAGE  = AI_STATE_ENGAGE;
+window.AI_STATE_SEARCH  = AI_STATE_SEARCH;
+window.AI_STATE_RETURN  = AI_STATE_RETURN;

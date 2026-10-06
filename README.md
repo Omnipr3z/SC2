@@ -74,10 +74,14 @@ Seules les fonctionnalités d'ores et déjà refaites et opérationnelles dans c
 - **Attaque personnalisée (`<visual_attack>`)** : balise XML paramétrable sur l'acteur ou les armes (durée par frame, nombre de frames, nom de l'action).
 - **Transitions propres** : verrouillage temporaire pendant l'action puis retour automatique à l'état de repos (`walk`).
 
-### 4. 👥 Compagnons d'Équipe (Followers) Avancés
+### 4. 👥 Compagnons d'Équipe (Followers) Avancés & Interactions
 - **Intégration Paperdoll complète** sur tous les membres de la troupe d'accompagnement.
 - **Orientation 8 directions** synchronisée avec le moteur de déplacement.
 - **Support des actions animées** : capacité à déclencher des poses et actions scriptées (`this.playAction`) sur les suiveurs.
+- **Interactions tactiles et orientation contextuelle** :
+  - Le déplacement à la souris (clic gauche) ne déclenche plus accidentellement de dialogue avec un follower à l'arrivée.
+  - Cliquer sur un compagnon adjacent sans lui faire face pivote d'abord le héros dans sa direction sans ouvrir de dialogue.
+  - Le dialogue d'interaction ne s'ouvre que lorsque le joueur fait déjà face au compagnon et clique sur lui.
 
 ### 5. 🎭 Événements Acteurs (Actor Events) & Gestion d'Équipe Dynamique
 - **Association Événement-Acteur** via le notetag `<actor: [ACTOR_ID]>` sur la page active ou la note de l'événement.
@@ -92,16 +96,62 @@ Seules les fonctionnalités d'ores et déjà refaites et opérationnelles dans c
 
 ### 7. 🥊 Combat ARPG en Temps Réel (`FightManager`) - Phase 1 : Mêlée à Mains Nues
 - **Gestionnaire centralisé `window.$fightManager`** : indexation et surveillance dynamique des acteurs et ennemis de la carte courante.
+- **Optimisation de performance (Screen Culling)** : le gestionnaire de combat filtre et n'évalue que les ennemis visibles à l'écran (`isNearTheScreen()`), maintenant les cibles distantes en veille.
 - **Rôles et affiliations par notetags** :
   - `<role: neutral/hostile/ally/civilian>`
   - `<enemy: [ENNEMY_ID]>` : lie un événement hostile à un battler `Game_Enemy` avec ses statistiques et compétences RMMZ.
   - `<attackId: [SKILL_ID]>` : compétence utilisée lors de l'attaque (par défaut ID 1).
 - **Combat au corps-à-corps sans arme** : résolution en temps réel des dégâts par le moteur natif (`Game_Action`) lors d'une attaque au contact direct face à un ennemi hostile (par clic ou touche d'action).
+- **Gestion des délais et interruptions de combat** :
+  - Lorsqu'un ennemi subit des dégâts (animation `hurt`), il ne peut pas attaquer et son compteur de délai d'attaque est immédiatement remis à zéro (`onHurt()`).
+  - Pendant l'animation d'attaque (`atk`), le compteur d'attaque est gelé et ne défile pas ; il est remis à zéro à la fin de l'animation.
 - **Retours physiques et visuels complets** :
   - L'ennemi pivote automatiquement pour faire face à l'attaquant (direction verrouillée).
   - Déclenchement de l'animation de compétence (`$gameTemp.requestAnimation`).
   - Réaction d'impact `hurt` (3 frames) avec recul physique (**knockback**) d'une case.
   - Réaction de mort `down` (3 frames) avec activation automatique de l'interrupteur local `C` pour le traitement des états de cadavre / butin dans l'éditeur.
+
+### 8. 🎒 Gestion des Inventaires Multiples & Conteneurs (`$inventories` & `Scene_Inventory`)
+- **Hub centralisé `$inventories` (`Game_Inventories`) & instances `Game_Inventory`** :
+  - Support d'inventaires secondaires multiples créés et instanciés à la volée (`$inventories.inventory(id)`).
+  - Conventions de nommage claires et notetags dédiés :
+    - Acteurs : `A_[ACTOR_ID]` (`<actor_inventory: ID>`)
+    - Conteneurs : `C_[EVENT_ID]` (`<inventory>` ou `<inventory: ID>`)
+    - Ennemis : `E_[ENEMY_ID]` (`<enemy_inventory: ID>`)
+  - Pré-remplissage au démarrage via le fichier de données externe `data/SC/INVENTORIES.json` (`$dataInventories`).
+  - Persistance intégrale dans les sauvegardes via la classe statique dédiée `SC_DataManager.js`.
+- **Synchronisation dynamique avec l'équipe** :
+  - Lorsqu'un acteur rejoint l'équipe (`joinPlayerParty`), son inventaire autonome est automatiquement transféré et fusionné dans l'inventaire du groupe (`$gameParty`).
+  - Lorsqu'un compagnon quitte l'équipe ou qu'on interagit avec lui, son inventaire reste accessible via le choix contextuel *"Ouvrir l'inventaire"*.
+- **Génération de butin d'ennemis (`initEnnemyInventory`) & pillage de cadavres** :
+  - Génération unique du butin basée sur les tables de récompenses vanilla RMMZ (`dropItems`) et `$dataInventories`.
+  - Persistance du butin tant que le joueur ne l'a pas entièrement ramassé.
+  - Dès que l'inventaire du cadavre est vidé : retrait du registre (`$inventories.unset`), disparition visuelle du cadavre et activation automatique de l'interrupteur local `D`.
+- **Interface graphique dédiée (`Scene_Inventory`)** :
+  - Double panneau ergonomique côte-à-côte : inventaire du joueur (`Game_Party`) et inventaire cible (Allié, Conteneur, Cadavre ennemi).
+  - Panneau d'informations contextuelles et fenêtre de commande d'action (*Transférer 1*, *Transférer Tout*, *Annuler*).
+  - Accessible depuis le menu principal (*Bouton "Inventaire"*), les dialogues de compagnons, les conteneurs ou les cadavres ennemis.
+
+### 9. 🤖 Architecture Modulaire des IA (`IAManager`, `IA_melee`, `IA_range`, `Enemy_AI`)
+- **Architecture orientée objet découplée de FightManager** :
+  - **`IAManager` (Classe Parente)** : gère la machine à états finis commune, le suivi de cible, le leash et la temporisation.
+  - **`IA_Melee` (`IA_melee.js`)** : IA spécialisée pour le corps-à-corps (<AI_MODE: melee>). Gère les attaques au contact, le gel du compteur pendant l'animation et sa remise à zéro.
+  - **`IA_Range` (`IA_range.js`)** : IA spécialisée pour le combat à distance (<AI_MODE: range>).
+  - **`Enemy_AI.js`** : pont d'intégration reliant dynamiquement chaque `Game_Event` à son instance `IAManager` selon ses notetags.
+- **Optimisation des performances (Standby hors écran)** :
+  - Les ennemis en dehors de l'écran basculent automatiquement en mode veille (`MODE_NEUTRE`) sans calcul de pathfinding coûteux.
+- **Machine à états finis (FSM) à 4 modes modulaires** :
+  - **MODE_NEUTRE (`neutral`)** : l'ennemi suit sa route autonome définie sur sa page à vitesse de patrouille (`AI_BASE_SPEED`, défaut : 2).
+  - **MODE_ENGAGE (`engage`)** : dès que la cible entre dans le rayon d'engagement (`AI_ENGAGE_RANGE`, défaut : 4 cases), l'ennemi accélère (`AI_ENGAGE_SPEED`, défaut : 4), poursuit la cible via l'algorithme A* 8 directions et attaque selon sa portée.
+  - **MODE_RECHERCHE (`search`)** : si la cible quitte le rayon d'engagement mais reste dans le rayon de détection (`AI_SEARCH_RANGE`, défaut : 10 cases), l'ennemi cherche pendant un temps donné (`AI_SEARCH_TIME` / `AI_FORGET_TIME`, défaut : 60 frames = 1s) en alternant déplacement vers la dernière position connue (70%) et aléatoire (30%). Ré-engagement immédiat si la cible revient à portée.
+  - **MODE_RETOUR_BASE (`return`)** : en cas d'expiration du temps de recherche ou de dépassement de la zone de poursuite autorisée (**leash** via `<AI_ZONE_ENGAEMENT_RANGE>`), l'ennemi regagne sa position d'ancrage (`AI_BASE_POSITION`) en pathfinding avant de reprendre son comportement neutre.
+- **Combat au corps-à-corps initié par l'IA (`FightManager.executeEnemyAttack`)** :
+  - Déclenchement à portée d'attaque (`AI_ATTACK_RANGE`, défaut : 1 case) après chargement du compteur d'attaque (`AI_ATTACK_FREQUENCY`, défaut : 240 frames = 4s).
+  - Animation de compétence native RMMZ et résolution des dégâts via `Game_Action`.
+  - Retours physiques sur la cible : orientation face à face, direction fixe, **knockback** d'une case, et animation `hurt` (3 frames).
+  - Gestion du KO du joueur : animation `down` (3 frames) et bascule automatique sur l'écran **Game Over** si le groupe succombe.
+- **Paramétrage dynamique par Notetags** :
+  - Support sur les notes de BDD ennemis, notes d'événements et commentaires de page active (codes 108 / 408 avec priorité par page).
 
 ---
 
@@ -112,20 +162,31 @@ L'ensemble des développements V2 est concentré dans les répertoires suivants 
 ```text
 SC4/
 ├── data/                               # Données du projet RPG Maker MZ
+│   └── SC/
+│       └── INVENTORIES.json            # Base de données des inventaires initiaux
 ├── img/characters/composite/           # Banques de spritesheets Paperdoll (bases, faces, équipements)
 ├── js/
 │   ├── plugins.js                      # Configuration d'activation des plugins
 │   └── plugins/
 │       ├── Bitmap_Composite.js         # Moteur de composition multi-couches
 │       ├── Character_Hero.js           # Contrôleur d'animation et de transitions
+│       ├── Enemy_AI.js                 # Pont d'intégration Game_Event <-> IAManager
+│       ├── IAManager.js                # Classe parente d'IA modulaire (FSM, Cibles, Leash)
+│       ├── IA_melee.js                 # IA spécialisée pour combat au corps-à-corps
+│       ├── IA_range.js                 # IA spécialisée pour combat à distance
 │       ├── FightManager.js             # Singleton du système de combat ARPG temps réel
 │       ├── Game_Hero.js                # Extension de Game_Actor pour héros composites
+│       ├── Game_Inventory.js           # Classe d'instance d'inventaire secondaire
+│       ├── Game_Inventories.js         # Registre et hub d'inventaires ($inventories)
 │       ├── Hub_Hero.js                 # Façade d'accès aux entités composites
+│       ├── SC_DataManager.js          # Gestionnaire étendu de chargement et sauvegarde SC
+│       ├── Scene_Inventory.js          # Scène de gestion et transfert d'inventaires
 │       ├── Sprite_Hero.js              # Sprite custom 8 directions & gestion des actions
-│       ├── SC4_rmmz_core_Patches.js    # Patchs sur le core RMMZ (ImageManager, etc.)
-│       ├── SC4_rmmz_objects_Patches.js # Patchs sur les Game_Objects (Player, Follower, Event, etc.)
-│       ├── SC4_rmmz_scenes_Patches.js  # Patchs sur les scènes RMMZ
+│       ├── SC4_rmmz_core_Patches.js    # Patchs sur le core RMMZ (TouchInput, etc.)
+│       ├── SC4_rmmz_objects_Patches.js # Patchs sur Game_Objects (Player, Follower, Event, etc.)
+│       ├── SC4_rmmz_scenes_Patches.js  # Patchs sur Scene_Map, Scene_Menu, etc.
 │       └── SC4_rmmz_sprites_Patches.js # Patchs sur les classes de rendu Sprite
+├── UNIT_TESTS/                         # Suite complète de tests unitaires automatisés (14 suites)
 ├── WALKTROUGHT.md                      # Journal de bord détaillé et étapes d'implémentation
 └── README.md                           # Présentation générale du projet V2
 ```

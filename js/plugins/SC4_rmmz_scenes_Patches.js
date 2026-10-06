@@ -62,4 +62,36 @@
         }
     };
 
+    // ========================================================================
+    // 2. Patches pour Window_MenuCommand & Scene_Menu (Bouton Inventory)
+    // ========================================================================
+    if (typeof Window_MenuCommand !== "undefined") {
+        const _Window_MenuCommand_addOriginalCommands = Window_MenuCommand.prototype.addOriginalCommands;
+        Window_MenuCommand.prototype.addOriginalCommands = function() {
+            if (_Window_MenuCommand_addOriginalCommands) {
+                _Window_MenuCommand_addOriginalCommands.call(this);
+            }
+            this.addCommand("Inventaire", "inventory", true);
+        };
+    }
+
+    if (typeof Scene_Menu !== "undefined") {
+        const _Scene_Menu_createCommandWindow = Scene_Menu.prototype.createCommandWindow;
+        Scene_Menu.prototype.createCommandWindow = function() {
+            _Scene_Menu_createCommandWindow.call(this);
+            this._commandWindow.setHandler("inventory", this.commandInventory.bind(this));
+        };
+
+        Scene_Menu.prototype.commandInventory = function() {
+            const leader = (typeof $gameParty !== "undefined" && $gameParty) ? $gameParty.leader() : null;
+            const targetId = "A_" + (leader ? leader.actorId() : 1);
+            if (typeof $inventories !== "undefined" && $inventories) {
+                $inventories.open(targetId);
+            } else if (typeof Scene_Inventory !== "undefined") {
+                Scene_Inventory.prepare(targetId);
+                SceneManager.push(Scene_Inventory);
+            }
+        };
+    }
+
 })();
