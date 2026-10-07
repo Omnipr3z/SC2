@@ -256,7 +256,7 @@ assert(event1._aiEngageRange === 4, "AI Engage Range par défaut est 4");
 assert(event1._aiEngageSpeed === 4, "AI Engage Speed par défaut est 4");
 assert(event1._aiSearchRange === 10, "AI Search Range par défaut est 10");
 assert(event1._aiSearchTime === 60, "AI Search Time par défaut est 60 frames (1s)");
-assert(event1._aiAttackFrequency === 240, "AI Attack Frequency par défaut est 240 frames (4s)");
+assert(event1._aiAttackFrequency === 60, "AI Attack Frequency par défaut est 60 frames (1s)");
 assert(event1._aiBasePosition.x === 5 && event1._aiBasePosition.y === 5, "AI Base Position par défaut correspond aux coordonnées de l'event (5,5)");
 assert(event1._aiZoneEngagementRange === null, "AI Zone Leash par défaut est désactivé (null)");
 assert(event1.aiState() === "neutral", "L'état initial de l'IA est 'neutral'");

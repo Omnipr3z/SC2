@@ -156,6 +156,26 @@
         return this.roundY(this.yWithDirection(y, d));
     };
 
+    const _Game_Map_update = Game_Map.prototype.update;
+    Game_Map.prototype.update = function(sceneActive) {
+        if (_Game_Map_update) {
+            _Game_Map_update.call(this, sceneActive);
+        }
+        if (typeof IAManager !== "undefined" && typeof IAManager.updateBgm === "function") {
+            IAManager.updateBgm();
+        }
+    };
+
+    const _Game_Map_setup = Game_Map.prototype.setup;
+    Game_Map.prototype.setup = function(mapId) {
+        if (_Game_Map_setup) {
+            _Game_Map_setup.call(this, mapId);
+        }
+        if (typeof IAManager !== "undefined" && typeof IAManager.resetBgmState === "function") {
+            IAManager.resetBgmState();
+        }
+    };
+
     // ========================================================================
     // 3. Patches pour Game_CharacterBase (Déplacement 8 dir & Moteur d'actions)
     // ========================================================================
@@ -189,6 +209,9 @@
     Game_CharacterBase.prototype.action = function() {
         if (this.isActing()) {
             return this._action || "walk";
+        }
+        if (this._actionFreezeLastFrame && this._action) {
+            return this._action;
         }
         const dashing = typeof this.isDashing === "function" && this.isDashing();
         const moving = typeof this.isMoving === "function" && this.isMoving();
@@ -287,6 +310,7 @@
         this._actionTimer = 0;
         this._actionMaxFrames = Number(frames) || 4;
         this._actionFrameDuration = Number(duration) || 4;
+        this._actionFreezeLastFrame = options.freezeLastFrame !== undefined ? Boolean(options.freezeLastFrame) : (actionName === "down");
         this._actionOnEnd = typeof options.onEnd === "function" ? options.onEnd : null;
 
         return true;
@@ -303,13 +327,19 @@
                 this._actionPattern = currentPattern;
             } else {
                 this._isActing = false;
-                this._action = "walk";
-                this._actionPattern = 0;
-                this._actionTimer = 0;
-                this.setDirection(this._actionDirection);
-                this._pattern = 0;
-                if (typeof this.resetPattern === "function") {
-                    this.resetPattern();
+                if (this._actionFreezeLastFrame) {
+                    this._actionPattern = Math.max(0, this._actionMaxFrames - 1);
+                    this._pattern = this._actionPattern;
+                    // Conserve l'action (ex: "down") figée sur la dernière frame
+                } else {
+                    this._action = "walk";
+                    this._actionPattern = 0;
+                    this._actionTimer = 0;
+                    this.setDirection(this._actionDirection);
+                    this._pattern = 0;
+                    if (typeof this.resetPattern === "function") {
+                        this.resetPattern();
+                    }
                 }
                 if (this._actionOnEnd) {
                     const cb = this._actionOnEnd;
@@ -317,6 +347,28 @@
                     cb.call(this);
                 }
             }
+        }
+    };
+
+    const _Game_CharacterBase_resetPattern = Game_CharacterBase.prototype.resetPattern;
+    Game_CharacterBase.prototype.resetPattern = function() {
+        if (this._action && this._action !== "walk") {
+            return;
+        }
+        if (_Game_CharacterBase_resetPattern) {
+            _Game_CharacterBase_resetPattern.call(this);
+        } else {
+            this.setPattern(1);
+        }
+    };
+
+    const _Game_CharacterBase_updatePattern = Game_CharacterBase.prototype.updatePattern;
+    Game_CharacterBase.prototype.updatePattern = function() {
+        if (this._action && this._action !== "walk") {
+            return;
+        }
+        if (_Game_CharacterBase_updatePattern) {
+            _Game_CharacterBase_updatePattern.call(this);
         }
     };
 
@@ -677,10 +729,19 @@
         return dist;
     };
 
-    // Blocage du déplacement pendant l'attaque
+    // Blocage du déplacement pendant l'attaque, les actions ou si KO
     const _Game_Player_canMove = Game_Player.prototype.canMove;
     Game_Player.prototype.canMove = function() {
-        if (this.isAttacking()) {
+        if (this.isAttacking() || this.isActing()) {
+            return false;
+        }
+        if (this._action && this._action !== "walk") {
+            return false;
+        }
+        const actor = (typeof this.actor === "function" ? this.actor() : null) ||
+                      (typeof this.hero === "function" ? this.hero() : null) ||
+                      (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
+        if (actor && typeof actor.isDead === "function" && actor.isDead()) {
             return false;
         }
         return _Game_Player_canMove.call(this);
@@ -1265,11 +1326,45 @@
 
         const _Game_Event_setupPageSettings = Game_Event.prototype.setupPageSettings;
         Game_Event.prototype.setupPageSettings = function() {
+            const prevDirection = this._direction;
             if (_Game_Event_setupPageSettings) {
                 _Game_Event_setupPageSettings.call(this);
             }
             this.extractActorNotetag();
             this.updateActorAppearance();
+
+            // Préservation de la direction lors de la mort (interrupteur C ou D)
+            const page = this.page();
+            const isDeathPage = page && page.conditions && page.conditions.selfSwitchValid &&
+                (page.conditions.selfSwitchCh === "C" || page.conditions.selfSwitchCh === "D");
+
+            if (isDeathPage) {
+                const mapId = (typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.mapId === "function")
+                    ? $gameMap.mapId()
+                    : (this._mapId || 1);
+                const evId = (typeof this.eventId === "function") ? this.eventId() : (this._eventId || 0);
+                const storedDir = (typeof $gameSystem !== "undefined" && $gameSystem && $gameSystem._eventDeathDirections && mapId && evId)
+                    ? $gameSystem._eventDeathDirections[`${mapId}_${evId}`]
+                    : null;
+                const targetDir = this._deathDirection || storedDir || prevDirection;
+                if (targetDir) {
+                    this._deathDirection = targetDir;
+                    if (typeof $gameSystem !== "undefined" && $gameSystem && mapId && evId) {
+                        if (!$gameSystem._eventDeathDirections) {
+                            $gameSystem._eventDeathDirections = {};
+                        }
+                        $gameSystem._eventDeathDirections[`${mapId}_${evId}`] = targetDir;
+                    }
+                    this._action = "walk";
+                    this._isActing = false;
+                    this.setDirectionFix(false);
+                    this.setDirection(targetDir);
+                    this._originalDirection = targetDir;
+                    if (page.directionFix) {
+                        this.setDirectionFix(true);
+                    }
+                }
+            }
         };
 
         const _Game_Event_refresh = Game_Event.prototype.refresh;

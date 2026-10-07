@@ -50,15 +50,50 @@
     };
 
     /**
-     * Surcharge d'update pour interrompre le déplacement automatique dès que l'on vise.
+     * Surcharge d'update pour interrompre le déplacement automatique dès que l'on vise
+     * et écouter la touche 'I' (ouverture rapide de l'inventaire).
      */
     const _Scene_Map_update = Scene_Map.prototype.update;
     Scene_Map.prototype.update = function() {
         _Scene_Map_update.call(this);
-        if ($gamePlayer && $gamePlayer.isAiming && $gamePlayer.isAiming()) {
-            if ($gameTemp.isDestinationValid()) {
+        if (typeof $gamePlayer !== "undefined" && $gamePlayer && typeof $gamePlayer.isAiming === "function" && $gamePlayer.isAiming()) {
+            if (typeof $gameTemp !== "undefined" && $gameTemp && typeof $gameTemp.isDestinationValid === "function" && $gameTemp.isDestinationValid()) {
                 $gameTemp.clearDestination();
             }
+        }
+        const isActive = (typeof this.isActive === "function") ? this.isActive() : true;
+        const isSceneChanging = (typeof SceneManager !== "undefined" && typeof SceneManager.isSceneChanging === "function") ? SceneManager.isSceneChanging() : false;
+        if (isActive && !isSceneChanging && typeof Input !== "undefined" && typeof Input.isTriggered === "function" && Input.isTriggered("inventory")) {
+            if (typeof $gameMap !== "undefined" && !$gameMap.isEventRunning() && typeof $gameParty !== "undefined" && $gameParty.leader()) {
+                const targetId = "A_" + $gameParty.leader().actorId();
+                if (typeof SoundManager !== "undefined" && typeof SoundManager.playOk === "function") {
+                    SoundManager.playOk();
+                }
+                if (typeof $inventories !== "undefined" && $inventories) {
+                    $inventories.open(targetId);
+                } else if (typeof Scene_Inventory !== "undefined") {
+                    Scene_Inventory.prepare(targetId);
+                    SceneManager.push(Scene_Inventory);
+                }
+            }
+        }
+    };
+
+    /**
+     * Instanciation du HUD joueur en haut à gauche de Scene_Map.
+     */
+    const _Scene_Map_createDisplayObjects = Scene_Map.prototype.createDisplayObjects;
+    Scene_Map.prototype.createDisplayObjects = function() {
+        if (_Scene_Map_createDisplayObjects) {
+            _Scene_Map_createDisplayObjects.call(this);
+        }
+        this.createPlayerHud();
+    };
+
+    Scene_Map.prototype.createPlayerHud = function() {
+        if (typeof Sprite_PlayerHUD !== "undefined") {
+            this._playerHud = new Sprite_PlayerHUD();
+            this.addChild(this._playerHud);
         }
     };
 

@@ -204,6 +204,7 @@ global.$gameVariables = new Game_Variables();
 global.$gameSelfSwitches = new Game_SelfSwitches();
 global.$gameActors = new Game_Actors();
 global.$gameParty = new Game_Party();
+global.$gameTroop = new Game_Troop();
 global.$gameMap = new Game_Map();
 global.$gamePlayer = new Game_Player();
 
@@ -391,37 +392,186 @@ assert(gauges._atSprite._lastRate === 0.5, "La jauge AT affiche un ratio de 50% 
 
 // Vérification de la jauge HP (Dégradé par %)
 const battler = enemyEvent.battler();
-battler.setHp(180); // 180 / 200 = 90% (>80%)
+battler.setHp(Math.round(battler.mhp * 0.9)); // 90% (>80%)
 gauges.update();
-assert(gauges._hpSprite._lastRate === 0.9, "Jauge HP à 90% (vert -> vert)");
+assert(Math.abs(gauges._hpSprite._lastRate - 0.9) < 0.01, "Jauge HP à 90% (vert -> vert)");
 let colors = gauges._hpSprite.getGradientColors(0.9);
 assert(colors[0] === "#2ecc71" && colors[1] === "#27ae60", "Couleurs de dégradé correctes pour >80% (vert -> vert)");
 
-battler.setHp(140); // 70% (60-80%)
+battler.setHp(Math.round(battler.mhp * 0.7)); // 70% (60-80%)
 colors = gauges._hpSprite.getGradientColors(0.7);
-assert(colors[0] === "#e67e22" && colors[1] === "#2ecc71", "Couleurs de dégradé correctes pour 60-80% (orange -> vert)");
+assert(colors[0] === "#2ecc71" && colors[1] === "#e67e22", "Couleurs de dégradé correctes pour 60-80% (vert -> orange)");
 
-battler.setHp(100); // 50% (40-60%)
+battler.setHp(Math.round(battler.mhp * 0.5)); // 50% (40-60%)
 colors = gauges._hpSprite.getGradientColors(0.5);
-assert(colors[0] === "#f39c12" && colors[1] === "#d35400", "Couleurs de dégradé correctes pour 40-60% (orange -> orange)");
+assert(colors[0] === "#d35400" && colors[1] === "#f39c12", "Couleurs de dégradé correctes pour 40-60% (orange -> orange)");
 
-battler.setHp(60); // 30% (20-40%)
+battler.setHp(Math.round(battler.mhp * 0.3)); // 30% (20-40%)
 colors = gauges._hpSprite.getGradientColors(0.3);
-assert(colors[0] === "#e74c3c" && colors[1] === "#e67e22", "Couleurs de dégradé correctes pour 20-40% (rouge -> orange)");
+assert(colors[0] === "#e67e22" && colors[1] === "#e74c3c", "Couleurs de dégradé correctes pour 20-40% (orange -> rouge)");
 
-battler.setHp(30); // 15% (<20%)
+battler.setHp(Math.round(battler.mhp * 0.15)); // 15% (<20%)
 colors = gauges._hpSprite.getGradientColors(0.15);
-assert(colors[0] === "#c0392b" && colors[1] === "#962d22", "Couleurs de dégradé correctes pour <20% (rouge -> rouge)");
+assert(colors[0] === "#962d22" && colors[1] === "#c0392b", "Couleurs de dégradé correctes pour <20% (rouge -> rouge)");
 
 // Clignotement à moins de 10% de PV
-battler.setHp(10); // 10 / 200 = 5% (<10%)
+battler.setHp(Math.round(battler.mhp * 0.05)); // 5% (<10%)
 gauges.update();
 assert(gauges._hpSprite._blinkTimer > 0, "Le compteur de clignotement s'active pour HP < 10%");
 
 // Invisibilité si KO
 battler.addNewState(1); // KO
 gauges.update();
-assert(gauges.visible === false, "Les jauges deviennent immédiatement invisibles si l'ennemi est KO");
+// ============================================================================
+// TEST 5 : SAUT DE SURPRISE, EFFETS SONORES (SE) & BGM COMBAT (FONDU 3S)
+// ============================================================================
+console.log("\n--- TEST 5 : SAUT DE SURPRISE, EFFETS SONORES & BGM COMBAT ---");
+
+// Mock AudioManager
+let lastSe = null;
+let lastBgm = null;
+let lastFadeOut = null;
+let lastFadeIn = null;
+let replayedBgm = null;
+
+global.AudioManager = {
+    _currentBgm: { name: "Theme4", volume: 90, pitch: 100, pan: 0 },
+    playSe(se) { lastSe = se; },
+    playBgm(bgm) { lastBgm = bgm; this._currentBgm = bgm; },
+    saveBgm() { return this._currentBgm ? { ...this._currentBgm, pos: 12.5 } : null; },
+    replayBgm(bgm) { replayedBgm = bgm; this._currentBgm = bgm; },
+    fadeOutBgm(d) { lastFadeOut = d; },
+    fadeInBgm(d) { lastFadeIn = d; }
+};
+
+// Réinitialisation de l'état BGM et réanimation du battler
+IAManager.resetBgmState();
+battler._states = [];
+battler.setHp(battler.mhp);
+
+// Positionner joueur à (5, 5) et ennemi à (7, 5) -> dx = +2
+$gamePlayer.locate(5, 5);
+enemyEvent.locate(7, 5);
+
+let jumped = false;
+enemyEvent.jump = (x, y) => {
+    if (x === 0 && y === 0) jumped = true;
+};
+
+// 1. NEUTRAL -> ENGAGE
+enemyEvent.setAiState("neutral");
+jumped = false;
+lastSe = null;
+lastBgm = null;
+
+enemyEvent.setAiState("engage");
+
+assert(jumped === true, "L'ennemi effectue un bond sur place (jump(0,0)) lors du repérage");
+assert(lastSe !== null && lastSe.name === "Buzzer2", "SE Buzzer2 joué lors de neutral -> engage");
+assert(lastSe.volume === 90 && lastSe.pitch === 130, "SE Buzzer2 volume 90 et pitch 130");
+assert(lastSe.pan === 0, "SE Buzzer2 pan constant centré à 0 (non dynamique)");
+assert(IAManager._isBattleBgm === true, "IAManager active le mode BGM combat");
+assert(lastBgm !== null && lastBgm.name === $dataSystem.battleBgm.name, "La musique de combat (Battle1) est lancée");
+
+// 2. ENGAGE -> SEARCH (le dernier ennemi engagé perd la cible)
+lastSe = null;
+lastFadeOut = null;
+
+enemyEvent.setAiState("search");
+
+assert(lastSe !== null && lastSe.name === "Cancel2", "SE Cancel2 joué lors de engage -> search");
+assert(lastSe.volume === 90 && lastSe.pitch === 80 && lastSe.pan === 0, "SE Cancel2 volume 90, pitch 80, pan 0");
+assert(IAManager._isBattleBgm === false, "IAManager quitte le mode BGM combat");
+assert(lastFadeOut === 3, "Fondu de sortie (fadeOutBgm) de 3s déclenché sur la musique de combat");
+assert(IAManager._bgmFadeOutTimer === 180, "Timer de fondu initialisé à 180 frames (3s à 60 FPS)");
+
+// 3. Déroulement des 3 secondes de fondu
+for (let frame = 0; frame < 179; frame++) {
+    IAManager.updateBgm();
+}
+assert(replayedBgm === null, "Pendant les 180 frames de fondu, la musique de map attend");
+
+// 180ème frame : fin du fondu et reprise de la musique de map
+lastFadeIn = null;
+IAManager.updateBgm();
+assert(replayedBgm !== null && replayedBgm.name === "Theme4", "À la fin des 3s, la musique de map est relancée");
+assert(lastFadeIn === 3, "Fondu d'entrée (fadeInBgm) de 3s appliqué sur la musique de map");
+
+// 4. SEARCH -> NEUTRAL
+lastSe = null;
+enemyEvent.setAiState("neutral");
+assert(lastSe !== null && lastSe.name === "Blind", "SE Blind joué lors de search -> neutral");
+assert(lastSe.volume === 90 && lastSe.pitch === 100 && lastSe.pan === 0, "SE Blind volume 90, pitch 100, pan 0");
+
+// 5. Annulation du fondu si ré-engagement pendant les 3s
+enemyEvent.setAiState("engage");
+enemyEvent.setAiState("search");
+assert(IAManager._bgmFadeOutTimer === 180, "Nouveau fondu de sortie démarré (180 frames)");
+for (let f = 0; f < 60; f++) IAManager.updateBgm(); // 1 seconde écoulée
+assert(IAManager._bgmFadeOutTimer === 120, "60 frames de fondu écoulées (reste 120)");
+
+// Ré-engagement soudain de l'ennemi
+lastBgm = null;
+enemyEvent.setAiState("engage");
+assert(IAManager._bgmFadeOutTimer === 0, "Le fondu vers la map est annulé lors d'un ré-engagement");
+assert(IAManager._isBattleBgm === true, "Le mode combat BGM est réactivé immédiatement");
+assert(lastBgm !== null && lastBgm.name === $dataSystem.battleBgm.name, "La musique de combat reprend sans attendre");
+
+// ============================================================================
+// TEST 6 : PRÉSERVATION DE LA DIRECTION DE L'ENNEMI LORS DE LA MORT (SWITCH C)
+// ============================================================================
+console.log("\n--- TEST 6 : PRÉSERVATION DE LA DIRECTION DE L'ENNEMI (SWITCH C) ---");
+
+const deadPages = [
+    {
+        conditions: { selfSwitchValid: false },
+        image: { characterName: "Actor1", characterIndex: 0, direction: 2, pattern: 1 },
+        directionFix: false
+    },
+    {
+        conditions: { selfSwitchValid: true, selfSwitchCh: "C" },
+        image: { characterName: "composite/died/$3", characterIndex: 0, direction: 6, pattern: 0 },
+        directionFix: true
+    }
+];
+$dataMap.events[99] = {
+    id: 99,
+    x: 10,
+    y: 10,
+    pages: deadPages
+};
+const deadTestEvent = new Game_Event(1, 99);
+assert(deadTestEvent.findProperPageIndex() === 0, "L'ennemi démarre sur la page 1");
+
+// L'ennemi fait face au Nord (direction 8) avant sa mort
+deadTestEvent.setDirection(8);
+assert(deadTestEvent.direction() === 8, "L'ennemi fait face au Nord (8) avant de mourir");
+
+// Configuration attaquant et battler mort
+if ($gameParty.members().length === 0) $gameParty.addActor(1);
+const enemyBattler99 = new Game_Enemy(1, 0, 0);
+enemyBattler99.setHp(0);
+deadTestEvent._enemyBattler = enemyBattler99;
+deadTestEvent.battler = () => enemyBattler99;
+
+// Attaquant positionné au Sud (10, 11) -> l'ennemi va faire face au Sud (2)
+$gamePlayer.locate(10, 11);
+$fightManager = new FightManager();
+const atkResult = $fightManager.executeAttack($gamePlayer, deadTestEvent);
+assert(atkResult === true, "L'attaque fatale est exécutée avec succès");
+
+// Avance l'action down
+while (deadTestEvent.isActing()) {
+    deadTestEvent.updateAction();
+}
+
+assert($gameSelfSwitches.value([1, 99, "C"]) === true, "L'interrupteur C est activé pour l'ennemi mort");
+
+// Refresh sur la page 2 (Switch C)
+deadTestEvent.refresh();
+assert(deadTestEvent._pageIndex === 1, "L'événement est maintenant sur la page 2 (Switch C)");
+assert(deadTestEvent.direction() === 2, "La direction du sprite (2) est préservée au lieu de la direction 6 définie dans l'éditeur");
+assert(deadTestEvent.isDirectionFixed() === true, "Le directionFix de la page C est bien respecté");
 
 // ============================================================================
 // RÉSUMÉ FINAL

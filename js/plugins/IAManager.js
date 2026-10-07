@@ -22,10 +22,10 @@
  */
 
 const AI_STATE_NEUTRAL = "neutral";
-const AI_STATE_ENGAGE  = "engage";
-const AI_STATE_SEARCH  = "search";
-const AI_STATE_RETURN  = "return";
-const AI_STATE_HURTED  = "hurted";
+const AI_STATE_ENGAGE = "engage";
+const AI_STATE_SEARCH = "search";
+const AI_STATE_RETURN = "return";
+const AI_STATE_HURTED = "hurted";
 
 class IAManager {
     /**
@@ -52,7 +52,7 @@ class IAManager {
         this._engageRange = 4;
         this._searchRange = 10;
         this._searchTime = 60;
-        this._attackFrequency = 240;
+        this._attackFrequency = 60;
         this._attackTimer = 0;       // Compteur qui avance vers attackFrequency
         this._searchTimer = 0;
         this._basePosition = null;
@@ -62,7 +62,7 @@ class IAManager {
     }
 
     extractNotetags() {
-        const ev = this._event && typeof this._event.event === "function" ? this._event.event() : null;
+        const ev = (this._event && typeof this._event.event === "function") ? this._event.event() : (this._event || null);
         this._basePosition = {
             x: ev ? ev.x : (this._event ? this._event.x : 0),
             y: ev ? ev.y : (this._event ? this._event.y : 0)
@@ -101,7 +101,18 @@ class IAManager {
 
             const matchLeash = text.match(/<AI_ZONE_ENGA(?:E|GE)?MENT_RANGE:\s*\[?(\d+)\]?>/i);
             if (matchLeash) this._zoneEngagementRange = Number(matchLeash[1]);
+
+            const matchSe = text.match(/<se_(engage|search|forget|hurted|death):\s*([a-zA-Z0-9_-]+)(?:,\s*(\d+))?(?:,\s*(\d+))?>/i);
+            if (matchSe) {
+                const seType = matchSe[1].toLowerCase();
+                const seName = matchSe[2].trim();
+                const seVol = matchSe[3] !== undefined ? parseInt(matchSe[3], 10) : 90;
+                const sePitch = matchSe[4] !== undefined ? parseInt(matchSe[4], 10) : 100;
+                this._customSe[seType] = { name: seName, volume: seVol, pitch: sePitch };
+            }
         };
+
+        this._customSe = {};
 
         const enemyId = this._event && typeof this._event.enemyId === "function" ? this._event.enemyId() : (this._event ? this._event._enemyId : 0);
         if (enemyId > 0 && typeof $dataEnemies !== "undefined" && $dataEnemies && $dataEnemies[enemyId]) {
@@ -128,6 +139,7 @@ class IAManager {
 
     mode() { return this._mode; }
     state() { return this._state || AI_STATE_NEUTRAL; }
+    previousState() { return this._previousState; }
     setState(state) {
         const oldState = this._state;
         if (state === AI_STATE_HURTED && oldState !== AI_STATE_HURTED) {
@@ -136,13 +148,45 @@ class IAManager {
 
         this._state = state;
 
-        // Déclenchement automatique des indicateurs visuels au changement d'état :
-        if (oldState === AI_STATE_NEUTRAL && state === AI_STATE_ENGAGE) {
-            this.requestIndicator("exclamation"); // Ligne 1 : Point d'exclamation
+        // Déclenchement automatique des indicateurs visuels, effets et sons au changement d'état :
+        const enteringEngage = state === AI_STATE_ENGAGE &&
+            (oldState === AI_STATE_NEUTRAL || oldState === AI_STATE_SEARCH || oldState === AI_STATE_RETURN || oldState === null);
+
+        if (enteringEngage) {
+            // Ligne 1 : Point d'exclamation
+            this.requestIndicator("exclamation");
+
+            // Le personnage fait face au joueur et fait un bond avant d'entamer la poursuite
+            const target = this.target();
+            if (target && this._event && typeof this._event.turnTowardCharacter === "function") {
+                this._event.turnTowardCharacter(target);
+            }
+            if (this._event && typeof this._event.jump === "function") {
+                this._event.jump(0, 0);
+            }
+
+            // SE engage (notetag ou défaut Buzzer2, volume 90, pitch 130, pan 0)
+            this.playCustomSe("engage", { name: "Buzzer2", volume: 90, pitch: 130, pan: 0 });
         } else if (oldState === AI_STATE_ENGAGE && state === AI_STATE_SEARCH) {
-            this.requestIndicator("question_red"); // Ligne 2 : Point d'interrogation rouge
-        } else if (oldState === AI_STATE_SEARCH && state === AI_STATE_NEUTRAL) {
-            this.requestIndicator("question_yellow"); // Ligne 3 : Point d'interrogation jaune
+            // Ligne 2 : Point d'interrogation rouge
+            this.requestIndicator("question_red");
+
+            // SE search (notetag ou défaut Cancel2, volume 90, pitch 80, pan 0)
+            this.playCustomSe("search", { name: "Cancel2", volume: 90, pitch: 80, pan: 0 });
+        } else if ((oldState === AI_STATE_SEARCH && (state === AI_STATE_NEUTRAL || state === AI_STATE_RETURN)) ||
+                   (oldState === AI_STATE_RETURN && state === AI_STATE_NEUTRAL)) {
+            // Ligne 3 : Point d'interrogation jaune lors de l'abandon
+            if (oldState === AI_STATE_SEARCH) {
+                this.requestIndicator("question_yellow");
+            }
+
+            // SE forget (notetag ou défaut Blind, volume 90, pitch 100, pan 0)
+            this.playCustomSe("forget", { name: "Blind", volume: 90, pitch: 100, pan: 0 });
+        }
+
+        // Vérification automatique de la musique de combat
+        if (typeof IAManager !== "undefined" && typeof IAManager.checkBattleBgm === "function") {
+            IAManager.checkBattleBgm();
         }
 
         if (!this._event || typeof this._event.setMoveSpeed !== "function") return;
@@ -163,6 +207,22 @@ class IAManager {
             case AI_STATE_HURTED:
                 break;
         }
+    }
+
+    playCustomSe(type, defaultSe = null) {
+        const se = (this._customSe && this._customSe[type]) || defaultSe;
+        if (se && se.name && typeof AudioManager !== "undefined" && typeof AudioManager.playSe === "function") {
+            AudioManager.playSe({
+                name: se.name,
+                volume: se.volume !== undefined ? se.volume : 90,
+                pitch: se.pitch !== undefined ? se.pitch : 100,
+                pan: 0
+            });
+        }
+    }
+
+    playSurpriseSe() {
+        this.playCustomSe("engage", { name: "Buzzer2", volume: 90, pitch: 130, pan: 0 });
     }
 
     requestIndicator(type) {
@@ -198,6 +258,7 @@ class IAManager {
         }
         this.setState(AI_STATE_HURTED);
         this.resetAttackTimer();
+        this.playCustomSe("hurted");
     }
 
     /**
@@ -284,8 +345,8 @@ class IAManager {
 
         // Cible KO
         const targetBattler = (typeof target.battler === "function" ? target.battler() : null) ||
-                              (typeof target.actor === "function" ? target.actor() : null) ||
-                              (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
+            (typeof target.actor === "function" ? target.actor() : null) ||
+            (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
         if (targetBattler && typeof targetBattler.isDead === "function" && targetBattler.isDead()) {
             if (this._state !== AI_STATE_NEUTRAL && this._state !== AI_STATE_RETURN) {
                 this.setState(this._basePosition ? AI_STATE_RETURN : AI_STATE_NEUTRAL);
@@ -525,11 +586,116 @@ class IAManager {
         }
         return null;
     }
+
+    // ========================================================================
+    // GESTION DU BGM DE COMBAT ET FONDU
+    // ========================================================================
+    static resetBgmState() {
+        IAManager._isBattleBgm = false;
+        IAManager._savedMapBgm = null;
+        IAManager._bgmFadeOutTimer = 0;
+    }
+
+    /**
+     * Compte le nombre d'ennemis actuellement en état "engage" et vivants sur la carte.
+     * @returns {number}
+     */
+    static countEngagedEnemies() {
+        if (typeof $gameMap === "undefined" || !$gameMap || typeof $gameMap.events !== "function") return 0;
+        let count = 0;
+        const events = $gameMap.events();
+        for (const ev of events) {
+            if (ev && ev._ai && typeof ev._ai.state === "function") {
+                const s = ev._ai.state();
+                const isCombat = (s === AI_STATE_ENGAGE) || (s === AI_STATE_HURTED && typeof ev._ai.previousState === "function" && ev._ai.previousState() === AI_STATE_ENGAGE);
+                if (isCombat) {
+                    const battler = typeof ev.battler === "function" ? ev.battler() : null;
+                    if (!battler || !battler.isDead || !battler.isDead()) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Vérifie si le BGM doit basculer vers la musique de combat ou revenir à la musique de la map (fondu de 3s).
+     */
+    static checkBattleBgm() {
+        const engagedCount = IAManager.countEngagedEnemies();
+
+        if (engagedCount > 0) {
+            // Au moins un ennemi est engagé contre le joueur
+            IAManager._bgmFadeOutTimer = 0; // Annule le retour fondu en cours si l'ennemi se ré-engage
+
+            if (!IAManager._isBattleBgm) {
+                if (typeof AudioManager !== "undefined") {
+                    const currentBgm = (typeof AudioManager.saveBgm === "function") ? AudioManager.saveBgm() : null;
+                    if (currentBgm && currentBgm.name) {
+                        IAManager._savedMapBgm = currentBgm;
+                    } else if (typeof $dataMap !== "undefined" && $dataMap && $dataMap.bgm && $dataMap.bgm.name) {
+                        IAManager._savedMapBgm = { ...$dataMap.bgm, pos: 0 };
+                    }
+
+                    const battleBgm = (typeof $gameSystem !== "undefined" && $gameSystem && typeof $gameSystem.battleBgm === "function")
+                        ? $gameSystem.battleBgm()
+                        : (typeof $dataSystem !== "undefined" && $dataSystem ? $dataSystem.battleBgm : null);
+
+                    if (battleBgm && battleBgm.name && typeof AudioManager.playBgm === "function") {
+                        AudioManager.playBgm(battleBgm);
+                        IAManager._isBattleBgm = true;
+                    }
+                }
+            }
+        } else {
+            // Le dernier ennemi engagé quitte le mode engage (ex: search, neutral, ou vaincu)
+            if (IAManager._isBattleBgm) {
+                IAManager._isBattleBgm = false;
+                if (typeof AudioManager !== "undefined") {
+                    if (typeof AudioManager.fadeOutBgm === "function") {
+                        AudioManager.fadeOutBgm(3); // Fondu de 3s sur la musique de combat
+                    }
+                    IAManager._bgmFadeOutTimer = 180; // 3 secondes (180 frames à 60 FPS) avant reprise de la map
+                }
+            }
+        }
+    }
+
+    /**
+     * Mise à jour frame par frame du fondu de BGM.
+     */
+    static updateBgm() {
+        if (IAManager._bgmFadeOutTimer > 0) {
+            IAManager._bgmFadeOutTimer--;
+            if (IAManager._bgmFadeOutTimer === 0) {
+                if (typeof AudioManager !== "undefined") {
+                    const mapBgm = IAManager._savedMapBgm ||
+                        ((typeof $dataMap !== "undefined" && $dataMap) ? $dataMap.bgm : null);
+                    if (mapBgm && mapBgm.name) {
+                        if (typeof AudioManager.replayBgm === "function") {
+                            AudioManager.replayBgm(mapBgm);
+                        } else if (typeof AudioManager.playBgm === "function") {
+                            AudioManager.playBgm(mapBgm);
+                        }
+                        if (typeof AudioManager.fadeInBgm === "function") {
+                            AudioManager.fadeInBgm(3);
+                        }
+                    }
+                }
+                IAManager._savedMapBgm = null;
+            }
+        }
+    }
 }
+
+IAManager._isBattleBgm = false;
+IAManager._savedMapBgm = null;
+IAManager._bgmFadeOutTimer = 0;
 
 // Enregistrement global
 window.IAManager = IAManager;
 window.AI_STATE_NEUTRAL = AI_STATE_NEUTRAL;
-window.AI_STATE_ENGAGE  = AI_STATE_ENGAGE;
-window.AI_STATE_SEARCH  = AI_STATE_SEARCH;
-window.AI_STATE_RETURN  = AI_STATE_RETURN;
+window.AI_STATE_ENGAGE = AI_STATE_ENGAGE;
+window.AI_STATE_SEARCH = AI_STATE_SEARCH;
+window.AI_STATE_RETURN = AI_STATE_RETURN;

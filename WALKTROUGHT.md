@@ -508,6 +508,61 @@ La couche R des terrain sert à indiquer les zones "hautes" (couvrant la ligne d
 
 Il faut aussi gérer le cas ou le joueur se cache derrière un obstacle ou un autre ennemi (gestion de la ligne de vue). Si l'ennemi ne voit plus le joueur, il doit continuer à chercher le joueur pendant le temps defini par <AI:forget_time>.
 
+# ETAPE 11.5
+
+## Ajout de l'audio & review
+
+Ajouter l'audio au combat c'est fait. Neanmoins
+- la bgm ne doit pas changer quand l'IA enemy passe de HURTED à ENGAGE Ca doit rester sur celle de combat. La musique ne doit changer que lorsque il quitte le Mode ENgage pour retourner en NEUTRE (ou retourne a sa base) ou qu'il meurt.
+- On va optimiser les choix des sons des indicators. Les sons par defaut reste les meme mais un notetag dans l'event doit permettre de les remplacer. J'ai aussi ajouter quelque sons. Le Pan sera de 100 tout le temps finalement pas la peine de le changer ou de le rendre dynamique.
+-ni l'indicateur d'engage ni l'audio ne son lancé à chaque fois que l'ennemy passe de Neutre à engage.
+
+```
+<se_engage:[SOUND_NAME],[VOLUME], [PITCH]> // pour neutre->engage
+<se_search:[SOUND_NAME],[VOLUME], [PITCH]> // pour engage->search
+<se_forget:[SOUND_NAME],[VOLUME], [PITCH]> // pour search->neutre ou retour à la base
+<se_hurted:[SOUND_NAME],[VOLUME], [PITCH]> // lorsqu'il est touché en combat
+<se_death:[SOUND_NAME], [VOLUME], [PITCH]> // lorsqu'il meurt
+``` 
+Pour l'event 1 j'ai mis
+```
+<se_engage:Monster1_A, 100, 150>
+<se_search:Monster1_A, 90, 100>
+<se_forget:Monster1_B, 90, 100>
+<se_hurted:Monster1_C, 100, 150>
+<se_death:Monster1_C, 90, 100>
+``` 
+
+Le commentaire etant limité à 6 lignes par instruction dans l'event punchingball le system doit pouvoir lire tout les notetag de la page pour extraire les notetags.
+
+Il y a un probleme avec l'animation de course du sprite elle se reset sur walk en boucle pendant la course. J'avait deja rencontré ce probleme dans l'ancienne version de SCE (je sais plsu trop mais c'est lié à la manière dont le vanilla gere isDashing et au moment ou le plugin l'interroge), j'avait ajouté un delai d'attente entre le moment ou il a l'animation de course et c'le retour à walk ce compteur est reset à chaque fois qu'il dash comme ca ca evite de basculer d'un etat à l'autre pendant la course. Y'a peut etre une meilleure manière de faire mais faute de mieux ca a marché.
+
+Je voudrais ajouter à la mort d'un enemi l'ajout des XP qu player.
+
+# ETAPE 12
+
+## COntroles avancé et gui
+
+### Control clavier scene_Map
+
+- Je voudrais ajouter les touche ZQSD comme touche directionnelle sur la map. donc Z ne doit plus etre une touche enter
+- La touche A doit etre reservé à une action spéciale (on le fera après mais tu peux deja supprimer les actions par defaut de cette touche)
+
+- Je veux dans le menu option que le joueur puisse choisir entre Qwerty et Azerty. Dans le cas de qwerty le touche ZQSD deviendront les touche WASD et la touche A est remplacé par Q. Et dans le cas de Azerty le touche ZQSD restera ZQSD.
+
+- La touche E devra servir à interagir avec les objets ou les events comme Enter
+- La touche I devra servir pour ouvrir l'inventaire
+
+- La touche Esc ou Num0 devra servir pour le menu (comme natif)
+- La touche R servira a recharger mais on verra quand on s'occupera du Gunfight
+
+### GUI
+
+Ajoute un hud en haut à gauche de l'ecran qui affiche les information du joueur.
+- faceset en 64*64px
+- Nom du perso sur le haut du faceset (à moitié à cheval au dessus)
+- Jauge Pv, MP et TP en dessous du faceset
+- Jauge d'xp en dessous des jauges Pv, MP et TP avec indication du niveau.
 
 
 

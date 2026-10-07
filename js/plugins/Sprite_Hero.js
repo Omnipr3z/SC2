@@ -30,6 +30,7 @@ class Sprite_Hero extends Sprite_Character {
         this._lastCacheKey = "";
         this._indicatorSprite = null;
         this._fightGauges = null;
+        this._dashBufferTimer = 0;
     }
 
     setCharacter(character) {
@@ -49,6 +50,28 @@ class Sprite_Hero extends Sprite_Character {
     }
 
     /**
+     * Résout l'action courante en évitant les micro-sauts intempestifs entre dash et walk
+     * lors des transitions entre deux tuiles sur la map.
+     */
+    resolveAction() {
+        if (!this._character) return "walk";
+        const charAction = this._character.action ? this._character.action() : "walk";
+        if (charAction === "dash") {
+            this._dashBufferTimer = 6;
+            return "dash";
+        }
+        if (this._currentAction === "dash" && charAction === "walk") {
+            const isDashing = typeof this._character.isDashing === "function" && this._character.isDashing();
+            if (isDashing && this._dashBufferTimer > 0) {
+                this._dashBufferTimer--;
+                return "dash";
+            }
+        }
+        this._dashBufferTimer = 0;
+        return charAction;
+    }
+
+    /**
      * Met à jour le bitmap du héros depuis Bitmap_Composite.
      */
     updateBitmap() {
@@ -63,7 +86,7 @@ class Sprite_Hero extends Sprite_Character {
      */
     isImageChanged() {
         const hero = this.getHero();
-        const action = this._character.action ? this._character.action() : "walk";
+        const action = this.resolveAction();
         const actionChanged = this._currentAction !== action;
 
         if (hero) {
@@ -91,7 +114,7 @@ class Sprite_Hero extends Sprite_Character {
     setHeroBitmap() {
         const hero = this.getHero();
         if (hero) {
-            this._currentAction = this._character.action ? this._character.action() : "walk";
+            this._currentAction = this.resolveAction();
             this._lastCacheKey = hero.getCompositeCacheKey(this._currentAction);
             this._compositeEntry = hero.getCompositeEntry(this._currentAction);
 
@@ -167,9 +190,16 @@ class Sprite_Hero extends Sprite_Character {
     }
 
     characterPatternX() {
-        if (this._character && typeof this._character.isActing === "function" && this._character.isActing()) {
-            const pattern = this._character.actionPattern();
-            return this.getHero() ? pattern : (pattern % 3);
+        if (this._character) {
+            const act = typeof this._character.action === "function" ? this._character.action() : "walk";
+            if (act !== "walk" && act !== "dash") {
+                const pattern = typeof this._character.actionPattern === "function" ? this._character.actionPattern() : 0;
+                return this.getHero() ? pattern : (pattern % 3);
+            }
+            if (typeof this._character.isActing === "function" && this._character.isActing()) {
+                const pattern = this._character.actionPattern();
+                return this.getHero() ? pattern : (pattern % 3);
+            }
         }
         if (this.getHero()) {
             return this._character.pattern(); // 0, 1 (repos), 2

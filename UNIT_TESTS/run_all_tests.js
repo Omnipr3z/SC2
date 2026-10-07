@@ -26,7 +26,8 @@ const testFiles = [
     'test_step9.js',
     'test_step10.js',
     'test_step11_ai.js',
-    'test_step11_indicators_gauges.js'
+    'test_step11_indicators_gauges.js',
+    'test_step11_5_and_step12.js'
 ];
 
 console.log("==============================================================");

@@ -170,4 +170,139 @@
         configurable: true
     });
 
+    // ========================================================================
+    // 2. Gestion du Clavier (AZERTY / QWERTY, ZQSD / WASD, E, I, R, A)
+    // ========================================================================
+    if (typeof ConfigManager !== "undefined") {
+        ConfigManager.keyboardLayout = "azerty";
+
+        const _ConfigManager_makeData = ConfigManager.makeData;
+        ConfigManager.makeData = function() {
+            const config = _ConfigManager_makeData ? _ConfigManager_makeData.call(this) : {};
+            config.keyboardLayout = this.keyboardLayout;
+            return config;
+        };
+
+        const _ConfigManager_applyData = ConfigManager.applyData;
+        ConfigManager.applyData = function(config) {
+            if (_ConfigManager_applyData) {
+                _ConfigManager_applyData.call(this, config);
+            }
+            this.keyboardLayout = (config && config.keyboardLayout) ? config.keyboardLayout : "azerty";
+            this.applyKeyboardLayout();
+        };
+
+        ConfigManager.applyKeyboardLayout = function() {
+            if (typeof Input === "undefined" || !Input.keyMapper) return;
+            const isQwerty = this.keyboardLayout === "qwerty";
+
+            // Touches communes
+            Input.keyMapper[13] = "ok";        // Enter
+            Input.keyMapper[32] = "ok";        // Espace
+            Input.keyMapper[69] = "ok";        // E (Interagir avec objets/events comme Enter)
+            Input.keyMapper[73] = "inventory"; // I (Ouvrir l'inventaire)
+            Input.keyMapper[82] = "reload";    // R (Recharger - réservé gunfight)
+            Input.keyMapper[27] = "escape";    // Échap (Menu natif)
+            Input.keyMapper[96] = "escape";    // Numpad 0 (Menu natif)
+
+            // Flèches directionnelles standard
+            Input.keyMapper[37] = "left";
+            Input.keyMapper[38] = "up";
+            Input.keyMapper[39] = "right";
+            Input.keyMapper[40] = "down";
+
+            if (isQwerty) {
+                // QWERTY : WASD pour se déplacer
+                Input.keyMapper[87] = "up";       // W -> Haut
+                Input.keyMapper[65] = "left";     // A -> Gauche
+                Input.keyMapper[83] = "down";     // S -> Bas
+                Input.keyMapper[68] = "right";    // D -> Droite
+                Input.keyMapper[81] = "special";  // Q -> Action spéciale
+                delete Input.keyMapper[90];       // Z n'est plus ni haut ni enter
+            } else {
+                // AZERTY : ZQSD pour se déplacer
+                Input.keyMapper[90] = "up";       // Z -> Haut (et plus du tout Enter !)
+                Input.keyMapper[81] = "left";     // Q -> Gauche
+                Input.keyMapper[83] = "down";     // S -> Bas
+                Input.keyMapper[68] = "right";    // D -> Droite
+                Input.keyMapper[65] = "special";  // A -> Action spéciale
+                delete Input.keyMapper[87];       // W retiré
+            }
+        };
+
+        // Application initiale
+        ConfigManager.applyKeyboardLayout();
+    }
+
+    // Intégration dans le menu des Options (Window_Options)
+    if (typeof Window_Options !== "undefined") {
+        const _Window_Options_addGeneralOptions = Window_Options.prototype.addGeneralOptions;
+        Window_Options.prototype.addGeneralOptions = function() {
+            if (_Window_Options_addGeneralOptions) {
+                _Window_Options_addGeneralOptions.call(this);
+            }
+            this.addCommand("Clavier", "keyboardLayout");
+        };
+
+        const _Window_Options_statusText = Window_Options.prototype.statusText;
+        Window_Options.prototype.statusText = function(index) {
+            const symbol = this.commandSymbol(index);
+            if (symbol === "keyboardLayout") {
+                const val = this.getConfigValue(symbol);
+                return val === "qwerty" ? "QWERTY" : "AZERTY";
+            }
+            return _Window_Options_statusText ? _Window_Options_statusText.call(this, index) : "";
+        };
+
+        const _Window_Options_processOk = Window_Options.prototype.processOk;
+        Window_Options.prototype.processOk = function() {
+            const index = this.index();
+            const symbol = this.commandSymbol(index);
+            if (symbol === "keyboardLayout") {
+                const current = this.getConfigValue(symbol);
+                const next = current === "qwerty" ? "azerty" : "qwerty";
+                this.changeValue(symbol, next);
+                if (typeof ConfigManager.applyKeyboardLayout === "function") {
+                    ConfigManager.applyKeyboardLayout();
+                }
+                return;
+            }
+            if (_Window_Options_processOk) {
+                _Window_Options_processOk.call(this);
+            }
+        };
+
+        const _Window_Options_cursorRight = Window_Options.prototype.cursorRight;
+        Window_Options.prototype.cursorRight = function() {
+            const index = this.index();
+            const symbol = this.commandSymbol(index);
+            if (symbol === "keyboardLayout") {
+                this.changeValue(symbol, "qwerty");
+                if (typeof ConfigManager.applyKeyboardLayout === "function") {
+                    ConfigManager.applyKeyboardLayout();
+                }
+                return;
+            }
+            if (_Window_Options_cursorRight) {
+                _Window_Options_cursorRight.call(this);
+            }
+        };
+
+        const _Window_Options_cursorLeft = Window_Options.prototype.cursorLeft;
+        Window_Options.prototype.cursorLeft = function() {
+            const index = this.index();
+            const symbol = this.commandSymbol(index);
+            if (symbol === "keyboardLayout") {
+                this.changeValue(symbol, "azerty");
+                if (typeof ConfigManager.applyKeyboardLayout === "function") {
+                    ConfigManager.applyKeyboardLayout();
+                }
+                return;
+            }
+            if (_Window_Options_cursorLeft) {
+                _Window_Options_cursorLeft.call(this);
+            }
+        };
+    }
+
 })();

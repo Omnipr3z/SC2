@@ -26,7 +26,7 @@
 class Sprite_FightGaugeBase extends Sprite {
     constructor() {
         super();
-        this.bitmap = new Bitmap(50, 16);
+        this.bitmap = new Bitmap(34, 5);
         this.drawBackground();
     }
 
@@ -34,7 +34,7 @@ class Sprite_FightGaugeBase extends Sprite {
         const ctx = this.bitmap.context;
         if (!ctx) return;
         ctx.fillStyle = "#000000";
-        ctx.fillRect(0, 0, 50, 16);
+        ctx.fillRect(0, 0, 34, 5);
     }
 }
 
@@ -44,7 +44,7 @@ class Sprite_FightGaugeBase extends Sprite {
 class Sprite_FightGaugeAT extends Sprite {
     constructor() {
         super();
-        this.bitmap = new Bitmap(48, 2);
+        this.bitmap = new Bitmap(32, 1);
         this._lastRate = -1;
     }
 
@@ -70,13 +70,13 @@ class Sprite_FightGaugeAT extends Sprite {
 
         // Fond noir / gris très sombre
         ctx.fillStyle = "#111111";
-        ctx.fillRect(0, 0, 48, 2);
+        ctx.fillRect(0, 0, 32, 1);
 
         // Remplissage blanc
-        const fillW = Math.floor(48 * rate);
+        const fillW = Math.floor(32 * rate);
         if (fillW > 0) {
             ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, fillW, 2);
+            ctx.fillRect(0, 0, fillW, 1);
         }
     }
 }
@@ -87,7 +87,7 @@ class Sprite_FightGaugeAT extends Sprite {
 class Sprite_FightGaugeHP extends Sprite {
     constructor() {
         super();
-        this.bitmap = new Bitmap(48, 8);
+        this.bitmap = new Bitmap(32, 2);
         this._lastRate = -1;
         this._blinkTimer = 0;
     }
@@ -96,20 +96,20 @@ class Sprite_FightGaugeHP extends Sprite {
         if (rate > 0.80) {
             return ["#2ecc71", "#27ae60"]; // Vert -> Vert
         } else if (rate >= 0.60) {
-            return ["#e67e22", "#2ecc71"]; // Orange -> Vert
+            return ["#2ecc71", "#e67e22"]; // Orange -> Vert
         } else if (rate >= 0.40) {
-            return ["#f39c12", "#d35400"]; // Orange -> Orange
+            return ["#d35400", "#f39c12"]; // Orange -> Orange
         } else if (rate >= 0.20) {
-            return ["#e74c3c", "#e67e22"]; // Rouge -> Orange
+            return ["#e67e22", "#e74c3c"]; // Rouge -> Orange
         } else {
-            return ["#c0392b", "#962d22"]; // Rouge -> Rouge
+            return ["#962d22", "#c0392b"]; // Rouge -> Rouge
         }
     }
 
     updateGauge(battler) {
         if (!battler || battler.mhp <= 0) return;
         const rate = Math.max(0.0, Math.min(1.0, battler.hp / battler.mhp));
-        
+
         let needsRedraw = false;
         if (rate !== this._lastRate) {
             this._lastRate = rate;
@@ -136,9 +136,9 @@ class Sprite_FightGaugeHP extends Sprite {
 
         // Fond noir
         ctx.fillStyle = "#000000";
-        ctx.fillRect(0, 0, 48, 8);
+        ctx.fillRect(0, 0, 32, 2);
 
-        const fillW = Math.floor(48 * rate);
+        const fillW = Math.floor(32 * rate);
         if (fillW <= 0) return;
 
         // Effet clignotement rouge vif (< 10%)
@@ -153,7 +153,7 @@ class Sprite_FightGaugeHP extends Sprite {
         gradient.addColorStop(1, colors[1]);
 
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, fillW, 8);
+        ctx.fillRect(0, 0, fillW, 2);
     }
 }
 
@@ -163,7 +163,7 @@ class Sprite_FightGaugeHP extends Sprite {
 class Sprite_FightGaugeMP extends Sprite {
     constructor() {
         super();
-        this.bitmap = new Bitmap(48, 4);
+        this.bitmap = new Bitmap(32, 1);
         this._lastRate = -1;
     }
 
@@ -197,9 +197,9 @@ class Sprite_FightGaugeMP extends Sprite {
 
         // Fond noir
         ctx.fillStyle = "#000000";
-        ctx.fillRect(0, 0, 48, 4);
+        ctx.fillRect(0, 0, 32, 4);
 
-        const fillW = Math.floor(48 * rate);
+        const fillW = Math.floor(32 * rate);
         if (fillW <= 0) return;
 
         const colors = this.getGradientColors(rate);
@@ -208,7 +208,7 @@ class Sprite_FightGaugeMP extends Sprite {
         gradient.addColorStop(1, colors[1]);
 
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, fillW, 4);
+        ctx.fillRect(0, 0, fillW, 1);
     }
 }
 
@@ -254,7 +254,7 @@ class Spriteset_FightGauges extends Sprite {
         // Jauge MP (Mana) en bas : y = 10, h = 4
         this._mpSprite = new Sprite_FightGaugeMP();
         this._mpSprite.x = 0;
-        this._mpSprite.y = 10;
+        this._mpSprite.y = 5;
         this.addChild(this._mpSprite);
     }
 
@@ -292,7 +292,7 @@ class Spriteset_FightGauges extends Sprite {
         if (!this.parent) return;
 
         // Centré horizontalement (-24px pour 48px de large)
-        this.x = -24;
+        this.x = -16;
 
         let charHeight = 48;
         if (typeof this.parent.patternHeight === "function") {
@@ -302,12 +302,12 @@ class Spriteset_FightGauges extends Sprite {
         }
 
         // Positionné au-dessus de la tête du personnage (et au-dessus de l'indicateur)
-        this.y = -charHeight - 16;
+        this.y = -charHeight * 0.9;
     }
 }
 
 window.Sprite_FightGaugeBase = Sprite_FightGaugeBase;
-window.Sprite_FightGaugeAT   = Sprite_FightGaugeAT;
-window.Sprite_FightGaugeHP   = Sprite_FightGaugeHP;
-window.Sprite_FightGaugeMP   = Sprite_FightGaugeMP;
+window.Sprite_FightGaugeAT = Sprite_FightGaugeAT;
+window.Sprite_FightGaugeHP = Sprite_FightGaugeHP;
+window.Sprite_FightGaugeMP = Sprite_FightGaugeMP;
 window.Spriteset_FightGauges = Spriteset_FightGauges;

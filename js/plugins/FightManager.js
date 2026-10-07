@@ -123,15 +123,13 @@ class FightManager {
      */
     onPlayerAttack(player, direction) {
         if (!player) return false;
-        const actor = (typeof player.actor === "function" ? player.actor() : null) ||
-                      (typeof player.hero === "function" ? player.hero() : null) ||
-                      (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
-        if (!actor) return false;
 
-        // Étape 9 : Attaque à mains nues uniquement si le joueur n'a pas d'arme
-        if (typeof actor.hasNoWeapons === "function" && !actor.hasNoWeapons()) {
-            return false;
-        }
+        const actor = (typeof player.actor === "function" ? player.actor() : null) ||
+            (typeof player.hero === "function" ? player.hero() : null) ||
+            (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
+
+
+        if (!actor) return false;
 
         const targetEvent = this.findHostileTarget(player, direction);
         if (!targetEvent) return false;
@@ -147,8 +145,8 @@ class FightManager {
      */
     executeAttack(attackerChar, targetEvent) {
         const attackerActor = (typeof attackerChar.actor === "function" ? attackerChar.actor() : null) ||
-                              (typeof attackerChar.hero === "function" ? attackerChar.hero() : null) ||
-                              (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
+            (typeof attackerChar.hero === "function" ? attackerChar.hero() : null) ||
+            (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
         let targetBattler = typeof targetEvent.battler === "function" ? targetEvent.battler() : null;
         if (!targetBattler && targetEvent._enemyId > 0 && typeof Game_Enemy !== "undefined") {
             targetBattler = new Game_Enemy(targetEvent._enemyId, 0, 0);
@@ -173,7 +171,14 @@ class FightManager {
         // 2. L'animation de la compétence est jouée sur l'event
         let animId = skill ? skill.animationId : 1;
         if (animId === -1) {
-            animId = (attackerActor.bareHandsAnimationId && attackerActor.bareHandsAnimationId()) || 1;
+            if (typeof attackerActor.attackAnimationId1 === "function") {
+                animId = attackerActor.attackAnimationId1();
+            } else if (typeof attackerActor.bareHandsAnimationId === "function") {
+                animId = attackerActor.bareHandsAnimationId();
+            }
+            if (!animId || animId <= 0) {
+                animId = 1;
+            }
         }
         if (animId > 0 && typeof $gameTemp !== "undefined" && $gameTemp && typeof $gameTemp.requestAnimation === "function") {
             $gameTemp.requestAnimation([targetEvent], animId);
@@ -230,25 +235,65 @@ class FightManager {
                 }
             }
         } else {
-            if (typeof targetEvent.playAction === "function") {
-                targetEvent.playAction({
-                    action: "down",
-                    duration: 10,
-                    frames: 3,
-                    onEnd: () => {
-                        if (typeof $gameMap !== "undefined" && $gameMap && typeof $gameSelfSwitches !== "undefined") {
-                            const key = [$gameMap.mapId(), targetEvent.eventId(), "C"];
-                            $gameSelfSwitches.setValue(key, true);
+            // Attribution des points d'XP de l'ennemi au joueur / groupe
+            if (typeof targetBattler.exp === "function") {
+                const expVal = targetBattler.exp();
+                if (expVal > 0 && typeof $gameParty !== "undefined" && $gameParty) {
+                    for (const actor of $gameParty.members()) {
+                        if (actor && typeof actor.gainExp === "function") {
+                            actor.gainExp(expVal);
                         }
-                        targetEvent.setDirectionFix(false);
                     }
-                });
-            } else {
+                }
+            }
+
+            // SE de mort personnalisé
+            if (targetEvent._ai && typeof targetEvent._ai.playCustomSe === "function") {
+                targetEvent._ai.playCustomSe("death");
+            }
+
+            if (typeof IAManager !== "undefined" && typeof IAManager.checkBattleBgm === "function") {
+                IAManager.checkBattleBgm();
+            }
+            const deathDirection = (typeof targetEvent.direction === "function") ? targetEvent.direction() : 2;
+            targetEvent._deathDirection = deathDirection;
+
+            const onDeathSwitchC = () => {
+                targetEvent._deathDirection = deathDirection;
+                if (typeof $gameSystem !== "undefined" && $gameSystem) {
+                    if (!$gameSystem._eventDeathDirections) {
+                        $gameSystem._eventDeathDirections = {};
+                    }
+                    const mapId = (typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.mapId === "function") ? $gameMap.mapId() : 1;
+                    const evId = typeof targetEvent.eventId === "function" ? targetEvent.eventId() : targetEvent._eventId;
+                    if (evId) {
+                        $gameSystem._eventDeathDirections[`${mapId}_${evId}`] = deathDirection;
+                    }
+                }
+                if (typeof targetEvent.setAction === "function") {
+                    targetEvent.setAction("walk");
+                }
+                targetEvent._isActing = false;
+
                 if (typeof $gameMap !== "undefined" && $gameMap && typeof $gameSelfSwitches !== "undefined") {
                     const key = [$gameMap.mapId(), targetEvent.eventId(), "C"];
                     $gameSelfSwitches.setValue(key, true);
                 }
                 targetEvent.setDirectionFix(false);
+                if (typeof targetEvent.setDirection === "function") {
+                    targetEvent.setDirection(deathDirection);
+                }
+            };
+
+            if (typeof targetEvent.playAction === "function") {
+                targetEvent.playAction({
+                    action: "down",
+                    duration: 10,
+                    frames: 3,
+                    onEnd: onDeathSwitchC
+                });
+            } else {
+                onDeathSwitchC();
             }
         }
 
@@ -314,9 +359,9 @@ class FightManager {
         }
 
         let targetBattler = (typeof targetChar.actor === "function" ? targetChar.actor() : null) ||
-                            (typeof targetChar.hero === "function" ? targetChar.hero() : null) ||
-                            (typeof targetChar.battler === "function" ? targetChar.battler() : null) ||
-                            (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
+            (typeof targetChar.hero === "function" ? targetChar.hero() : null) ||
+            (typeof targetChar.battler === "function" ? targetChar.battler() : null) ||
+            (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
         if (!targetBattler || (typeof targetBattler.isDead === "function" && targetBattler.isDead())) {
             return false;
         }
@@ -376,8 +421,15 @@ class FightManager {
 
         // 4. L'animation de la compétence est jouée sur la cible
         let animId = skill ? skill.animationId : 1;
-        if (animId === -1 && typeof attackerBattler.bareHandsAnimationId === "function") {
-            animId = attackerBattler.bareHandsAnimationId() || 1;
+        if (animId === -1) {
+            if (typeof attackerBattler.attackAnimationId1 === "function") {
+                animId = attackerBattler.attackAnimationId1();
+            } else if (typeof attackerBattler.bareHandsAnimationId === "function") {
+                animId = attackerBattler.bareHandsAnimationId();
+            }
+            if (!animId || animId <= 0) {
+                animId = 1;
+            }
         }
         if (animId > 0 && typeof $gameTemp !== "undefined" && $gameTemp && typeof $gameTemp.requestAnimation === "function") {
             $gameTemp.requestAnimation([targetChar], animId);
@@ -435,17 +487,12 @@ class FightManager {
                     action: "down",
                     duration: 10,
                     frames: 3,
+                    freezeLastFrame: true,
                     onEnd: () => {
-                        if (typeof targetChar.setDirectionFix === "function") {
-                            targetChar.setDirectionFix(false);
-                        }
                         this.checkGameOver(targetChar);
                     }
                 });
             } else {
-                if (typeof targetChar.setDirectionFix === "function") {
-                    targetChar.setDirectionFix(false);
-                }
                 this.checkGameOver(targetChar);
             }
         }
