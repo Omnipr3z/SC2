@@ -65,7 +65,7 @@ Pour guider les développeurs et concepteurs d'événements, un répertoire comp
 | ⭕ **Ring Command Menu** | Menu circulaire rotatif (`Window_RingCommand`), animation d'ouverture Ease-Out, icônes, navigation angulaire et trigger tactile/souris sur la carte. | [Tutoriel Ring Command](./DEV_TUTORIALS/TUTORIAL_RING_COMMAND.md) |
 | 🎒 **Conteneurs & Multi-Inventaires** | Gestion des inventaires secondaires (`Game_Inventories`), conteneurs persistants vs auto-erase, support items/armes/armures, sauvegarde/chargement. | [Tutoriel Conteneurs](./DEV_TUTORIALS/TUTORIAL_CONTAINERS_INVENTORIES.md) |
 
-Consultez le [Sommaire Général des Tutoriels](./DEV_TUTORIALS/README.md) pour les conventions globales et les guides de scripting.
+Consultez le [Sommaire Général des Tutoriels](./DEV_TUTORIALS/README.md) pour les conventions globales et le [Journal de Développement (Walkthrough)](./Walktrough.md) pour l'historique complet des étapes et spécifications techniques.
 
 ---
 
