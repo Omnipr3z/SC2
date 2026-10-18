@@ -1,0 +1,12 @@
+{
+    "name": "rmmz-game",
+    "main": "index.html",
+    "chromium-args": "--force-color-profile=srgb",
+    "window": {
+        "title": "SC4",
+        "width": 1760,
+        "height": 990,
+        "position": "center",
+        "icon": "icon/icon.png"
+    }
+}

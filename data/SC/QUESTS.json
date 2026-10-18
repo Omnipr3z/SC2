@@ -1,0 +1,66 @@
+[
+  {
+    "id": 0,
+    "name": "Signal Astropathique Impérial",
+    "description": "Une transmission cryptée prioritaire provenant de la planète Ankaros Prime réclame une assistance immédiate.",
+    "iconName": "mapIcon_imp",
+    "active": true,
+    "triggerTimestamp": 55657647,
+    "alertTxt": [
+      { "style": "info", "txt": "Signal Astropathique détecté. Établissement de la liaison..." },
+      { "style": "info", "txt": "Autorisation assermentée Artis-4568. Déchiffrement en cours..." },
+      { "style": "alert", "txt": "Ici l'Administrateur Gouverneur du Secteur Ankaros depuis Ankaros Prime." },
+      { "style": "alert", "txt": "Nous avons besoin d'aide de toute urgence. Veuillez vous rendre au spatioport..." },
+      { "style": "info", "txt": "Interruption inattendue de la transmission..." },
+      { "style": "imperium", "txt": "L'Empereur Protège." }
+    ],
+    "locations": [
+      {
+        "id": "loc_prime_spaceport",
+        "name": "Spatioport Magellan",
+        "description": "Rencontrer l'émissaire du Gouverneur au spatioport d'Ankaros Prime.",
+        "sectorId": 0,
+        "systemId": 0,
+        "planetId": 4,
+        "poiId": "prime_spatioport",
+        "active": true,
+        "completed": false
+      },
+      {
+        "id": "loc_altus_intel",
+        "name": "Station Altus - Données Auspex",
+        "description": "Récupérer les journaux de télémesure auprès de la station de surveillance Altus.",
+        "sectorId": 0,
+        "systemId": 0,
+        "planetId": 8,
+        "poiId": "altus_dock",
+        "active": true,
+        "completed": false
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "name": "Échos de Kalyxis",
+    "description": "Des émanations radio inhabituelles ont été captées dans le secteur voisin de Kalyxis.",
+    "iconName": "mapIcon_qust",
+    "active": false,
+    "triggerTimestamp": 55660000,
+    "alertTxt": [
+      { "style": "alert", "txt": "Signal relais inconnu intercepté dans le système Kalyxis." }
+    ],
+    "locations": [
+      {
+        "id": "loc_kalyxis_base",
+        "name": "Avant-poste Kalyxis-B",
+        "description": "Inspecter les installations minières de l'astéroïde Kalyxis-B.",
+        "sectorId": 0,
+        "systemId": 1,
+        "planetId": 11,
+        "poiId": "kalyxis_mine_b",
+        "active": true,
+        "completed": false
+      }
+    ]
+  }
+]

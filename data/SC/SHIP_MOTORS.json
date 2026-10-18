@@ -1,0 +1,71 @@
+[
+  {
+    "id": 0,
+    "name": "Ion Thrusters",
+    "description": "Propulseurs ioniques standards pour petits vaisseaux légers.",
+    "fuelname": "Ion Cells",
+    "capacity": -1,
+    "speed": 0.15,
+    "hyperdrive": {
+      "consumeRate": 3.0,
+      "buffRate": 1.15
+    }
+  },
+  {
+    "id": 1,
+    "name": "Fusion Drive",
+    "description": "Réacteur à fusion stable offrant une vitesse de croisière modérée.",
+    "fuelname": "Fusion Cores",
+    "capacity": 150,
+    "speed": 0.35,
+    "hyperdrive": {
+      "consumeRate": 1.5,
+      "buffRate": 1.3
+    }
+  },
+  {
+    "id": 2,
+    "name": "Warp Engine",
+    "description": "Moteur Warp capable de déchirer l'espace conventionnel pour de longues traversées.",
+    "fuelname": "Warp Flux",
+    "capacity": 300,
+    "speed": 0.55,
+    "hyperdrive": {
+      "consumeRate": 1.8,
+      "buffRate": 3.0
+    }
+  },
+  {
+    "id": 3,
+    "name": "Plasma Stream",
+    "description": "Turbines à plasma thermique à forte puissance constante.",
+    "fuelname": "Plasma Tanks",
+    "capacity": 1000,
+    "speed": 0.8,
+    "hyperdrive": false
+  },
+  {
+    "id": 4,
+    "name": "Dark Matter",
+    "description": "Générateur à matière noire de facture archéotechnologique.",
+    "fuelname": "DarkStone Energy",
+    "capacity": 800,
+    "speed": 1.0,
+    "hyperdrive": {
+      "consumeRate": 1.0,
+      "buffRate": 1.25
+    }
+  },
+  {
+    "id": 5,
+    "name": "Impulse Engine",
+    "description": "Moteur à impulsion quantique de haute précision militaire.",
+    "fuelname": "Impulsion Cells",
+    "capacity": -1,
+    "speed": 1.0,
+    "hyperdrive": {
+      "consumeRate": 1.5,
+      "buffRate": 1.5
+    }
+  }
+]

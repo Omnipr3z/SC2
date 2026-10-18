@@ -1,16 +1,86 @@
 {
   "A_1": [
-    { "item_id": 7, "quantity": 10 },
-    { "item_id": 8, "quantity": 5 }
+    {
+      "item_id": 7,
+      "quantity": 10
+    },
+    {
+      "item_id": 8,
+      "quantity": 5
+    }
   ],
   "A_2": [
-    { "item_id": 10, "quantity": 3 }
+    {
+      "item_id": 10,
+      "quantity": 3
+    }
   ],
-  "C_1": [
-    { "item_id": 7, "quantity": 10 },
-    { "item_id": 13, "quantity": 5 }
-  ],
+  "C_1": {
+    "persistent": true,
+    "items": [
+      {
+        "armor_id": 4,
+        "quantity": 1
+      }
+    ]
+  },
   "E_1": [
-    { "item_id": 7, "quantity": 2 }
-  ]
+    {
+      "item_id": 7,
+      "quantity": 2
+    }
+  ],
+  "C_ARMORY": {
+    "persistent": true,
+    "onlyWeapons": true,
+    "maxSlots": 5,
+    "maxWeight": 40,
+    "items": [
+      {
+        "weapon_id": 1,
+        "quantity": 2
+      }
+    ]
+  },
+  "C_AMMO_BOX": {
+    "persistent": true,
+    "onlyAmmo": true,
+    "maxSlots": 3,
+    "items": []
+  },
+  "C_MEDKIT": {
+    "persistent": true,
+    "onlyItems": true,
+    "maxSlots": 4,
+    "maxWeight": 20,
+    "items": [
+      {
+        "item_id": 7,
+        "quantity": 5
+      }
+    ]
+  },
+  "C_RESTRICTED": {
+    "persistent": true,
+    "allowedItemIds": [
+      7,
+      8,
+      10
+    ],
+    "blockedItemIds": [
+      13
+    ],
+    "maxSlots": 3,
+    "items": []
+  },
+  "C_EPHEMERAL": {
+    "persistent": false,
+    "auto_erase": true,
+    "items": [
+      {
+        "item_id": 7,
+        "quantity": 1
+      }
+    ]
+  }
 }

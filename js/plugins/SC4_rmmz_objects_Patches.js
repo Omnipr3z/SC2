@@ -51,7 +51,7 @@
     // 1. Patches pour Game_Actors
     // ========================================================================
     const _Game_Actors_actor = Game_Actors.prototype.actor;
-    Game_Actors.prototype.actor = function(actorId) {
+    Game_Actors.prototype.actor = function (actorId) {
         if ($dataActors && $dataActors[actorId]) {
             if (!this._data[actorId]) {
                 const actorData = $dataActors[actorId];
@@ -69,7 +69,7 @@
     // ========================================================================
     // Patches pour Game_Actor & Game_Action (Étape 9 - Combat ARPG temps réel)
     // ========================================================================
-    Game_Actor.prototype.attackSkillId = function() {
+    Game_Actor.prototype.attackSkillId = function () {
         const actorData = this.actor ? this.actor() : null;
         if (actorData && actorData.note) {
             const match = actorData.note.match(/<attackId:\s*(\d+)>/i);
@@ -80,20 +80,48 @@
         return 1;
     };
 
-    Game_Actor.prototype.hasNoWeapons = function() {
+    Game_Actor.prototype.hasNoWeapons = function () {
         const w = typeof this.weapons === "function" ? this.weapons() : [];
         return w.filter(Boolean).length === 0;
     };
 
+    Game_Actor.prototype.getFaceEquipLayers = function () {
+        const layers = [];
+        const equips = (typeof this.equips === "function") ? this.equips() : [];
+        for (const item of equips) {
+            if (!item || !item.note) continue;
+            const regex = /<face:\s*([^,>]+)(?:,\s*(\d+))?(?:,\s*(true|false))?\s*>/gi;
+            let match;
+            while ((match = regex.exec(item.note)) !== null) {
+                const filename = match[1].trim();
+                const zindex = match[2] ? parseInt(match[2], 10) : 10;
+                const unisex = match[3] ? (match[3].toLowerCase() === "true") : false;
+                layers.push({ filename, zindex, unisex });
+            }
+        }
+        return layers;
+    };
+
+    if (typeof Game_BattlerBase !== "undefined") {
+        const _Game_BattlerBase_xparam = Game_BattlerBase.prototype.xparam;
+        Game_BattlerBase.prototype.xparam = function (xparamId) {
+            const val = _Game_BattlerBase_xparam.call(this, xparamId);
+            if (xparamId === 0 && val === 0 && this.isActor && this.isActor()) {
+                return 0.95;
+            }
+            return val;
+        };
+    }
+
     if (typeof Game_Action !== "undefined") {
         const _Game_Action_setSubject = Game_Action.prototype.setSubject;
-        Game_Action.prototype.setSubject = function(subject) {
+        Game_Action.prototype.setSubject = function (subject) {
             _Game_Action_setSubject.call(this, subject);
             this._customSubject = subject;
         };
 
         const _Game_Action_subject = Game_Action.prototype.subject;
-        Game_Action.prototype.subject = function() {
+        Game_Action.prototype.subject = function () {
             const orig = _Game_Action_subject.call(this);
             if (!orig && this._customSubject) {
                 return this._customSubject;
@@ -102,7 +130,7 @@
         };
 
         const _Game_Action_friendsUnit = Game_Action.prototype.friendsUnit;
-        Game_Action.prototype.friendsUnit = function() {
+        Game_Action.prototype.friendsUnit = function () {
             const s = this.subject();
             if (s && typeof s.friendsUnit === "function") {
                 return s.friendsUnit();
@@ -111,7 +139,7 @@
         };
 
         const _Game_Action_opponentsUnit = Game_Action.prototype.opponentsUnit;
-        Game_Action.prototype.opponentsUnit = function() {
+        Game_Action.prototype.opponentsUnit = function () {
             const s = this.subject();
             if (s && typeof s.opponentsUnit === "function") {
                 return s.opponentsUnit();
@@ -120,7 +148,7 @@
         };
 
         const _Game_Action_testApply = Game_Action.prototype.testApply;
-        Game_Action.prototype.testApply = function(target) {
+        Game_Action.prototype.testApply = function (target) {
             if (this.isForOpponent() && target && target.isAlive()) {
                 return true;
             }
@@ -129,10 +157,10 @@
     }
 
     if (typeof Game_Enemy !== "undefined") {
-        Game_Enemy.prototype.friendsUnit = function() {
+        Game_Enemy.prototype.friendsUnit = function () {
             return (typeof $gameTroop !== "undefined" && $gameTroop) ? $gameTroop : null;
         };
-        Game_Enemy.prototype.opponentsUnit = function() {
+        Game_Enemy.prototype.opponentsUnit = function () {
             return (typeof $gameParty !== "undefined" && $gameParty) ? $gameParty : null;
         };
     }
@@ -140,24 +168,24 @@
     // ========================================================================
     // 2. Patches pour Game_Map (Coordonnées 8 directions)
     // ========================================================================
-    Game_Map.prototype.xWithDirection = function(x, d) {
+    Game_Map.prototype.xWithDirection = function (x, d) {
         return x + (d === 6 || d === 3 || d === 9 ? 1 : d === 4 || d === 1 || d === 7 ? -1 : 0);
     };
 
-    Game_Map.prototype.yWithDirection = function(y, d) {
+    Game_Map.prototype.yWithDirection = function (y, d) {
         return y + (d === 2 || d === 1 || d === 3 ? 1 : d === 8 || d === 7 || d === 9 ? -1 : 0);
     };
 
-    Game_Map.prototype.roundXWithDirection = function(x, d) {
+    Game_Map.prototype.roundXWithDirection = function (x, d) {
         return this.roundX(this.xWithDirection(x, d));
     };
 
-    Game_Map.prototype.roundYWithDirection = function(y, d) {
+    Game_Map.prototype.roundYWithDirection = function (y, d) {
         return this.roundY(this.yWithDirection(y, d));
     };
 
     const _Game_Map_update = Game_Map.prototype.update;
-    Game_Map.prototype.update = function(sceneActive) {
+    Game_Map.prototype.update = function (sceneActive) {
         if (_Game_Map_update) {
             _Game_Map_update.call(this, sceneActive);
         }
@@ -167,7 +195,7 @@
     };
 
     const _Game_Map_setup = Game_Map.prototype.setup;
-    Game_Map.prototype.setup = function(mapId) {
+    Game_Map.prototype.setup = function (mapId) {
         if (_Game_Map_setup) {
             _Game_Map_setup.call(this, mapId);
         }
@@ -180,7 +208,7 @@
     // 3. Patches pour Game_CharacterBase (Déplacement 8 dir & Moteur d'actions)
     // ========================================================================
     const _Game_CharacterBase_initMembers = Game_CharacterBase.prototype.initMembers;
-    Game_CharacterBase.prototype.initMembers = function() {
+    Game_CharacterBase.prototype.initMembers = function () {
         _Game_CharacterBase_initMembers.call(this);
         this._action = "walk";
         this._isActing = false;
@@ -193,7 +221,7 @@
         this._indicatorQueue = [];
     };
 
-    Game_CharacterBase.prototype.requestIndicator = function(type) {
+    Game_CharacterBase.prototype.requestIndicator = function (type) {
         if (!this._indicatorQueue) {
             this._indicatorQueue = [];
         }
@@ -201,12 +229,12 @@
     };
 
     if (!Game_CharacterBase.prototype.isDashing) {
-        Game_CharacterBase.prototype.isDashing = function() {
+        Game_CharacterBase.prototype.isDashing = function () {
             return false;
         };
     }
 
-    Game_CharacterBase.prototype.action = function() {
+    Game_CharacterBase.prototype.action = function () {
         if (this.isActing()) {
             return this._action || "walk";
         }
@@ -216,37 +244,51 @@
         const dashing = typeof this.isDashing === "function" && this.isDashing();
         const moving = typeof this.isMoving === "function" && this.isMoving();
         if (dashing && moving) {
-            return "dash";
+            return "run";
         }
         return this._action || "walk";
     };
 
-    Game_CharacterBase.prototype.setAction = function(action) {
+    Game_CharacterBase.prototype.setAction = function (action) {
         this._action = action;
     };
 
-    Game_CharacterBase.prototype.isActing = function() {
+    Game_CharacterBase.prototype.isActing = function () {
         return Boolean(this._isActing);
     };
 
-    Game_CharacterBase.prototype.isAttacking = function() {
+    Game_CharacterBase.prototype.isAttacking = function () {
         return this.isActing() && this._action === "atk";
     };
 
-    Game_CharacterBase.prototype.actionPattern = function() {
+    Game_CharacterBase.prototype.actionPattern = function () {
         return this._actionPattern || 0;
     };
 
-    Game_CharacterBase.prototype.attackPattern = function() {
+    Game_CharacterBase.prototype.attackPattern = function () {
         return this.actionPattern();
     };
 
-    Game_CharacterBase.prototype.canAct = function() {
+    Game_CharacterBase.prototype.canAct = function () {
         return !this.isActing();
     };
 
-    Game_CharacterBase.prototype.canAttack = function() {
+    Game_CharacterBase.prototype.canAttack = function () {
         return this.canAct();
+    };
+
+    Game_Player.prototype.canAct = function () {
+        if (typeof this.isBurstShooting === "function" && this.isBurstShooting() && this._shootCooldown <= 0) {
+            return true;
+        }
+        return Game_CharacterBase.prototype.canAct.call(this);
+    };
+
+    Game_Player.prototype.canAttack = function () {
+        if (typeof this.isBurstShooting === "function" && this.isBurstShooting() && this._shootCooldown <= 0) {
+            return true;
+        }
+        return Game_CharacterBase.prototype.canAttack.call(this);
     };
 
     /**
@@ -254,7 +296,7 @@
      * @param {{ action?: string, duration?: number, frames?: number, direction?: number, actorId?: number, onEnd?: Function }|string} options 
      * @returns {boolean}
      */
-    Game_CharacterBase.prototype.playAction = function(options = {}) {
+    Game_CharacterBase.prototype.playAction = function (options = {}) {
         if (typeof options === "string") {
             options = { action: options };
         }
@@ -285,17 +327,18 @@
 
         const hero = (typeof this.hero === "function") ? this.hero() : null;
         if (hero && typeof hero.getAttackConfig === "function" && (!frames || !duration)) {
-            const cfg = hero.getAttackConfig();
+            const skillId = options.skillId || (typeof hero.attackSkillId === "function" ? hero.attackSkillId() : 1);
+            const cfg = hero.getAttackConfig(skillId);
             if (!frames) frames = cfg.frames;
             if (!duration) duration = cfg.duration;
             if (!options.action) actionName = cfg.actionName;
         }
 
         // Déclenchement de l'action ATK pour le joueur et transmission au FightManager
-        if (typeof $gamePlayer !== "undefined" && this === $gamePlayer && actionName === "atk") {
+        if (typeof $gamePlayer !== "undefined" && this === $gamePlayer && actionName === "atk" && !options.skipMelee) {
             const pActor = (typeof this.actor === "function" ? this.actor() : null) ||
-                           (typeof this.hero === "function" ? this.hero() : null) ||
-                           (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
+                (typeof this.hero === "function" ? this.hero() : null) ||
+                (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
             const pActorId = pActor && typeof pActor.actorId === "function" ? pActor.actorId() : 1;
             console.log(`Player ${pActorId} action ATK`);
 
@@ -319,7 +362,7 @@
     /**
      * Progression temporelle de l'animation d'action (frame par frame).
      */
-    Game_CharacterBase.prototype.updateAction = function() {
+    Game_CharacterBase.prototype.updateAction = function () {
         if (this._isActing) {
             this._actionTimer++;
             const currentPattern = Math.floor(this._actionTimer / this._actionFrameDuration);
@@ -327,7 +370,11 @@
                 this._actionPattern = currentPattern;
             } else {
                 this._isActing = false;
-                if (this._actionFreezeLastFrame) {
+                if (typeof this.isBurstShooting === "function" && this.isBurstShooting()) {
+                    // Maintien de la dernière frame de tir en rafale (évite de repasser par walk entre deux tirs)
+                    this._actionPattern = Math.max(0, this._actionMaxFrames - 1);
+                    this._pattern = this._actionPattern;
+                } else if (this._actionFreezeLastFrame) {
                     this._actionPattern = Math.max(0, this._actionMaxFrames - 1);
                     this._pattern = this._actionPattern;
                     // Conserve l'action (ex: "down") figée sur la dernière frame
@@ -351,7 +398,7 @@
     };
 
     const _Game_CharacterBase_resetPattern = Game_CharacterBase.prototype.resetPattern;
-    Game_CharacterBase.prototype.resetPattern = function() {
+    Game_CharacterBase.prototype.resetPattern = function () {
         if (this._action && this._action !== "walk") {
             return;
         }
@@ -363,7 +410,7 @@
     };
 
     const _Game_CharacterBase_updatePattern = Game_CharacterBase.prototype.updatePattern;
-    Game_CharacterBase.prototype.updatePattern = function() {
+    Game_CharacterBase.prototype.updatePattern = function () {
         if (this._action && this._action !== "walk") {
             return;
         }
@@ -372,12 +419,12 @@
         }
     };
 
-    Game_CharacterBase.prototype.updateAttack = function() {
+    Game_CharacterBase.prototype.updateAttack = function () {
         this.updateAction();
     };
 
     const _Game_CharacterBase_update = Game_CharacterBase.prototype.update;
-    Game_CharacterBase.prototype.update = function() {
+    Game_CharacterBase.prototype.update = function () {
         if (_Game_CharacterBase_update) {
             _Game_CharacterBase_update.call(this);
         }
@@ -391,7 +438,7 @@
      * Exécute un pas en 8 directions avec gestion des diagonales et glissement.
      * @param {number} direction (1..9)
      */
-    Game_CharacterBase.prototype.executeMove8Dir = function(direction) {
+    Game_CharacterBase.prototype.executeMove8Dir = function (direction) {
         if ([1, 3, 7, 9].includes(direction)) {
             let horz = 0;
             let vert = 0;
@@ -423,7 +470,7 @@
      * @param {number} direction 
      * @returns {number}
      */
-    Game_CharacterBase.prototype.reverseDir8 = function(direction) {
+    Game_CharacterBase.prototype.reverseDir8 = function (direction) {
         switch (direction) {
             case 2: return 8;
             case 4: return 6;
@@ -442,7 +489,7 @@
      * @param {Game_CharacterBase} target 
      * @returns {number}
      */
-    Game_CharacterBase.prototype.directionToCharacter = function(target) {
+    Game_CharacterBase.prototype.directionToCharacter = function (target) {
         if (!target) return 0;
         const dx = $gameMap.deltaX(target.x, this.x);
         const dy = $gameMap.deltaY(target.y, this.y);
@@ -457,6 +504,16 @@
         return 0;
     };
 
+    Game_CharacterBase.prototype.shiftY = function () {
+        if (this.isObjectCharacter()) {
+            return 0;
+        } else if (this.isHero && this.isHero()) {
+            return -6;
+        } else {
+            return 6;
+        }
+    };
+
     // ========================================================================
     // 3. Patches pour Game_Character (Pathfinding 8 directions)
     // ========================================================================
@@ -466,7 +523,7 @@
      * @param {number} goalY 
      * @returns {number} Direction (1..9, ou 0)
      */
-    Game_Character.prototype.findDirectionTo = function(goalX, goalY) {
+    Game_Character.prototype.findDirectionTo = function (goalX, goalY) {
         const searchLimit = this.searchLimit();
         const mapWidth = $gameMap.width();
         const nodeList = [];
@@ -627,7 +684,7 @@
      * Déplacement vers un personnage avec prise en compte des diagonales.
      * @param {Game_Character} character 
      */
-    Game_Character.prototype.moveTowardCharacter = function(character) {
+    Game_Character.prototype.moveTowardCharacter = function (character) {
         const sx = this.deltaXFrom(character.x);
         const sy = this.deltaYFrom(character.y);
         const horz = sx > 0 ? 4 : (sx < 0 ? 6 : 0);
@@ -656,7 +713,7 @@
      * Éloignement d'un personnage avec prise en compte des diagonales.
      * @param {Game_Character} character 
      */
-    Game_Character.prototype.moveAwayFromCharacter = function(character) {
+    Game_Character.prototype.moveAwayFromCharacter = function (character) {
         const sx = this.deltaXFrom(character.x);
         const sy = this.deltaYFrom(character.y);
         const horz = sx > 0 ? 6 : (sx < 0 ? 4 : 0);
@@ -684,22 +741,22 @@
     // ========================================================================
     // 4. Patches pour Game_Player
     // ========================================================================
-    Game_Player.prototype.hero = function() {
+    Game_Player.prototype.hero = function () {
         const leader = $gameParty ? $gameParty.leader() : null;
         return (leader && leader.isHero && leader.isHero()) ? leader : null;
     };
 
-    Game_Player.prototype.isHero = function() {
+    Game_Player.prototype.isHero = function () {
         return Boolean(this.hero());
     };
 
     // Entrées 8 directions pour le joueur
-    Game_Player.prototype.getInputDirection = function() {
+    Game_Player.prototype.getInputDirection = function () {
         return Input.dir8;
     };
 
     // Surcharge standard RMMZ de executeMove
-    Game_Player.prototype.executeMove = function(direction) {
+    Game_Player.prototype.executeMove = function (direction) {
         // Étape 7 : Si un follower est présent sur la case cible et que le joueur ne lui fait pas encore face :
         // "cela ne doit pas effectuer le mouvement directement mais lui faire face dans un premier temps"
         const targetX = $gameMap.roundXWithDirection(this.x, direction);
@@ -721,7 +778,7 @@
 
     // Normalisation de la vitesse en diagonale (1/sqrt(2) ≈ 0.7071)
     const _Game_Player_distancePerFrame = Game_Player.prototype.distancePerFrame;
-    Game_Player.prototype.distancePerFrame = function() {
+    Game_Player.prototype.distancePerFrame = function () {
         let dist = _Game_Player_distancePerFrame.call(this);
         if (this.isMoving() && this._realX !== this._x && this._realY !== this._y) {
             dist *= 0.7071;
@@ -731,7 +788,7 @@
 
     // Blocage du déplacement pendant l'attaque, les actions ou si KO
     const _Game_Player_canMove = Game_Player.prototype.canMove;
-    Game_Player.prototype.canMove = function() {
+    Game_Player.prototype.canMove = function () {
         if (this.isAttacking() || this.isActing()) {
             return false;
         }
@@ -739,8 +796,8 @@
             return false;
         }
         const actor = (typeof this.actor === "function" ? this.actor() : null) ||
-                      (typeof this.hero === "function" ? this.hero() : null) ||
-                      (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
+            (typeof this.hero === "function" ? this.hero() : null) ||
+            (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
         if (actor && typeof actor.isDead === "function" && actor.isDead()) {
             return false;
         }
@@ -751,7 +808,7 @@
      * Recherche le suiveur visible le plus proche du joueur.
      * @returns {Game_Follower|null}
      */
-    Game_Player.prototype.findNearestFollower = function() {
+    Game_Player.prototype.findNearestFollower = function () {
         if (!this.followers) return null;
         const visibleFollowers = this.followers().data().filter(f => f && f.isVisible());
         if (visibleFollowers.length === 0) return null;
@@ -773,7 +830,7 @@
      * @param {Game_Follower} follower 
      * @returns {boolean}
      */
-    Game_Player.prototype.interactWithFollower = function(follower) {
+    Game_Player.prototype.interactWithFollower = function (follower) {
         if (!follower || !follower.isVisible() || !follower.actor()) return false;
         if (typeof $gameMessage !== "undefined" && $gameMessage.isBusy()) return false;
 
@@ -815,7 +872,7 @@
      * - Sinon, affiche le message "Je ne peux pas rester ici".
      * @param {Game_Follower} follower 
      */
-    Game_Player.prototype.commandFollowerStay = function(follower) {
+    Game_Player.prototype.commandFollowerStay = function (follower) {
         if (!follower || !follower.actor()) return;
         const actorId = follower.actor().actorId();
 
@@ -846,7 +903,7 @@
     };
 
     // Déclenchement d'action au toucher/clic avec prise en compte des événements adjacents en 8 directions
-    Game_Player.prototype.triggerTouchAction = function() {
+    Game_Player.prototype.triggerTouchAction = function () {
         if ($gameTemp.isDestinationValid()) {
             const destX = $gameTemp.destinationX();
             const destY = $gameTemp.destinationY();
@@ -951,7 +1008,7 @@
 
     // Déclenchement d'interaction via touche OK face à un suiveur
     const _Game_Player_triggerButtonAction = Game_Player.prototype.triggerButtonAction;
-    Game_Player.prototype.triggerButtonAction = function() {
+    Game_Player.prototype.triggerButtonAction = function () {
         if (Input.isTriggered("ok")) {
             const direction = this.direction();
             const frontX = $gameMap.roundXWithDirection(this.x, direction);
@@ -973,11 +1030,34 @@
     };
 
     // Mode visée (clic droit maintenu) & orientation vers le curseur
-    Game_Player.prototype.isAiming = function() {
+    Game_Player.prototype.isAiming = function () {
         return Boolean(TouchInput && TouchInput.isRightPressed && TouchInput.isRightPressed());
     };
 
-    Game_Player.prototype.aimDirection = function() {
+    // Étape 13.5 : Lorsque le clic droit est enfoncé, interdire la course (dash),
+    // même lors des déplacements avec les touches de mouvement (ZQSD/WASD)
+    const _Game_Player_isDashing = Game_Player.prototype.isDashing;
+    Game_Player.prototype.isDashing = function () {
+        if (this.isAiming && this.isAiming()) {
+            return false;
+        }
+        return _Game_Player_isDashing ? _Game_Player_isDashing.call(this) : false;
+    };
+
+    // Étape 13.5 : Lorsque le clic droit est enfoncé (sans être en train d'attaquer),
+    // l'animation du personnage est 'guard' ([race]_[sex]_guard.png) au lieu de 'walk'
+    const _Game_Player_action = Game_Player.prototype.action;
+    Game_Player.prototype.action = function () {
+        if (this.isActing()) {
+            return _Game_Player_action ? _Game_Player_action.call(this) : (this._action || "walk");
+        }
+        if (this.isAiming && this.isAiming()) {
+            return "guard";
+        }
+        return _Game_Player_action ? _Game_Player_action.call(this) : "walk";
+    };
+
+    Game_Player.prototype.aimDirection = function () {
         if (!TouchInput) return this.direction();
         const px = this.screenX();
         const py = this.screenY() - 48; // Centre du personnage (96x96)
@@ -994,7 +1074,7 @@
         return this.angleTo8Direction(angle);
     };
 
-    Game_Player.prototype.angleTo8Direction = function(angle) {
+    Game_Player.prototype.angleTo8Direction = function (angle) {
         const octant = Math.floor((angle + Math.PI / 8) / (Math.PI / 4));
         switch (octant) {
             case 0: return 6; // Droite
@@ -1019,7 +1099,7 @@
      * 2. Oriente le joueur vers la position visée au clic.
      * 3. Délègue à playAction({ action: "atk", direction: dir }).
      */
-    Game_Player.prototype.performAttack = function() {
+    Game_Player.prototype.performAttack = function () {
         if (!this.canAttack()) {
             console.warn("[Combat] ⚠️ performAttack : canAttack() est faux !");
             return false;
@@ -1037,7 +1117,7 @@
     };
 
     const _Game_Player_update = Game_Player.prototype.update;
-    Game_Player.prototype.update = function(sceneActive) {
+    Game_Player.prototype.update = function (sceneActive) {
         if (_Game_Player_update) {
             _Game_Player_update.call(this, sceneActive);
         }
@@ -1055,11 +1135,11 @@
         }
     };
 
-    Game_Player.prototype.isAimActionTriggered = function() {
+    Game_Player.prototype.isAimActionTriggered = function () {
         return this.isAiming() && Boolean(TouchInput && TouchInput.isTriggered && TouchInput.isTriggered());
     };
 
-    Game_Player.prototype.onAimAction = function() {
+    Game_Player.prototype.onAimAction = function () {
         if (this.canAttack()) {
             this.performAttack();
         }
@@ -1073,18 +1153,18 @@
          * Récupère le Game_Hero associé à ce follower si l'acteur a le flag <Hero>.
          * @returns {Game_Hero|null}
          */
-        Game_Follower.prototype.hero = function() {
+        Game_Follower.prototype.hero = function () {
             const actor = this.actor();
             return (actor && actor.isHero && actor.isHero()) ? actor : null;
         };
 
-        Game_Follower.prototype.isHero = function() {
+        Game_Follower.prototype.isHero = function () {
             return Boolean(this.hero());
         };
 
         // Orientation en 8 directions lors des mouvements en diagonale du follower
         const _Game_Follower_moveDiagonally = Game_Follower.prototype.moveDiagonally;
-        Game_Follower.prototype.moveDiagonally = function(horz, vert) {
+        Game_Follower.prototype.moveDiagonally = function (horz, vert) {
             _Game_Follower_moveDiagonally.call(this, horz, vert);
             if (this.isMovementSucceeded()) {
                 let diagDir = 0;
@@ -1100,7 +1180,7 @@
 
         // Normalisation de la vitesse en diagonale (1/sqrt(2) ≈ 0.7071)
         const _Game_Follower_distancePerFrame = Game_Follower.prototype.distancePerFrame;
-        Game_Follower.prototype.distancePerFrame = function() {
+        Game_Follower.prototype.distancePerFrame = function () {
             let dist = _Game_Follower_distancePerFrame.call(this);
             if (this.isMoving() && this._realX !== this._x && this._realY !== this._y) {
                 dist *= 0.7071;
@@ -1108,11 +1188,11 @@
             return dist;
         };
 
-        Game_Follower.prototype.isDashing = function() {
+        Game_Follower.prototype.isDashing = function () {
             return typeof $gamePlayer !== "undefined" && $gamePlayer && typeof $gamePlayer.isDashing === "function" ? $gamePlayer.isDashing() : false;
         };
 
-        Game_Follower.prototype.realMoveSpeed = function() {
+        Game_Follower.prototype.realMoveSpeed = function () {
             if (typeof $gamePlayer !== "undefined" && $gamePlayer && typeof $gamePlayer.realMoveSpeed === "function") {
                 return $gamePlayer.realMoveSpeed();
             }
@@ -1121,14 +1201,14 @@
 
         // Rafraîchissement avec préchargement du composite
         const _Game_Follower_refresh = Game_Follower.prototype.refresh;
-        Game_Follower.prototype.refresh = function() {
+        Game_Follower.prototype.refresh = function () {
             if (_Game_Follower_refresh) {
                 _Game_Follower_refresh.call(this);
             }
             const hero = this.hero();
             if (hero) {
                 hero.getCompositeEntry("walk");
-                hero.getCompositeEntry("dash");
+                hero.getCompositeEntry("run");
                 hero.getCompositeEntry("atk");
             }
         };
@@ -1139,7 +1219,7 @@
     // ========================================================================
     if (typeof Game_Event !== "undefined") {
         const _Game_Event_initMembers = Game_Event.prototype.initMembers;
-        Game_Event.prototype.initMembers = function() {
+        Game_Event.prototype.initMembers = function () {
             _Game_Event_initMembers.call(this);
             this._actorId = 0;
             this._actorVisible = false;
@@ -1165,13 +1245,15 @@
          * - <actor_inventory: ID> : inventaire d'acteur lié
          * - <enemy_inventory: ID> : inventaire d'ennemi lié
          */
-        Game_Event.prototype.extractActorNotetag = function() {
+        Game_Event.prototype.extractActorNotetag = function () {
             this._actorId = 0;
             this._actorVisible = false;
             this._role = "neutral";
             this._enemyId = 0;
             this._isContainer = false;
             this._containerInventoryId = null;
+            this._isPersistentContainer = false;
+            this._isAutoEraseContainer = false;
             this._hasActorInventory = false;
             this._actorInventoryId = null;
             this._hasEnemyInventory = false;
@@ -1200,8 +1282,23 @@
                 if (matchContainer) {
                     this._isContainer = true;
                     if (matchContainer[1]) {
-                        this._containerInventoryId = matchContainer[1].trim();
+                        const rawVal = matchContainer[1].trim();
+                        const parts = rawVal.split(",").map(s => s.trim());
+                        this._containerInventoryId = parts[0];
+                        if (parts.length > 1) {
+                            if (/persistent/i.test(parts[1])) {
+                                this._isPersistentContainer = true;
+                            } else if (/auto_erase|erase/i.test(parts[1])) {
+                                this._isAutoEraseContainer = true;
+                            }
+                        }
                     }
+                }
+                if (/<persistent(?:_container|_inventory)?>/i.test(text)) {
+                    this._isPersistentContainer = true;
+                }
+                if (/<auto_erase(?:_container)?/i.test(text)) {
+                    this._isAutoEraseContainer = true;
                 }
                 const matchActorInv = text.match(/<actor_inventory:\s*\[?(\d+)\]?>/i);
                 if (matchActorInv) {
@@ -1241,46 +1338,46 @@
             }
         };
 
-        Game_Event.prototype.role = function() {
+        Game_Event.prototype.role = function () {
             return this._role || "neutral";
         };
 
-        Game_Event.prototype.setRole = function(role) {
+        Game_Event.prototype.setRole = function (role) {
             this._role = (role || "neutral").toLowerCase();
         };
 
-        Game_Event.prototype.isHostile = function() {
+        Game_Event.prototype.isHostile = function () {
             return this.role() === "hostile";
         };
 
-        Game_Event.prototype.isAlly = function() {
+        Game_Event.prototype.isAlly = function () {
             return this.role() === "ally";
         };
 
-        Game_Event.prototype.isNeutral = function() {
+        Game_Event.prototype.isNeutral = function () {
             return this.role() === "neutral";
         };
 
-        Game_Event.prototype.isCivilian = function() {
+        Game_Event.prototype.isCivilian = function () {
             return this.role() === "civilian";
         };
 
-        Game_Event.prototype.enemyId = function() {
+        Game_Event.prototype.enemyId = function () {
             return this._enemyId || 0;
         };
 
-        Game_Event.prototype.battler = function() {
+        Game_Event.prototype.battler = function () {
             if (!this._enemyBattler && this._enemyId > 0 && typeof Game_Enemy !== "undefined" && typeof $dataEnemies !== "undefined" && $dataEnemies && $dataEnemies[this._enemyId]) {
                 this._enemyBattler = new Game_Enemy(this._enemyId, 0, 0);
             }
             return this._enemyBattler || (this.actor ? this.actor() : null);
         };
 
-        Game_Event.prototype.actorId = function() {
+        Game_Event.prototype.actorId = function () {
             return this._actorId || 0;
         };
 
-        Game_Event.prototype.actor = function() {
+        Game_Event.prototype.actor = function () {
             const id = this.actorId();
             if (id > 0 && typeof $gameActors !== "undefined" && $gameActors) {
                 return $gameActors.actor(id);
@@ -1288,28 +1385,28 @@
             return null;
         };
 
-        Game_Event.prototype.hero = function() {
+        Game_Event.prototype.hero = function () {
             const actor = this.actor();
             return (actor && actor.isHero && actor.isHero()) ? actor : null;
         };
 
-        Game_Event.prototype.isHero = function() {
+        Game_Event.prototype.isHero = function () {
             return Boolean(this.hero());
         };
 
         /**
          * Détermine si l'événement court/dash selon sa vitesse configurée (5 = Rapide, 6 = Plus rapide/vite).
          */
-        Game_Event.prototype.isDashing = function() {
+        Game_Event.prototype.isDashing = function () {
             const speed = typeof this.moveSpeed === "function" ? this.moveSpeed() : (this._moveSpeed || 4);
             return speed >= 5;
         };
 
-        Game_Event.prototype.realMoveSpeed = function() {
+        Game_Event.prototype.realMoveSpeed = function () {
             return typeof this.moveSpeed === "function" ? this.moveSpeed() : (this._moveSpeed || 4);
         };
 
-        Game_Event.prototype.isActorInParty = function() {
+        Game_Event.prototype.isActorInParty = function () {
             if (this._actorId > 0 && typeof $gameParty !== "undefined" && $gameParty) {
                 return $gameParty.members().some(a => a && a.actorId() === this._actorId);
             }
@@ -1320,12 +1417,12 @@
          * Détermine si l'événement doit être masqué car l'acteur est présent dans l'équipe.
          * @returns {boolean}
          */
-        Game_Event.prototype.isInPartyHidden = function() {
+        Game_Event.prototype.isInPartyHidden = function () {
             return this._actorId > 0 && !this._actorVisible && this.isActorInParty();
         };
 
         const _Game_Event_setupPageSettings = Game_Event.prototype.setupPageSettings;
-        Game_Event.prototype.setupPageSettings = function() {
+        Game_Event.prototype.setupPageSettings = function () {
             const prevDirection = this._direction;
             if (_Game_Event_setupPageSettings) {
                 _Game_Event_setupPageSettings.call(this);
@@ -1368,7 +1465,7 @@
         };
 
         const _Game_Event_refresh = Game_Event.prototype.refresh;
-        Game_Event.prototype.refresh = function() {
+        Game_Event.prototype.refresh = function () {
             if (_Game_Event_refresh) {
                 _Game_Event_refresh.call(this);
             }
@@ -1380,7 +1477,7 @@
         /**
          * Met à jour l'apparence visuelle de l'événement avec les données de l'acteur.
          */
-        Game_Event.prototype.updateActorAppearance = function() {
+        Game_Event.prototype.updateActorAppearance = function () {
             if (this._actorId > 0) {
                 const actor = this.actor();
                 if (actor) {
@@ -1388,7 +1485,7 @@
                     const hero = this.hero();
                     if (hero) {
                         hero.getCompositeEntry("walk");
-                        hero.getCompositeEntry("dash");
+                        hero.getCompositeEntry("run");
                         hero.getCompositeEntry("atk");
                         hero.getCompositeEntry("hurt");
                         hero.getCompositeEntry("down");
@@ -1398,7 +1495,7 @@
         };
 
         const _Game_Event_isTransparent = Game_Event.prototype.isTransparent;
-        Game_Event.prototype.isTransparent = function() {
+        Game_Event.prototype.isTransparent = function () {
             if (this.isInPartyHidden()) {
                 return true;
             }
@@ -1406,7 +1503,7 @@
         };
 
         const _Game_Event_isThrough = Game_Event.prototype.isThrough;
-        Game_Event.prototype.isThrough = function() {
+        Game_Event.prototype.isThrough = function () {
             if (this.isInPartyHidden()) {
                 return true;
             }
@@ -1414,7 +1511,7 @@
         };
 
         const _Game_Event_start = Game_Event.prototype.start;
-        Game_Event.prototype.start = function() {
+        Game_Event.prototype.start = function () {
             if (this.isInPartyHidden()) {
                 return;
             }
@@ -1427,7 +1524,7 @@
          * @param {Function} [onComplete] Callback optionnel à l'arrivée
          * @returns {boolean}
          */
-        Game_Event.prototype.joinPlayerParty = function(onComplete) {
+        Game_Event.prototype.joinPlayerParty = function (onComplete) {
             if (this.isActorInParty()) {
                 return false;
             }
@@ -1455,10 +1552,10 @@
             return true;
         };
 
-        Game_Event.prototype.getFollowerJoinPosition = function() {
+        Game_Event.prototype.getFollowerJoinPosition = function () {
             const precedingChar = (typeof $gamePlayer !== "undefined" && $gamePlayer && $gamePlayer.followers)
-                ? ($gamePlayer.followers().visibleFollowers().length > 0 
-                    ? $gamePlayer.followers().visibleFollowers().at(-1) 
+                ? ($gamePlayer.followers().visibleFollowers().length > 0
+                    ? $gamePlayer.followers().visibleFollowers().at(-1)
                     : $gamePlayer)
                 : null;
 
@@ -1490,7 +1587,7 @@
             return { x: precedingChar.x, y: precedingChar.y, precedingChar };
         };
 
-        Game_Event.prototype.updateJoinParty = function() {
+        Game_Event.prototype.updateJoinParty = function () {
             if (this.isMoving()) return;
 
             if (this.pos(this._joinTargetX, this._joinTargetY)) {
@@ -1509,7 +1606,7 @@
             }
         };
 
-        Game_Event.prototype.finishJoinParty = function(precedingChar, onComplete) {
+        Game_Event.prototype.finishJoinParty = function (precedingChar, onComplete) {
             const actorId = this.actorId();
             const finalDir = precedingChar ? precedingChar.direction() : this.direction();
             this.setDirection(finalDir);
@@ -1536,7 +1633,7 @@
         };
 
         const _Game_Event_update = Game_Event.prototype.update;
-        Game_Event.prototype.update = function() {
+        Game_Event.prototype.update = function () {
             if (_Game_Event_update) {
                 _Game_Event_update.call(this);
             }
@@ -1558,7 +1655,7 @@
          * @param {{ actorId?: number, id?: number, action?: string, duration?: number, frames?: number }|string} options 
          * @returns {boolean}
          */
-        Game_Interpreter.prototype.playAction = function(options = {}) {
+        Game_Interpreter.prototype.playAction = function (options = {}) {
             if (typeof options === "string") {
                 options = { action: options };
             }
@@ -1589,7 +1686,7 @@
          * @param {number} [eventId=0] 0 pour l'événement exécutant l'interpréteur
          * @returns {boolean}
          */
-        Game_Interpreter.prototype.joinPlayerParty = function(eventId = 0) {
+        Game_Interpreter.prototype.joinPlayerParty = function (eventId = 0) {
             const char = this.character(eventId);
             if (char && typeof char.joinPlayerParty === "function") {
                 const started = char.joinPlayerParty();
@@ -1602,7 +1699,7 @@
         };
 
         const _Game_Interpreter_updateWaitMode = Game_Interpreter.prototype.updateWaitMode;
-        Game_Interpreter.prototype.updateWaitMode = function() {
+        Game_Interpreter.prototype.updateWaitMode = function () {
             if (this._waitMode === "joinParty") {
                 const char = this.character(0);
                 const waiting = char && Boolean(char._isJoiningParty);
@@ -1618,10 +1715,20 @@
          * Ouvre l'inventaire spécifié (ou de l'événement courant si conteneur)
          * @param {string} [inventoryId=null]
          */
-        Game_Interpreter.prototype.openInventory = function(inventoryId = null) {
+        Game_Interpreter.prototype.openInventory = function (inventoryId = null, persistent = null) {
             if (typeof $inventories !== "undefined" && $inventories) {
                 const id = inventoryId || ("C_" + this._eventId);
-                $inventories.open(id, { eventId: this._eventId });
+                let isPersist = persistent;
+                if (isPersist === null && this._eventId && typeof $gameMap !== "undefined" && $gameMap) {
+                    const ev = $gameMap.event(this._eventId);
+                    if (ev) {
+                        isPersist = ev._isPersistentContainer || (!ev._isAutoEraseContainer);
+                    }
+                }
+                $inventories.open(id, { 
+                    eventId: this._eventId,
+                    persistent: isPersist !== null ? Boolean(isPersist) : true
+                });
                 return true;
             }
             return false;
@@ -1631,10 +1738,10 @@
          * Initialise le butin d'un ennemi et ouvre son inventaire
          * @param {number} [enemyId=1]
          */
-        Game_Interpreter.prototype.openEnemyLoot = function(enemyId = 1) {
+        Game_Interpreter.prototype.openEnemyLoot = function (enemyId = 1) {
             if (typeof $inventories !== "undefined" && $inventories) {
                 $inventories.initEnnemyInventory(enemyId);
-                $inventories.open("E_" + enemyId, { eventId: this._eventId });
+                $inventories.open("E_" + enemyId, { eventId: this._eventId, persistent: false });
                 return true;
             }
             return false;
@@ -1646,7 +1753,7 @@
     // ========================================================================
     if (typeof Game_Party !== "undefined") {
         const _Game_Party_addActor = Game_Party.prototype.addActor;
-        Game_Party.prototype.addActor = function(actorId) {
+        Game_Party.prototype.addActor = function (actorId) {
             _Game_Party_addActor.call(this, actorId);
             if (typeof $inventories !== "undefined" && $inventories) {
                 const invId = "A_" + actorId;
@@ -1669,16 +1776,340 @@
     // ========================================================================
     if (typeof Game_Event !== "undefined") {
         const _Game_Event_start = Game_Event.prototype.start;
-        Game_Event.prototype.start = function() {
+        Game_Event.prototype.start = function () {
             const list = this.list();
             if (this._isContainer && (!list || list.length <= 1)) {
                 const invId = this._containerInventoryId || ("C_" + this.eventId());
                 if (typeof $inventories !== "undefined" && $inventories) {
-                    $inventories.open(invId, { eventId: this.eventId() });
+                    const isPersist = this._isPersistentContainer || (!this._isAutoEraseContainer);
+                    $inventories.open(invId, { 
+                        eventId: this.eventId(),
+                        persistent: isPersist
+                    });
                     return;
                 }
             }
             _Game_Event_start.call(this);
+        };
+    }
+
+    // ========================================================================
+    // 11. Gestion de la visibilité des HUDs (Game_System, Game_Interpreter, SC4)
+    // ========================================================================
+    if (typeof Game_System !== "undefined") {
+        const _Game_System_initialize = Game_System.prototype.initialize;
+        Game_System.prototype.initialize = function () {
+            if (_Game_System_initialize) _Game_System_initialize.call(this);
+            this._playerHudVisible = true;
+            this._weaponHudVisible = true;
+        };
+
+        Game_System.prototype.isPlayerHudVisible = function () {
+            return this._playerHudVisible !== undefined ? Boolean(this._playerHudVisible) : true;
+        };
+
+        Game_System.prototype.setPlayerHudVisible = function (visible) {
+            this._playerHudVisible = Boolean(visible);
+        };
+
+        Game_System.prototype.togglePlayerHud = function () {
+            this.setPlayerHudVisible(!this.isPlayerHudVisible());
+            return this.isPlayerHudVisible();
+        };
+
+        Game_System.prototype.isWeaponHudVisible = function () {
+            return this._weaponHudVisible !== undefined ? Boolean(this._weaponHudVisible) : true;
+        };
+
+        Game_System.prototype.setWeaponHudVisible = function (visible) {
+            this._weaponHudVisible = Boolean(visible);
+        };
+
+        Game_System.prototype.toggleWeaponHud = function () {
+            this.setWeaponHudVisible(!this.isWeaponHudVisible());
+            return this.isWeaponHudVisible();
+        };
+
+        Game_System.prototype.isHudVisible = function () {
+            return this.isPlayerHudVisible() || this.isWeaponHudVisible();
+        };
+
+        Game_System.prototype.setHudVisible = function (visible) {
+            this.setPlayerHudVisible(visible);
+            this.setWeaponHudVisible(visible);
+        };
+
+        Game_System.prototype.toggleHud = function () {
+            const newState = !this.isHudVisible();
+            this.setHudVisible(newState);
+            return newState;
+        };
+    }
+
+    if (typeof Game_Interpreter !== "undefined") {
+        Game_Interpreter.prototype.setHudVisible = function (visible) {
+            if (typeof $gameSystem !== "undefined" && $gameSystem) $gameSystem.setHudVisible(visible);
+        };
+        Game_Interpreter.prototype.toggleHud = function () {
+            if (typeof $gameSystem !== "undefined" && $gameSystem) return $gameSystem.toggleHud();
+        };
+        Game_Interpreter.prototype.showHud = function () { this.setHudVisible(true); };
+        Game_Interpreter.prototype.hideHud = function () { this.setHudVisible(false); };
+
+        Game_Interpreter.prototype.setPlayerHudVisible = function (visible) {
+            if (typeof $gameSystem !== "undefined" && $gameSystem) $gameSystem.setPlayerHudVisible(visible);
+        };
+        Game_Interpreter.prototype.togglePlayerHud = function () {
+            if (typeof $gameSystem !== "undefined" && $gameSystem) return $gameSystem.togglePlayerHud();
+        };
+        Game_Interpreter.prototype.showPlayerHud = function () { this.setPlayerHudVisible(true); };
+        Game_Interpreter.prototype.hidePlayerHud = function () { this.setPlayerHudVisible(false); };
+
+        Game_Interpreter.prototype.setWeaponHudVisible = function (visible) {
+            if (typeof $gameSystem !== "undefined" && $gameSystem) $gameSystem.setWeaponHudVisible(visible);
+        };
+        Game_Interpreter.prototype.toggleWeaponHud = function () {
+            if (typeof $gameSystem !== "undefined" && $gameSystem) return $gameSystem.toggleWeaponHud();
+        };
+        Game_Interpreter.prototype.showWeaponHud = function () { this.setWeaponHudVisible(true); };
+        Game_Interpreter.prototype.hideWeaponHud = function () { this.setWeaponHudVisible(false); };
+    }
+
+    // Namespace global pour accès rapide (console, scripts, dev)
+    window.SC4 = window.SC4 || {};
+    window.SC4.setHudVisible = function (visible) {
+        if (typeof $gameSystem !== "undefined" && $gameSystem) {
+            $gameSystem.setHudVisible(visible);
+        }
+    };
+    window.SC4.setHud = window.SC4.setHudVisible;
+    window.SC4.showHud = function () { window.SC4.setHudVisible(true); };
+    window.SC4.hideHud = function () { window.SC4.setHudVisible(false); };
+    window.SC4.toggleHud = function () {
+        if (typeof $gameSystem !== "undefined" && $gameSystem) {
+            return $gameSystem.toggleHud();
+        }
+        return false;
+    };
+
+    window.SC4.setPlayerHudVisible = function (visible) {
+        if (typeof $gameSystem !== "undefined" && $gameSystem) {
+            $gameSystem.setPlayerHudVisible(visible);
+        }
+    };
+    window.SC4.setPlayerHud = window.SC4.setPlayerHudVisible;
+    window.SC4.showPlayerHud = function () { window.SC4.setPlayerHudVisible(true); };
+    window.SC4.hidePlayerHud = function () { window.SC4.setPlayerHudVisible(false); };
+    window.SC4.togglePlayerHud = function () {
+        if (typeof $gameSystem !== "undefined" && $gameSystem) {
+            return $gameSystem.togglePlayerHud();
+        }
+        return false;
+    };
+
+    window.SC4.setWeaponHudVisible = function (visible) {
+        if (typeof $gameSystem !== "undefined" && $gameSystem) {
+            $gameSystem.setWeaponHudVisible(visible);
+        }
+    };
+    window.SC4.setWeaponHud = window.SC4.setWeaponHudVisible;
+    window.SC4.showWeaponHud = function () { window.SC4.setWeaponHudVisible(true); };
+    window.SC4.hideWeaponHud = function () { window.SC4.setWeaponHudVisible(false); };
+    window.SC4.toggleWeaponHud = function () {
+        if (typeof $gameSystem !== "undefined" && $gameSystem) {
+            return $gameSystem.toggleWeaponHud();
+        }
+        return false;
+    };
+
+    // ========================================================================
+    // Système de Poids, Capacité et Surcharge d'Inventaire
+    // ========================================================================
+    if (typeof DataManager !== "undefined") {
+        DataManager.itemRawWeight = function (item) {
+            if (!item) return 0;
+            if (item.note) {
+                const match = item.note.match(/<(?:height|weight):\s*(-?\d+(?:\.\d+)?)>/i);
+                if (match) {
+                    return parseFloat(match[1]);
+                }
+            }
+            return 1;
+        };
+
+        DataManager.itemWeight = function (item) {
+            const raw = DataManager.itemRawWeight(item);
+            return Math.max(0, raw);
+        };
+
+        DataManager.isAmmo = function (item) {
+            if (!item || (typeof DataManager.isItem === "function" && !DataManager.isItem(item))) return false;
+            if (item.ammo === true) return true;
+            if (item.note) {
+                if (/<ammo>/i.test(item.note) || /<isAmmo:\s*true>/i.test(item.note) || /<munition>/i.test(item.note)) {
+                    return true;
+                }
+            }
+            if (typeof $dataWeapons !== "undefined" && Array.isArray($dataWeapons)) {
+                for (let i = 1; i < $dataWeapons.length; i++) {
+                    const w = $dataWeapons[i];
+                    if (w && w.note && /<ammoId:\s*(\d+)>/i.test(w.note)) {
+                        const m = w.note.match(/<ammoId:\s*(\d+)>/i);
+                        if (m && parseInt(m[1], 10) === item.id) return true;
+                    }
+                }
+            }
+            return false;
+        };
+    }
+
+    // Capacité et bonus d'équipement pour Game_Actor
+    if (typeof Game_Actor !== "undefined") {
+        Game_Actor.prototype.equipmentWeightCapacityBonus = function () {
+            let bonus = 0;
+            const equips = (typeof this.equips === "function") ? this.equips() : [];
+            for (const eq of equips) {
+                if (eq) {
+                    const raw = DataManager.itemRawWeight(eq);
+                    if (raw < 0) {
+                        bonus += Math.abs(raw);
+                    }
+                }
+            }
+            return bonus;
+        };
+
+        Game_Actor.prototype.weightCapacity = function () {
+            const baseAtk = (typeof this.atk === "number") ? this.atk : 10;
+            const baseCap = Math.max(10, Math.round(baseAtk * 2.5));
+            return baseCap + this.equipmentWeightCapacityBonus();
+        };
+    }
+
+    // Gestion du poids pour Game_Party
+    if (typeof Game_Party !== "undefined") {
+        Game_Party.prototype.maxWeight = function () {
+            let max = 0;
+            const members = (typeof this.members === "function") ? this.members() : [];
+            for (const actor of members) {
+                if (actor && typeof actor.weightCapacity === "function") {
+                    max += actor.weightCapacity();
+                }
+            }
+            return Math.max(10, max);
+        };
+
+        Game_Party.prototype.totalWeight = function () {
+            let total = 0;
+            const items = (typeof this.allItems === "function") ? this.allItems() : [];
+            for (const item of items) {
+                if (item) {
+                    const qty = (typeof this.numItems === "function") ? this.numItems(item) : 0;
+                    total += DataManager.itemWeight(item) * qty;
+                }
+            }
+            return Math.round(total * 100) / 100;
+        };
+
+        Game_Party.prototype.isOverloaded = function () {
+            return this.totalWeight() > this.maxWeight();
+        };
+
+        Game_Party.prototype.canAcceptItem = function (item, amount = 1) {
+            if (!item) return false;
+            const itemW = DataManager.itemWeight(item) * amount;
+            return (this.totalWeight() + itemW) <= this.maxWeight();
+        };
+    }
+
+    // Blocage du déplacement et alerte visuelle en cas de surcharge pour Game_Player
+    if (typeof Game_Player !== "undefined") {
+        const _Game_Player_canMove = Game_Player.prototype.canMove;
+        Game_Player.prototype.canMove = function () {
+            if (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.isOverloaded === "function" && $gameParty.isOverloaded()) {
+                return false;
+            }
+            return _Game_Player_canMove ? _Game_Player_canMove.call(this) : true;
+        };
+
+        const _Game_Player_moveByInput = Game_Player.prototype.moveByInput;
+        Game_Player.prototype.moveByInput = function () {
+            if (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.isOverloaded === "function" && $gameParty.isOverloaded()) {
+                if (this.isMoving()) return;
+                const dir = (typeof this.getInputDirection === "function") ? this.getInputDirection() : 0;
+                if (dir > 0) {
+                    this.triggerOverloadAlert();
+                }
+                return;
+            }
+            if (_Game_Player_moveByInput) {
+                _Game_Player_moveByInput.call(this);
+            }
+        };
+
+        Game_Player.prototype.triggerOverloadAlert = function () {
+            if (!this._overloadAlertCooldown || this._overloadAlertCooldown <= 0) {
+                this._overloadAlertTimer = 25;
+                this._overloadAlertCooldown = 30;
+                if (typeof SoundManager !== "undefined" && typeof SoundManager.playBuzzer === "function") {
+                    SoundManager.playBuzzer();
+                }
+            }
+        };
+
+        const _Game_Player_update = Game_Player.prototype.update;
+        Game_Player.prototype.update = function (sceneActive) {
+            if (_Game_Player_update) {
+                _Game_Player_update.call(this, sceneActive);
+            }
+            if (this._overloadAlertTimer > 0) {
+                this._overloadAlertTimer--;
+            }
+            if (this._overloadAlertCooldown > 0) {
+                this._overloadAlertCooldown--;
+            }
+        };
+    }
+
+    // Effet visuel de flash rouge lors d'une tentative de déplacement en surcharge
+    if (typeof Sprite_Character !== "undefined") {
+        const _Sprite_Character_updateOther = Sprite_Character.prototype.updateOther;
+        Sprite_Character.prototype.updateOther = function () {
+            if (_Sprite_Character_updateOther) {
+                _Sprite_Character_updateOther.call(this);
+            }
+            if (this._character && this._character._overloadAlertTimer > 0) {
+                const alpha = Math.min(220, Math.floor((this._character._overloadAlertTimer / 25) * 220));
+                this.setBlendColor([255, 30, 30, alpha]);
+            }
+        };
+    }
+
+    // Mise à jour automatique de l'interrupteur local B pour les événements conteneurs
+    if (typeof $inventories !== "undefined") {
+        $inventories.updateEventSelfSwitchB = function (containerId) {
+            if (!containerId || typeof $gameMap === "undefined" || !$gameMap) return;
+            const targetId = String(containerId).trim();
+            const inv = this.inventory(targetId);
+            const isEmpty = inv ? inv.isEmpty() : true;
+
+            const events = $gameMap.events ? $gameMap.events() : [];
+            for (const ev of events) {
+                if (!ev) continue;
+                const note = (ev.event && ev.event() && ev.event().note) || "";
+                let matches = false;
+                if (note.includes(targetId)) {
+                    matches = true;
+                } else if (targetId.startsWith("C_")) {
+                    const cNum = targetId.slice(2);
+                    if (ev.eventId && ev.eventId() === Number(cNum)) {
+                        matches = true;
+                    }
+                }
+                if (matches && typeof $gameSelfSwitches !== "undefined") {
+                    $gameSelfSwitches.setValue([$gameMap.mapId(), ev.eventId(), "B"], isEmpty);
+                }
+            }
         };
     }
 

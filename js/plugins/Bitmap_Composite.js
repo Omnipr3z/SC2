@@ -168,11 +168,52 @@ class Bitmap_Composite {
      */
     static resolveActionCandidates(action) {
         const act = (action || "walk").toLowerCase();
-        if (act === "dash") {
-            return ["dash", "run", "walk"];
-        }
-        if (act === "run") {
+        if (act === "run" || act === "dash") {
             return ["run", "dash", "walk"];
+        }
+        if (act.startsWith("walkreload_")) {
+            const suffix = act.substring("walkreload_".length);
+            return [act, `reload_${suffix}`, "walkreload", "reload", "walk"];
+        }
+        if (act.startsWith("reload_")) {
+            return [act, "reload", "walk"];
+        }
+        if (act.startsWith("guard_")) {
+            return [act, "guard", "walk"];
+        }
+        if (act.startsWith("run_")) {
+            const suffix = act.substring("run_".length);
+            return [act, `dash_${suffix}`, "run", "dash", `walk_${suffix}`, "walk"];
+        }
+        if (act.startsWith("dash_")) {
+            const suffix = act.substring("dash_".length);
+            return [`run_${suffix}`, act, "run", "dash", `walk_${suffix}`, "walk"];
+        }
+        if (act.startsWith("walk_")) {
+            return [act, "walk"];
+        }
+        if (act.startsWith("shot_")) {
+            const suffix = act.substring("shot_".length);
+            return [act, `atk_${suffix}`, "shot", "atk", "walk"];
+        }
+        if (act.startsWith("atk_")) {
+            const suffix = act.substring("atk_".length);
+            return [act, `shot_${suffix}`, "atk", "shot", "walk"];
+        }
+        if (act === "shot") {
+            return ["shot", "atk", "walk"];
+        }
+        if (act === "atk") {
+            return ["atk", "shot", "walk"];
+        }
+        if (act === "walkreload") {
+            return ["walkreload", "reload", "walk"];
+        }
+        if (act === "reload") {
+            return ["reload", "walk"];
+        }
+        if (act === "guard") {
+            return ["guard", "walk"];
         }
         if (act !== "walk") {
             return [act, "walk"];
@@ -213,16 +254,31 @@ class Bitmap_Composite {
         const actionCandidates = this.resolveActionCandidates(act);
 
         // 1. Couche du corps de base (z-index: 50 par défaut)
+        // Structure cible : img/characters/composite/[race]/[sex]/bodies/[action].png
         let baseFilename = "";
+        let baseFolder = "";
         for (const candidate of actionCandidates) {
-            const fn = `${race}_${sex}_${candidate}`;
-            if (this.fileExists("img/characters/composite/", fn)) {
-                baseFilename = fn;
+            const structuredFolder = `img/characters/composite/${race}/${sex}/bodies/`;
+            if (this.fileExists(structuredFolder, candidate)) {
+                baseFilename = candidate;
+                baseFolder = structuredFolder;
+                break;
+            }
+            const legacyFn = `${race}_${sex}_${candidate}`;
+            if (this.fileExists("img/characters/composite/", legacyFn)) {
+                baseFilename = legacyFn;
+                baseFolder = "img/characters/composite/";
+                break;
+            }
+            const singleFn = `${race}_${candidate}`;
+            if (this.fileExists("img/characters/composite/", singleFn)) {
+                baseFilename = singleFn;
+                baseFolder = "img/characters/composite/";
                 break;
             }
         }
-        if (baseFilename) {
-            composer.addLayer("img/characters/composite/", baseFilename, 50);
+        if (baseFilename && baseFolder) {
+            composer.addLayer(baseFolder, baseFilename, 50);
         }
 
         // 2. Couche du visage (z-index: 60) si <Face> est présent
@@ -241,26 +297,126 @@ class Bitmap_Composite {
         }
 
         // 3. Couches d'équipements (<visual_equip: FILENAME, ZINDEX>)
+        // Structure cible : img/characters/composite/[race]/[sex]/equipments/[filename]_[action].png
         const equipLayers = hero.getVisualEquipLayers();
         for (const eq of equipLayers) {
             let eqFilename = "";
             let folder = "";
+            const rawEq = eq.filename.toLowerCase();
             for (const candidate of actionCandidates) {
-                const fn = `${race}_${sex}_${eq.filename.toLowerCase()}_${candidate}`;
-                const resolvedFolder = this.resolveEquipFolder(fn);
-                if (this.fileExists(resolvedFolder, fn)) {
-                    eqFilename = fn;
-                    folder = resolvedFolder;
+                const structuredFolder = `img/characters/composite/${race}/${sex}/equipments/`;
+                const structuredFn = `${rawEq}_${candidate}`;
+                if (this.fileExists(structuredFolder, structuredFn)) {
+                    eqFilename = structuredFn;
+                    folder = structuredFolder;
+                    break;
+                }
+                const legacyFn = `${race}_${sex}_${rawEq}_${candidate}`;
+                const legacyFolder = this.resolveEquipFolder(legacyFn);
+                if (this.fileExists(legacyFolder, legacyFn)) {
+                    eqFilename = legacyFn;
+                    folder = legacyFolder;
+                    break;
+                }
+                if (this.fileExists(legacyFolder, structuredFn)) {
+                    eqFilename = structuredFn;
+                    folder = legacyFolder;
                     break;
                 }
             }
-            if (eqFilename) {
+            if (eqFilename && folder) {
                 composer.addLayer(folder, eqFilename, eq.zindex);
             }
         }
 
         // Planche 96x96 pixels : 3 colonnes de frames x 8 lignes de direction
         const destinationBitmap = new Bitmap(288, 768);
+        composer.loadLayers();
+
+        const entry = {
+            bitmap: destinationBitmap,
+            composer: composer,
+            isComposed: false
+        };
+
+        this._cache.set(cacheKey, entry);
+        return entry;
+    }
+
+    /**
+     * Récupère ou compose le Bitmap_Composite pour le Faceset d'un Hero (144x144 px).
+     * @param {Game_Hero|Game_Actor} hero 
+     * @returns {{ bitmap: Bitmap, composer: Bitmap_Composite, isComposed: boolean }}
+     */
+    static getCompositeFaceEntry(hero) {
+        if (!hero) return null;
+
+        const actorId = (typeof hero.actorId === "function") ? hero.actorId() : 1;
+        const race = (typeof hero.race === "function" && hero.race() ? hero.race() : "human").toLowerCase();
+        const sex = (typeof hero.sex === "function" && hero.sex() ? hero.sex() : "male").toLowerCase();
+        const equipIds = (hero.equips ? hero.equips() : []).map(e => e ? e.id : 0).join("-");
+        const cacheKey = `face_${actorId}_${race}_${sex}_${equipIds}`;
+
+        if (this._cache.has(cacheKey)) {
+            return this._cache.get(cacheKey);
+        }
+
+        const composer = new Bitmap_Composite();
+        const folder = "img/faces/hero/";
+
+        // 1. Couche de base (index 0) : l'ID de l'actor (ex: 1.png)
+        const baseFilename = String(actorId);
+        if (this.fileExists(folder, baseFilename)) {
+            composer.addLayer(folder, baseFilename, 0);
+        } else {
+            const fallbackBase = `${race}_${sex}`;
+            if (this.fileExists(folder, fallbackBase)) {
+                composer.addLayer(folder, fallbackBase, 0);
+            }
+        }
+
+        // 2. Couches d'équipements (<face: [EQUIP_FILENAME], [Z_INDEX], [UNISEX]>)
+        const faceEquipLayers = (typeof hero.getFaceEquipLayers === "function")
+            ? hero.getFaceEquipLayers()
+            : [];
+
+        for (const eq of faceEquipLayers) {
+            const rawFn = (eq.filename || "").toLowerCase();
+            let candidates = [];
+            if (eq.unisex) {
+                candidates = [
+                    `equip_${rawFn}_${race}`,
+                    `${rawFn}_${race}`,
+                    `equip_${rawFn}`,
+                    rawFn
+                ];
+            } else {
+                candidates = [
+                    `equip_${rawFn}_${race}_${sex}`,
+                    `${rawFn}_${race}_${sex}`,
+                    `equip_${rawFn}_${race}`,
+                    `${rawFn}_${race}`,
+                    `equip_${rawFn}`,
+                    rawFn
+                ];
+            }
+
+            for (const candidate of candidates) {
+                if (this.fileExists(folder, candidate)) {
+                    composer.addLayer(folder, candidate, eq.zindex);
+                    break;
+                }
+            }
+        }
+
+        // Si aucun calque n'a été trouvé, renvoyer null pour permettre le fallback vanilla
+        if (composer._layers.length === 0) {
+            this._cache.set(cacheKey, null);
+            return null;
+        }
+
+        // Planche 144x144 pixels : unique tile affiché dans son intégralité
+        const destinationBitmap = new Bitmap(144, 144);
         composer.loadLayers();
 
         const entry = {

@@ -82,9 +82,164 @@
     };
 
     // ========================================================================
-    // 3. Sprite_PlayerHUD (HUD Joueur en haut à gauche : Face 64x64, Nom, PV, MP, TP, XP, Niveau)
+    // 3. Sprite_PaperdollFace (Portrait dynamique Étape 13)
     // ========================================================================
     const Sprite_BaseClass = (typeof Sprite !== "undefined") ? Sprite : class {};
+
+    let FaceSpriteClass = (typeof Sprite_PaperdollFace !== "undefined") ? Sprite_PaperdollFace : null;
+    if (!FaceSpriteClass) {
+        FaceSpriteClass = class Sprite_PaperdollFace extends Sprite_BaseClass {
+            constructor(actorOrId = null, targetWidth = 144, targetHeight = 144) {
+                super();
+                this._actor = null;
+                this._actorId = 0;
+                this._targetWidth = targetWidth || 144;
+                this._targetHeight = targetHeight || 144;
+                this._compositeEntry = null;
+                this._lastCacheKey = "";
+                this._vanillaFaceLoaded = false;
+
+                if (actorOrId) {
+                    this.setActor(actorOrId);
+                }
+            }
+
+            setActor(actorOrId) {
+                if (typeof actorOrId === "number") {
+                    this._actorId = actorOrId;
+                    this._actor = (typeof $gameActors !== "undefined" && $gameActors)
+                        ? $gameActors.actor(actorOrId)
+                        : null;
+                } else {
+                    this._actor = actorOrId;
+                    this._actorId = (actorOrId && typeof actorOrId.actorId === "function")
+                        ? actorOrId.actorId()
+                        : (actorOrId ? (actorOrId._actorId || 0) : 0);
+                }
+                this.refresh();
+            }
+
+            actor() {
+                if (!this._actor && this._actorId > 0 && typeof $gameActors !== "undefined" && $gameActors) {
+                    this._actor = $gameActors.actor(this._actorId);
+                }
+                return this._actor;
+            }
+
+            actorId() {
+                return this._actorId || (this._actor && typeof this._actor.actorId === "function" ? this._actor.actorId() : 0);
+            }
+
+            setTargetSize(width, height) {
+                this._targetWidth = width || 144;
+                this._targetHeight = height || 144;
+                this.updateScale();
+            }
+
+            isHero() {
+                const act = this.actor();
+                if (!act) return false;
+                if (typeof act.isHero === "function") return act.isHero();
+                if (typeof act.hasNotetag === "function") return act.hasNotetag("Hero");
+                const data = (typeof act.actor === "function") ? act.actor() : act;
+                return Boolean(data && data.note && /<Hero>/i.test(data.note));
+            }
+
+            currentCacheKey() {
+                const act = this.actor();
+                if (!act) return "";
+                if (this.isHero() && typeof act.getCompositeFaceCacheKey === "function") {
+                    return act.getCompositeFaceCacheKey();
+                }
+                const equips = (typeof act.equips === "function") ? act.equips() : [];
+                const equipIds = equips.map(e => e ? e.id : 0).join("-");
+                return `face_${this.actorId()}_${equipIds}`;
+            }
+
+            refresh() {
+                const act = this.actor();
+                if (!act) {
+                    this.bitmap = null;
+                    this._compositeEntry = null;
+                    this._lastCacheKey = "";
+                    return;
+                }
+
+                if (this.isHero() && typeof Bitmap_Composite !== "undefined") {
+                    this._compositeEntry = Bitmap_Composite.getCompositeFaceEntry(act);
+                    this._lastCacheKey = this.currentCacheKey();
+                    if (this._compositeEntry && this._compositeEntry.bitmap) {
+                        this.bitmap = this._compositeEntry.bitmap;
+                    } else {
+                        const faceName = (typeof act.faceName === "function") ? act.faceName() : "";
+                        this.bitmap = faceName && typeof ImageManager !== "undefined" ? ImageManager.loadFace(faceName) : null;
+                    }
+                } else {
+                    this._compositeEntry = null;
+                    this._lastCacheKey = this.currentCacheKey();
+                    const faceName = (typeof act.faceName === "function") ? act.faceName() : "";
+                    this.bitmap = faceName && typeof ImageManager !== "undefined" ? ImageManager.loadFace(faceName) : null;
+                }
+                this.updateScale();
+            }
+
+            updateScale() {
+                if (this.isHero() && this._compositeEntry && this._compositeEntry.isComposed) {
+                    const baseW = 144;
+                    const baseH = 144;
+                    if (this.scale) {
+                        this.scale.x = this._targetWidth / baseW;
+                        this.scale.y = this._targetHeight / baseH;
+                    }
+                } else if (this.bitmap && typeof ImageManager !== "undefined") {
+                    const pw = ImageManager.faceWidth || 144;
+                    const ph = ImageManager.faceHeight || 144;
+                    if (this.scale) {
+                        this.scale.x = this._targetWidth / pw;
+                        this.scale.y = this._targetHeight / ph;
+                    }
+                }
+            }
+
+            update() {
+                super.update();
+                const act = this.actor();
+                if (!act) return;
+
+                const key = this.currentCacheKey();
+                if (key !== this._lastCacheKey) {
+                    this.refresh();
+                }
+
+                if (this.isHero() && this._compositeEntry) {
+                    const { composer, bitmap, isComposed } = this._compositeEntry;
+                    if (composer && composer.isReady() && !this._compositeEntry.isComposed) {
+                        composer.bltComposite(bitmap);
+                        this._compositeEntry.isComposed = true;
+                    }
+                    if (this.bitmap !== bitmap) {
+                        this.bitmap = bitmap;
+                    }
+                } else {
+                    if (this.bitmap && this.bitmap.isReady()) {
+                        const pw = ImageManager.faceWidth || 144;
+                        const ph = ImageManager.faceHeight || 144;
+                        const faceIdx = (typeof act.faceIndex === "function") ? act.faceIndex() : 0;
+                        const sx = (faceIdx % 4) * pw;
+                        const sy = Math.floor(faceIdx / 4) * ph;
+                        this.setFrame(sx, sy, pw, ph);
+                    }
+                }
+
+                this.updateScale();
+            }
+        };
+        window.Sprite_PaperdollFace = FaceSpriteClass;
+    }
+
+    // ========================================================================
+    // 4. Sprite_PlayerHUD (HUD Joueur en haut à gauche : Face 64x64, Nom, PV, MP, TP, XP, Niveau)
+    // ========================================================================
     class Sprite_PlayerHUD extends Sprite_BaseClass {
         constructor() {
             super();
@@ -93,12 +248,31 @@
             this.y = 20;
             this._lastValues = {};
             this._faceLoaded = false;
+
+            // Portrait Paperdoll dynamique (Étape 13)
+            this._faceSprite = new Sprite_PaperdollFace(null, 64, 64);
+            this._faceSprite.x = 10;
+            this._faceSprite.y = 18;
+            if (typeof this.addChild === "function") {
+                this.addChild(this._faceSprite);
+            }
+
+            // Calque d'overlay (bordure du faceset et badge du nom au-dessus du visage)
+            this._badgeSprite = new Sprite_BaseClass();
+            this._badgeSprite.bitmap = (typeof Bitmap !== "undefined") ? new Bitmap(144, 150) : null;
+            if (typeof this.addChild === "function") {
+                this.addChild(this._badgeSprite);
+            }
         }
 
         update() {
             super.update();
             const actor = this.leaderActor();
-            if (!actor) {
+            const isSystemVisible = (typeof $gameSystem !== "undefined" && typeof $gameSystem.isPlayerHudVisible === "function")
+                ? $gameSystem.isPlayerHudVisible()
+                : true;
+
+            if (!actor || !isSystemVisible) {
                 this.visible = false;
                 return;
             }
@@ -114,10 +288,35 @@
         }
 
         updateRedraw(actor) {
+            const isHero = actor && (
+                (typeof actor.isHero === "function" && actor.isHero()) ||
+                (actor.hasNotetag && actor.hasNotetag("Hero")) ||
+                (actor.actor && actor.actor() && /<Hero>/i.test(actor.actor().note))
+            );
+
+            if (this._faceSprite) {
+                if (isHero) {
+                    this._faceSprite.setActor(actor);
+                    this._faceSprite.visible = true;
+                } else {
+                    this._faceSprite.visible = false;
+                }
+            }
+
+            let faceEntry = null;
+            if (isHero && typeof Bitmap_Composite !== "undefined") {
+                faceEntry = Bitmap_Composite.getCompositeFaceEntry(actor);
+                if (faceEntry && faceEntry.composer && faceEntry.composer.isReady() && !faceEntry.isComposed) {
+                    faceEntry.composer.bltComposite(faceEntry.bitmap);
+                    faceEntry.isComposed = true;
+                }
+            }
+
             const faceName = (typeof actor.faceName === "function") ? actor.faceName() : "";
             const faceIndex = (typeof actor.faceIndex === "function") ? actor.faceIndex() : 0;
             const faceBitmap = faceName ? ImageManager.loadFace(faceName) : null;
-            const faceReady = faceBitmap ? faceBitmap.isReady() : false;
+            const isComposed = faceEntry ? Boolean(faceEntry.isComposed) : false;
+            const faceReady = isComposed || (faceBitmap ? faceBitmap.isReady() : false);
 
             const hp = actor.hp;
             const mhp = actor.mhp;
@@ -127,6 +326,9 @@
             const exp = (typeof actor.currentExp === "function") ? actor.currentExp() : 0;
             const level = actor.level;
             const name = (typeof actor.name === "function") ? actor.name() : "";
+
+            const equips = (typeof actor.equips === "function") ? actor.equips() : [];
+            const equipKey = equips.map(e => e ? e.id : 0).join("-");
 
             const last = this._lastValues;
             const needsRedraw = (
@@ -140,20 +342,26 @@
                 last.name !== name ||
                 last.faceName !== faceName ||
                 last.faceIndex !== faceIndex ||
+                last.equipKey !== equipKey ||
+                last.isComposed !== isComposed ||
                 (!this._faceLoaded && faceReady)
             );
 
             if (needsRedraw) {
-                this._lastValues = { hp, mhp, mp, mmp, tp, exp, level, name, faceName, faceIndex };
+                this._lastValues = { hp, mhp, mp, mmp, tp, exp, level, name, faceName, faceIndex, equipKey, isComposed };
                 this._faceLoaded = faceReady;
                 this.drawHud(actor, faceBitmap);
             }
         }
 
         drawHud(actor, faceBitmap) {
-            const ctx = this.bitmap.context;
+            const ctx = this.bitmap ? this.bitmap.context : null;
             if (!ctx) return;
             this.bitmap.clear();
+
+            if (this._badgeSprite && this._badgeSprite.bitmap) {
+                this._badgeSprite.bitmap.clear();
+            }
 
             // 1. Fond général HUD (design sombre, légèrement transparent avec bordure douce)
             ctx.fillStyle = "rgba(12, 16, 24, 0.75)";
@@ -175,48 +383,66 @@
             ctx.fillStyle = "#111111";
             ctx.fillRect(fx, fy, fw, fh);
 
-            // Dessin du Faceset si prêt
-            if (faceBitmap && faceBitmap.isReady()) {
+            const isHero = actor && (
+                (typeof actor.isHero === "function" && actor.isHero()) ||
+                (actor.hasNotetag && actor.hasNotetag("Hero")) ||
+                (actor.actor && actor.actor() && /<Hero>/i.test(actor.actor().note))
+            );
+
+            // Dessin du faceset vanilla si non-héros
+            if (!isHero && faceBitmap && faceBitmap.isReady()) {
                 const pw = ImageManager.faceWidth || 144;
                 const ph = ImageManager.faceHeight || 144;
-                const sx = ((typeof actor.faceIndex === "function" ? actor.faceIndex() : 0) % 4) * pw;
-                const sy = Math.floor(((typeof actor.faceIndex === "function" ? actor.faceIndex() : 0) / 4)) * ph;
+                const faceIdx = (typeof actor.faceIndex === "function") ? actor.faceIndex() : 0;
+                const sx = (faceIdx % 4) * pw;
+                const sy = Math.floor(faceIdx / 4) * ph;
                 const img = faceBitmap._image || faceBitmap._canvas;
                 if (img) {
                     ctx.drawImage(img, sx, sy, pw, ph, fx, fy, fw, fh);
                 }
             }
 
-            // Bordure du Faceset
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(fx, fy, fw, fh);
+            // 3. Dessin du cadre et du badge de nom
+            const bCtx = (this._badgeSprite && this._badgeSprite.bitmap) ? this._badgeSprite.bitmap.context : null;
 
-            // 3. Nom du personnage (à moitié à cheval sur le haut du faceset)
-            const nameText = typeof actor.name === "function" ? actor.name() : "";
-            ctx.font = "bold 11px sans-serif";
-            ctx.textBaseline = "middle";
-            ctx.textAlign = "center";
-            const textWidth = ctx.measureText(nameText).width;
-            const badgeW = Math.max(fw, textWidth + 12);
-            const badgeX = fx + (fw - badgeW) / 2;
-            const badgeY = fy - 8; // Centré à cheval sur fy=18 (donc de 10 à 26)
-            const badgeH = 16;
+            const drawBorderAndBadge = (targetCtx) => {
+                if (!targetCtx) return;
+                // Bordure du Faceset
+                targetCtx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+                targetCtx.lineWidth = 1.5;
+                targetCtx.strokeRect(fx, fy, fw, fh);
 
-            ctx.fillStyle = "rgba(18, 22, 32, 0.9)";
-            ctx.beginPath();
-            if (ctx.roundRect) ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 4);
-            else ctx.rect(badgeX, badgeY, badgeW, badgeH);
-            ctx.fill();
-            ctx.strokeStyle = "rgba(255, 215, 0, 0.6)"; // Liseré doré
-            ctx.lineWidth = 1;
-            ctx.stroke();
+                // Nom du personnage (à moitié à cheval sur le haut du faceset)
+                const nameText = typeof actor.name === "function" ? actor.name() : "";
+                targetCtx.font = "bold 11px sans-serif";
+                targetCtx.textBaseline = "middle";
+                targetCtx.textAlign = "center";
+                const textWidth = targetCtx.measureText(nameText).width;
+                const badgeW = Math.max(fw, textWidth + 12);
+                const badgeX = fx + (fw - badgeW) / 2;
+                const badgeY = fy - 8; // Centré à cheval sur fy=18 (donc de 10 à 26)
+                const badgeH = 16;
 
-            ctx.fillStyle = "#ffffff";
-            ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-            ctx.shadowBlur = 2;
-            ctx.fillText(nameText, fx + fw / 2, badgeY + badgeH / 2);
-            ctx.shadowBlur = 0;
+                targetCtx.fillStyle = "rgba(18, 22, 32, 0.9)";
+                targetCtx.beginPath();
+                if (targetCtx.roundRect) targetCtx.roundRect(badgeX, badgeY, badgeW, badgeH, 4);
+                else targetCtx.rect(badgeX, badgeY, badgeW, badgeH);
+                targetCtx.fill();
+                targetCtx.strokeStyle = "rgba(255, 215, 0, 0.6)"; // Liseré doré
+                targetCtx.lineWidth = 1;
+                targetCtx.stroke();
+
+                targetCtx.fillStyle = "#ffffff";
+                targetCtx.shadowColor = "rgba(0, 0, 0, 0.8)";
+                targetCtx.shadowBlur = 2;
+                targetCtx.fillText(nameText, fx + fw / 2, badgeY + badgeH / 2);
+                targetCtx.shadowBlur = 0;
+            };
+
+            drawBorderAndBadge(ctx);
+            if (bCtx && bCtx !== ctx) {
+                drawBorderAndBadge(bCtx);
+            }
 
             // 4. Jauges PV, MP, TP (en dessous du faceset, y >= 88)
             const gx = 10;
@@ -320,5 +546,104 @@
     }
 
     window.Sprite_PlayerHUD = Sprite_PlayerHUD;
+
+    // ========================================================================
+    // 5. Surcharges Window_Base & Window_StatusBase (Étape 13)
+    // ========================================================================
+    if (typeof Window_Base !== "undefined") {
+        if (!Window_Base.prototype.drawDynamicFace) {
+            Window_Base.prototype.drawDynamicFace = function(actorOrId, x, y, width, height) {
+                const actor = (typeof actorOrId === "number")
+                    ? ((typeof $gameActors !== "undefined" && $gameActors) ? $gameActors.actor(actorOrId) : null)
+                    : actorOrId;
+                if (!actor) return null;
+
+                const actorId = (typeof actor.actorId === "function") ? actor.actorId() : 0;
+                width = width || (typeof ImageManager !== "undefined" ? ImageManager.faceWidth : 144) || 144;
+                height = height || (typeof ImageManager !== "undefined" ? ImageManager.faceHeight : 144) || 144;
+
+                this._additionalSprites = this._additionalSprites || {};
+                const key = `dynamicFace_${actorId}_${x}_${y}`;
+                let sprite = this._additionalSprites[key];
+
+                if (!sprite) {
+                    sprite = new (window.Sprite_PaperdollFace || Sprite_BaseClass)(actor, width, height);
+                    this._additionalSprites[key] = sprite;
+                    if (typeof this.addInnerChild === "function") {
+                        this.addInnerChild(sprite);
+                    } else if (typeof this.addChild === "function") {
+                        this.addChild(sprite);
+                    }
+                } else {
+                    if (typeof sprite.setTargetSize === "function") sprite.setTargetSize(width, height);
+                    if (typeof sprite.setActor === "function") sprite.setActor(actor);
+                }
+
+                if (typeof sprite.move === "function") sprite.move(x, y);
+                else { sprite.x = x; sprite.y = y; }
+
+                if (typeof sprite.show === "function") sprite.show();
+                else sprite.visible = true;
+
+                sprite._inUse = true;
+                return sprite;
+            };
+        }
+
+        if (!Window_Base.prototype.drawActorFace) {
+            Window_Base.prototype.drawActorFace = function(actor, x, y, width, height) {
+                const isHero = actor && (
+                    (typeof actor.isHero === "function" && actor.isHero()) ||
+                    (actor.hasNotetag && actor.hasNotetag("Hero")) ||
+                    (actor.actor && actor.actor() && /<Hero>/i.test(actor.actor().note))
+                );
+                if (isHero && typeof this.drawDynamicFace === "function") {
+                    this.drawDynamicFace(actor, x, y, width, height);
+                } else if (typeof this.drawFace === "function") {
+                    this.drawFace(actor.faceName(), actor.faceIndex(), x, y, width, height);
+                }
+            };
+        }
+
+        if (!Window_Base.prototype.drawActorPicture) {
+            Window_Base.prototype.drawActorPicture = function(actor, x, y, width, height) {
+                this.drawActorFace(actor, x, y, width, height);
+            };
+        }
+    }
+
+    if (typeof Window_StatusBase !== "undefined") {
+        const _Window_StatusBase_drawActorFace = Window_StatusBase.prototype.drawActorFace;
+        Window_StatusBase.prototype.drawActorFace = function(actor, x, y, width, height) {
+            const isHero = actor && (
+                (typeof actor.isHero === "function" && actor.isHero()) ||
+                (actor.hasNotetag && actor.hasNotetag("Hero")) ||
+                (actor.actor && actor.actor() && /<Hero>/i.test(actor.actor().note))
+            );
+            if (isHero && typeof this.drawDynamicFace === "function") {
+                this.drawDynamicFace(actor, x, y, width, height);
+            } else if (_Window_StatusBase_drawActorFace) {
+                _Window_StatusBase_drawActorFace.call(this, actor, x, y, width, height);
+            } else if (typeof this.drawFace === "function") {
+                this.drawFace(actor.faceName(), actor.faceIndex(), x, y, width, height);
+            }
+        };
+
+        const _Window_StatusBase_hideAdditionalSprites = Window_StatusBase.prototype.hideAdditionalSprites;
+        Window_StatusBase.prototype.hideAdditionalSprites = function() {
+            if (_Window_StatusBase_hideAdditionalSprites) {
+                _Window_StatusBase_hideAdditionalSprites.call(this);
+            }
+            if (this._additionalSprites) {
+                for (const sprite of Object.values(this._additionalSprites)) {
+                    if (sprite && typeof sprite.hide === "function") {
+                        sprite.hide();
+                    } else if (sprite) {
+                        sprite.visible = false;
+                    }
+                }
+            }
+        };
+    }
 
 })();

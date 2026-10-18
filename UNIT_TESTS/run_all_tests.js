@@ -27,7 +27,12 @@ const testFiles = [
     'test_step10.js',
     'test_step11_ai.js',
     'test_step11_indicators_gauges.js',
-    'test_step11_5_and_step12.js'
+    'test_step11_5_and_step12.js',
+    'test_step13_paperdoll_face.js',
+    'test_step13_5_and_step14.js',
+    'test_step15_gunfight.js',
+    'test_step16_localization.js',
+    'test_step17_bubble_ring.js'
 ];
 
 console.log("==============================================================");

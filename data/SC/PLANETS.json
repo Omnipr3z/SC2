@@ -1,0 +1,557 @@
+[
+  {
+    "id": 0,
+    "name": "Ankaros Star",
+    "type": "Star",
+    "description": "Étoile centrale du système, source de radiations intenses et d'énergie solaire.",
+    "x": 640,
+    "y": 310,
+    "zoom": 1,
+    "bitmapName": "Suros",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.2,
+        "speed": 0.002
+      },
+      {
+        "type": "rotation",
+        "value": 0.0003
+      },
+      {
+        "type": "opacity",
+        "speed": 0.005,
+        "min": 100,
+        "max": 160
+      }
+    ],
+    "pois": [
+      {
+        "id": "ankaros_helios",
+        "name": "Station Solaire Helios",
+        "description": "Plateforme de captage d'énergie coronale et observatoire astrophysique.",
+        "icon": "poi_station",
+        "mapX": 0.52,
+        "mapY": 0.46,
+        "landingMapId": 1,
+        "landingX": 10,
+        "landingY": 10,
+        "landingEventId": 1
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "name": "Vortex Warp",
+    "type": "Warp",
+    "description": "Déchirure spatio-temporelle résiduelle permettant des transits à haute vitesse.",
+    "x": 1165,
+    "y": 132,
+    "zoom": 0.1,
+    "bitmapName": "planet_1",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.2,
+        "speed": 0.002
+      },
+      {
+        "type": "rotation",
+        "value": 0.03
+      },
+      {
+        "type": "opacity",
+        "speed": 0.5,
+        "min": 100,
+        "max": 160
+      }
+    ],
+    "pois": [
+      {
+        "id": "warp_beacon_alpha",
+        "name": "Balise de Confinement Alpha",
+        "description": "Bouée de navigation stabilisant la déchirure dimensionnelle.",
+        "icon": "poi_beacon",
+        "mapX": 0.5,
+        "mapY": 0.48,
+        "landingMapId": 1,
+        "landingX": 10,
+        "landingY": 10,
+        "landingEventId": 1
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Vortex Warp Secondaire",
+    "type": "Warp",
+    "description": "Anomalie gravitationnelle fluctuante.",
+    "x": 1165,
+    "y": 132,
+    "zoom": 0.15,
+    "bitmapName": "planet_6",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.2,
+        "speed": 0.003
+      },
+      {
+        "type": "rotation",
+        "value": 0.04
+      },
+      {
+        "type": "opacity",
+        "speed": 0.5,
+        "min": 100,
+        "max": 200
+      }
+    ],
+    "pois": [
+      {
+        "id": "warp_derelict",
+        "name": "Épave Dérivante Saint-Drusus",
+        "description": "Carcasse d'un transporteur éjecté du sous-espace il y a plusieurs décennies.",
+        "icon": "poi_wreck",
+        "mapX": 0.48,
+        "mapY": 0.52,
+        "landingMapId": 1,
+        "landingX": 10,
+        "landingY": 10,
+        "landingEventId": 1
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Furia",
+    "type": "Volcanic World",
+    "description": "Monde magmatique hostile riche en métaux lourds et en silicates rares.",
+    "x": 1165,
+    "y": 132,
+    "zoom": 0.1,
+    "bitmapName": "planet_2",
+    "moves": [
+      {
+        "type": "scaleOnY",
+        "value": 0.11
+      },
+      {
+        "type": "rotation",
+        "value": 0.001
+      },
+      {
+        "type": "orbit",
+        "value": 0.5,
+        "speed": 0.00015,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 330,
+        "radiusY": 160
+      }
+    ],
+    "pois": [
+      {
+        "id": "furia_mine",
+        "name": "Avant-poste Minier K-14",
+        "description": "Station de forage automatisée résistant aux coulées de lave.",
+        "icon": "poi_mine",
+        "mapX": 0.42,
+        "mapY": 0.55,
+        "landingMapId": 1,
+        "landingX": 10,
+        "landingY": 15,
+        "landingEventId": 1
+      },
+      {
+        "id": "furia_caldera",
+        "name": "Observatoire Géothermique Ignis",
+        "description": "Station de surveillance des flux de magma et des activités telluriques.",
+        "icon": "poi_science",
+        "mapX": 0.6,
+        "mapY": 0.38,
+        "landingMapId": 1,
+        "landingX": 15,
+        "landingY": 12,
+        "landingEventId": 1
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Ankaros Prime",
+    "type": "Hive World",
+    "description": "Monde-ruche principal du système, siège du Gouverneur impérial et métropole surpeuplée.",
+    "x": 350,
+    "y": 240,
+    "zoom": 0.2,
+    "bitmapName": "planet_0",
+    "moves": [
+      {
+        "type": "scaleOnY",
+        "value": 0.24
+      },
+      {
+        "type": "rotation",
+        "value": 0.001
+      },
+      {
+        "type": "orbit",
+        "value": 0.5,
+        "speed": 0.0001,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 440,
+        "radiusY": 240
+      }
+    ],
+    "pois": [
+      {
+        "id": "prime_spatioport",
+        "name": "Spatioport Magellan",
+        "description": "Plateforme d'atterrissage majeure pour vaisseaux de transport et marchands.",
+        "icon": "poi_spaceport",
+        "mapX": 0.5,
+        "mapY": 0.4,
+        "landingMapId": 3,
+        "landingX": 15,
+        "landingY": 20,
+        "landingEventId": 1
+      },
+      {
+        "id": "prime_ruins",
+        "name": "Ruche Effondrée Mortis",
+        "description": "Vestiges d'une ancienne cité industrielle frappée par un cataclysme.",
+        "icon": "poi_ruins",
+        "mapX": 0.65,
+        "mapY": 0.62,
+        "landingMapId": 3,
+        "landingX": 8,
+        "landingY": 12,
+        "landingEventId": 1
+      },
+      {
+        "id": "prime_governor_spire",
+        "name": "Flèche Magistrale de l'Administratum",
+        "description": "Cœur névralgique de la bureaucratie impériale et palais du Gouverneur sous haute sécurité.",
+        "icon": "poi_palace",
+        "mapX": 0.42,
+        "mapY": 0.32,
+        "landingMapId": 3,
+        "landingX": 12,
+        "landingY": 8,
+        "landingEventId": 1
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "Wanghek",
+    "type": "Hostile Jungle World",
+    "description": "Monde hostile recouvert d'une canopée dense et d'une faune prédatrice mortelle.",
+    "x": 350,
+    "y": 240,
+    "zoom": 0.12,
+    "bitmapName": "planet_3",
+    "moves": [
+      {
+        "type": "scaleOnY",
+        "value": 0.135
+      },
+      {
+        "type": "rotation",
+        "value": 0.002
+      },
+      {
+        "type": "orbit",
+        "value": 0.5,
+        "speed": 0.00006,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 550,
+        "radiusY": 300
+      }
+    ],
+    "pois": [
+      {
+        "id": "wanghek_camp",
+        "name": "Campement de Recherche Valdor",
+        "description": "Camp scientifique retranché au cœur de la jungle équatoriale.",
+        "icon": "poi_camp",
+        "mapX": 0.48,
+        "mapY": 0.52,
+        "landingMapId": 1,
+        "landingX": 12,
+        "landingY": 18,
+        "landingEventId": 1
+      },
+      {
+        "id": "wanghek_xenolith",
+        "name": "Structure Xénos Oméga",
+        "description": "Monolithe énigmatique enfoui sous les strates végétales émettant des impulsions bio-acoustiques.",
+        "icon": "poi_ancient",
+        "mapX": 0.58,
+        "mapY": 0.65,
+        "landingMapId": 1,
+        "landingX": 16,
+        "landingY": 22,
+        "landingEventId": 1
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "name": "Station Altus",
+    "type": "Orbital Station",
+    "description": "Station de défense impériale assurant la surveillance des couloirs de fret d'Ankaros Prime.",
+    "x": 350,
+    "y": 240,
+    "zoom": 0.03,
+    "bitmapName": "ship_1",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.5,
+        "speed": 0.0026,
+        "planetId": 4,
+        "radiusX": 48,
+        "radiusY": 48
+      }
+    ],
+    "pois": [
+      {
+        "id": "altus_dock",
+        "name": "Baie d'Amarrage Alpha",
+        "description": "Sas de pressurisation principal pour l'accueil des vaisseaux de patrouille.",
+        "icon": "poi_dock",
+        "mapX": 0.5,
+        "mapY": 0.5,
+        "landingMapId": 1,
+        "landingX": 10,
+        "landingY": 10,
+        "landingEventId": 1
+      },
+      {
+        "id": "altus_auspex",
+        "name": "Matrice Auspex Longue Portée",
+        "description": "Station de surveillance radar scannant les arrivées de navires et les fluctuations Warp du secteur.",
+        "icon": "poi_radar",
+        "mapX": 0.52,
+        "mapY": 0.42,
+        "landingMapId": 1,
+        "landingX": 15,
+        "landingY": 14,
+        "landingEventId": 1
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "name": "Kalyxis Prime",
+    "type": "Desert World",
+    "description": "Monde aride balayé par des tempêtes de sable électrostatiques.",
+    "x": 640,
+    "y": 320,
+    "zoom": 0.16,
+    "bitmapName": "planet_4",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.001
+      },
+      {
+        "type": "orbit",
+        "value": 0.2,
+        "speed": 0.00012,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 380,
+        "radiusY": 200
+      }
+    ],
+    "pois": [
+      {
+        "id": "kalyxis_settlement",
+        "name": "Cité-Dôme de Silice",
+        "description": "Agglomération protégée par un champ de force hermétique contre les tempêtes de sable électrostatiques.",
+        "icon": "poi_colony",
+        "mapX": 0.46,
+        "mapY": 0.54,
+        "landingMapId": 1,
+        "landingX": 10,
+        "landingY": 10,
+        "landingEventId": 1
+      },
+      {
+        "id": "kalyxis_extractor",
+        "name": "Extracteur Géothermique 7-B",
+        "description": "Puits de forage puisant dans les nappes de gaz sous la croûte aride.",
+        "icon": "poi_extractor",
+        "mapX": 0.62,
+        "mapY": 0.4,
+        "landingMapId": 1,
+        "landingX": 12,
+        "landingY": 15,
+        "landingEventId": 1
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "name": "Avant-poste Kalyxis-B",
+    "type": "Asteroid Base",
+    "description": "Complexe minier creusé dans un astéroïde riche en titane.",
+    "x": 640,
+    "y": 320,
+    "zoom": 0.03,
+    "bitmapName": "ship_1",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.3,
+        "speed": 0.002,
+        "planetId": 10,
+        "radiusX": 60,
+        "radiusY": 60
+      }
+    ],
+    "pois": [
+      {
+        "id": "kalyxis_mine_b",
+        "name": "Puits de Titane B-Prime",
+        "description": "Exploitation minière automatisée creusée au cœur du noyau ferreux de l'astéroïde.",
+        "icon": "poi_mine",
+        "mapX": 0.5,
+        "mapY": 0.5,
+        "landingMapId": 1,
+        "landingX": 10,
+        "landingY": 10,
+        "landingEventId": 1
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "name": "Mortis Alpha",
+    "type": "Tomb World",
+    "description": "Planète sans atmosphère couverte de mégalithes antédiluviens.",
+    "x": 640,
+    "y": 320,
+    "zoom": 0.18,
+    "bitmapName": "planet_5",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0008
+      },
+      {
+        "type": "orbit",
+        "value": 0.8,
+        "speed": 0.00008,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 420,
+        "radiusY": 220
+      }
+    ],
+    "pois": [
+      {
+        "id": "mortis_tomb",
+        "name": "Cité Nécropole Sans Nom",
+        "description": "Gigantesques cryptes d'obsidienne antérieures à l'Imperium, totalement silencieuses.",
+        "icon": "poi_ancient",
+        "mapX": 0.48,
+        "mapY": 0.52,
+        "landingMapId": 1,
+        "landingX": 10,
+        "landingY": 10,
+        "landingEventId": 1
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "name": "Station Relais Mortis",
+    "type": "Orbital Station",
+    "description": "Relais de communication automatisé émettant des signaux brouillés.",
+    "x": 640,
+    "y": 320,
+    "zoom": 0.03,
+    "bitmapName": "ship_1",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.1,
+        "speed": 0.003,
+        "planetId": 12,
+        "radiusX": 50,
+        "radiusY": 50
+      }
+    ],
+    "pois": [
+      {
+        "id": "mortis_relay_hub",
+        "name": "Module de Commutateur Vox",
+        "description": "Antennes relais abandonnées émettant des harmoniques fantômes à intervalles réguliers.",
+        "icon": "poi_relay",
+        "mapX": 0.5,
+        "mapY": 0.5,
+        "landingMapId": 1,
+        "landingX": 10,
+        "landingY": 10,
+        "landingEventId": 1
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "name": "Ophidia Prime",
+    "type": "Ice World",
+    "description": "Monde gelé abritant des enclaves de pirates dissimulées sous la calotte glaciaire.",
+    "x": 640,
+    "y": 320,
+    "zoom": 0.17,
+    "bitmapName": "planet_4",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.001
+      },
+      {
+        "type": "orbit",
+        "value": 0.4,
+        "speed": 0.00009,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 400,
+        "radiusY": 210
+      }
+    ],
+    "pois": [
+      {
+        "id": "ophidia_pirate_den",
+        "name": "Crique des Corsaires de l'Ombre",
+        "description": "Refuge clandestin dissimulé sous une faille glaciaire de 3 kilomètres de profondeur.",
+        "icon": "poi_pirate",
+        "mapX": 0.42,
+        "mapY": 0.58,
+        "landingMapId": 1,
+        "landingX": 10,
+        "landingY": 10,
+        "landingEventId": 1
+      },
+      {
+        "id": "ophidia_ice_station",
+        "name": "Avant-poste Cryo-Thermique",
+        "description": "Station de forage de glace lourde et de purification d'eau riche en minéraux.",
+        "icon": "poi_station",
+        "mapX": 0.6,
+        "mapY": 0.45,
+        "landingMapId": 1,
+        "landingX": 10,
+        "landingY": 10,
+        "landingEventId": 1
+      }
+    ]
+  }
+]

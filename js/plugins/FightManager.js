@@ -190,8 +190,18 @@ class FightManager {
         action.apply(targetBattler);
 
         const result = targetBattler.result ? targetBattler.result() : null;
-        const damage = result ? result.hpDamage : 0;
-        const isDead = targetBattler.isDead();
+        let damage = result ? result.hpDamage : 0;
+        const isHit = result ? (typeof result.isHit === "function" ? result.isHit() : (!result.missed && !result.evaded)) : true;
+        if (isHit && damage <= 0) {
+            damage = 1;
+            if (typeof targetBattler.gainHp === "function") {
+                targetBattler.gainHp(-damage);
+            }
+            if (result) {
+                result.hpDamage = damage;
+            }
+        }
+        const isDead = targetBattler.isDead ? targetBattler.isDead() : false;
 
         // Enregistrement du résultat dans le FightManager
         const fightRecord = {
@@ -441,8 +451,18 @@ class FightManager {
         action.apply(targetBattler);
 
         const result = targetBattler.result ? targetBattler.result() : null;
-        const damage = result ? result.hpDamage : 0;
-        const isDead = targetBattler.isDead();
+        let damage = result ? result.hpDamage : 0;
+        const isHit = result ? (typeof result.isHit === "function" ? result.isHit() : (!result.missed && !result.evaded)) : true;
+        if (isHit && damage <= 0) {
+            damage = 1;
+            if (typeof targetBattler.gainHp === "function") {
+                targetBattler.gainHp(-damage);
+            }
+            if (result) {
+                result.hpDamage = damage;
+            }
+        }
+        const isDead = targetBattler.isDead ? targetBattler.isDead() : false;
 
         // Enregistrement dans l'historique
         const fightRecord = {

@@ -1,32 +1,11 @@
-# Ignorer tous les fichiers et dossiers par défaut
-/*
+# Fichiers scripts de base de RPG Maker MZ
+js/rmmz_core.js
+js/rmmz_managers.js
+js/rmmz_objects.js
+js/rmmz_scenes.js
+js/rmmz_sprites.js
+js/rmmz_windows.js
 
-# Ne pas ignorer la configuration et la documentation
-!.gitignore
-!README.md
-!WALKTROUGHT.md
-!WALKTHROUGH.md
-
-# Conserver data/ (données de l'éditeur RPG Maker)
-!/data/
-!/data/**
-
-# Conserver js/plugins/ et js/plugins.js
-!/js/
-/js/*
-!/js/plugins.js
-!/js/plugins/
-!/js/plugins/**
-
-# Conserver img/characters/ et img/ui/
-!/img/
-/img/*
-!/img/characters/
-!/img/characters/**
-!/img/ui/
-!/img/ui/**
-
-# Conserver les tests unitaires
-!/UNIT_TESTS/
-!/UNIT_TESTS/**
-
+# Répertoires WIP (Work In Progress)
+**/WIP/
+WIP/

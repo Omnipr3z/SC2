@@ -20,13 +20,15 @@
 class Game_Inventories {
     constructor() {
         this._data = {}; // { inventoryId: Game_Inventory }
+        this._looted = {}; // { inventoryId: boolean } (pour cadavres ou conteneurs temporaires vidés)
         this._currentOpenId = null;
         this._currentEventId = null;
     }
 
     /**
      * Accède ou crée à la volée un inventaire avec son ID.
-     * Si l'inventaire est nouveau, charge ses données initiales depuis $dataInventories.
+     * Si l'inventaire est nouveau et n'a pas déjà été vidé/pillé,
+     * charge ses données initiales depuis $dataInventories.
      * @param {string} id (ex: "A_1", "C_1", "E_1")
      * @returns {Game_Inventory}
      */
@@ -36,13 +38,71 @@ class Game_Inventories {
 
         if (!this._data[key]) {
             const inv = new Game_Inventory(key);
-            if (typeof $dataInventories !== "undefined" && $dataInventories && $dataInventories[key]) {
+            // Charge les données initiales uniquement si non vidé/pillé auparavant
+            if (!this.isLooted(key) && typeof $dataInventories !== "undefined" && $dataInventories && $dataInventories[key]) {
                 inv.loadData($dataInventories[key]);
+            }
+            // Par convention, les acteurs (A_) et conteneurs (C_) sont persistants par défaut sauf indication contraire
+            if (key.startsWith("A_") || key.startsWith("C_")) {
+                const hasExplicitFlag = typeof $dataInventories !== "undefined" && $dataInventories && $dataInventories[key] &&
+                    ($dataInventories[key].persistent !== undefined || $dataInventories[key].auto_erase !== undefined);
+                if (!hasExplicitFlag && !inv.isPersistent()) {
+                    inv.setPersistent(true);
+                }
             }
             this._data[key] = inv;
         }
 
         return this._data[key];
+    }
+
+    /**
+     * Crée ou configure un inventaire secondaire via l'API simple.
+     * @param {string} id Identifiant unique (ex: "C_COFFRE", "C_1")
+     * @param {object} [options={}] Options (persistent, maxWeight, maxSlots, onlyWeapons, items, etc.)
+     * @returns {Game_Inventory}
+     */
+    create(id, options = {}) {
+        if (!id) id = "DEFAULT";
+        const key = String(id).trim();
+        const inv = new Game_Inventory(key);
+        if (options && typeof options === "object") {
+            inv.loadData(options);
+        }
+        this._data[key] = inv;
+        return inv;
+    }
+
+    /**
+     * Indique si un inventaire a déjà été vidé/pillé.
+     * @param {string} id 
+     * @returns {boolean}
+     */
+    isLooted(id) {
+        if (!id) return false;
+        return Boolean(this._looted && this._looted[String(id).trim()]);
+    }
+
+    /**
+     * Marque un inventaire comme pillé (ne sera plus rechargé depuis $dataInventories).
+     * @param {string} id 
+     */
+    markLooted(id) {
+        if (!id) return;
+        this._looted = this._looted || {};
+        this._looted[String(id).trim()] = true;
+    }
+
+    /**
+     * Définit le caractère persistant d'un inventaire.
+     * @param {string} id 
+     * @param {boolean} persistent 
+     */
+    setPersistent(id, persistent = true) {
+        const inv = this.inventory(id);
+        if (inv) {
+            inv.setPersistent(persistent);
+        }
     }
 
     /**
@@ -65,13 +125,26 @@ class Game_Inventories {
     }
 
     /**
+     * Supprime un inventaire du registre (API simple).
+     * @param {string} id 
+     */
+    remove(id) {
+        this.unset(id);
+    }
+
+    /**
      * Ouvre la scène d'inventaire pour transférer avec un inventaire cible.
      * @param {string} inventoryId ID de l'inventaire secondaire (ex: "C_1", "E_1", "A_2")
-     * @param {object} [options={}] Options contextuelles (ex: { eventId: 2 })
+     * @param {object} [options={}] Options contextuelles (ex: { eventId: 2, persistent: true })
      */
     open(inventoryId, options = {}) {
         this._currentOpenId = String(inventoryId).trim();
         this._currentEventId = options.eventId || null;
+
+        const inv = this.inventory(this._currentOpenId);
+        if (options.persistent !== undefined) {
+            inv.setPersistent(Boolean(options.persistent));
+        }
 
         if (typeof Scene_Inventory !== "undefined") {
             Scene_Inventory.prepare(this._currentOpenId, options);
@@ -156,6 +229,7 @@ class Game_Inventories {
                 saveObj[key] = inv.makeSaveData();
             }
         }
+        saveObj._looted = Object.assign({}, this._looted || {});
         return saveObj;
     }
 
@@ -165,10 +239,18 @@ class Game_Inventories {
      */
     loadSavefileData(saveData) {
         this._data = {};
+        this._looted = {};
         if (!saveData || typeof saveData !== "object") return;
+        if (saveData._looted && typeof saveData._looted === "object") {
+            this._looted = Object.assign({}, saveData._looted);
+        }
         for (const key of Object.keys(saveData)) {
+            if (key === "_looted" || key === "looted") continue;
             const inv = new Game_Inventory(key);
             inv.loadData(saveData[key]);
+            if ((key.startsWith("A_") || key.startsWith("C_")) && saveData[key].persistent === undefined && !saveData[key].auto_erase) {
+                inv.setPersistent(true);
+            }
             this._data[key] = inv;
         }
     }

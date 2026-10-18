@@ -564,5 +564,203 @@ Ajoute un hud en haut à gauche de l'ecran qui affiche les information du joueur
 - Jauge Pv, MP et TP en dessous du faceset
 - Jauge d'xp en dessous des jauges Pv, MP et TP avec indication du niveau.
 
+Il doit y avoir aussi de hud pour les follower en version plus petite (60 %) alignés horizontalement à droite de la fenetre du joueur en haut de l'ecran.
+
+Je voudrais qu'en cliquant sur le hud du follower (clic gauche) le mouvement sur la map normal ne soit pas activé.
+
+aussi je voudrais que tu ajoute au gitignore les exceptions:
+- fichiers audio utilisé dans le programme (vanilla system, map & animation et ceux  custommap et scipt).
+- pour le faceset on va faire quelque chose (Etape13 WALKTROUGHT ligne568) avant donc tu ajoute rien pour l'instant 
+
+# ETAPE 13
+
+## Ajustement:
+
+J'ai un bug tout fonctionne sauf que quand je donne un coup à un enemi avec le player:
+- le player s'anim correctement
+- le character de l'ennemi aussi et il recule d'une case
+- l'animation se declenche bien sur l'ennemi
+- mais il ne perd pas de pv
+
+quand c'est lui qui m'attaque je perd bien des pv et je peut meme mourir.
+Ce n'est peut etre pas dans le code parce que j'ai fait des modif qui ont potentiellement casser l'equilibrage du combat mais je ne crois pas.
+
+## Visual faceset Paperdoll
+
+Au lieu d'utiliser le faceset vanilla pour afficher les visages dans le HUD et les menus, j'aimerais qu'on utilise un portrait de personnage dynamique (paperdoll) pour les actor "<hero>". Le portrait sera généré automatiquement par le plugin Sprite_PaperdollFace (Pour pouvoir le faire evoluer dans le futur avec des anim ou d'autre truc). Il utilisera un Bitmap_Composite généré pour les <hero> dans leur notetag, les autres auront le faceset vanilla par defaut. Les classe vanilla qui utilisent draw actorFace ou equivalent doivent être surchargées pour faire appel a une nouvelle methode drawDynamicFace(actorId) quand c'est necessaire. Au lieu de dessiner directement sur la fenetre, il ajoutera le sprite du portrait dynamique en children et quand la fenetre update le sprite aussi (pour l'instant sans changement majeur sinon les eventuel changement d'équipements).
+
+Les fichiers seront contenu dans le dossier 
+``` img/faces/hero/...```
+
+Le Bitmap Composite sera composé de la couche de Base et des couches equipement:
+
+### Couche de base
+Le fichier de base (index 0) est l'id de l'actor (ex: 1.png).
+
+### Couche d'éauipement
+dans les equipements il y aura un notetag si un layer doit etre affiché sur l'image du faceset :
+
+``` <face:[EQUIP_FILENAME],[Z_INDEX],[UNISEX-bool factultative (defaut = false)]>```
+
+pour chaque equipement:
+[EQUIP_FILENAME]_[RACE_NAME]_[SEXE].png (z-index defini par le [z_INDEX] du notetag) (la race et le sexe sont ceux de l'acteur)
+
+Si le [UNISEX] est 'true' il ne prendra en compte que la race et pas le sexe pour l'affichage (il n'y aura qu'un fichier equip_[EQUIP_FILENAME]_[RACE_ID].png).
+
+Au lieu d'utiliser le system de faceset natif, avec des tiles, le bitmap composite composera un unique tile (144*144px) à partir des image sources qui sera affiché dans son integralité (redimensionné si lieu est biensure)
+
+# ETAPE 13.5
+
+## Review Ajustement
+
+* Il faudrait que lorsque le clique droit et enfoncé, meme si il peut se deplacer avec les touches ZQSD, le personnage ne puisse pas courrir (seulement quand le clic droit est enfoncé )
+* Je voudrais que lorsque le clic droit (pas le gauche et l'action atk) est enfoncé le character du personnage ne soit pas celui walk mais guard ([race]_[sex]_guard.png)
+
+# ETAPE 14 Title
+
+Pour l'ecran titre je veux un truc plus chouette que l'ecran de base de rmmz. 
+
+## Images
+
+Dans le repertoire img/Titles1/ j'ai ajouter les image suivantes:
+* Parralaxe.png
+* Bg_0.png
+* Bg_1.png
+* Bg_2.png
+* Bg_3.png
+
+Dans le repertoire img/Titles2/:
+* Game_logo.png
+* Screw.png
+* Sc_logo.png
+* Station.png
+* Left.png 
+* Right.png
+
+## Superposition des layer
+
+J'indique le z-index comme suis : z-[valeur] ex: z-[1]
+
+Dans le repertoire img/Titles1/:
+* Parralaxe.png : z-[0]
+* Bg_0.png : z-[1]
+* Bg_1.png : z-[2]
+* Bg_2.png : z-[10]
+
+Dans le repertoire img/Titles2/:
+* Station.png : z-[4]
+* Game_logo.png : z-[11]
+* Screw.png : z-[5]
+* Sc_logo.png : z-[12]
+* Left.png : z-[13]
+* Right.png : z-[14]
+
+
+Ca serait bien de prechargé les layer et de les animer ensuite
+
+## ANimation des layer
+
+Voilà ce que je voudrais:
+
+### Animation d'ouverture
+
+A l'ouverture le paralaxe (defilement tilling horizontal lent) apparait progressivement (un fade in) et l'image bg_0 (fullscreen image) doit apparaitre progressivement avec un leger decallage de depart (fade in)
+Une fois ces image en place, le logo (game_logo) doit apparaitre aussi (un fade in de 1.5s) centré sur l'ecran jusqu'à opacity 0.5.
+Dès qu'il a atteint opacité 0.5, le game_logo doit se deplacer vers le haut jusqu'à ce que le bitmap soit aligné sur le haut de l'écran et opaque et en parallele l'image bg_1 doit s'afficher progressivement (un fade in)
+
+une fois le logo en place en haut de l'ecran et opaque, bg_1 aussi, le screw doit s'afficher en bas à droite de l'ecran (en rotation et fade in) et en parrallèle l'image station doit s'afficher progressivement (un fade in)
+positionné precisement à x406 y225 (c'est la position au centre de l'image) avec un zoom 0.1 et grossir jusqu'à un zoom 1.
+
+Dès que la station est apparu completement le logo sc_logo doit apparaitre (un fade in) à la meme positionet à la pace de screw qui disparait en fondu.
+
+Une fois ce la fait la fenetre de commande de la scene s'ouvre (pas avant !).
+
+
+# Menu
+
+Le menu de commande de l'ecran titre doit comprendre de nouvelles options que les classique de RPG maker: 
+* Débuter (vanilla)
+* Continuer (Vanilla)
+* Mode libre : qui ouvre une Scene_FreeGameStart que nous feront par la suite.
+* Options (vanilla)
+* Codex (qui ouvre une scene_codex): une sorte de base de connaissance du jeu et des accomplishments. Il doit comprendre des entrées textuelles et des images (qui s'affiche dans une image view)... tu peux faire une scene simple on travaillera plus sérieusement sur ca plus tard.
+* Credits (qui ouvre une scene_credits) une scene de credits qui defile verticalement les uns apres les autres (comme dans les film).Tu peux mettre un timer par defaut à 10 secondes. Tu peux aussi mettre une musique de fond (bgm/03Z_MystFallOut.ogg)
+Dans les credits tu peux mettre de données fictives pour l'instant le temps de finaliser le contenu du jeu.
+* Quitter (qui ferme le jeu)
+
+La fenetre en arrière plan de la commande doit transparent (pas de bordure/cadre).
+
+# Transistion du mode histoire/libre
+
+Lorsque le joueur sélectionne Débuter ou Continuer, au leiu d'avoir la transition directe vers la scene map, il doit y avoir une animation qui donne l'impression qu'on plonge dans l'univers.
+L'image bg_2 (fullscreen image) doit s'afficher progressivement (un fade in) les autre doivent s'effacer en fade out. 
+Une fois apparu totalement l'image Left apparait en x:0 y:990 (top-left) zoom 1.2 et `right.png` en x:1780 y:600 (top-right) zoom:0.6.
+Les deux effectuent simultanément un deplacement vers x0y0 et zoom 1 et le bgm de la scene transitionne vers bgm/03Z_MystFallOut.ogg
+Ensuite ca atend 2s et transition vers la prochaine scene classique.
+
+
+# Optimisation des inventaires
+
+Pour l'instant il est possible de recuperer le stuff des inventaire dans la scene dediée mais on ne peut pas deposer du stuff de son inventaire perso vers le conteneur ? Ca doit etre possible uniquement du contenaire perso vers les contenaires persistants ou les sacs des autres persos mais pas les cadavres ou les inventaire éphémères.
+
+L'interface doit etre repensée pour plus de clarté, il faut ajouter une fenetre de commande au dessus de la fenetre de description de l'objet et les fenetres des listes. Elle doit:
+* prendre (active la liste d'objets du contenaire et permet de les recuperer la fenetre deja existante : prendre 1, prendre tout...)
+* deposer (active la liste d'objets de l'inventaire perso et permet de les deposer) uniquement si c'est possible
+
+Le stuff qu'on peut deposer ne doit pas comprendre l'equipement porté.
+
+Pour les inventaires secondaires C_ (contenaire et autres) , j'aimerai qu'on puisse les parametrer pour limiter leur usage:
+* persistant ou auto-erase quand il est vidé
+* reservé au armes
+* reservé aux consommables
+* reservé aux munitions
+* resérvé au equipements/ armures/ accesoires 
+* reservé à un objet ou une liste d'objets spécifiques
+* interdit à un objet ou une liste d'objets spécifiques
+* nombre limité d'objets (par exemple 3)
+
+C'est parametre doivent etre reglable dans le INVENTORIES.json
+
+on doit pouvoir créer et supprimé des inventaire via une interface simple
+Je voudrais aussi que si un event porte le flag <inventory: C_[id]>, et qu'il est vide l'interupteur B de cet event soit automatiquement activé et désactivé si il est a nouveau remplit.
+
+Enfin il faut adapter le contenu pour le relier aux fichiers de localisation.
+
+## Gestion du poids
+
+Il serait opportun d'ajouter une limite de poids pour les inventaires (perso, acteurs, contenaires). Si le poids total des objets depasse la limite , le joueur ne peut pas ajouter d'objet.
+
+Les objets auraient par defaut un poid de 1 mais des flag en notetag permettrait de modifier cette valeur
+
+`
+<height:[VALUE]>
+`
+où [VALUE] est la valeur numerique du poids
+
+Des equipements pourrait par ailleurs avoir un poid negatif pour representer un gain de place.
+
+Si il enleve l'equipement, le poids negatif doit disparaitre.
+
+L'equipement porté voit son poids non pris en compte dans le calcul du poids total.
+
+si il depasse la limite de poids à cause du changement d'equipement ou pour une autre raison (par exemple il vient de récupérer un objet), le personnage ne peut plus se deplacer et le jeu doit l'indiquer visuellement (par exemple en changeant la couleur du personnage en rouge lorsqu'il tente un mouvement surchargé).
+
+Aussi, il faut prevoir une option pour jeter les objet dans l'inventaire du perso.
+
+## Calcul de la capacité en poids
+
+Pour la V1 je ppense simplement a me baser sur la force du perso (atk). Lorsque des acteur rejoigne sa team. le poids et la capacité de poids doivent s'ajuster en fonction de l'inventaire de chacun et des forces de tous pour qu'il ne se retrouve pas en surpoids.
+
+## Interface
+
+Dans l'inventaire et dans les fenetre de trasfert il faut avoir l'indication "poids accumulé/capacité totale" de chaque inventaire en dessous de sa liste (par exemple : "Poids: 10/50").
+
+
+
+
+
+
+
+
 
 

@@ -175,11 +175,13 @@
     // ========================================================================
     if (typeof ConfigManager !== "undefined") {
         ConfigManager.keyboardLayout = "azerty";
+        ConfigManager.autoReload = false;
 
         const _ConfigManager_makeData = ConfigManager.makeData;
         ConfigManager.makeData = function() {
             const config = _ConfigManager_makeData ? _ConfigManager_makeData.call(this) : {};
             config.keyboardLayout = this.keyboardLayout;
+            config.autoReload = this.autoReload;
             return config;
         };
 
@@ -189,6 +191,7 @@
                 _ConfigManager_applyData.call(this, config);
             }
             this.keyboardLayout = (config && config.keyboardLayout) ? config.keyboardLayout : "azerty";
+            this.autoReload = Boolean(config && config.autoReload);
             this.applyKeyboardLayout();
         };
 
@@ -202,6 +205,7 @@
             Input.keyMapper[69] = "ok";        // E (Interagir avec objets/events comme Enter)
             Input.keyMapper[73] = "inventory"; // I (Ouvrir l'inventaire)
             Input.keyMapper[82] = "reload";    // R (Recharger - réservé gunfight)
+            Input.keyMapper[72] = "toggleHud"; // H (Basculer l'affichage des HUDs acteur/arme)
             Input.keyMapper[27] = "escape";    // Échap (Menu natif)
             Input.keyMapper[96] = "escape";    // Numpad 0 (Menu natif)
 
@@ -242,6 +246,7 @@
                 _Window_Options_addGeneralOptions.call(this);
             }
             this.addCommand("Clavier", "keyboardLayout");
+            this.addCommand("Recharge auto", "autoReload");
         };
 
         const _Window_Options_statusText = Window_Options.prototype.statusText;
@@ -302,6 +307,44 @@
             if (_Window_Options_cursorLeft) {
                 _Window_Options_cursorLeft.call(this);
             }
+        };
+    }
+
+    // ========================================================================
+    // 3. Utilitaires Mathématiques & Interpolation (approach)
+    // ========================================================================
+    Utils.approach = function(current, target, step) {
+        if (current < target) {
+            return Math.min(current + step, target);
+        } else if (current > target) {
+            return Math.max(current - step, target);
+        }
+        return target;
+    };
+
+    if (!Number.prototype.approach) {
+        Object.defineProperty(Number.prototype, "approach", {
+            value: function(target, step) {
+                return Utils.approach(this.valueOf(), target, step);
+            },
+            configurable: true,
+            writable: true,
+            enumerable: false
+        });
+    }
+
+    if (!Bitmap.prototype.drawLine) {
+        Bitmap.prototype.drawLine = function(x1, y1, x2, y2, color, lineWidth = 1) {
+            const context = this.context;
+            context.save();
+            context.beginPath();
+            context.moveTo(x1, y1);
+            context.lineTo(x2, y2);
+            context.strokeStyle = color || "#ffffff";
+            context.lineWidth = lineWidth;
+            context.stroke();
+            context.restore();
+            this._baseTexture.update();
         };
     }
 

@@ -56,15 +56,15 @@ class Sprite_Hero extends Sprite_Character {
     resolveAction() {
         if (!this._character) return "walk";
         const charAction = this._character.action ? this._character.action() : "walk";
-        if (charAction === "dash") {
+        if (charAction === "run" || charAction.startsWith("run_") || charAction === "dash" || charAction.startsWith("dash_")) {
             this._dashBufferTimer = 6;
-            return "dash";
+            return (charAction === "dash") ? "run" : (charAction.startsWith("dash_") ? "run_" + charAction.substring(5) : charAction);
         }
-        if (this._currentAction === "dash" && charAction === "walk") {
+        if ((this._currentAction === "run" || (this._currentAction && (this._currentAction.startsWith("run_") || this._currentAction.startsWith("dash_")))) && (charAction === "walk" || charAction.startsWith("walk_"))) {
             const isDashing = typeof this._character.isDashing === "function" && this._character.isDashing();
             if (isDashing && this._dashBufferTimer > 0) {
                 this._dashBufferTimer--;
-                return "dash";
+                return this._currentAction;
             }
         }
         this._dashBufferTimer = 0;
@@ -191,14 +191,27 @@ class Sprite_Hero extends Sprite_Character {
 
     characterPatternX() {
         if (this._character) {
-            const act = typeof this._character.action === "function" ? this._character.action() : "walk";
-            if (act !== "walk" && act !== "dash") {
-                const pattern = typeof this._character.actionPattern === "function" ? this._character.actionPattern() : 0;
-                return this.getHero() ? pattern : (pattern % 3);
-            }
+            // 1. Si le personnage exécute une action active (ex: attaque 'atk', tir 'shot_*')
             if (typeof this._character.isActing === "function" && this._character.isActing()) {
-                const pattern = this._character.actionPattern();
-                return this.getHero() ? pattern : (pattern % 3);
+                const pattern = typeof this._character.actionPattern === "function" ? this._character.actionPattern() : 0;
+                const maxCols = (this.bitmap && this._frameWidth > 0) ? Math.max(1, Math.floor(this.bitmap.width / this._frameWidth)) : 3;
+                return this.getHero() ? Math.min(pattern, maxCols - 1) : (pattern % 3);
+            }
+            // 2. Si une action fige la dernière frame (ex: mort/down)
+            if (this._character._actionFreezeLastFrame) {
+                const pattern = typeof this._character.actionPattern === "function" ? this._character.actionPattern() : 0;
+                const maxCols = (this.bitmap && this._frameWidth > 0) ? Math.max(1, Math.floor(this.bitmap.width / this._frameWidth)) : 3;
+                return this.getHero() ? Math.min(pattern, maxCols - 1) : (pattern % 3);
+            }
+            // 3. Actions discrètes hors locomotions, gardes et recharges continues (walk, dash, run, guard*, reload*, walkreload*)
+            const act = typeof this._character.action === "function" ? this._character.action() : "walk";
+            const isContinuous = act === "walk" || act === "dash" || act === "run" ||
+                act.startsWith("guard") || act.startsWith("reload") || act.startsWith("walkreload") ||
+                act.startsWith("walk_") || act.startsWith("dash_") || act.startsWith("run_");
+            if (!isContinuous) {
+                const pattern = typeof this._character.actionPattern === "function" ? this._character.actionPattern() : 0;
+                const maxCols = (this.bitmap && this._frameWidth > 0) ? Math.max(1, Math.floor(this.bitmap.width / this._frameWidth)) : 3;
+                return this.getHero() ? Math.min(pattern, maxCols - 1) : (pattern % 3);
             }
         }
         if (this.getHero()) {

@@ -212,6 +212,7 @@ $gameParty.addActor(1);
 console.log("--- Test 1: Actor notetag <attackId: 1> and hasNoWeapons() ---");
 const actor1 = $gameActors.actor(1);
 assert("Actor 1 is a Game_Hero instance", actor1 instanceof Game_Hero);
+actor1.isEquipWtypeOk = () => true;
 assert("Actor 1 has attackSkillId = 1", actor1.attackSkillId() === 1);
 
 // Équiper une arme dans le test pour valider hasNoWeapons()

@@ -1,0 +1,54 @@
+[
+  {
+    "id": 0,
+    "name": "Ankaros Sector",
+    "description": "Secteur frontalier de l'Ultima Segmentum sous blocus impérial.",
+    "segmentum": "ULTIMA-SEGMENTUM",
+    "systems": [
+      {
+        "id": 0,
+        "name": "Ankaros",
+        "description": "Système primaire, abrite le siège administratif planétaire et la station orbitale Altus.",
+        "starType": "Yellow Giant",
+        "starColor": "#ffd700",
+        "pos": { "x": 340, "y": 300 },
+        "connections": [1, 2],
+        "entryPoint": { "x": 1100, "y": 160 },
+        "planetIds": [0, 1, 2, 3, 4, 5, 8]
+      },
+      {
+        "id": 1,
+        "name": "Kalyxis",
+        "description": "Système minier réputé pour ses ceintures d'astéroïdes et ses avant-postes automatisés.",
+        "starType": "Blue Dwarf",
+        "starColor": "#4da6ff",
+        "pos": { "x": 600, "y": 180 },
+        "connections": [0, 2, 3],
+        "entryPoint": { "x": 250, "y": 480 },
+        "planetIds": [10, 11]
+      },
+      {
+        "id": 2,
+        "name": "Mundus Mortis",
+        "description": "Ancien monde nécropole abandonné, entouré de tempêtes de plasma radioactives.",
+        "starType": "Red Dwarf",
+        "starColor": "#ff4d4d",
+        "pos": { "x": 520, "y": 460 },
+        "connections": [0, 1, 3],
+        "entryPoint": { "x": 950, "y": 520 },
+        "planetIds": [12, 13]
+      },
+      {
+        "id": 3,
+        "name": "Ophidia",
+        "description": "Système lointain aux confins de la bordure extérieure, refuge de corsaires et contrebandiers.",
+        "starType": "White Dwarf",
+        "starColor": "#e6e6ff",
+        "pos": { "x": 860, "y": 320 },
+        "connections": [1, 2],
+        "entryPoint": { "x": 320, "y": 220 },
+        "planetIds": [14]
+      }
+    ]
+  }
+]

@@ -37,7 +37,7 @@ class Game_Hero extends Game_Actor {
 
         // Précharge les planches composites indispensables
         this.getCompositeEntry("walk");
-        this.getCompositeEntry("dash");
+        this.getCompositeEntry("run");
         this.getCompositeEntry("atk");
         this.getCompositeEntry("hurt");
         this.getCompositeEntry("down");
@@ -127,7 +127,8 @@ class Game_Hero extends Game_Actor {
      */
     getCompositeCacheKey(action = "walk") {
         let act = (action || "walk").toLowerCase();
-        if (act === "run") act = "dash";
+        if (act === "dash") act = "run";
+        if (act.startsWith("dash_")) act = "run_" + act.substring(5);
         const equipIds = this.equips().map(e => e ? e.id : 0).join("-");
         return `${this.actorId()}_${this._race}_${this._sex}_${this._hasFace}_${act}_${equipIds}`;
     }
@@ -140,19 +141,93 @@ class Game_Hero extends Game_Actor {
     getCompositeEntry(action = "walk") {
         return Bitmap_Composite.getCompositeEntry(this, action);
     }
+
     /**
-     * Récupère la configuration d'attaque de l'acteur ou de l'arme équipée.
-     * Lit les balises XML <visual_attack>...</visual_attack>
+     * Extrait toutes les couches de portrait faceset d'équipements équipées par le héros.
+     * Lit les notetags <face: FILENAME, [zindex], [unisex]> sur chaque équipement.
+     * @returns {Array<{ filename: string, zindex: number, unisex: boolean }>}
+     */
+    getFaceEquipLayers() {
+        const layers = [];
+        const equips = this.equips ? this.equips() : [];
+
+        for (const item of equips) {
+            if (!item || !item.note) continue;
+
+            const regex = /<face:\s*([^,>]+)(?:,\s*(\d+))?(?:,\s*(true|false))?\s*>/gi;
+            let match;
+            while ((match = regex.exec(item.note)) !== null) {
+                const filename = match[1].trim();
+                const zindex = match[2] ? parseInt(match[2], 10) : 10;
+                const unisex = match[3] ? (match[3].toLowerCase() === "true") : false;
+                layers.push({ filename, zindex, unisex });
+            }
+        }
+
+        return layers;
+    }
+
+    /**
+     * Calcule une clé unique de cache représentant le visage actuel du héros.
+     * @returns {string}
+     */
+    getCompositeFaceCacheKey() {
+        const equipIds = (this.equips ? this.equips() : []).map(e => e ? e.id : 0).join("-");
+        return `face_${this.actorId()}_${this._race}_${this._sex}_${equipIds}`;
+    }
+
+    /**
+     * Récupère l'entrée composite faceset via Bitmap_Composite.
+     * @returns {{ bitmap: Bitmap, composer: Bitmap_Composite, isComposed: boolean }}
+     */
+    getCompositeFaceEntry() {
+        return Bitmap_Composite.getCompositeFaceEntry(this);
+    }
+
+    /**
+     * Récupère la configuration d'attaque de la compétence utilisée, de l'arme ou de l'acteur.
+     * Lit les balises XML <visual_attack>...</visual_attack> en priorité dans la compétence d'attaque.
+     * @param {number} [skillId] ID optionnel de la compétence d'attaque
      * @returns {{ actionName: string, frames: number, duration: number }}
      */
-    getAttackConfig() {
+    getAttackConfig(skillId = null) {
         let note = "";
-        const weapon = (typeof this.weapons === "function") ? this.weapons()[0] : null;
-        if (weapon && weapon.note && /<visual_attack>/i.test(weapon.note)) {
-            note = weapon.note;
-        } else {
-            const actorData = this.actor();
-            if (actorData && actorData.note) {
+
+        // 1. Détermination de la compétence d'attaque (priorité absolue)
+        let targetSkillId = skillId;
+        if (!targetSkillId) {
+            if (typeof this.attackSkillId === "function") {
+                targetSkillId = this.attackSkillId();
+            } else {
+                const actorData = typeof this.actor === "function" ? this.actor() : null;
+                if (actorData && actorData.note) {
+                    const match = actorData.note.match(/<attackId:\s*(\d+)>/i);
+                    if (match) targetSkillId = Number(match[1]);
+                }
+            }
+        }
+        if (!targetSkillId) targetSkillId = 1;
+
+        // 2. Recherche prioritaire dans les notes de la compétence
+        if (typeof $dataSkills !== "undefined" && $dataSkills && $dataSkills[targetSkillId]) {
+            const skill = $dataSkills[targetSkillId];
+            if (skill && skill.note && /<visual_attack>/i.test(skill.note)) {
+                note = skill.note;
+            }
+        }
+
+        // 3. Repli sur l'arme équipée
+        if (!note) {
+            const weapon = (typeof this.weapons === "function") ? this.weapons()[0] : null;
+            if (weapon && weapon.note && /<visual_attack>/i.test(weapon.note)) {
+                note = weapon.note;
+            }
+        }
+
+        // 4. Repli sur les notes de l'acteur (pour rétrocompatibilité)
+        if (!note) {
+            const actorData = typeof this.actor === "function" ? this.actor() : null;
+            if (actorData && actorData.note && /<visual_attack>/i.test(actorData.note)) {
                 note = actorData.note;
             }
         }
@@ -173,6 +248,14 @@ class Game_Hero extends Game_Actor {
 
             const durationMatch = content.match(/<duration>(\d+)<\/duration>/i);
             if (durationMatch) duration = parseInt(durationMatch[1], 10);
+        } else {
+            const weapon = (typeof this.weapons === "function") ? this.weapons()[0] : null;
+            if (weapon && weapon.note) {
+                const matchAnim = weapon.note.match(/<specialAnim:\s*([^>]+)>/i);
+                if (matchAnim) {
+                    actionName = `shot_${matchAnim[1].trim()}`;
+                }
+            }
         }
 
         return {

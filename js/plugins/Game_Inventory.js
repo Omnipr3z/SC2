@@ -22,6 +22,18 @@ class Game_Inventory {
     constructor(id) {
         this._id = String(id);
         this._items = {}; // { key: quantity }
+        // Par convention SC4 : les conteneurs (C_) et sacs d'acteurs (A_) sont persistants par défaut
+        this._persistent = this._id.startsWith("A_") || this._id.startsWith("C_");
+        this._explicitEphemeral = false;
+        this._maxWeight = null;
+        this._maxSlots = null;
+        this._onlyWeapons = false;
+        this._onlyItems = false;
+        this._onlyArmors = false;
+        this._onlyAmmo = false;
+        this._allowedTypes = null;
+        this._allowedItemIds = null;
+        this._blockedItemIds = null;
     }
 
     /**
@@ -145,6 +157,236 @@ class Game_Inventory {
     }
 
     /**
+     * Indique si cet inventaire est persistant (ne doit pas être effacé une fois vidé).
+     * @returns {boolean}
+     */
+    isPersistent() {
+        if (this._explicitEphemeral) return false;
+        if (this._id.startsWith("A_") || this._id.startsWith("C_")) {
+            return this._persistent !== false;
+        }
+        return Boolean(this._persistent);
+    }
+
+    /**
+     * Indique si l'inventaire doit s'auto-effacer après vidage (ex: cadavres, coffres temporaires).
+     * @returns {boolean}
+     */
+    isAutoErase() {
+        return Boolean(this._explicitEphemeral) || (this._id.startsWith("E_") && !this._persistent);
+    }
+
+    /**
+     * Définit le caractère persistant de cet inventaire.
+     * @param {boolean} value 
+     */
+    setPersistent(value) {
+        this._persistent = Boolean(value);
+        if (!this._persistent) {
+            this._explicitEphemeral = true;
+        } else {
+            this._explicitEphemeral = false;
+        }
+    }
+
+    /**
+     * Calcule le poids total accumulé dans cet inventaire.
+     * @returns {number}
+     */
+    totalWeight() {
+        let total = 0;
+        for (const item of this.items()) {
+            const qty = this.numItems(item);
+            const w = (typeof DataManager !== "undefined" && typeof DataManager.itemWeight === "function") 
+                ? DataManager.itemWeight(item) 
+                : 1;
+            total += w * qty;
+        }
+        return Math.round(total * 100) / 100;
+    }
+
+    /**
+     * Capacité maximale en poids de cet inventaire.
+     * @returns {number}
+     */
+    maxWeight() {
+        return (this._maxWeight !== null && this._maxWeight !== undefined) ? this._maxWeight : Infinity;
+    }
+
+    /**
+     * Définit la capacité maximale en poids.
+     * @param {number|null} val 
+     */
+    setMaxWeight(val) {
+        this._maxWeight = (val !== null && val !== undefined) ? Number(val) : null;
+    }
+
+    /**
+     * Indique si l'inventaire est surchargé.
+     * @returns {boolean}
+     */
+    isOverloaded() {
+        return this.totalWeight() > this.maxWeight();
+    }
+
+    /**
+     * Nombre maximum d'emplacements différents (slots).
+     * @returns {number}
+     */
+    maxSlots() {
+        return (this._maxSlots !== null && this._maxSlots !== undefined) ? this._maxSlots : Infinity;
+    }
+
+    /**
+     * Définit le nombre maximum d'emplacements.
+     * @param {number|null} val 
+     */
+    setMaxSlots(val) {
+        this._maxSlots = (val !== null && val !== undefined) ? Number(val) : null;
+    }
+
+    /**
+     * Configure les restrictions et options d'inventaire.
+     * @param {object} options 
+     */
+    setRestrictions(options = {}) {
+        if (!options || typeof options !== "object") return;
+        if (options.persistent !== undefined) {
+            this._persistent = Boolean(options.persistent);
+            if (!this._persistent) this._explicitEphemeral = true;
+            else this._explicitEphemeral = false;
+        }
+        if (options.auto_erase !== undefined) {
+            this._persistent = !Boolean(options.auto_erase);
+            if (options.auto_erase) this._explicitEphemeral = true;
+            else this._explicitEphemeral = false;
+        }
+        if (options.maxWeight !== undefined) this.setMaxWeight(options.maxWeight);
+        if (options.maxSlots !== undefined) this.setMaxSlots(options.maxSlots);
+        if (options.onlyWeapons !== undefined) this._onlyWeapons = Boolean(options.onlyWeapons);
+        if (options.onlyItems !== undefined) this._onlyItems = Boolean(options.onlyItems);
+        if (options.onlyArmors !== undefined) this._onlyArmors = Boolean(options.onlyArmors);
+        if (options.onlyAmmo !== undefined) this._onlyAmmo = Boolean(options.onlyAmmo);
+        if (options.allowedTypes !== undefined) this._allowedTypes = Array.isArray(options.allowedTypes) ? options.allowedTypes.slice() : null;
+        if (options.allowedItemIds !== undefined) this._allowedItemIds = Array.isArray(options.allowedItemIds) ? options.allowedItemIds.slice() : null;
+        if (options.blockedItemIds !== undefined) this._blockedItemIds = Array.isArray(options.blockedItemIds) ? options.blockedItemIds.slice() : null;
+    }
+
+    /**
+     * Vérifie si un objet respecte toutes les restrictions pour être déposé dans cet inventaire.
+     * @param {object} item 
+     * @param {number} [amount=1] 
+     * @returns {{ allowed: boolean, reason: string }}
+     */
+    checkAcceptItem(item, amount = 1) {
+        if (!item) return { allowed: false, reason: "invalid_item" };
+        amount = Number(amount) || 1;
+
+        // Restriction : Armes uniquement
+        if (this._onlyWeapons) {
+            const isW = typeof DataManager !== "undefined" && typeof DataManager.isWeapon === "function" ? DataManager.isWeapon(item) : (item._itype === "weapon");
+            if (!isW) {
+                return { allowed: false, reason: "only_weapons" };
+            }
+        }
+
+        // Restriction : Consommables uniquement
+        if (this._onlyItems) {
+            const isI = typeof DataManager !== "undefined" && typeof DataManager.isItem === "function" ? DataManager.isItem(item) : (item._itype === "item");
+            if (!isI) {
+                return { allowed: false, reason: "only_items" };
+            }
+        }
+
+        // Restriction : Armures / Équipements uniquement
+        if (this._onlyArmors) {
+            const isA = typeof DataManager !== "undefined" && typeof DataManager.isArmor === "function" ? DataManager.isArmor(item) : (item._itype === "armor");
+            if (!isA) {
+                return { allowed: false, reason: "only_armors" };
+            }
+        }
+
+        // Restriction : Munitions uniquement
+        if (this._onlyAmmo) {
+            const isAmmo = (typeof DataManager !== "undefined" && typeof DataManager.isAmmo === "function")
+                ? DataManager.isAmmo(item)
+                : (Boolean(DataManager.isItem ? DataManager.isItem(item) : (item._itype === "item")) && Boolean(item.note && (/<ammo/i.test(item.note) || /<munition/i.test(item.note))));
+            if (!isAmmo) {
+                return { allowed: false, reason: "only_ammo" };
+            }
+        }
+
+        // Types autorisés
+        if (Array.isArray(this._allowedTypes) && this._allowedTypes.length > 0) {
+            let matchesType = false;
+            for (const t of this._allowedTypes) {
+                const typeStr = String(t).toLowerCase();
+                if ((typeStr === "weapon" || typeStr === "w") && DataManager.isWeapon(item)) matchesType = true;
+                if ((typeStr === "armor" || typeStr === "a") && DataManager.isArmor(item)) matchesType = true;
+                if ((typeStr === "item" || typeStr === "i") && DataManager.isItem(item)) matchesType = true;
+                if (typeStr === "ammo" && (typeof DataManager.isAmmo === "function" ? DataManager.isAmmo(item) : /<ammo/i.test(item.note || ""))) matchesType = true;
+            }
+            if (!matchesType) {
+                return { allowed: false, reason: "allowed_types" };
+            }
+        }
+
+        // Objets interdits (blockedItemIds)
+        if (Array.isArray(this._blockedItemIds) && this._blockedItemIds.length > 0) {
+            const key = this.itemKey(item);
+            for (const b of this._blockedItemIds) {
+                if (b === item.id || String(b) === String(item.id) || String(b) === key) {
+                    return { allowed: false, reason: "blocked_item" };
+                }
+            }
+        }
+
+        // Objets autorisés spécifiques (allowedItemIds)
+        if (Array.isArray(this._allowedItemIds) && this._allowedItemIds.length > 0) {
+            const key = this.itemKey(item);
+            let found = false;
+            for (const a of this._allowedItemIds) {
+                if (a === item.id || String(a) === String(item.id) || String(a) === key) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return { allowed: false, reason: "not_in_allowed_list" };
+            }
+        }
+
+        // Limite du nombre d'emplacements (slots)
+        if (this._maxSlots !== null && this._maxSlots !== undefined && this._maxSlots > 0) {
+            if (!this.hasItem(item) && this.items().length >= this._maxSlots) {
+                return { allowed: false, reason: "max_slots" };
+            }
+        }
+
+        // Limite de poids
+        if (this._maxWeight !== null && this._maxWeight !== undefined && this._maxWeight > 0) {
+            const itemW = (typeof DataManager !== "undefined" && typeof DataManager.itemWeight === "function")
+                ? DataManager.itemWeight(item)
+                : 1;
+            if (this.totalWeight() + (itemW * amount) > this._maxWeight) {
+                return { allowed: false, reason: "max_weight" };
+            }
+        }
+
+        return { allowed: true, reason: "" };
+    }
+
+    /**
+     * Indique si l'objet peut être accepté dans cet inventaire.
+     * @param {object} item 
+     * @param {number} [amount=1] 
+     * @returns {boolean}
+     */
+    canAcceptItem(item, amount = 1) {
+        return this.checkAcceptItem(item, amount).allowed;
+    }
+
+    /**
      * Vide intégralement l'inventaire.
      */
     clear() {
@@ -152,18 +394,44 @@ class Game_Inventory {
     }
 
     /**
-     * Charge le contenu depuis une liste de données JSON.
-     * Supporte [{ item_id: 1, quantity: 10, kind: 1 }, ...] ou [{ item_id, quantity }]
-     * @param {Array<object>} dataArray 
+     * Charge le contenu depuis une liste de données JSON ou un objet de configuration.
+     * @param {Array<object>|object} data 
      */
-    loadData(dataArray) {
+    loadData(data) {
         this.clear();
+        if (!data) return;
+
+        let dataArray = data;
+        if (!Array.isArray(data) && typeof data === "object") {
+            this.setRestrictions(data);
+            dataArray = data.items || [];
+        }
         if (!Array.isArray(dataArray)) return;
+
         for (const entry of dataArray) {
             if (!entry) continue;
-            const itemId = Number(entry.item_id || entry.id);
+
+            let kind = 1; // 1: item, 2: weapon, 3: armor
+            let itemId = 0;
+
+            if (entry.weapon_id !== undefined) {
+                kind = 2;
+                itemId = Number(entry.weapon_id);
+            } else if (entry.armor_id !== undefined) {
+                kind = 3;
+                itemId = Number(entry.armor_id);
+            } else if (entry.type === "weapon" || entry.kind === "weapon" || entry.type === "w" || entry.kind === 2 || entry.kind === "2") {
+                kind = 2;
+                itemId = Number(entry.item_id || entry.id);
+            } else if (entry.type === "armor" || entry.kind === "armor" || entry.type === "a" || entry.kind === 3 || entry.kind === "3") {
+                kind = 3;
+                itemId = Number(entry.item_id || entry.id);
+            } else {
+                kind = Number(entry.kind) || 1;
+                itemId = Number(entry.item_id || entry.id);
+            }
+
             const quantity = Number(entry.quantity) || 1;
-            const kind = Number(entry.kind) || 1; // 1: item, 2: weapon, 3: armor
 
             let itemObj = null;
             if (kind === 1 && typeof $dataItems !== "undefined") itemObj = $dataItems[itemId];
@@ -178,10 +446,10 @@ class Game_Inventory {
 
     /**
      * Génère la structure de sauvegarde sérialisable.
-     * @returns {Array<object>}
+     * @returns {object}
      */
     makeSaveData() {
-        const result = [];
+        const items = [];
         for (const key of Object.keys(this._items)) {
             const quantity = this._items[key];
             if (quantity <= 0) continue;
@@ -192,14 +460,27 @@ class Game_Inventory {
                 let kind = 1;
                 if (prefix === "w") kind = 2;
                 else if (prefix === "a") kind = 3;
-                result.push({
+                items.push({
                     kind: kind,
                     item_id: id,
                     quantity: quantity
                 });
             }
         }
-        return result;
+        return {
+            items: items,
+            persistent: Boolean(this._persistent),
+            maxWeight: this._maxWeight || null,
+            maxSlots: this._maxSlots || null,
+            onlyWeapons: Boolean(this._onlyWeapons),
+            onlyItems: Boolean(this._onlyItems),
+            onlyArmors: Boolean(this._onlyArmors),
+            onlyAmmo: Boolean(this._onlyAmmo),
+            allowedTypes: this._allowedTypes || null,
+            allowedItemIds: this._allowedItemIds || null,
+            blockedItemIds: this._blockedItemIds || null,
+            initialized: true
+        };
     }
 }
 

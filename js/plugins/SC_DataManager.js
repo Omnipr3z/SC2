@@ -23,6 +23,12 @@ class SC_DataManager {
      */
     static loadDatabase() {
         this.loadScDataFile("$dataInventories", "INVENTORIES.json");
+        this.loadScDataFile("$dataTimeSystem", "TIME_SYSTEM.json");
+        this.loadScDataFile("$dataSectors", "SECTORS.json");
+        this.loadScDataFile("$dataPlanets", "PLANETS.json");
+        this.loadScDataFile("$dataShipMotors", "SHIP_MOTORS.json");
+        this.loadScDataFile("$dataSpaceships", "SPACESHIPS.json");
+        this.loadScDataFile("$dataQuests", "QUESTS.json");
     }
 
     /**
@@ -61,7 +67,16 @@ class SC_DataManager {
      * @returns {boolean}
      */
     static isDatabaseLoaded() {
-        return window.$dataInventories !== null && typeof window.$dataInventories !== "undefined";
+        const required = [
+            "$dataInventories",
+            "$dataTimeSystem",
+            "$dataSectors",
+            "$dataPlanets",
+            "$dataShipMotors",
+            "$dataSpaceships",
+            "$dataQuests"
+        ];
+        return required.every(key => window[key] !== null && typeof window[key] !== "undefined");
     }
 
     /**
@@ -70,6 +85,21 @@ class SC_DataManager {
     static createGameObjects() {
         if (typeof Game_Inventories !== "undefined") {
             window.$inventories = new Game_Inventories();
+        }
+        if (typeof Game_Date !== "undefined") {
+            window.$gameDate = new Game_Date();
+        }
+        if (typeof Game_Sector !== "undefined") {
+            window.$gameSector = new Game_Sector();
+        }
+        if (typeof Game_Spaceships !== "undefined") {
+            window.$gameSpaceships = new Game_Spaceships();
+        }
+        if (typeof Game_Quests !== "undefined") {
+            window.$gameQuests = new Game_Quests();
+        }
+        if (typeof StoryManager !== "undefined") {
+            window.$storyManager = new StoryManager();
         }
     }
 
@@ -81,6 +111,21 @@ class SC_DataManager {
         if (window.$inventories && typeof window.$inventories.makeSavefileData === "function") {
             contents.sc_inventories = window.$inventories.makeSavefileData();
         }
+        if (window.$gameDate && typeof window.$gameDate.makeSavefileData === "function") {
+            contents.sc_gameDate = window.$gameDate.makeSavefileData();
+        }
+        if (window.$gameSector && typeof window.$gameSector.makeSavefileData === "function") {
+            contents.sc_sector = window.$gameSector.makeSavefileData();
+        }
+        if (window.$gameSpaceships && typeof window.$gameSpaceships.makeSavefileData === "function") {
+            contents.sc_spaceships = window.$gameSpaceships.makeSavefileData();
+        }
+        if (window.$gameQuests && typeof window.$gameQuests.makeSavefileData === "function") {
+            contents.sc_quests = window.$gameQuests.makeSavefileData();
+        }
+        if (window.$storyManager && typeof window.$storyManager.makeSavefileData === "function") {
+            contents.sc_story = window.$storyManager.makeSavefileData();
+        }
     }
 
     /**
@@ -90,6 +135,21 @@ class SC_DataManager {
     static extractSaveContents(contents) {
         if (contents && contents.sc_inventories && window.$inventories && typeof window.$inventories.loadSavefileData === "function") {
             window.$inventories.loadSavefileData(contents.sc_inventories);
+        }
+        if (contents && contents.sc_gameDate && window.$gameDate && typeof window.$gameDate.loadSavefileData === "function") {
+            window.$gameDate.loadSavefileData(contents.sc_gameDate);
+        }
+        if (contents && contents.sc_sector && window.$gameSector && typeof window.$gameSector.loadSavefileData === "function") {
+            window.$gameSector.loadSavefileData(contents.sc_sector);
+        }
+        if (contents && contents.sc_spaceships && window.$gameSpaceships && typeof window.$gameSpaceships.loadSavefileData === "function") {
+            window.$gameSpaceships.loadSavefileData(contents.sc_spaceships);
+        }
+        if (contents && contents.sc_quests && window.$gameQuests && typeof window.$gameQuests.loadSavefileData === "function") {
+            window.$gameQuests.loadSavefileData(contents.sc_quests);
+        }
+        if (contents && contents.sc_story && window.$storyManager && typeof window.$storyManager.loadSavefileData === "function") {
+            window.$storyManager.loadSavefileData(contents.sc_story);
         }
     }
 }

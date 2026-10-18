@@ -33,6 +33,7 @@ global.Input = {
 global.$dataActors = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'data/Actors.json'), 'utf8'));
 global.$dataArmors = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'data/Armors.json'), 'utf8'));
 global.$dataWeapons = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'data/Weapons.json'), 'utf8'));
+global.$dataSkills = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'data/Skills.json'), 'utf8'));
 
 // Mock TouchInput
 global.TouchInput = {
@@ -180,11 +181,34 @@ eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_rmmz_sprites_Patches.js
 console.log('--- TEST 1 : PARSING DE LA CONFIGURATION D\'ATTAQUE ---');
 const actors = new Game_Actors();
 const hero = actors.actor(1);
-console.log('Config d\'attaque par défaut :', hero.getAttackConfig());
+const defaultCfg = hero.getAttackConfig();
+console.log('Config d\'attaque depuis la compétence 1 :', defaultCfg);
+if (defaultCfg.duration !== 4 || defaultCfg.frames !== 4 || defaultCfg.actionName !== 'atk') {
+    console.error('❌ La config d\'attaque de la compétence 1 n\'a pas été correctement extraite');
+    process.exit(1);
+}
 
-// Test avec balise XML personnalisée
+// Test avec compétence personnalisée
+$dataSkills[99] = {
+    id: 99,
+    note: '<visual_attack>\n<duration>8</duration>\n<frames>6</frames>\n<action_name>heavy_slash</action_name>\n</visual_attack>'
+};
+const customSkillCfg = hero.getAttackConfig(99);
+console.log('Config d\'attaque compétence 99 :', customSkillCfg);
+if (customSkillCfg.duration !== 8 || customSkillCfg.frames !== 6 || customSkillCfg.actionName !== 'heavy_slash') {
+    console.error('❌ La config d\'attaque de la compétence 99 n\'a pas été correctement extraite');
+    process.exit(1);
+}
+
+// Test avec repli sur balise XML personnalisée de l'acteur si absente de la compétence
+$dataSkills[100] = { id: 100, note: '' };
 hero.actor().note += '\n<visual_attack>\n<duration>6</duration>\n<frames>5</frames>\n<action_name>slash</action_name>\n</visual_attack>';
-console.log('Config XML personnalisée :', hero.getAttackConfig());
+const fallbackCfg = hero.getAttackConfig(100);
+console.log('Config XML personnalisée (repli) :', fallbackCfg);
+if (fallbackCfg.duration !== 6 || fallbackCfg.frames !== 5 || fallbackCfg.actionName !== 'slash') {
+    console.error('❌ Le repli sur la note de l\'acteur n\'a pas fonctionné');
+    process.exit(1);
+}
 hero.actor().note = '<Hero>\n<Race: Human>\n<Sex: Male>\n<Face>';
 
 console.log('\n--- TEST 2 : CALQUES COMPOSITES D\'ATTAQUE ---');
@@ -218,9 +242,9 @@ sprite.update();
 let completed = false;
 for (let t = 0; t <= 18; t++) {
     $gamePlayer.update(true);
-    if (!$gamePlayer.isAttacking() && $gamePlayer.action() === 'walk') {
+    if (!$gamePlayer.isAttacking() && ($gamePlayer.action() === 'walk' || $gamePlayer.action() === 'guard')) {
         completed = true;
-        console.log(`Action terminée au tick ${t}, retour à l'action walk.`);
+        console.log(`Action terminée au tick ${t}, retour à l'action ${$gamePlayer.action()}.`);
         break;
     }
 }

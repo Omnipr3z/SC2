@@ -41,19 +41,35 @@ Veuillez consulter le [EULA officiel de RPG Maker MZ](https://www.rpgmakerweb.co
 
 # QU'EST-CE QUE SIMCRAFT ENGINE V2 (SC4)
 
-**SimCraft Engine V2** est la réécriture complète et la modernisation du sous-moteur modulaire SimCraft pour **RPG Maker MZ**.
+**SimCraft Engine V2 (SC4)** est la réécriture complète et la modernisation du sous-moteur modulaire SimCraft pour **RPG Maker MZ**, développé pour des RPG tactiques, des simulations spatiales et des ARPGs exigeants dans l'univers sombre et futuriste de style Warhammer 40K.
 
 > ⚡ **Refacto V2 : Légèreté, Modularité & Performance**  
 > Contrairement à l'architecture monolithique de la première version, la V2 a été repensée dès le départ avec des principes stricts :
-> - **Architecture légère et découplée** : aucun sur-engin inutile ni couche d'abstraction superflue.
+> - **Architecture légère et découplée** : aucun sur-moteur superflu, modules ES6 indépendants.
 > - **Surcharges chirurgicales** : les extensions du moteur RPG Maker MZ sont concentrées dans des fichiers de patchs dédiés (`SC4_rmmz_*_Patches.js`).
-> - **Approche incrémentale et orientée ARPG** : intégration fluide entre les mécanismes de simulation, le rendu graphique avancé et les interactions en temps réel.
+> - **Simulation spatiale & ARPG unifiés** : intégration fluide entre navigation galactique multi-échelles, combat en temps réel, inventaires multiples et narration réactive.
+
+---
+
+# 📚 DOCUMENTATION TECHNIQUE & TUTORIELS DÉVELOPPEUR
+
+Pour guider les développeurs et concepteurs d'événements, un répertoire complet de tutoriels spécialisés est disponible dans le dossier [`DEV_TUTORIALS/`](./DEV_TUTORIALS/) :
+
+| Module | Description | Guide Développeur |
+| :--- | :--- | :--- |
+| 🚀 **Navigation & Simulation Spatiale** | Navigation multi-échelles (Secteur FTL, Système Solaire, Sous-système), sauts Warp animés, physique orbitale `$gameDate`, mode Hangar et atterrissage sur POI. | [Tutoriel Navigation Spatiale](./DEV_TUTORIALS/TUTORIAL_SPACE_TRAVEL.md) |
+| 📜 **Système de Quêtes & Balises** | Gestionnaire `$gameQuests`, déclencheur temporel `$storyManager`, balises multi-échelles, objectifs hiérarchiques et alertes radio cockpit. | [Tutoriel Quêtes & Balises](./DEV_TUTORIALS/TUTORIAL_QUEST_SYSTEM.md) |
+| 🔫 **Gunfight & Balistique** | Système complet d'armes à feu, munitions, rechargement (1by1 / total), balistique de projectiles, raycast, HUDs arme et acteur, visée et tir en rafale. | [Tutoriel Gunfight](./DEV_TUTORIALS/TUTORIAL_GUNFIGHT.md) |
+| 🌐 **Localisation Multi-Langue** | Traduction dynamique avec balises `\L[KEY]`, dictionnaires JSON (FR/EN), intégration réactive TextManager et base de données, menu Options. | [Tutoriel Localisation](./DEV_TUTORIALS/TUTORIAL_LOCALIZATION.md) |
+| 💬 **Bubble Messages** | Fenêtres de message flottantes en bulle (`Window_BubbleMsg`), ciblage dynamique (`\A`, `\E[id]`, `\PX`, `\PY`), auto-taille et edge-clamping hors-écran. | [Tutoriel Bubble Messages](./DEV_TUTORIALS/TUTORIAL_BUBBLE_MESSAGE.md) |
+| ⭕ **Ring Command Menu** | Menu circulaire rotatif (`Window_RingCommand`), animation d'ouverture Ease-Out, icônes, navigation angulaire et trigger tactile/souris sur la carte. | [Tutoriel Ring Command](./DEV_TUTORIALS/TUTORIAL_RING_COMMAND.md) |
+| 🎒 **Conteneurs & Multi-Inventaires** | Gestion des inventaires secondaires (`Game_Inventories`), conteneurs persistants vs auto-erase, support items/armes/armures, sauvegarde/chargement. | [Tutoriel Conteneurs](./DEV_TUTORIALS/TUTORIAL_CONTAINERS_INVENTORIES.md) |
+
+Consultez le [Sommaire Général des Tutoriels](./DEV_TUTORIALS/README.md) pour les conventions globales et les guides de scripting.
 
 ---
 
 # FONCTIONNALITÉS IMPLÉMENTÉES (V2)
-
-Seules les fonctionnalités d'ores et déjà refaites et opérationnelles dans cette V2 sont listées ci-dessous :
 
 ### 1. 🎨 Système Paperdoll & Rendu Composite Dynamique (`Bitmap_Composite`)
 - **Génération multi-couches en temps réel** : assemblage automatique du corps de base, du visage (`<Face>`), des armures, équipements et vêtements (`<visual_equip: FILENAME, zindex>`).
@@ -94,157 +110,135 @@ Seules les fonctionnalités d'ores et déjà refaites et opérationnelles dans c
 - Bascule automatique et instantanée de l'action `walk` à l'action `dash` (spritesheets `run`) pour le joueur et les followers dès que la course est active.
 - Prise en charge sur les événements acteurs avec bascule automatique basée sur la vitesse de déplacement configurée.
 
-### 7. 🥊 Combat ARPG en Temps Réel (`FightManager`) - Phase 1 : Mêlée à Mains Nues
+### 7. 🥊 Combat ARPG en Temps Réel (`FightManager`) - Mêlée & Dégâts
 - **Gestionnaire centralisé `window.$fightManager`** : indexation et surveillance dynamique des acteurs et ennemis de la carte courante.
 - **Optimisation de performance (Screen Culling)** : le gestionnaire de combat filtre et n'évalue que les ennemis visibles à l'écran (`isNearTheScreen()`), maintenant les cibles distantes en veille.
 - **Rôles et affiliations par notetags** :
   - `<role: neutral/hostile/ally/civilian>`
   - `<enemy: [ENNEMY_ID]>` : lie un événement hostile à un battler `Game_Enemy` avec ses statistiques et compétences RMMZ.
   - `<attackId: [SKILL_ID]>` : compétence utilisée lors de l'attaque (par défaut ID 1).
-- **Combat au corps-à-corps sans arme** : résolution en temps réel des dégâts par le moteur natif (`Game_Action`) lors d'une attaque au contact direct face à un ennemi hostile (par clic ou touche d'action).
+- **Combat au corps-à-corps sans arme** : résolution en temps réel des dégâts par le moteur natif (`Game_Action`) lors d'une attaque au contact direct face à un ennemi hostile.
 - **Gestion des délais et interruptions de combat** :
-  - Lorsqu'un ennemi subit des dégâts (animation `hurt`), il ne peut pas attaquer et son compteur de délai d'attaque est immédiatement remis à zéro (`onHurt()`).
-  - Pendant l'animation d'attaque (`atk`), le compteur d'attaque est gelé et ne défile pas ; il est remis à zéro à la fin de l'animation.
+  - Lors de dégâts (animation `hurt`), le délai d'attaque est réinitialisé (`onHurt()`).
+  - Pendant l'animation d'attaque (`atk`), le compteur est gelé et remis à zéro à la fin de l'action.
 - **Retours physiques et visuels complets** :
-  - L'ennemi pivote automatiquement pour faire face à l'attaquant (direction verrouillée).
+  - L'ennemi pivote pour faire face à l'attaquant.
   - Déclenchement de l'animation de compétence (`$gameTemp.requestAnimation`).
   - Réaction d'impact `hurt` (3 frames) avec recul physique (**knockback**) d'une case.
-  - Réaction de mort `down` (3 frames) avec activation automatique de l'interrupteur local `C` pour le traitement des états de cadavre / butin dans l'éditeur.
+  - Réaction de mort `down` (3 frames) avec activation automatique de l'interrupteur local `C` pour le traitement des états de cadavre / butin.
 
-### 8. 🎒 Gestion des Inventaires Multiples & Conteneurs (`$inventories` & `Scene_Inventory`)
+### 8. 🎒 Inventaires Multiples & Conteneurs (`$inventories` & `Scene_Inventory`)
 - **Hub centralisé `$inventories` (`Game_Inventories`) & instances `Game_Inventory`** :
-  - Support d'inventaires secondaires multiples créés et instanciés à la volée (`$inventories.inventory(id)`).
+  - Support d'inventaires secondaires multiples instanciés à la volée (`$inventories.inventory(id)`).
   - Conventions de nommage claires et notetags dédiés :
     - Acteurs : `A_[ACTOR_ID]` (`<actor_inventory: ID>`)
     - Conteneurs : `C_[EVENT_ID]` (`<inventory>` ou `<inventory: ID>`)
     - Ennemis : `E_[ENEMY_ID]` (`<enemy_inventory: ID>`)
-  - Pré-remplissage au démarrage via le fichier de données externe `data/SC/INVENTORIES.json` (`$dataInventories`).
-  - Persistance intégrale dans les sauvegardes via la classe statique dédiée `SC_DataManager.js`.
-- **Synchronisation dynamique avec l'équipe** :
-  - Lorsqu'un acteur rejoint l'équipe (`joinPlayerParty`), son inventaire autonome est automatiquement transféré et fusionné dans l'inventaire du groupe (`$gameParty`).
-  - Lorsqu'un compagnon quitte l'équipe ou qu'on interagit avec lui, son inventaire reste accessible via le choix contextuel *"Ouvrir l'inventaire"*.
-- **Génération de butin d'ennemis (`initEnnemyInventory`) & pillage de cadavres** :
-  - Génération unique du butin basée sur les tables de récompenses vanilla RMMZ (`dropItems`) et `$dataInventories`.
-  - Persistance du butin tant que le joueur ne l'a pas entièrement ramassé.
-  - Dès que l'inventaire du cadavre est vidé : retrait du registre (`$inventories.unset`), disparition visuelle du cadavre et activation automatique de l'interrupteur local `D`.
+  - Pré-remplissage via `data/SC/INVENTORIES.json` et persistance complète dans les sauvegardes.
 - **Interface graphique dédiée (`Scene_Inventory`)** :
-  - Double panneau ergonomique côte-à-côte : inventaire du joueur (`Game_Party`) et inventaire cible (Allié, Conteneur, Cadavre ennemi).
-  - Panneau d'informations contextuelles et fenêtre de commande d'action (*Transférer 1*, *Transférer Tout*, *Annuler*).
-  - Accessible depuis le menu principal (*Bouton "Inventaire"*), les dialogues de compagnons, les conteneurs ou les cadavres ennemis.
+  - Double panneau ergonomique : inventaire du joueur (`Game_Party`) et inventaire cible (Allié, Conteneur, Cadavre ennemi).
+  - Commandes d'action (*Transférer 1*, *Transférer Tout*, *Annuler*).
 
 ### 9. 🤖 Architecture Modulaire des IA (`IAManager`, `IA_melee`, `IA_range`, `Enemy_AI`)
-- **Architecture orientée objet découplée de FightManager** :
-  - **`IAManager` (Classe Parente)** : gère la machine à états finis commune, le suivi de cible, le leash et la temporisation.
-  - **`IA_Melee` (`IA_melee.js`)** : IA spécialisée pour le corps-à-corps (<AI_MODE: melee>). Gère les attaques au contact, le gel du compteur pendant l'animation et sa remise à zéro.
-  - **`IA_Range` (`IA_range.js`)** : IA spécialisée pour le combat à distance (<AI_MODE: range>).
-  - **`Enemy_AI.js`** : pont d'intégration reliant dynamiquement chaque `Game_Event` à son instance `IAManager` selon ses notetags.
-- **Optimisation des performances (Standby hors écran)** :
-  - Les ennemis en dehors de l'écran basculent automatiquement en mode veille (`MODE_NEUTRE`) sans calcul de pathfinding coûteux.
 - **Machine à états finis (FSM) à 4 modes modulaires** :
-  - **MODE_NEUTRE (`neutral`)** : l'ennemi suit sa route autonome définie sur sa page à vitesse de patrouille (`AI_BASE_SPEED`, défaut : 2).
-  - **MODE_ENGAGE (`engage`)** : dès que la cible entre dans le rayon d'engagement (`AI_ENGAGE_RANGE`, défaut : 4 cases), l'ennemi accélère (`AI_ENGAGE_SPEED`, défaut : 4), poursuit la cible via l'algorithme A* 8 directions et attaque selon sa portée.
-  - **MODE_RECHERCHE (`search`)** : si la cible quitte le rayon d'engagement mais reste dans le rayon de détection (`AI_SEARCH_RANGE`, défaut : 10 cases), l'ennemi cherche pendant un temps donné (`AI_SEARCH_TIME` / `AI_FORGET_TIME`, défaut : 60 frames = 1s) en alternant déplacement vers la dernière position connue (70%) et aléatoire (30%). Ré-engagement immédiat si la cible revient à portée.
-  - **MODE_RETOUR_BASE (`return`)** : en cas d'expiration du temps de recherche ou de dépassement de la zone de poursuite autorisée (**leash** via `<AI_ZONE_ENGAEMENT_RANGE>`), l'ennemi regagne sa position d'ancrage (`AI_BASE_POSITION`) en pathfinding avant de reprendre son comportement neutre.
-- **Combat au corps-à-corps initié par l'IA (`FightManager.executeEnemyAttack`)** :
-  - Déclenchement à portée d'attaque (`AI_ATTACK_RANGE`, défaut : 1 case) après chargement du compteur d'attaque (`AI_ATTACK_FREQUENCY`, défaut : 240 frames = 4s).
-  - Animation de compétence native RMMZ et résolution des dégâts via `Game_Action`.
-  - Retours physiques sur la cible : orientation face à face, direction fixe, **knockback** d'une case, et animation `hurt` (3 frames).
-  - Gestion du KO du joueur : animation `down` (3 frames) et bascule automatique sur l'écran **Game Over** si le groupe succombe.
-- **Mode Hurted & Suspension de l'IA** :
-  - Lors d'une blessure infligée par le joueur, l'ennemi passe dans l'état `AI_STATE_HURTED`.
-  - L'IA et le pathfinding sont intégralement suspendus pendant l'animation `hurt` (3 frames / 24 ticks).
-  - Le compteur d'attaque est réinitialisé à 0 dès le premier impact.
-  - À la fin de l'action `hurt`, l'IA reprend automatiquement son état précédent (`neutral`, `search` ou `engage`) sans rupture de comportement.
-- **Paramétrage dynamique par Notetags** :
-  - Support sur les notes de BDD ennemis, notes d'événements et commentaires de page active (codes 108 / 408 avec priorité par page).
+  - **MODE_NEUTRE (`neutral`)** : patrouille autonome sur la carte.
+  - **MODE_ENGAGE (`engage`)** : accélération et poursuite de la cible via pathfinding A* 8 directions dès franchissement du rayon d'engagement.
+  - **MODE_RECHERCHE (`search`)** : recherche de la cible perdue pendant une durée configurable (`AI_SEARCH_TIME`).
+  - **MODE_RETOUR_BASE (`return`)** : retour à la position d'ancrage en cas de leash ou de perte de cible.
+- **Attaques IA au corps-à-corps & à distance** avec knockback, animations d'impact et gestion du KO joueur (écran Game Over).
 
-### 10. 💡 Indicateurs Visuels d'État (`Sprite_CharacterIndicator`)
-- **Indicateurs animés au-dessus de la tête des ennemis** (`img/ui/indicator.png`, 3 frames de 32x32px par ligne) :
-  - **Transition NEUTRE ➔ ENGAGE** : Point d'exclamation jaune/blanc (Ligne 0).
-  - **Transition ENGAGE ➔ RECHERCHE** : Point d'interrogation rouge (Ligne 1).
-  - **Transition RECHERCHE ➔ NEUTRE** : Point d'interrogation jaune (Ligne 2).
-- **Animation fluide en 3 phases sur 60 frames (1 seconde)** :
-  - *Phase 1 (15 frames)* : apparition avec fondu (`opacity 0 -> 255`), zoom (`scale 0.1 -> 1.0`) et élévation de 10px.
-  - *Phase 2 (30 frames)* : maintien fixe au-dessus de la tête.
-  - *Phase 3 (15 frames)* : disparition avec fondu (`opacity 255 -> 0`), zoom (`scale 1.0 -> 1.5`) et élévation de 20px supplémentaires.
-- **File d'attente (Waitlist)** : gestion ordonnée des indicateurs successifs pour garantir l'affichage complet sans interruption prématurée.
+### 10. 💡 Indicateurs Visuels d'État & Jauges (`Sprite_CharacterIndicator`, `Spriteset_FightGauges`)
+- Indicateurs animés au-dessus de la tête des ennemis (`!` jaune engagement, `?` rouge recherche, `?` jaune neutre).
+- Jauges de combat dynamiques au-dessus des ennemis engagés : barre AT (Attack Timer), PV (avec dégradé dynamique et clignotement critique) et PM.
 
-### 11. 📊 Jauges de Combat Ennemies (`Spriteset_FightGauges`)
-- **Affichage contextuel** : présent au-dessus des ennemis uniquement lorsqu'ils sont **vivants** et en mode **ENGAGEMENT (`engage`)**.
-- **Fond noir commun** (`Sprite_FightGaugeBase`, 50x16px avec bordure).
-- **Jauge d'Attack Timer** (`Sprite_FightGaugeAT`, 48x2px, blanche) :
-  - Positionnée en haut de la pile.
-  - Se remplit en temps réel selon le ratio `attackTimer / attackFrequency` (déclenche l'attaque à 100%).
-- **Jauge de Vie / HP** (`Sprite_FightGaugeHP`, 48x8px) :
-  - Positionnée au centre.
-  - Dégradé de couleur dynamique selon le pourcentage de PV restants :
-    * `> 80%` : Vert ➔ Vert
-    * `60% - 80%` : Orange ➔ Vert
-    * `40% - 60%` : Orange ➔ Orange
-    * `20% - 40%` : Rouge ➔ Orange
-    * `< 20%` : Rouge ➔ Rouge
-  - Effet de clignotement rouge vif / sombre (2 frames ON, 2 frames OFF) à moins de 10% de PV.
-- **Jauge de Mana / MP** (`Sprite_FightGaugeMP`, 48x4px, dégradé bleu) :
-  - Positionnée en bas de la pile, avec dégradé bleu clair à bleu foncé selon les MP restants.
+### 11. 🔫 Système d'Armes à Feu & Balistique (`SC4_Gunfight`)
+- Armes à feu personnalisées par notetags (`<gun_type>`, `<gun_range>`, `<gun_ammo_id>`, `<gun_mag_capacity>`, `<gun_reload_type: total|1by1>`, `<gun_fire_rate>`, `<gun_sound>`).
+- Raycast et balistique temps réel avec vérification des obstacles et détection des cibles ennemies.
+- HUD d'arme dédié affichant le chargeur actuel, les réserves et les animations de rechargement.
 
-### 12. 🛠️ Outil de Débogage Statique (`DEBUGTOOL`)
-- **Classe statique `DEBUGTOOL`** accessible partout dans le code :
-  - `DEBUGTOOL.log(message, key)` : log avec localisation automatique du fichier et de la ligne appelante via la stack trace.
-  - `DEBUGTOOL.logFormat(data, formatMessage, key)` : formatage avancé pour tableaux (`%1`, `%2`) et objets (`%[propriete]`).
-- **Paramétrage via Plugin Manager** :
-  - Activation/Désactivation globale.
-  - Mode sélectif activable avec filtrage par liste blanche de clés (`allowedKeys`).
+### 12. 🌐 Localisation Multi-Langue Dynamique (`SC4_Localization`)
+- Prise en charge des balises `\L[KEY]` dans les textes, fenêtres, messages et bases de données.
+- Dictionnaires JSON externes (`data/SC/Localisation_FR.json` et `Localisation_EN.json`).
+- Bascule instantanée de la langue dans les options sans rechargement.
+
+### 13. 💬 Bubble Messages & Ring Command (`SC4_BubbleMessage`, `SC4_RingCommand`)
+- **Bubble Messages** : fenêtres de dialogue flottantes au-dessus des acteurs (`\A`) ou événements (`\E[id]`) avec dimensionnement automatique et maintien à l'écran.
+- **Ring Command** : menu circulaire rotatif pour les actions rapides, interactions contextuelles et ordres d'équipe.
+
+### 14. 🚀 Voyage Spatial Multi-Échelles & Simulation Galactique (`SC4_SpaceTravel`, `SC4_SpaceScenes`)
+- **Trois niveaux d'échelles imbriquées** :
+  - **Niveau 1 : Secteur / Galaxie (Scene_SectorTravel)** : Constellations FTL, tracé des liaisons, sauts Warp visibles avec déplacement animé le long des lignes.
+  - **Niveau 2 : Système Solaire (Scene_SpaceTravel)** : Étoile centrale, physique orbitale elliptique temps réel, navigation libre, approche des vaisseaux PNJ (*Vigilance Prime*) et mise en contact.
+  - **Niveau 3 : Sous-système Planétaire (Scene_SubsystemTravel)** : Planète centrale en rotation continue, vaisseau en orbite stationnaire visible à côté de la planète, Points d'Intérêt rotatifs (échelle 0.25).
+- **Mode Hangar & Atterrissage** :
+  - Accès direct via `SC4.openHangar()` depuis la navette du hangar.
+  - Atterrissage automatique : joueur invisible (`setTransparent`), téléportation sur la carte cible et déclenchement du Self-Switch A de l'événement d'atterrissage.
+
+### 15. ⏱️ Horloge Galactique & Simulation en Tâche de Fond (`SC4_GameDate`)
+- Horloge continue et calendrier Warhammer 40K (`2.dayOfYear.year.M41 [HH:MM]`).
+- Modes de vitesse dynamiques : Normal (Mode 1), Croisière (Mode 2, 2x), Saut FTL / Hyperdrive (Mode 4, 12x).
+- **Simulation continue en arrière-plan** : lorsque le joueur explore à pied sur `Scene_Map`, le temps avance et les vaisseaux poursuivent leur vol spatial au prorata exact des minutes écoulées.
+
+### 16. 📜 Système de Quêtes & Datapad Impérial (`SC4_QuestManager`, `Scene_QuestBook`)
+- **Quêtes hiérarchiques multi-échelles** : projection automatique des balises sur l'étoile (Galaxie), la planète (Système) et le POI (Sous-système).
+- **StoryManager** : déclenchement temporel automatique par le calendrier `$gameDate` et transmission de messages astropathiques au terminal CRT du cockpit.
+- **Livre de Quêtes / Datapad (`Scene_QuestBook`)** :
+  - Registre de missions complet avec filtres par onglets (*En cours*, *Terminées*, *Toutes*).
+  - Fiche détaillée à défilement avec briefing, logs radio d'origine et objectifs géolocalisés avec fil d'Ariane (`Secteur ▹ Système ▹ Planète ▹ POI`).
+  - Accès rapide en événement RMMZ via `SC4.openQuestBook()` ou commande de plugin `openQuestBook`.
 
 ---
 
-# ARCHITECTURE & FICHIERS DU PROJET
+# ARCHITECTURE & ORGANISATION DU PROJET
 
-L'ensemble des développements V2 est concentré dans les répertoires suivants :
+L'ensemble des composants de SimCraft 4 est structuré ainsi :
 
 ```text
 SC4/
-├── data/                               # Données du projet RPG Maker MZ
-│   └── SC/
-│       └── INVENTORIES.json            # Base de données des inventaires initiaux
-├── img/
-│   ├── characters/composite/           # Banques de spritesheets Paperdoll (bases, faces, équipements)
-│   └── ui/
-│       └── indicator.png               # Planche d'indicateurs visuels (exclamation, ?, ?)
+├── data/                               # Données RPG Maker MZ
+│   └── SC/                             # Bases de données JSON spécifiques SimCraft
+│       ├── INVENTORIES.json            # Inventaires secondaires initiaux
+│       ├── Localisation_FR.json        # Dictionnaire français
+│       ├── Localisation_EN.json        # Dictionnaire anglais
+│       ├── PLANETS.json                # Planètes, mouvements et POIs
+│       ├── QUESTS.json                 # Quêtes et objectifs hiérarchiques
+│       ├── SECTORS.json                # Secteurs galactiques et constellations FTL
+│       ├── SHIP_MOTORS.json            # Moteurs et capacités de fuel
+│       ├── SPACESHIPS.json             # Flotte de vaisseaux du secteur
+│       └── TIME_SYSTEM.json            # Configuration du calendrier stellaire
+├── DEV_TUTORIALS/                      # Documentation technique et tutoriels développeur
+│   ├── README.md                       # Sommaire des tutoriels
+│   ├── TUTORIAL_SPACE_TRAVEL.md        # Guide complet de navigation spatiale
+│   ├── TUTORIAL_QUEST_SYSTEM.md        # Guide complet du système de quêtes
+│   ├── TUTORIAL_GUNFIGHT.md            # Guide des armes à feu et balistique
+│   ├── TUTORIAL_LOCALIZATION.md        # Guide du système de traduction
+│   ├── TUTORIAL_BUBBLE_MESSAGE.md      # Guide des bulles de dialogue
+│   ├── TUTORIAL_RING_COMMAND.md        # Guide du menu circulaire
+│   └── TUTORIAL_CONTAINERS_INVENTORIES.md # Guide des conteneurs
+├── img/                                # Ressources graphiques
+│   ├── GUI/ship/                       # Éléments d'interface spatiale, planètes et icônes
+│   ├── characters/composite/           # Banques Paperdoll (corps, têtes, équipements)
+│   └── ui/                             # Jauges et indicateurs visuels
 ├── js/
-│   ├── plugins.js                      # Configuration d'activation des plugins
+│   ├── plugins.js                      # Registre d'activation des plugins
 │   └── plugins/
-│       ├── DEBUGTOOL.js                # Outil statique de logs et débogage conditionnel
-│       ├── Bitmap_Composite.js         # Moteur de composition multi-couches
-│       ├── Character_Hero.js           # Contrôleur d'animation et de transitions
-│       ├── Enemy_AI.js                 # Pont d'intégration Game_Event <-> IAManager
-│       ├── IAManager.js                # Classe parente d'IA modulaire (FSM, Cibles, Leash, Hurted)
-│       ├── IA_melee.js                 # IA spécialisée pour combat au corps-à-corps
-│       ├── IA_range.js                 # IA spécialisée pour combat à distance
-│       ├── FightManager.js             # Singleton du système de combat ARPG temps réel
-│       ├── Game_Hero.js                # Extension de Game_Actor pour héros composites
-│       ├── Game_Inventory.js           # Classe d'instance d'inventaire secondaire
-│       ├── Game_Inventories.js         # Registre et hub d'inventaires ($inventories)
-│       ├── Hub_Hero.js                 # Façade d'accès aux entités composites
-│       ├── SC_DataManager.js          # Gestionnaire étendu de chargement et sauvegarde SC
-│       ├── Scene_Inventory.js          # Scène de gestion et transfert d'inventaires
-│       ├── Sprite_Hero.js              # Sprite custom 8 directions & assemblage d'enfants
-│       ├── Sprite_CharacterIndicator.js # Composant d'indicateurs visuels au-dessus des têtes
-│       ├── Spriteset_FightGauges.js    # Ensemble des jauges de combat ennemies (HP, MP, AT)
-│       ├── SC4_rmmz_core_Patches.js    # Patchs sur le core RMMZ (TouchInput, etc.)
-│       ├── SC4_rmmz_objects_Patches.js # Patchs sur Game_Objects (Player, Follower, Event, etc.)
-│       ├── SC4_rmmz_scenes_Patches.js  # Patchs sur Scene_Map, Scene_Menu, etc.
-│       └── SC4_rmmz_sprites_Patches.js # Patchs sur les classes de rendu Sprite
-├── UNIT_TESTS/                         # Suite complète de tests unitaires automatisés (15 suites)
-├── WALKTROUGHT.md                      # Journal de bord détaillé et étapes d'implémentation
-└── README.md                           # Présentation générale du projet V2
+│       ├── SC4_GameDate.js             # Moteur temporel et calendrier 40K
+│       ├── SC4_SpaceTravel.js          # Moteur physique spatial et navigation
+│       ├── SC4_SpaceScenes.js          # Scènes graphiques spatiales (Secteur, Système, Sous-système)
+│       ├── SC4_QuestManager.js         # Quêtes, StoryManager et Datapad (Scene_QuestBook)
+│       ├── SC4_Gunfight.js             # Système d'armes à feu et balistique
+│       ├── SC4_Localization.js         # Moteur de localisation dynamique
+│       ├── SC4_BubbleMessage.js        # Bulles de message flottantes
+│       ├── SC4_RingCommand.js          # Menu circulaire d'actions
+│       ├── SC4_TitleScreen.js          # Écran titre cinématique animé
+│       ├── Bitmap_Composite.js         # Compositeur Paperdoll
+│       ├── FightManager.js             # Combat ARPG temps réel
+│       ├── IAManager.js                # IA modulaire
+│       └── SC4_rmmz_*_Patches.js       # Surcharges chirurgicales du noyau RMMZ
+├── UNIT_TESTS/                         # Suite complète de tests unitaires automatisés
+├── WALKTROUGHT.md                      # Journal de développement des étapes
+└── README.md                           # Présentation générale du projet SC4
 ```
-
----
-
-# DOCUMENTATION TECHNIQUE & ÉTAPES
-
-Pour consulter le journal de développement détaillé, les choix de conception, les structures d'images et les spécifications de chaque étape :
-- [Consulter le journal technique (WALKTROUGHT.md)](WALKTROUGHT.md)
 
 ---
 
