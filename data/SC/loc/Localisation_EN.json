@@ -203,7 +203,7 @@
     "cmd_hyperdrive_on": "★ Hyperdrive [ON]",
     "cmd_land": "⬇ Land",
     "cmd_land_choose": "⬇ Choose Landing POI",
-    "cmd_exit_bridge": "Exit Bridge (Esc)",
+    "cmd_exit_bridge": "Return (Esc)",
     "cmd_exit_hangar": "Exit Hangar (Esc)",
     "cmd_back_bridge": "Return to Bridge (Esc)",
     "warp_engaged": "Warp jump engaged towards target system.",

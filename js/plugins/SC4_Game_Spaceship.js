@@ -162,16 +162,73 @@ class Game_Spaceship {
             : null;
     }
     get bitmapName() { return this._bitmapName; }
-    get sectorId() { return this._sectorId; }
+    get sectorId() {
+        if (this.isOnBoard()) {
+            const host = window.$gameSpaceships ? window.$gameSpaceships.ship(this.isOnBoard()) : null;
+            if (host && host !== this) return host.sectorId;
+        }
+        return this._sectorId;
+    }
     set sectorId(val) { this._sectorId = val; }
-    get systemId() { return this._systemId; }
+
+    get systemId() {
+        if (this.isOnBoard()) {
+            const host = window.$gameSpaceships ? window.$gameSpaceships.ship(this.isOnBoard()) : null;
+            if (host && host !== this) return host.systemId;
+        }
+        return this._systemId;
+    }
     set systemId(val) { this._systemId = val; }
-    get x() { return this._x; }
+
+    get x() {
+        if (this.isOnBoard()) {
+            const host = window.$gameSpaceships ? window.$gameSpaceships.ship(this.isOnBoard()) : null;
+            if (host && host !== this) return host.x;
+        }
+        return this._x;
+    }
     set x(val) { this._x = val; }
-    get y() { return this._y; }
+
+    get y() {
+        if (this.isOnBoard()) {
+            const host = window.$gameSpaceships ? window.$gameSpaceships.ship(this.isOnBoard()) : null;
+            if (host && host !== this) return host.y;
+        }
+        return this._y;
+    }
     set y(val) { this._y = val; }
-    get targetX() { return this._targetX; }
-    get targetY() { return this._targetY; }
+
+    get targetX() {
+        if (this.isOnBoard()) {
+            const host = window.$gameSpaceships ? window.$gameSpaceships.ship(this.isOnBoard()) : null;
+            if (host && host !== this) return host.targetX;
+        }
+        return this._targetX;
+    }
+    set targetX(val) { this._targetX = val; }
+
+    get targetY() {
+        if (this.isOnBoard()) {
+            const host = window.$gameSpaceships ? window.$gameSpaceships.ship(this.isOnBoard()) : null;
+            if (host && host !== this) return host.targetY;
+        }
+        return this._targetY;
+    }
+    set targetY(val) { this._targetY = val; }
+
+    syncHostPosition() {
+        const hostId = this.isOnBoard() || this.isDocked();
+        if (!hostId) return;
+        const host = window.$gameSpaceships ? window.$gameSpaceships.ship(hostId) : null;
+        if (host && host !== this) {
+            this._x = host.x;
+            this._y = host.y;
+            this._targetX = host.targetX;
+            this._targetY = host.targetY;
+            this._systemId = host.systemId;
+            this._sectorId = host.sectorId;
+        }
+    }
     get orbitingPlanetId() { return this._orbitingPlanetId; }
     get capacity() { return this._capacity; }
     get faction() { return this._faction; }

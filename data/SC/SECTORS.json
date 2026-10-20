@@ -2,7 +2,7 @@
   null,
   {
     "id": 1,
-    "segmentum": "ULTIMA-SEGMENTUM",
+    "segment": "ULTIMA-SEGMENT",
     "systems": [
       {
         "id": 1,

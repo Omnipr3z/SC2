@@ -391,7 +391,7 @@ class Scene_SectorTravel extends Scene_Base {
 
             cmds.push({ name: warpLabel, symbol: "jump", enabled: warpEnabled });
         }
-        cmds.push({ name: loc("travel.cmd_exit_bridge", "Quitter le Pont (Échap)"), symbol: "cancel", enabled: true });
+        cmds.push({ name: loc("travel.cmd_exit_bridge", "Retour (Échap)"), symbol: "cancel", enabled: true });
 
         this._controlsWindow.setCommands(cmds);
     }

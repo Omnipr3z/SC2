@@ -33,7 +33,7 @@ class Window_SpaceCalendar extends Window_Base {
         const system = window.$gameSector ? window.$gameSector.currentSystem() : null;
 
         const loc = (k, def) => typeof SC4_Localization !== "undefined" ? SC4_Localization.getText(k, def) : def;
-        const seg = sector ? (sector.segmentum || "ULTIMA-SEGMENTUM") : "GALAXIE";
+        const seg = sector ? (sector.segment || sector.segmentum || "ULTIMA-SEGMENT") : "GALAXIE";
         const secName = sector ? sector.name : loc("travel.sector_default", "Secteur");
         const sysName = system ? system.name : loc("travel.system_default", "Système");
 

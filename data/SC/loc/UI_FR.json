@@ -183,7 +183,7 @@
     "cmd_hyperdrive_on": "★ Hyperdrive [ON]",
     "cmd_land": "⬇ Atterrir",
     "cmd_land_choose": "⬇ Choisir un POI d'atterrissage",
-    "cmd_exit_bridge": "Quitter le Pont (Échap)",
+    "cmd_exit_bridge": "Retour (Échap)",
     "cmd_exit_hangar": "Quitter le Hangar (Échap)",
     "cmd_back_bridge": "Retour au Pont (Échap)",
     "warp_engaged": "Saut Warp engagé vers le système cible.",

@@ -80,7 +80,13 @@ class SystemMapManager {
     }
 
     updatePlanetsPhysics() {
-        const totalTicks = window.$gameDate ? (window.$gameDate.timestamp * 60 + window.$gameDate._tick) : Graphics.frameCount;
+        const tickPerMin = (window.$gameDate && typeof window.$gameDate.getTickPerMin === "function") 
+            ? window.$gameDate.getTickPerMin() 
+            : 60;
+        const progress = window.$gameDate 
+            ? (window.$gameDate.timestamp + (window.$gameDate._tick / (tickPerMin || 60))) 
+            : (Graphics.frameCount / 60);
+        const totalTicks = progress * 60;
         const pi2 = Math.PI * 2;
 
         this.planets.forEach(planet => {
@@ -168,13 +174,19 @@ class SystemMapManager {
 
             // Synchronisation de position pour vaisseaux à bord ou amarrés
             if (ship.isOnBoard() || ship.isDocked()) {
-                const hostId = ship.isOnBoard() || ship.isDocked();
-                const hostShip = window.$gameSpaceships ? window.$gameSpaceships.ship(hostId) : null;
-                if (hostShip && hostShip !== ship) {
-                    ship.x = hostShip.x;
-                    ship.y = hostShip.y;
-                    ship.systemId = hostShip.systemId;
-                    ship.sectorId = hostShip.sectorId;
+                if (typeof ship.syncHostPosition === "function") {
+                    ship.syncHostPosition();
+                } else {
+                    const hostId = ship.isOnBoard() || ship.isDocked();
+                    const hostShip = window.$gameSpaceships ? window.$gameSpaceships.ship(hostId) : null;
+                    if (hostShip && hostShip !== ship) {
+                        ship.x = hostShip.x;
+                        ship.y = hostShip.y;
+                        ship.targetX = hostShip.targetX;
+                        ship.targetY = hostShip.targetY;
+                        ship.systemId = hostShip.systemId;
+                        ship.sectorId = hostShip.sectorId;
+                    }
                 }
                 // Si à bord d'un hangar, pas de navigation autonome
                 if (ship.isOnBoard()) return;

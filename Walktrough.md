@@ -146,11 +146,14 @@ Cycle d'états : **NEUTRE** ➔ **ENGAGÉ** ➔ **RECHERCHE** ➔ **RETOUR BASE*
 <AI_ZONE_ENGAEMENT_RANGE: 15>
 ```
 
-### 3.4 Indicateurs Visuels Flottants (`Sprite_CharacterIndicator`)
-Animation fluide d'apparition (Fade-in + Zoom 0.1 ➔ 1.0) au-dessus de la tête :
-- `!` (Point d'exclamation rouge) : Passage en mode **ENGAGE**.
-- `?` (Point d'interrogation rouge) : Passage en mode **RECHERCHE**.
-- `?` (Point d'interrogation jaune) : Perte de cible et retour en mode **NEUTRE**.
+### 3.4 Indicateurs Visuels Flottants Agnostiques (`Sprite_CharacterIndicator`)
+Composant visuel entièrement agnostique et extensible via un registre d'indicateurs (`Sprite_CharacterIndicator.registerIndicator(type, config)`).  
+Gère l'empilement en file d'attente (waitlist) et une animation en 3 phases de 60 frames (apparition 15f zoom 0.1 ➔ 1.0, maintien 30f, disparition 15f zoom 1.0 ➔ 1.5).
+- **Alertes de Combat** (`img/GUI/indicators/ennemyAlert.png`) :
+  - `!` (Point d'exclamation rouge, ligne 0) : Passage en mode **ENGAGE** (`"exclamation"`, `"engage"`).
+  - `?` (Point d'interrogation rouge, ligne 1) : Passage en mode **RECHERCHE** (`"question_red"`, `"search"`).
+  - `?` (Point d'interrogation jaune, ligne 2) : Perte de cible et retour en mode **NEUTRE** (`"question_yellow"`, `"neutral"`).
+- **Indicateurs Extensibles** : Support natif pour de futurs marqueurs visuels (cœurs d'affinité, points de quête, bulles d'interaction).
 
 ### 3.5 Jauges de Combat au-dessus de l'Ennemi (`Spriteset_FightGauges`)
 - Jauge HP dynamique (dégradé vert ➔ orange ➔ rouge selon les PV restants, clignotement sous 10%).
@@ -346,11 +349,23 @@ L'embarquement et l'amarrage obéissent à des règles de classes strictes via `
   3. Activation du Self-Switch `A` de l'événement d'atterrissage sur la carte cible.
   4. Téléportation vers la carte de destination (pouvant être une carte vide servant de hub de transition et de dispatching scénarisé).
 
-### 8.7 Découplage Temporel Total & Vitesse Constante
+### 8.7 Découplage Temporel Total, Vitesse Constante & Continuité Orbitale
 - **Indépendance Temps / Déplacement** : L'accélération artificielle du temps liée au simple fait que le vaisseau avance a été totalement supprimée. L'horloge stellaire `$gameDate` progresse de manière fluide à sa cadence propre.
 - **Vitesse Propre Constante** : Le vaisseau navigue vers ses coordonnées de destination à vitesse constante indexée sur ses propulseurs (`SHIP_MOTORS.json`).
 - **Simulation continue hors-scène** : Les trajectoires interplanétaires continuent en temps réel pendant que le joueur explore à pied (`Scene_Map`).
-- **Physique orbitale absolue** : Angles de révolution et de rotation planétaires calculés directement depuis le timestamp galactique sans dérive temporelle.
+- **Physique orbitale continue & absolue** : Résolution du pas d'animation à chaque minute virtuelle via le ratio de progression sub-minute (`_tick / getTickPerMin()`). Les angles de révolution et de rotation sont calculés en continu sans aucune discontinuité ni à-coup au franchissement de minute.
+- **Synchronisation dynamique des Vaisseaux Étrangers & Navettes** :
+  - Les vaisseaux embarqués (`isOnBoard`) et les vaisseaux atterris (`isLanded`) sont dynamiquement masqués de la carte du système dans `Scene_SpaceTravel.updateShipGraphics()`.
+  - Leurs coordonnées géographiques sont automatiquement et continuellement alignées sur celles de leur vaisseau hôte ou planète d'accueil dans `SystemMapManager.updateSpaceships()`.
+
+### 8.8 Composants GUI Standardisés & Vocable de Navigation
+- **Classe `SC4_GUI_Utils` (Centrage 'Contain')** :
+  - Fournit les méthodes statiques `fitContain(srcW, srcH, maxW, maxH)` et `adjustSpriteContain(sprite, boxX, boxY, boxW, boxH)` prenant en charge le chargement asynchrone des Bitmaps RMMZ.
+  - Évite tout monkey-patching inutile de `Window_Base` et garantit l'affichage pixel-perfect sans déformation du sprite du navire dans `Window_SpaceShipInfo`.
+- **Vocable de Sortie Épuré** :
+  - Harmonisation du bouton d'annulation des scènes spatiales en `"Retour (Échap)"` dans `Scene_SpaceTravel`, `Scene_SectorTravel` et l'ensemble des dictionnaires de localisation FR et EN.
+- **Standardisation de la Hiérarchie Galactique** :
+  - Remplacement de `segmentum` par `segment` dans `SECTORS.json` et prise en charge native dans `SC4_Window_SpaceCalendar.js` (`Galaxie ▷ Segment ▹ Secteur ▹ Système ▹ POI`).
 
 ---
 

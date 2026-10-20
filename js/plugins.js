@@ -4,6 +4,7 @@ var $plugins =
 [
 {"name":"SC4_Interface","status":true,"description":"[SC4 v1.0.0] Façade d'interface globale, API publique et commandes de plugin.","parameters":{}},
 {"name":"SC4_DEBUGTOOL","status":true,"description":"[SC4 v1.0.0] Outil statique de débogage et logs conditionnels.","parameters":{"enabled":"true","selectiveMode":"false","allowedKeys":"[]"}},
+{"name":"SC4_GUI_Utils","status":true,"description":"[SC4 v1.0.0] Boîte à outils utilitaires statiques pour l'interface graphique (GUI) sans altérer Window_Base.","parameters":{}},
 {"name":"SC4_Hub_Hero","status":true,"description":"[SC4 v1.0.0] Hub central d'accès et d'association pour les entités Hero.","parameters":{}},
 {"name":"SC4_Bitmap_Composite","status":true,"description":"[SC4 v1.0.0] Compositeur d'images multi-couches pour le système Paperdoll.","parameters":{}},
 {"name":"SC4_Game_Hero","status":true,"description":"[SC4 v1.0.0] Classe acteur personnalisée pour les héros (Paperdoll & Notetags).","parameters":{}},

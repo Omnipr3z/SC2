@@ -24,6 +24,11 @@ class Game_Spaceships {
                 this._data.push(new Game_Spaceship(s));
             }
         });
+        this._data.forEach(s => {
+            if (s && typeof s.syncHostPosition === "function") {
+                s.syncHostPosition();
+            }
+        });
     }
 
     spaceships() {
@@ -60,21 +65,17 @@ class Game_Spaceships {
             data.forEach((sData, idx) => {
                 if (list[idx]) list[idx].loadSavefileData(sData);
             });
+            list.forEach(s => {
+                if (s && typeof s.syncHostPosition === "function") {
+                    s.syncHostPosition();
+                }
+            });
         }
     }
 }
-
 if (typeof window !== "undefined") {
-    window.Game_Planet = Game_Planet;
-    window.Game_PlanetarySystem = Game_PlanetarySystem;
-    window.Game_Sector = Game_Sector;
-    window.Game_Spaceship = Game_Spaceship;
     window.Game_Spaceships = Game_Spaceships;
 }
-
-// ============================================================================
-// 4. MOTEUR PHYSIQUE & MANAGER CARTOGRAPHIQUE (SystemMapManager)
-// ============================================================================
 
 window.Game_Spaceships = Game_Spaceships;
 if (typeof global !== "undefined") {

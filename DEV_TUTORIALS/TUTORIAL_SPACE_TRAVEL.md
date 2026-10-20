@@ -107,7 +107,7 @@ Définit la hiérarchie stellaire galactique, le placement des systèmes solaire
   {
     "id": 1,
     "name": "Secteur Calixis",
-    "segmentum": "ULTIMA-SEGMENTUM",
+    "segment": "ULTIMA-SEGMENT",
     "systems": [
       null,
       {
@@ -140,7 +140,7 @@ Définit la hiérarchie stellaire galactique, le placement des systèmes solaire
 ```
 
 * **`capital`** : Booléen (`true`/`false`) indiquant si le système est la capitale du secteur (affiche un indicateur ou blason distinctif sur la carte galactique).
-* **`segmentum`** : Région galactique affichée dans le fil d'Ariane de l'en-tête CRT.
+* **`segment`** : Région galactique majeure affichée dans le fil d'Ariane de l'en-tête CRT.
 * **`pos.x / pos.y`** : Coordonnées à l'écran de l'étoile dans `Scene_SectorTravel`.
 * **`connections`** : Tableau des IDs de systèmes reliés par des lignes FTL. Les sauts Warp ne sont autorisés qu'entre systèmes directement connectés.
 * **`entryPoint`** : Coordonnées locales $(X, Y)$ où émerge un vaisseau arrivant par saut FTL dans ce système.
@@ -365,7 +365,7 @@ Toutes les scènes spatiales (`Scene_SectorTravel`, `Scene_SpaceTravel`, `Scene_
 
 | Composant | Coordonnées `Rectangle(x, y, w, h)` | Rôle & Spécificités |
 | :--- | :---: | :--- |
-| **En-tête Fil d'Ariane & Date** | `Rectangle(0, 0, 1760, 48)` | Localisation stellaire, Segmentum, horloge 40K. |
+| **En-tête Fil d'Ariane & Date** | `Rectangle(0, 0, 1760, 48)` | Localisation stellaire, Segment, horloge 40K. |
 | **Zone de Carte / Viewport** | `(12, 12, 1280, 720)` | Vue décalée avec offset global `12px`. |
 | **Terminal de Log CRT** | `Rectangle(12, 744, 388, 234)` | Messages d'événements, contacts et alertes. |
 | **Description / Cible / POI** | `Rectangle(412, 744, 880, 150)` | Télémétrie planétaire, détails système et quêtes. |

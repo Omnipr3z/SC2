@@ -197,6 +197,10 @@ class Scene_SpaceTravel extends Scene_Base {
         const offX = window.$systemMapManager ? window.$systemMapManager.mapOffsetX : 0;
         const offY = window.$systemMapManager ? window.$systemMapManager.mapOffsetY : 0;
 
+        const isPlayerOnBoard = ship.isOnBoard && ship.isOnBoard() !== null;
+        const isPlayerLanded = ship.isLanded && ship.isLanded() !== null;
+        this._shipSprite.visible = !isPlayerOnBoard && !isPlayerLanded;
+
         this._shipSprite.x = ship.x + offX;
         this._shipSprite.y = ship.y + offY;
 
@@ -211,6 +215,9 @@ class Scene_SpaceTravel extends Scene_Base {
         if (this._npcShipSprites) {
             this._npcShipSprites.forEach(spr => {
                 const s = spr.shipData;
+                const isNpcOnBoard = s.isOnBoard && s.isOnBoard() !== null;
+                const isNpcLanded = s.isLanded && s.isLanded() !== null;
+                spr.visible = !isNpcOnBoard && !isNpcLanded;
                 spr.x = s.x + offX;
                 spr.y = s.y + offY;
             });
@@ -433,7 +440,7 @@ class Scene_SpaceTravel extends Scene_Base {
 
         const hdLabel = ship && ship.isHyperdrive() ? loc("travel.cmd_hyperdrive_on", "★ Hyperdrive [ON]") : loc("travel.cmd_hyperdrive", "☆ Hyperdrive (Shift)");
         cmds.push({ name: hdLabel, symbol: "hyperdrive", enabled: !!(ship && ship.canActivateHyperdrive()) });
-        cmds.push({ name: loc("travel.cmd_exit_bridge", "Quitter le Pont (Échap)"), symbol: "cancel", enabled: true });
+        cmds.push({ name: loc("travel.cmd_exit_bridge", "Retour (Échap)"), symbol: "cancel", enabled: true });
 
         this._controlsWindow.setCommands(cmds);
     }

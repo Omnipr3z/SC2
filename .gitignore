@@ -9,12 +9,14 @@ js/rmmz_windows.js
 # Répertoires WIP (Work In Progress)
 **/WIP/
 WIP/
+img/GUI/WIP/
 
-# Échanges de travail / Prompts
+# Échanges de travail / Prompts / Spécifications secrètes
 DIAL_with_AI.md
 AGENTS.md
 GEMINI.md
 ATLAS.md
+SC4_RELATIONSHIP_SYSTEM.md
 
 # Outils & Dossiers temporaires
 scratch/

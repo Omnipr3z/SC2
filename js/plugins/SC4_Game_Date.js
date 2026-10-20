@@ -210,6 +210,12 @@ class Game_Date {
     }
 })();
 
+if (typeof window !== "undefined") {
+    window.Game_Date = Game_Date;
+}
+if (typeof global !== "undefined") {
+    global.Game_Date = Game_Date;
+}
 if (typeof module !== "undefined" && module.exports) {
     module.exports = { Game_Date };
 }
