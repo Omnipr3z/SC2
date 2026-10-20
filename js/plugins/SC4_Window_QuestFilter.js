@@ -16,28 +16,48 @@ class Window_QuestFilter extends _BaseWindowQuestFilter {
         super(rect);
     }
 
+    // ========================================================================
+    // 1. DONNÉES & GETTERS MÉTIER
+    // ========================================================================
+
+    get quests() {
+        const qm = window.$gameQuests;
+        return qm ? qm.quests() : [];
+    }
+
+    get questCounts() {
+        const allQuests = this.quests;
+        return {
+            active: allQuests.filter(q => q && q.active).length,
+            recurring: allQuests.filter(q => q && q.recurring).length,
+            completed: allQuests.filter(q => q && q.completed).length,
+            total: allQuests.length
+        };
+    }
+
+    loc(key, def) {
+        return typeof SC4_Localization !== "undefined" ? SC4_Localization.getText(key, def) : def;
+    }
+
+    // ========================================================================
+    // 2. CONFIGURATION & COMMANDES
+    // ========================================================================
+
     maxCols() {
         return 4;
     }
 
     makeCommandList() {
-        const qm = window.$gameQuests;
-        const allQuests = qm ? qm.quests() : [];
-        const activeCount = allQuests.filter(q => q && q.active).length;
-        const recurringCount = allQuests.filter(q => q && q.recurring).length;
-        const completedCount = allQuests.filter(q => q && q.completed).length;
-        const totalCount = allQuests.length;
+        const counts = this.questCounts;
+        const activeLbl = this.loc("quest.filter_active", "En cours");
+        const recLbl = this.loc("quest.filter_recurring", "Contrats");
+        const compLbl = this.loc("quest.filter_completed", "Terminées");
+        const allLbl = this.loc("quest.filter_all", "Toutes");
 
-        const loc = (key, def) => typeof SC4_Localization !== "undefined" ? SC4_Localization.getText(key, def) : def;
-        const activeLbl = loc("quest.filter_active", "En cours");
-        const recLbl = loc("quest.filter_recurring", "Contrats");
-        const compLbl = loc("quest.filter_completed", "Terminées");
-        const allLbl = loc("quest.filter_all", "Toutes");
-
-        this.addCommand(`${activeLbl} (${activeCount})`, "active");
-        this.addCommand(`${recLbl} (${recurringCount})`, "recurring");
-        this.addCommand(`${compLbl} (${completedCount})`, "completed");
-        this.addCommand(`${allLbl} (${totalCount})`, "all");
+        this.addCommand(`${activeLbl} (${counts.active})`, "active");
+        this.addCommand(`${recLbl} (${counts.recurring})`, "recurring");
+        this.addCommand(`${compLbl} (${counts.completed})`, "completed");
+        this.addCommand(`${allLbl} (${counts.total})`, "all");
     }
 }
 

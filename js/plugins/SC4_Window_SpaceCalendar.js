@@ -16,6 +16,52 @@ class Window_SpaceCalendar extends Window_Base {
         this._lastTimeText = "";
     }
 
+    // ========================================================================
+    // 1. DONNÉES & GETTERS MÉTIER
+    // ========================================================================
+
+    get sector() {
+        return window.$gameSector ? window.$gameSector.currentSectorData() : null;
+    }
+
+    get system() {
+        return window.$gameSector ? window.$gameSector.currentSystem() : null;
+    }
+
+    get timeString() {
+        return window.$gameDate ? Game_DateFormatter.format40K($gameDate) : "";
+    }
+
+    loc(key, def) {
+        return typeof SC4_Localization !== "undefined" ? SC4_Localization.getText(key, def) : def;
+    }
+
+    formatBreadcrumb(locationTitle = "") {
+        const sector = this.sector;
+        const system = this.system;
+        const seg = sector ? (sector.segment || sector.segmentum || "ULTIMA-SEGMENT") : "GALAXIE";
+        const secName = sector ? sector.name : this.loc("travel.sector_default", "Secteur");
+        const sysName = system ? system.name : this.loc("travel.system_default", "Système");
+
+        return `${seg} ▷ ${secName} ▹ ${sysName}${locationTitle ? " ▹ " + locationTitle : ""}`;
+    }
+
+    // ========================================================================
+    // 2. RECTANGLES & GÉOMÉTRIE
+    // ========================================================================
+
+    breadcrumbRect() {
+        return new Rectangle(12, 0, this.contentsWidth() - 320, typeof this.lineHeight === "function" ? this.lineHeight() : 36);
+    }
+
+    clockRect() {
+        return new Rectangle(this.contentsWidth() - 300, 0, 280, typeof this.lineHeight === "function" ? this.lineHeight() : 36);
+    }
+
+    // ========================================================================
+    // 3. STYLES & TYPOGRAPHIE
+    // ========================================================================
+
     resetFontSettings() {
         this.contents.fontFace = $gameSystem ? $gameSystem.mainFontFace() : "sans-serif";
         this.contents.fontSize = 18;
@@ -24,28 +70,41 @@ class Window_SpaceCalendar extends Window_Base {
         this.contents.outlineWidth = 3;
     }
 
+    styliseBreadcrumb() {
+        this.contents.textColor = "#8ec07c";
+    }
+
+    styliseClock() {
+        this.contents.textColor = "#fabd2f";
+    }
+
+    // ========================================================================
+    // 4. DESSIN PAR BLOC
+    // ========================================================================
+
+    drawBreadcrumbBlock(locationTitle = "") {
+        const rect = this.breadcrumbRect();
+        const text = this.formatBreadcrumb(locationTitle);
+        this.styliseBreadcrumb();
+        this.drawText(text, rect.x, rect.y, rect.width, "left");
+    }
+
+    drawClockBlock() {
+        const rect = this.clockRect();
+        const text = this.timeString;
+        this.styliseClock();
+        this.drawText(text, rect.x, rect.y, rect.width, "right");
+    }
+
+    // ========================================================================
+    // 5. ORCHESTRATION & RAFRAÎCHISSEMENT
+    // ========================================================================
+
     refresh(locationTitle = "") {
         this.contents.clear();
         this.resetFontSettings();
-
-        const timeStr = window.$gameDate ? Game_DateFormatter.format40K($gameDate) : "";
-        const sector = window.$gameSector ? window.$gameSector.currentSectorData() : null;
-        const system = window.$gameSector ? window.$gameSector.currentSystem() : null;
-
-        const loc = (k, def) => typeof SC4_Localization !== "undefined" ? SC4_Localization.getText(k, def) : def;
-        const seg = sector ? (sector.segment || sector.segmentum || "ULTIMA-SEGMENT") : "GALAXIE";
-        const secName = sector ? sector.name : loc("travel.sector_default", "Secteur");
-        const sysName = system ? system.name : loc("travel.system_default", "Système");
-
-        const breadcrumb = `${seg} ▷ ${secName} ▹ ${sysName}${locationTitle ? " ▹ " + locationTitle : ""}`;
-
-        // Fil d'Ariane à gauche
-        this.contents.textColor = "#8ec07c";
-        this.drawText(breadcrumb, 12, 0, this.contentsWidth() - 320, "left");
-
-        // Horloge 40K à droite
-        this.contents.textColor = "#fabd2f";
-        this.drawText(timeStr, this.contentsWidth() - 300, 0, 280, "right");
+        this.drawBreadcrumbBlock(locationTitle);
+        this.drawClockBlock();
     }
 }
 

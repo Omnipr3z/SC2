@@ -60,79 +60,164 @@ class Window_QuestList extends _BaseWindowQuestList {
         }
     }
 
-    refresh() {
-        this.makeItemList();
-        super.refresh();
-        this.updateDetail();
+    // ========================================================================
+    // 1. DONNÉES & GETTERS MÉTIER
+    // ========================================================================
+
+    getQuestVisuals(quest) {
+        if (quest.failed) {
+            return { color: "#fb4934", marker: "✖" };
+        } else if (quest.completed) {
+            return { color: "#8ec07c", marker: "✔" };
+        } else if (quest.recurring) {
+            return { color: "#b8bb26", marker: "🔄" };
+        } else if (quest.category === "secondary" || quest.category === "side") {
+            return { color: "#83a598", marker: "📜" };
+        } else if (quest.category === "bounty") {
+            return { color: "#fe8019", marker: "🎯" };
+        }
+        return { color: "#fabd2f", marker: "👑" };
     }
 
-    drawItem(index) {
-        const quest = this._data[index];
-        if (!quest) return;
-
-        const rect = this.itemLineRect(index);
-        this.contents.fontFace = $gameSystem ? $gameSystem.mainFontFace() : "sans-serif";
-        this.contents.outlineColor = "#000000";
-        this.contents.outlineWidth = 3;
-
-        // Détermination du code couleur par catégorie / état
-        let itemColor = "#ebdbb2";
-        let marker = "◈";
-        if (quest.failed) {
-            itemColor = "#fb4934";
-            marker = "✖";
-        } else if (quest.completed) {
-            itemColor = "#8ec07c";
-            marker = "✔";
-        } else if (quest.recurring) {
-            itemColor = "#b8bb26"; // Vert émeraude contrat récurrent
-            marker = "🔄";
-        } else if (quest.category === "secondary" || quest.category === "side") {
-            itemColor = "#83a598"; // Cyan quête secondaire
-            marker = "📜";
-        } else if (quest.category === "bounty") {
-            itemColor = "#fe8019"; // Orange prime de recherche
-            marker = "🎯";
-        } else {
-            itemColor = "#fabd2f"; // Doré quête principale
-            marker = "👑";
-        }
-
-        // Puce et Pin de suivi
-        const trackPin = quest.isTracking ? "📌" : "◌";
-        this.contents.fontSize = 13;
-        this.contents.textColor = quest.isTracking ? "#8ec07c" : "#7c6f64";
-        this.drawText(trackPin, rect.x, rect.y + 4, 18, "center");
-
-        this.contents.fontSize = 14;
-        this.contents.textColor = itemColor;
-        this.drawText(marker, rect.x + 20, rect.y + 4, 20, "center");
-
-        // Titre + compteur de répétition
+    getQuestTitleText(quest) {
         let titleTxt = quest.name;
         if (quest.recurring && quest.completedCount > 0) {
             titleTxt += ` (x${quest.completedCount})`;
         }
-        this.contents.fontSize = 14;
-        this.contents.textColor = quest.completed ? "#a89984" : itemColor;
-        const titleW = rect.width - 150;
-        this.drawText(titleTxt, rect.x + 44, rect.y + 4, titleW, "left");
+        return titleTxt;
+    }
 
-        // Badge objectifs ou délai restant
+    loc(key, def) {
+        return typeof SC4_Localization !== "undefined" ? SC4_Localization.getText(key, def) : def;
+    }
+
+    // ========================================================================
+    // 2. RECTANGLES & GÉOMÉTRIE
+    // ========================================================================
+
+    itemPinRect(lineRect) {
+        return new Rectangle(lineRect.x, lineRect.y + 4, 18, 24);
+    }
+
+    itemMarkerRect(lineRect) {
+        return new Rectangle(lineRect.x + 20, lineRect.y + 4, 20, 24);
+    }
+
+    itemTitleRect(lineRect) {
+        const titleW = lineRect.width - 150;
+        return new Rectangle(lineRect.x + 44, lineRect.y + 4, titleW, 24);
+    }
+
+    itemDeadlineRect(lineRect) {
+        return new Rectangle(lineRect.x + lineRect.width - 100, lineRect.y + 4, 95, 24);
+    }
+
+    itemObjectiveRect(lineRect) {
+        return new Rectangle(lineRect.x + lineRect.width - 70, lineRect.y + 4, 65, 24);
+    }
+
+    // ========================================================================
+    // 3. STYLES & TYPOGRAPHIE
+    // ========================================================================
+
+    resetItemFontSettings() {
+        this.contents.fontFace = $gameSystem ? $gameSystem.mainFontFace() : "sans-serif";
+        this.contents.outlineColor = "#000000";
+        this.contents.outlineWidth = 3;
+    }
+
+    stylisePin(isTracking) {
+        this.contents.fontSize = 13;
+        this.contents.textColor = isTracking ? "#8ec07c" : "#7c6f64";
+    }
+
+    styliseMarker(color) {
+        this.contents.fontSize = 14;
+        this.contents.textColor = color;
+    }
+
+    styliseTitle(color, isCompleted) {
+        this.contents.fontSize = 14;
+        this.contents.textColor = isCompleted ? "#a89984" : color;
+    }
+
+    styliseDeadline(remainingMin) {
         this.contents.fontSize = 11;
+        this.contents.textColor = remainingMin <= 60 ? "#fb4934" : (remainingMin <= 360 ? "#fe8019" : "#b8bb26");
+    }
+
+    styliseObjective(isCompleted) {
+        this.contents.fontSize = 11;
+        this.contents.textColor = isCompleted ? "#8ec07c" : "#83a598";
+    }
+
+    // ========================================================================
+    // 4. DESSIN PAR BLOC
+    // ========================================================================
+
+    drawPinBlock(lineRect, quest) {
+        const rect = this.itemPinRect(lineRect);
+        const pin = quest.isTracking ? "📌" : "◌";
+        this.stylisePin(quest.isTracking);
+        this.drawText(pin, rect.x, rect.y, rect.width, "center");
+    }
+
+    drawMarkerBlock(lineRect, quest, marker, color) {
+        const rect = this.itemMarkerRect(lineRect);
+        this.styliseMarker(color);
+        this.drawText(marker, rect.x, rect.y, rect.width, "center");
+    }
+
+    drawTitleBlock(lineRect, quest, color) {
+        const rect = this.itemTitleRect(lineRect);
+        const titleText = this.getQuestTitleText(quest);
+        this.styliseTitle(color, quest.completed);
+        this.drawText(titleText, rect.x, rect.y, rect.width, "left");
+    }
+
+    drawBadgeBlock(lineRect, quest) {
         if (typeof quest.hasDeadline === "function" && quest.hasDeadline() && quest.active) {
+            const rect = this.itemDeadlineRect(lineRect);
             const remStr = quest.remainingTimeString();
             const remMin = quest.remainingTime();
-            this.contents.textColor = remMin <= 60 ? "#fb4934" : (remMin <= 360 ? "#fe8019" : "#b8bb26");
-            this.drawText(`⏱ ${remStr}`, rect.x + rect.width - 100, rect.y + 4, 95, "right");
+            this.styliseDeadline(remMin);
+            this.drawText(`⏱ ${remStr}`, rect.x, rect.y, rect.width, "right");
         } else {
+            const rect = this.itemObjectiveRect(lineRect);
             const completedLocs = quest.locations ? quest.locations.filter(l => l && l.completed).length : 0;
             const totalLocs = quest.locations ? quest.locations.length : 0;
-            this.contents.textColor = quest.completed ? "#8ec07c" : "#83a598";
-            const badgeLbl = typeof SC4_Localization !== "undefined" ? SC4_Localization.getText("quest.obj_badge", "obj.") : "obj.";
+            this.styliseObjective(quest.completed);
+            const badgeLbl = this.loc("quest.obj_badge", "obj.");
             const objTxt = totalLocs > 0 ? `${completedLocs}/${totalLocs} ${badgeLbl}` : "";
-            this.drawText(objTxt, rect.x + rect.width - 70, rect.y + 4, 65, "right");
+            this.drawText(objTxt, rect.x, rect.y, rect.width, "right");
         }
+    }
+
+    drawItemContent(lineRect, quest) {
+        this.resetItemFontSettings();
+        const { color, marker } = this.getQuestVisuals(quest);
+
+        this.drawPinBlock(lineRect, quest);
+        this.drawMarkerBlock(lineRect, quest, marker, color);
+        this.drawTitleBlock(lineRect, quest, color);
+        this.drawBadgeBlock(lineRect, quest);
+    }
+
+    // ========================================================================
+    // 5. ORCHESTRATION & RAFRAÎCHISSEMENT
+    // ========================================================================
+
+    drawItem(index) {
+        const quest = this._data[index];
+        if (!quest) return;
+        const rect = this.itemLineRect(index);
+        this.drawItemContent(rect, quest);
+    }
+
+    refresh() {
+        this.makeItemList();
+        super.refresh();
+        this.updateDetail();
     }
 
     select(index) {

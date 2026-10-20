@@ -461,7 +461,15 @@ DEBUGTOOL.logFormat({ actor: "Paolo", hp: 120 }, "Acteur : %[actor], PV : %[hp]"
   - **Moteur Spatial** : 6 modèles physiques et de gestion (`SC4_Game_Planet`, `SC4_Game_PlanetarySystem`, `SC4_Game_Sector`, `SC4_Game_Spaceship`, `SC4_Game_Spaceships`, `SC4_SystemMapManager`) orchestrés par `SC4_SpaceTravel`.
   - **Gestionnaire de Quêtes** : 4 modèles métiers (`SC4_Game_QuestLocation`, `SC4_Game_Quest`, `SC4_Game_Quests`, `SC4_StoryManager`) orchestrés par `SC4_QuestManager`.
   - **Calendrier & Horloge** : Séparation propre du modèle de temps (`SC4_Game_Date`) et du formateur lisible (`SC4_Game_DateFormatter`).
-- **Couverture de Tests** : 26 suites de tests unitaires validées à 100% sans aucun échec (`node UNIT_TESTS/run_all_tests.js`).
+- **Couverture de Tests** : 27 suites de tests unitaires validées à 100% sans aucun échec (`node UNIT_TESTS/run_all_tests.js`).
+
+### 11.4 Architecture Modulaire Standard des Fenêtres (`Window_*`)
+Toutes les fenêtres du projet (`SC4_Window_*.js`) adoptent une architecture stricte en 5 sections standardisées (basée sur le pattern de référence `SC4_Window_SpaceShipInfo.js`) :
+1. **Section 1 : Données & Getters Métier** : Isolation des accesseurs de données, calculs dérivés et passerelles de localisation (`get xxx()`, `loc(key, fallback)`).
+2. **Section 2 : Rectangles & Géométrie** : Délimitation géométrique stricte isolée dans des méthodes retournant des instances de `Rectangle` (`xxxRect(lineRect)`).
+3. **Section 3 : Styles & Typographie** : Configuration dédiée des polices, couleurs thématiques, ombrages et contours (`styliseXxx()`).
+4. **Section 4 : Dessin par Bloc** : Méthodes atomiques de rendu visuel par composant (`drawXxxBlock(...)`).
+5. **Section 5 : Orchestration & Rafraîchissement** : Méthode `refresh()` ou `drawItem(index)` succincte (10-15 lignes), agissant en pur chef d'orchestre des blocs de dessin.
 
 ---
 

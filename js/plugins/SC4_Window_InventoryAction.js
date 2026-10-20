@@ -20,6 +20,32 @@ class Window_InventoryAction extends _BaseWindowInvAct {
         this.deactivate();
     }
 
+    // ========================================================================
+    // 1. DONNÉES & GETTERS MÉTIER
+    // ========================================================================
+
+    get mode() {
+        return this._mode;
+    }
+
+    get canDeposit() {
+        return this._canDeposit;
+    }
+
+    loc(key, def) {
+        if (typeof SC4_Localization !== "undefined") {
+            return SC4_Localization.getText(key, def);
+        }
+        if (typeof LocalisationManager !== "undefined" && typeof LocalisationManager.getText === "function") {
+            return LocalisationManager.getText(key, def);
+        }
+        return def;
+    }
+
+    // ========================================================================
+    // 2. CONFIGURATION & COMMANDES
+    // ========================================================================
+
     setup(mode, canDeposit = true) {
         this._mode = mode;
         this._canDeposit = canDeposit;
@@ -30,29 +56,19 @@ class Window_InventoryAction extends _BaseWindowInvAct {
     }
 
     makeCommandList() {
-        const getTxt = (key, fallback) => {
-            return (typeof LocalisationManager !== "undefined" && typeof LocalisationManager.getText === "function")
-                ? LocalisationManager.getText(key, fallback)
-                : fallback;
-        };
-
         if (this._mode === "target") {
-            this.addCommand(getTxt("inventory.take_one", "Prendre 1"), "take_one", true);
-            this.addCommand(getTxt("inventory.take_all", "Prendre Tout"), "take_all", true);
-            this.addCommand(getTxt("inventory.cancel", "Annuler"), "cancel", true);
+            this.addCommand(this.loc("inventory.take_one", "Prendre 1"), "take_one", true);
+            this.addCommand(this.loc("inventory.take_all", "Prendre Tout"), "take_all", true);
+            this.addCommand(this.loc("inventory.cancel", "Annuler"), "cancel", true);
         } else {
-            this.addCommand(getTxt("inventory.deposit_one", "Déposer 1"), "deposit_one", this._canDeposit);
-            this.addCommand(getTxt("inventory.deposit_all", "Déposer Tout"), "deposit_all", this._canDeposit);
-            this.addCommand(getTxt("inventory.drop_one", "Jeter 1"), "drop_one", true);
-            this.addCommand(getTxt("inventory.drop_all", "Jeter Tout"), "drop_all", true);
-            this.addCommand(getTxt("inventory.cancel", "Annuler"), "cancel", true);
+            this.addCommand(this.loc("inventory.deposit_one", "Déposer 1"), "deposit_one", this._canDeposit);
+            this.addCommand(this.loc("inventory.deposit_all", "Déposer Tout"), "deposit_all", this._canDeposit);
+            this.addCommand(this.loc("inventory.drop_one", "Jeter 1"), "drop_one", true);
+            this.addCommand(this.loc("inventory.drop_all", "Jeter Tout"), "drop_all", true);
+            this.addCommand(this.loc("inventory.cancel", "Annuler"), "cancel", true);
         }
     }
 }
-
-// ============================================================================
-// 4. Scène principale Scene_Inventory
-// ============================================================================
 
 window.Window_InventoryAction = Window_InventoryAction;
 if (typeof global !== "undefined") {

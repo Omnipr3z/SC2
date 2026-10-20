@@ -22,6 +22,38 @@ class Window_QuestBookHeader extends Window_Base {
         }
     }
 
+    // ========================================================================
+    // 1. DONNÉES & GETTERS MÉTIER
+    // ========================================================================
+
+    get headerTitle() {
+        return this.loc("quest.header", "DATAPAD IMPÉRIAL ▷ REGISTRE DES MISSIONS & TRANSMISSIONS");
+    }
+
+    get timeString() {
+        return window.$gameDate ? Game_DateFormatter.format40K($gameDate) : "";
+    }
+
+    loc(key, def) {
+        return typeof SC4_Localization !== "undefined" ? SC4_Localization.getText(key, def) : def;
+    }
+
+    // ========================================================================
+    // 2. RECTANGLES & GÉOMÉTRIE
+    // ========================================================================
+
+    titleRect() {
+        return new Rectangle(12, 0, this.contentsWidth() - 320, typeof this.lineHeight === "function" ? this.lineHeight() : 36);
+    }
+
+    clockRect() {
+        return new Rectangle(this.contentsWidth() - 300, 0, 280, typeof this.lineHeight === "function" ? this.lineHeight() : 36);
+    }
+
+    // ========================================================================
+    // 3. STYLES & TYPOGRAPHIE
+    // ========================================================================
+
     resetFontSettings() {
         this.contents.fontFace = $gameSystem ? $gameSystem.mainFontFace() : "sans-serif";
         this.contents.fontSize = 18;
@@ -30,19 +62,39 @@ class Window_QuestBookHeader extends Window_Base {
         this.contents.outlineWidth = 3;
     }
 
+    styliseTitle() {
+        this.contents.textColor = "#8ec07c";
+    }
+
+    styliseClock() {
+        this.contents.textColor = "#fabd2f";
+    }
+
+    // ========================================================================
+    // 4. DESSIN PAR BLOC
+    // ========================================================================
+
+    drawTitleBlock() {
+        const rect = this.titleRect();
+        this.styliseTitle();
+        this.drawText(this.headerTitle, rect.x, rect.y, rect.width, "left");
+    }
+
+    drawClockBlock() {
+        const rect = this.clockRect();
+        this.styliseClock();
+        this.drawText(this.timeString, rect.x, rect.y, rect.width, "right");
+    }
+
+    // ========================================================================
+    // 5. ORCHESTRATION & RAFRAÎCHISSEMENT
+    // ========================================================================
+
     refresh() {
         this.contents.clear();
         this.resetFontSettings();
-
-        // Titre Datapad
-        this.contents.textColor = "#8ec07c";
-        const titleText = typeof SC4_Localization !== "undefined" ? SC4_Localization.getText("quest.header", "DATAPAD IMPÉRIAL ▷ REGISTRE DES MISSIONS & TRANSMISSIONS") : "DATAPAD IMPÉRIAL ▷ REGISTRE DES MISSIONS & TRANSMISSIONS";
-        this.drawText(titleText, 12, 0, this.contentsWidth() - 320, "left");
-
-        // Horloge 40K
-        const timeStr = window.$gameDate ? Game_DateFormatter.format40K($gameDate) : "";
-        this.contents.textColor = "#fabd2f";
-        this.drawText(timeStr, this.contentsWidth() - 300, 0, 280, "right");
+        this.drawTitleBlock();
+        this.drawClockBlock();
     }
 }
 

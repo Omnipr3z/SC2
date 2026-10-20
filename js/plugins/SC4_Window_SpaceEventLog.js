@@ -61,49 +61,114 @@ class Window_SpaceEventLog extends Window_Base {
         }
     }
 
+    // ========================================================================
+    // 1. DONNÉES & GETTERS MÉTIER
+    // ========================================================================
+
+    get lineHeight() {
+        return 20;
+    }
+
+    get maxLines() {
+        return Math.floor(this.contentsHeight() / this.lineHeight);
+    }
+
+    get hasPending() {
+        return this._messages.length > 0;
+    }
+
+    get blinkPrompt() {
+        return (Math.floor(this._blinkTimer / 30) % 2 === 0) ? "▷ " : "▹ ";
+    }
+
+    get recentLogs() {
+        const maxOutLines = this.hasPending ? Math.max(1, this.maxLines - 1) : this.maxLines;
+        return this._out.slice(-maxOutLines);
+    }
+
+    loc(key, def) {
+        return typeof SC4_Localization !== "undefined" ? SC4_Localization.getText(key, def) : def;
+    }
+
+    // ========================================================================
+    // 2. RECTANGLES & GÉOMÉTRIE
+    // ========================================================================
+
+    entryRect(index) {
+        return new Rectangle(8, index * this.lineHeight, this.contentsWidth() - 16, this.lineHeight);
+    }
+
+    pendingRect(index) {
+        return new Rectangle(8, index * this.lineHeight, this.contentsWidth() - 16, this.lineHeight);
+    }
+
+    // ========================================================================
+    // 3. STYLES & TYPOGRAPHIE
+    // ========================================================================
+
+    styliseLogText(style) {
+        this.contents.fontFace = "monospace";
+        this.contents.fontSize = 15;
+        this.contents.outlineWidth = 2;
+        this.contents.outlineColor = "#000000";
+
+        if (style === "alert") {
+            this.contents.textColor = "#fe8019";
+        } else if (style === "imperium") {
+            this.contents.textColor = "#fabd2f";
+        } else if (style === "basicInfos") {
+            this.contents.textColor = "#b8bb26";
+        } else {
+            this.contents.textColor = "#8ec07c";
+        }
+    }
+
+    stylisePendingText() {
+        this.contents.fontFace = "monospace";
+        this.contents.fontSize = 14;
+        this.contents.outlineWidth = 2;
+        this.contents.outlineColor = "#000000";
+        this.contents.textColor = (Math.floor(this._blinkTimer / 20) % 2 === 0) ? "#fabd2f" : "#d79921";
+    }
+
+    // ========================================================================
+    // 4. DESSIN PAR BLOC
+    // ========================================================================
+
+    drawLogEntry(item, index, isLast, blinkPrompt) {
+        const rect = this.entryRect(index);
+        this.styliseLogText(item.style);
+        const prefix = isLast ? blinkPrompt : "  ";
+        this.drawText(prefix + item.text, rect.x, rect.y, rect.width, "left");
+    }
+
+    drawPendingBlock(index) {
+        const rect = this.pendingRect(index);
+        const dotsCount = (Math.floor(this._blinkTimer / 15) % 4);
+        const dots = ".".repeat(dotsCount);
+        const loadingText = `⏳ ${this.loc("travel.log_computing", "Calcul des données")}${dots}`;
+        this.stylisePendingText();
+        this.drawText(loadingText, rect.x, rect.y, rect.width, "left");
+    }
+
+    // ========================================================================
+    // 5. ORCHESTRATION & RAFRAÎCHISSEMENT
+    // ========================================================================
+
     refresh() {
         this.contents.clear();
-        const lineHeight = 20;
-        const maxLines = Math.floor(this.contentsHeight() / lineHeight);
-        const blinkPrompt = (Math.floor(this._blinkTimer / 30) % 2 === 0) ? "▷ " : "▹ ";
 
-        const hasPending = this._messages.length > 0;
-        const maxOutLines = hasPending ? Math.max(1, maxLines - 1) : maxLines;
-        const recent = this._out.slice(-maxOutLines);
+        const recent = this.recentLogs;
+        const blinkPrompt = this.blinkPrompt;
+        const hasPending = this.hasPending;
 
         recent.forEach((item, index) => {
-            const y = index * lineHeight;
-            this.contents.fontFace = "monospace";
-            this.contents.fontSize = 15;
-            this.contents.outlineWidth = 2;
-            this.contents.outlineColor = "#000000";
-
-            if (item.style === "alert") {
-                this.contents.textColor = "#fe8019";
-            } else if (item.style === "imperium") {
-                this.contents.textColor = "#fabd2f";
-            } else if (item.style === "basicInfos") {
-                this.contents.textColor = "#b8bb26";
-            } else {
-                this.contents.textColor = "#8ec07c";
-            }
-
-            const prefix = index === recent.length - 1 && !hasPending ? blinkPrompt : "  ";
-            this.drawText(prefix + item.text, 8, y, this.contentsWidth() - 16, "left");
+            const isLast = (index === recent.length - 1) && !hasPending;
+            this.drawLogEntry(item, index, isLast, blinkPrompt);
         });
 
-        // Ligne animée si des logs sont en attente de calcul
         if (hasPending) {
-            const dotsCount = (Math.floor(this._blinkTimer / 15) % 4);
-            const dots = ".".repeat(dotsCount);
-            const loadingText = `⏳ Calcul des données${dots}`;
-            const loadingY = recent.length * lineHeight;
-            this.contents.fontFace = "monospace";
-            this.contents.fontSize = 14;
-            this.contents.outlineWidth = 2;
-            this.contents.outlineColor = "#000000";
-            this.contents.textColor = (Math.floor(this._blinkTimer / 20) % 2 === 0) ? "#fabd2f" : "#d79921";
-            this.drawText(loadingText, 8, loadingY, this.contentsWidth() - 16, "left");
+            this.drawPendingBlock(recent.length);
         }
     }
 }

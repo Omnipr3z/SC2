@@ -76,10 +76,26 @@ class Window_InventoryList extends _BaseWindowInvList {
         }
     }
 
-    drawAllItems() {
-        this.makeItemList();
-        super.drawAllItems();
-        this.drawWeightStatus();
+    // ========================================================================
+    // 1. DONNÉES & GETTERS MÉTIER
+    // ========================================================================
+
+    get currentWeight() {
+        if (this._isParty) {
+            return (typeof $gameParty !== "undefined" && typeof $gameParty.totalWeight === "function") ? $gameParty.totalWeight() : 0;
+        }
+        return this._targetInventory ? this._targetInventory.totalWeight() : 0;
+    }
+
+    get maxWeight() {
+        if (this._isParty) {
+            return (typeof $gameParty !== "undefined" && typeof $gameParty.maxWeight === "function") ? $gameParty.maxWeight() : Infinity;
+        }
+        return this._targetInventory ? this._targetInventory.maxWeight() : Infinity;
+    }
+
+    get isOverloaded() {
+        return this.currentWeight > this.maxWeight;
     }
 
     itemQuantity(item) {
@@ -92,49 +108,106 @@ class Window_InventoryList extends _BaseWindowInvList {
         return 0;
     }
 
+    loc(key, def) {
+        if (typeof SC4_Localization !== "undefined") {
+            return SC4_Localization.getText(key, def);
+        }
+        if (typeof LocalisationManager !== "undefined" && typeof LocalisationManager.getText === "function") {
+            return LocalisationManager.getText(key, def);
+        }
+        return def;
+    }
+
+    // ========================================================================
+    // 2. RECTANGLES & GÉOMÉTRIE
+    // ========================================================================
+
+    itemNameRect(lineRect) {
+        return new Rectangle(lineRect.x, lineRect.y, lineRect.width - 80, lineRect.height);
+    }
+
+    itemQtyRect(lineRect) {
+        return new Rectangle(lineRect.x, lineRect.y, lineRect.width, lineRect.height);
+    }
+
+    weightBarRect() {
+        const lh = typeof this.lineHeight === "function" ? this.lineHeight() : 36;
+        const y = this.innerHeight - lh;
+        const w = this.innerWidth - 8;
+        return {
+            backgroundRect: new Rectangle(0, y - 2, this.innerWidth, lh + 4),
+            titleRect: new Rectangle(4, y, Math.floor(w / 2), lh),
+            valueRect: new Rectangle(4, y, w, lh)
+        };
+    }
+
+    // ========================================================================
+    // 3. STYLES & TYPOGRAPHIE
+    // ========================================================================
+
+    styliseWeightStatus(isOverloaded) {
+        if (isOverloaded) {
+            this.changeTextColor("#ff4d4d");
+        } else if (typeof ColorManager !== "undefined") {
+            this.changeTextColor(ColorManager.systemColor());
+        }
+    }
+
+    // ========================================================================
+    // 4. DESSIN PAR BLOC
+    // ========================================================================
+
+    drawItemContent(lineRect, item) {
+        const nameRect = this.itemNameRect(lineRect);
+        const qtyRect = this.itemQtyRect(lineRect);
+        const qty = this.itemQuantity(item);
+
+        this.changePaintOpacity(this.isCurrentItemEnabled());
+        this.drawItemName(item, nameRect.x, nameRect.y, nameRect.width);
+        this.drawText("x" + qty, qtyRect.x, qtyRect.y, qtyRect.width, "right");
+        this.changePaintOpacity(1);
+    }
+
+    drawWeightStatusBlock() {
+        const rects = this.weightBarRect();
+        const curWeight = this.currentWeight;
+        const maxWeight = this.maxWeight;
+        const isOverloaded = this.isOverloaded;
+
+        const label = this.loc("inventory.weight", "Poids");
+        const maxStr = (maxWeight === Infinity || isNaN(maxWeight)) ? "∞" : maxWeight;
+        const text = `${label}: ${curWeight}/${maxStr}`;
+
+        if (typeof ColorManager !== "undefined") {
+            this.contents.fillRect(rects.backgroundRect.x, rects.backgroundRect.y, rects.backgroundRect.width, rects.backgroundRect.height, ColorManager.dimColor1());
+        }
+        this.changePaintOpacity(true);
+        this.styliseWeightStatus(isOverloaded);
+        this.drawText(this._title, rects.titleRect.x, rects.titleRect.y, rects.titleRect.width, "left");
+        this.drawText(text, rects.valueRect.x, rects.valueRect.y, rects.valueRect.width, "right");
+        this.resetTextColor();
+    }
+
+    // ========================================================================
+    // 5. ORCHESTRATION & RAFRAÎCHISSEMENT
+    // ========================================================================
+
     drawItem(index) {
         const item = this.itemAt(index);
         if (item) {
             const rect = this.itemLineRect(index);
-            this.changePaintOpacity(this.isCurrentItemEnabled());
-            this.drawItemName(item, rect.x, rect.y, rect.width - 80);
-            const qty = this.itemQuantity(item);
-            this.drawText("x" + qty, rect.x, rect.y, rect.width, "right");
-            this.changePaintOpacity(1);
+            this.drawItemContent(rect, item);
         }
     }
 
     drawWeightStatus() {
-        const y = this.innerHeight - this.lineHeight();
-        const x = 4;
-        const w = this.innerWidth - 8;
+        this.drawWeightStatusBlock();
+    }
 
-        const curWeight = this._isParty
-            ? ((typeof $gameParty !== "undefined" && typeof $gameParty.totalWeight === "function") ? $gameParty.totalWeight() : 0)
-            : (this._targetInventory ? this._targetInventory.totalWeight() : 0);
-
-        const maxWeight = this._isParty
-            ? ((typeof $gameParty !== "undefined" && typeof $gameParty.maxWeight === "function") ? $gameParty.maxWeight() : Infinity)
-            : (this._targetInventory ? this._targetInventory.maxWeight() : Infinity);
-
-        const isOverloaded = curWeight > maxWeight;
-
-        const label = (typeof LocalisationManager !== "undefined" && typeof LocalisationManager.getText === "function")
-            ? LocalisationManager.getText("inventory.weight", "Poids")
-            : "Poids";
-        const maxStr = (maxWeight === Infinity || isNaN(maxWeight)) ? "∞" : maxWeight;
-        const text = `${label}: ${curWeight}/${maxStr}`;
-
-        this.contents.fillRect(0, y - 2, this.innerWidth, this.lineHeight() + 4, ColorManager.dimColor1());
-        this.changePaintOpacity(true);
-        if (isOverloaded) {
-            this.changeTextColor("#ff4d4d");
-        } else {
-            this.changeTextColor(ColorManager.systemColor());
-        }
-        this.drawText(this._title, x, y, Math.floor(w / 2), "left");
-        this.drawText(text, x, y, w, "right");
-        this.resetTextColor();
+    drawAllItems() {
+        this.makeItemList();
+        super.drawAllItems();
+        this.drawWeightStatus();
     }
 
     updateHelp() {

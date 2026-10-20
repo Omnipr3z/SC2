@@ -18,6 +18,36 @@ class Window_InventoryCommand extends _BaseWindowInvCmd {
         this._isPersistent = true;
     }
 
+    // ========================================================================
+    // 1. DONNÉES & GETTERS MÉTIER
+    // ========================================================================
+
+    get hasTargetItems() {
+        return this._targetInventory ? !this._targetInventory.isEmpty() : false;
+    }
+
+    get canDeposit() {
+        return Boolean(this._isPersistent);
+    }
+
+    get hasPartyItems() {
+        return (typeof $gameParty !== "undefined" && $gameParty) ? $gameParty.allItems().length > 0 : false;
+    }
+
+    loc(key, def) {
+        if (typeof SC4_Localization !== "undefined") {
+            return SC4_Localization.getText(key, def);
+        }
+        if (typeof LocalisationManager !== "undefined" && typeof LocalisationManager.getText === "function") {
+            return LocalisationManager.getText(key, def);
+        }
+        return def;
+    }
+
+    // ========================================================================
+    // 2. CONFIGURATION & COMMANDES
+    // ========================================================================
+
     maxCols() {
         return 3;
     }
@@ -29,29 +59,15 @@ class Window_InventoryCommand extends _BaseWindowInvCmd {
     }
 
     makeCommandList() {
-        const hasTargetItems = this._targetInventory ? !this._targetInventory.isEmpty() : false;
-        const canDeposit = Boolean(this._isPersistent);
-        const hasPartyItems = (typeof $gameParty !== "undefined" && $gameParty) ? $gameParty.allItems().length > 0 : false;
+        const txtTake = this.loc("inventory.take", "Prendre");
+        const txtDeposit = this.loc("inventory.deposit", "Déposer");
+        const txtClose = this.loc("inventory.close", "Fermer");
 
-        const txtTake = (typeof LocalisationManager !== "undefined" && typeof LocalisationManager.getText === "function")
-            ? LocalisationManager.getText("inventory.take", "Prendre")
-            : "Prendre";
-        const txtDeposit = (typeof LocalisationManager !== "undefined" && typeof LocalisationManager.getText === "function")
-            ? LocalisationManager.getText("inventory.deposit", "Déposer")
-            : "Déposer";
-        const txtClose = (typeof LocalisationManager !== "undefined" && typeof LocalisationManager.getText === "function")
-            ? LocalisationManager.getText("inventory.close", "Fermer")
-            : "Fermer";
-
-        this.addCommand(txtTake, "take", hasTargetItems);
-        this.addCommand(txtDeposit, "deposit", canDeposit && hasPartyItems);
+        this.addCommand(txtTake, "take", this.hasTargetItems);
+        this.addCommand(txtDeposit, "deposit", this.canDeposit && this.hasPartyItems);
         this.addCommand(txtClose, "close", true);
     }
 }
-
-// ============================================================================
-// 2. Fenêtre de liste d'inventaire avec barre de poids intégrée
-// ============================================================================
 
 window.Window_InventoryCommand = Window_InventoryCommand;
 if (typeof global !== "undefined") {

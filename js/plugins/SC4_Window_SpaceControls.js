@@ -17,6 +17,14 @@ class Window_SpaceControls extends _BaseWindowControls {
         this.opacity = 0;
     }
 
+    // ========================================================================
+    // 1. CONFIGURATION & DISPOSITION
+    // ========================================================================
+
+    maxCols() {
+        return Math.max(1, (this._commandsConfig ? this._commandsConfig.length : 1));
+    }
+
     setCommands(cmds) {
         const lastSymbol = typeof this.currentSymbol === "function" ? this.currentSymbol() : null;
         this._commandsConfig = cmds || [];
@@ -26,15 +34,15 @@ class Window_SpaceControls extends _BaseWindowControls {
         if (typeof this.activate === "function") this.activate();
     }
 
+    // ========================================================================
+    // 2. FABRICATION DES COMMANDES
+    // ========================================================================
+
     makeCommandList() {
         if (!Array.isArray(this._commandsConfig)) return;
         this._commandsConfig.forEach(cmd => {
             this.addCommand(cmd.name, cmd.symbol, cmd.enabled !== false);
         });
-    }
-
-    maxCols() {
-        return Math.max(1, (this._commandsConfig ? this._commandsConfig.length : 1));
     }
 }
 
