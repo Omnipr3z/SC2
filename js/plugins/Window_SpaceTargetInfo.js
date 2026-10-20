@@ -6,7 +6,7 @@
  * @plugindesc [SC4 v1.0.0] Volet de télémétrie de la cible sélectionnée avec Scroll Y.
  * @author SimCraft
  *
- * @help Window_SpaceTargetInfo.js
+ * @help SC4_Window_SpaceTargetInfo.js
  */
 
 class Window_SpaceTargetInfo extends Window_Base {

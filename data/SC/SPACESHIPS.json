@@ -77,7 +77,7 @@
     "shipClass": "shuttle",
     "captainId": 1,
     "bitmapName": "ship_C",
-    "onBoard": "V1",
+    "onBoard": "V2",
     "sectorId": 1,
     "systemId": 1,
     "x": 580,

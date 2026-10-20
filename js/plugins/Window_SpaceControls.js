@@ -6,7 +6,7 @@
  * @plugindesc [SC4 v1.0.0] Barre de commandes d'actions spatiales et navigation multi-échelles.
  * @author SimCraft
  *
- * @help Window_SpaceControls.js
+ * @help SC4_Window_SpaceControls.js
  */
 
 const _BaseWindowControls = typeof Window_HorzCommand !== "undefined" ? Window_HorzCommand : (typeof Window_Command !== "undefined" ? Window_Command : (typeof Window_Base !== "undefined" ? Window_Base : Object));

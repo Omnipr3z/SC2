@@ -147,8 +147,10 @@ const vm = require('vm');
 const ROOT_DIR = path.resolve(__dirname, '..');
 vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Localization.js'), 'utf8'));
 vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_SpaceTravel.js'), 'utf8'));
-vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_SpaceScenes.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Scene_SectorTravel.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Scene_SpaceTravel.js'), 'utf8'));
 vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_QuestManager.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Window_QuestDetail.js'), 'utf8'));
 
 console.log("==============================================================");
 console.log("--- TEST VALIDATION REVUE DIAL_with_AI ---");

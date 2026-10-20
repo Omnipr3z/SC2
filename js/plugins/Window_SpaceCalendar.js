@@ -6,7 +6,7 @@
  * @plugindesc [SC4 v1.0.0] En-tête spatial affichant le fil d'Ariane et l'horloge stellaire Neotori.
  * @author SimCraft
  *
- * @help Window_SpaceCalendar.js
+ * @help SC4_Window_SpaceCalendar.js
  */
 
 class Window_SpaceCalendar extends Window_Base {

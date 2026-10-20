@@ -35,7 +35,9 @@ const testFiles = [
     'test_step17_bubble_ring.js',
     'test_dial_review.js',
     'test_review_test2.js',
-    'test_review_additions.js'
+    'test_review_additions.js',
+    'test_advanced_quests.js',
+    'test_atlas_galaxy.js'
 ];
 
 console.log("==============================================================");

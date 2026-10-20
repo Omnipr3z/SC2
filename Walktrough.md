@@ -427,10 +427,26 @@ DEBUGTOOL.logFormat({ actor: "Paolo", hp: 120 }, "Acteur : %[actor], PV : %[hp]"
 - Affichage aligné au-delà de la colonne 80 pour ne pas polluer la lecture du code.
 
 ### 11.2 Normes de Codage
-- Une classe principale par fichier JavaScript.
-- Surcharges du moteur vanilla concentrées dans `SC4_rmmz_*_Patches.js`.
+- Une classe principale par fichier JavaScript ("1 Fichier = 1 Classe").
+- Préfixe unifié `SC4_` sur tous les plugins métier du projet SimCraft pour éviter les conflits et assurer un classement alphabétique propre dans l'éditeur.
+- Surcharges du moteur vanilla concentrées dans `SC4_rmmz_*_Patches.js` (Règle d'exception : ne pas scinder les patches natifs).
+- Gestionnaire de données SimCraft `SC4_DataManager.js` traité de façon autonome en dehors des patches vanilla.
 - Conservation absolue des bannières d'en-tête ASCII et licences.
 - Préservation de l'intégrité des données vanilla (aucun hack destructif dans les JSON de base).
+- Synchronisation RMMZ Editor : à chaque modification de `js/plugins.js`, bascule de la propriété `nickname` de l'Acteur 1 dans `data/Actors.json` (`"Wesword"` <-> `"Wesword_RMMZ"`) pour forcer le rafraîchissement natif de l'éditeur.
+
+### 11.3 Façade Publique Universelle & Modularité (`SC4_Interface`)
+- **Gateway Unique (`SC4_Interface.js`)** :
+  - Centralisation de toutes les commandes de plugin RPG Maker MZ (`openSector`, `openSystem`, `openHangar`, `openQuestBook`, `openInventory`, `setHeroPose`, `clearHeroPose`).
+  - API globale documentée en JSDoc sous le namespace `window.SC4.*`.
+  - Alias rétrocompatibles pour les anciens appels de commande (`SC4_SpaceScenes`).
+- **Décomposition Modulaire Accomplie** :
+  - **Livre de Quêtes** : 4 fenêtres dédiées (`SC4_Window_QuestBookHeader`, `SC4_Window_QuestFilter`, `SC4_Window_QuestList`, `SC4_Window_QuestDetail`) et 1 scène orchestratrice pure (`SC4_Scene_QuestBook`).
+  - **Multi-Inventaires** : 3 fenêtres dédiées (`SC4_Window_InventoryCommand`, `SC4_Window_InventoryList`, `SC4_Window_InventoryAction`) et 1 scène orchestratrice pure (`SC4_Scene_Inventory`).
+  - **Moteur Spatial** : 6 modèles physiques et de gestion (`SC4_Game_Planet`, `SC4_Game_PlanetarySystem`, `SC4_Game_Sector`, `SC4_Game_Spaceship`, `SC4_Game_Spaceships`, `SC4_SystemMapManager`) orchestrés par `SC4_SpaceTravel`.
+  - **Gestionnaire de Quêtes** : 4 modèles métiers (`SC4_Game_QuestLocation`, `SC4_Game_Quest`, `SC4_Game_Quests`, `SC4_StoryManager`) orchestrés par `SC4_QuestManager`.
+  - **Calendrier & Horloge** : Séparation propre du modèle de temps (`SC4_Game_Date`) et du formateur lisible (`SC4_Game_DateFormatter`).
+- **Couverture de Tests** : 26 suites de tests unitaires validées à 100% sans aucun échec (`node UNIT_TESTS/run_all_tests.js`).
 
 ---
 

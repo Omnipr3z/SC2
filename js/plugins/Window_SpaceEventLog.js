@@ -6,7 +6,7 @@
  * @plugindesc [SC4 v1.0.0] Terminal CRT de télémétrie, contacts et alertes spatiales.
  * @author SimCraft
  *
- * @help Window_SpaceEventLog.js
+ * @help SC4_Window_SpaceEventLog.js
  */
 
 class Window_SpaceEventLog extends Window_Base {

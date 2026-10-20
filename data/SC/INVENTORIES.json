@@ -19,6 +19,14 @@
     "persistent": true,
     "items": [
       {
+        "item_id": 7,
+        "quantity": 10
+      },
+      {
+        "item_id": 13,
+        "quantity": 5
+      },
+      {
         "armor_id": 4,
         "quantity": 1
       }

@@ -56,7 +56,7 @@
     "use strict";
 
     const pluginName = "SC4_TitleScreen";
-    const parameters = PluginManager.parameters(pluginName);
+    const parameters = typeof PluginManager !== "undefined" ? PluginManager.parameters(pluginName) : {};
     const titleFontFaceParam = (parameters["titleFontFace"] || "Neuropol.otf").trim();
     const titleFontSize = parseInt(parameters["titleFontSize"] || 0, 10);
 

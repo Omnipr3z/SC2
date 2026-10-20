@@ -1,32 +1,17 @@
 //=============================================================================
-// Scene_Inventory.js
+// RPG Maker MZ - SC4_Window_InventoryCommand
 //=============================================================================
 /*:
  * @target MZ
- * @plugindesc [SC4 v1.0.0] Scène de gestion, de transfert et de tri d'inventaires multiples.
+ * @plugindesc [SC4 v1.0.0] Fenêtre de commande supérieure de transfert d'inventaire.
  * @author SimCraft
- * @help
- * ============================================================================
- * Scene_Inventory.js
- * ============================================================================
- * Fournit l'interface visuelle complète pour gérer les inventaires :
- * - Fenêtre de commande supérieure : Prendre, Déposer (si conteneur persistant), Fermer.
- * - Fenêtre d'aide contextuelle pour la description des objets.
- * - Listes côte-à-côte : Inventaire du joueur ($gameParty) et Inventaire cible.
- * - Affichage de l'état du poids ("Poids: [accumulé]/[capacité]") pour chaque liste.
- * - Menu d'action contextuel :
- *     * Cible  : Prendre 1, Prendre Tout, Annuler
- *     * Joueur : Déposer 1, Déposer Tout (si autorisé), Jeter 1, Jeter Tout, Annuler
- * - Restrictions automatiques (type d'objet, munitions, emplacements max, poids max).
- * - Mise à jour de l'interrupteur local B des événements conteneurs.
- * - Gestion automatique du pillage des cadavres et conteneurs éphémères.
- * ============================================================================
+ * 
+ * @help SC4_Window_InventoryCommand.js
  */
 
-// ============================================================================
-// 1. Fenêtre de commande supérieure (Prendre / Déposer / Fermer)
-// ============================================================================
-class Window_InventoryCommand extends Window_HorzCommand {
+const _BaseWindowInvCmd = typeof Window_HorzCommand !== "undefined" ? Window_HorzCommand : (typeof Window_Command !== "undefined" ? Window_Command : (typeof Window_Base !== "undefined" ? Window_Base : Object));
+
+class Window_InventoryCommand extends _BaseWindowInvCmd {
     constructor(rect) {
         super(rect);
         this._targetInventory = null;
@@ -67,7 +52,30 @@ class Window_InventoryCommand extends Window_HorzCommand {
 // ============================================================================
 // 2. Fenêtre de liste d'inventaire avec barre de poids intégrée
 // ============================================================================
-class Window_InventoryList extends Window_Selectable {
+
+window.Window_InventoryCommand = Window_InventoryCommand;
+if (typeof global !== "undefined") {
+    global.Window_InventoryCommand = Window_InventoryCommand;
+}
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { Window_InventoryCommand };
+}
+
+
+//=============================================================================
+// RPG Maker MZ - SC4_Window_InventoryList
+//=============================================================================
+/*:
+ * @target MZ
+ * @plugindesc [SC4 v1.0.0] Liste d'inventaire avec barre de jauge de poids intégrée.
+ * @author SimCraft
+ * 
+ * @help SC4_Window_InventoryList.js
+ */
+
+const _BaseWindowInvList = typeof Window_Selectable !== "undefined" ? Window_Selectable : (typeof Window_Base !== "undefined" ? Window_Base : Object);
+
+class Window_InventoryList extends _BaseWindowInvList {
     /**
      * @param {Rectangle} rect 
      * @param {string} title 
@@ -208,7 +216,30 @@ class Window_InventoryList extends Window_Selectable {
 // ============================================================================
 // 3. Fenêtre de commande d'actions contextuelles (Transférer / Jeter / Annuler)
 // ============================================================================
-class Window_InventoryAction extends Window_Command {
+
+window.Window_InventoryList = Window_InventoryList;
+if (typeof global !== "undefined") {
+    global.Window_InventoryList = Window_InventoryList;
+}
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { Window_InventoryList };
+}
+
+
+//=============================================================================
+// RPG Maker MZ - SC4_Window_InventoryAction
+//=============================================================================
+/*:
+ * @target MZ
+ * @plugindesc [SC4 v1.0.0] Fenêtre d'action contextuelle (Prendre / Déposer / Jeter).
+ * @author SimCraft
+ * 
+ * @help SC4_Window_InventoryAction.js
+ */
+
+const _BaseWindowInvAct = typeof Window_Command !== "undefined" ? Window_Command : (typeof Window_Selectable !== "undefined" ? Window_Selectable : Object);
+
+class Window_InventoryAction extends _BaseWindowInvAct {
     constructor(rect) {
         super(rect);
         this._mode = "target"; // "target" ou "party"
@@ -250,7 +281,67 @@ class Window_InventoryAction extends Window_Command {
 // ============================================================================
 // 4. Scène principale Scene_Inventory
 // ============================================================================
-class Scene_Inventory extends Scene_MenuBase {
+
+window.Window_InventoryAction = Window_InventoryAction;
+if (typeof global !== "undefined") {
+    global.Window_InventoryAction = Window_InventoryAction;
+}
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { Window_InventoryAction };
+}
+
+
+//=============================================================================
+// RPG Maker MZ - SC4_Scene_Inventory
+//=============================================================================
+/*:
+ * @target MZ
+ * @plugindesc [SC4 v1.0.0] Scène de gestion et de transfert d'inventaires multiples.
+ * @author SimCraft
+ * @base SC4_Window_InventoryCommand
+ * @base SC4_Window_InventoryList
+ * @base SC4_Window_InventoryAction
+ * 
+ * @help SC4_Scene_Inventory.js
+ */
+
+// Fallback loader pour l'environnement Node.js
+if (typeof Window_InventoryCommand === "undefined") {
+    try {
+        const _getMod = (name) => {
+            if (typeof require === "function") return require(name);
+            if (typeof process !== "undefined" && process.mainModule && process.mainModule.require) return process.mainModule.require(name);
+            return null;
+        };
+        const _fs = _getMod('fs');
+        const _path = _getMod('path');
+        const _vm = _getMod('vm');
+        if (_fs && _path && _vm) {
+            let pluginsDir = _path.resolve('js/plugins');
+            if (!_fs.existsSync(pluginsDir) && typeof __dirname !== 'undefined') {
+                const candidate = _path.resolve(__dirname, '../js/plugins');
+                if (_fs.existsSync(candidate)) pluginsDir = candidate;
+            }
+            if (!_fs.existsSync(pluginsDir) && typeof process !== 'undefined') {
+                const candidate2 = _path.resolve(process.cwd(), 'js/plugins');
+                if (_fs.existsSync(candidate2)) pluginsDir = candidate2;
+            }
+            const files = [
+                'SC4_Window_InventoryCommand.js',
+                'SC4_Window_InventoryList.js',
+                'SC4_Window_InventoryAction.js'
+            ];
+            for (const f of files) {
+                const p = _path.join(pluginsDir, f);
+                if (_fs.existsSync(p)) _vm.runInThisContext(_fs.readFileSync(p, 'utf8'));
+            }
+        }
+    } catch (e) {}
+}
+
+const _BaseSceneInventory = typeof Scene_MenuBase !== "undefined" ? Scene_MenuBase : (typeof Scene_Base !== "undefined" ? Scene_Base : Object);
+
+class Scene_Inventory extends _BaseSceneInventory {
     static prepare(inventoryId, options = {}) {
         this._preparedId = String(inventoryId).trim();
         this._preparedOptions = options;
@@ -711,7 +802,10 @@ class Scene_Inventory extends Scene_MenuBase {
     }
 }
 
-window.Window_InventoryCommand = Window_InventoryCommand;
-window.Window_InventoryList = Window_InventoryList;
-window.Window_InventoryAction = Window_InventoryAction;
 window.Scene_Inventory = Scene_Inventory;
+if (typeof global !== "undefined") {
+    global.Scene_Inventory = Scene_Inventory;
+}
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { Scene_Inventory };
+}

@@ -313,7 +313,8 @@
     // ========================================================================
     // 3. Utilitaires Mathématiques & Interpolation (approach)
     // ========================================================================
-    Utils.approach = function(current, target, step) {
+    const _Utils = (typeof Utils !== "undefined") ? Utils : (typeof window !== "undefined" ? (window.Utils = window.Utils || {}) : {});
+    _Utils.approach = function(current, target, step) {
         if (current < target) {
             return Math.min(current + step, target);
         } else if (current > target) {
@@ -325,7 +326,7 @@
     if (!Number.prototype.approach) {
         Object.defineProperty(Number.prototype, "approach", {
             value: function(target, step) {
-                return Utils.approach(this.valueOf(), target, step);
+                return _Utils.approach(this.valueOf(), target, step);
             },
             configurable: true,
             writable: true,
@@ -333,7 +334,7 @@
         });
     }
 
-    if (!Bitmap.prototype.drawLine) {
+    if (typeof Bitmap !== "undefined" && !Bitmap.prototype.drawLine) {
         Bitmap.prototype.drawLine = function(x1, y1, x2, y2, color, lineWidth = 1) {
             const context = this.context;
             context.save();

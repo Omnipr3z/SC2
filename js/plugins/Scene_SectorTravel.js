@@ -6,7 +6,7 @@
  * @plugindesc [SC4 v1.0.0] Scène de navigation à l'échelle du secteur / galaxie (Sauts FTL).
  * @author SimCraft
  *
- * @help Scene_SectorTravel.js
+ * @help SC4_Scene_SectorTravel.js
  */
 
 class Scene_SectorTravel extends Scene_Base {

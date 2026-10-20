@@ -6,7 +6,7 @@
  * @plugindesc [SC4 v1.0.0] Scène de navigation à l'échelle du système solaire (orbites, vol libre).
  * @author SimCraft
  *
- * @help Scene_SpaceTravel.js
+ * @help SC4_Scene_SpaceTravel.js
  */
 
 class Scene_SpaceTravel extends Scene_Base {

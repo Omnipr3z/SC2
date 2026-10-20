@@ -6,7 +6,7 @@
  * @plugindesc [SC4 v1.0.0] Scène de navigation à l'échelle du sous-système (POIs, mode hangar).
  * @author SimCraft
  *
- * @help Scene_SubsystemTravel.js
+ * @help SC4_Scene_SubsystemTravel.js
  */
 
 class Scene_SubsystemTravel extends Scene_Base {

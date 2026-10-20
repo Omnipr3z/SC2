@@ -6,7 +6,7 @@
  * @plugindesc [SC4 v1.0.0] Volet d'informations télémétriques du vaisseau et flotte à bord.
  * @author SimCraft
  *
- * @help Window_SpaceShipInfo.js
+ * @help SC4_Window_SpaceShipInfo.js
  */
 
 class Window_SpaceShipInfo extends Window_Base {

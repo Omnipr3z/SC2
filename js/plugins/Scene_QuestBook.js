@@ -1,24 +1,13 @@
 //=============================================================================
-// Scene_QuestBook.js
+// RPG Maker MZ - SC4_Window_QuestBookHeader
 //=============================================================================
 /*:
  * @target MZ
- * @plugindesc [SC4 v1.0.0] Interface graphique du Livre de Quêtes et Datapad stellaire.
+ * @plugindesc [SC4 v1.0.0] En-tête du Datapad stellaire avec fil d'Ariane et horloge Neotori.
  * @author SimCraft
- * @help
- * ============================================================================
- * Scene_QuestBook.js
- * ============================================================================
- * Fournit l'interface visuelle complète du Datapad :
- * - Window_QuestBookHeader : En-tête avec fil d'Ariane et horloge Neotori.
- * - Window_QuestFilter     : Onglets de filtrage (En cours, Contrats, Terminées, Toutes).
- * - Window_QuestList       : Liste des missions avec badges, indicateurs et délais.
- * - Window_QuestDetail     : Volet détaillé défilant (briefing, logs CRT, objectifs, récompenses).
- * - Scene_QuestBook        : Contrôleur de scène.
- * ============================================================================
+ * 
+ * @help SC4_Window_QuestBookHeader.js
  */
-
-// ============================================================================
 
 class Window_QuestBookHeader extends Window_Base {
     constructor(rect) {
@@ -57,7 +46,29 @@ class Window_QuestBookHeader extends Window_Base {
     }
 }
 
-class Window_QuestFilter extends Window_HorzCommand {
+window.Window_QuestBookHeader = Window_QuestBookHeader;
+if (typeof global !== "undefined") {
+    global.Window_QuestBookHeader = Window_QuestBookHeader;
+}
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { Window_QuestBookHeader };
+}
+
+
+//=============================================================================
+// RPG Maker MZ - SC4_Window_QuestFilter
+//=============================================================================
+/*:
+ * @target MZ
+ * @plugindesc [SC4 v1.0.0] Barre d'onglets et de filtrage des quêtes du Datapad.
+ * @author SimCraft
+ * 
+ * @help SC4_Window_QuestFilter.js
+ */
+
+const _BaseWindowQuestFilter = typeof Window_HorzCommand !== "undefined" ? Window_HorzCommand : (typeof Window_Command !== "undefined" ? Window_Command : (typeof Window_Base !== "undefined" ? Window_Base : Object));
+
+class Window_QuestFilter extends _BaseWindowQuestFilter {
     constructor(rect) {
         super(rect);
     }
@@ -69,9 +80,9 @@ class Window_QuestFilter extends Window_HorzCommand {
     makeCommandList() {
         const qm = window.$gameQuests;
         const allQuests = qm ? qm.quests() : [];
-        const activeCount = allQuests.filter(q => q.active).length;
-        const recurringCount = allQuests.filter(q => q.recurring).length;
-        const completedCount = allQuests.filter(q => q.completed).length;
+        const activeCount = allQuests.filter(q => q && q.active).length;
+        const recurringCount = allQuests.filter(q => q && q.recurring).length;
+        const completedCount = allQuests.filter(q => q && q.completed).length;
         const totalCount = allQuests.length;
 
         const loc = (key, def) => typeof SC4_Localization !== "undefined" ? SC4_Localization.getText(key, def) : def;
@@ -87,7 +98,29 @@ class Window_QuestFilter extends Window_HorzCommand {
     }
 }
 
-class Window_QuestList extends Window_Selectable {
+window.Window_QuestFilter = Window_QuestFilter;
+if (typeof global !== "undefined") {
+    global.Window_QuestFilter = Window_QuestFilter;
+}
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { Window_QuestFilter };
+}
+
+
+//=============================================================================
+// RPG Maker MZ - SC4_Window_QuestList
+//=============================================================================
+/*:
+ * @target MZ
+ * @plugindesc [SC4 v1.0.0] Liste des quêtes et contrats avec badges, marqueurs et délais.
+ * @author SimCraft
+ * 
+ * @help SC4_Window_QuestList.js
+ */
+
+const _BaseWindowQuestList = typeof Window_Selectable !== "undefined" ? Window_Selectable : (typeof Window_Base !== "undefined" ? Window_Base : Object);
+
+class Window_QuestList extends _BaseWindowQuestList {
     constructor(rect) {
         super(rect);
         this._filter = "active";
@@ -126,11 +159,11 @@ class Window_QuestList extends Window_Selectable {
         const qm = window.$gameQuests;
         const all = qm ? qm.quests() : [];
         if (this._filter === "active") {
-            this._data = all.filter(q => q.active);
+            this._data = all.filter(q => q && q.active);
         } else if (this._filter === "recurring") {
-            this._data = all.filter(q => q.recurring);
+            this._data = all.filter(q => q && q.recurring);
         } else if (this._filter === "completed") {
-            this._data = all.filter(q => q.completed);
+            this._data = all.filter(q => q && q.completed);
         } else {
             this._data = [...all];
         }
@@ -196,14 +229,14 @@ class Window_QuestList extends Window_Selectable {
 
         // Badge objectifs ou délai restant
         this.contents.fontSize = 11;
-        if (quest.hasDeadline() && quest.active) {
+        if (typeof quest.hasDeadline === "function" && quest.hasDeadline() && quest.active) {
             const remStr = quest.remainingTimeString();
             const remMin = quest.remainingTime();
             this.contents.textColor = remMin <= 60 ? "#fb4934" : (remMin <= 360 ? "#fe8019" : "#b8bb26");
             this.drawText(`⏱ ${remStr}`, rect.x + rect.width - 100, rect.y + 4, 95, "right");
         } else {
-            const completedLocs = quest.locations.filter(l => l.completed).length;
-            const totalLocs = quest.locations.length;
+            const completedLocs = quest.locations ? quest.locations.filter(l => l && l.completed).length : 0;
+            const totalLocs = quest.locations ? quest.locations.length : 0;
             this.contents.textColor = quest.completed ? "#8ec07c" : "#83a598";
             const badgeLbl = typeof SC4_Localization !== "undefined" ? SC4_Localization.getText("quest.obj_badge", "obj.") : "obj.";
             const objTxt = totalLocs > 0 ? `${completedLocs}/${totalLocs} ${badgeLbl}` : "";
@@ -231,7 +264,29 @@ class Window_QuestList extends Window_Selectable {
     }
 }
 
-class Window_QuestDetail extends Window_Scrollable {
+window.Window_QuestList = Window_QuestList;
+if (typeof global !== "undefined") {
+    global.Window_QuestList = Window_QuestList;
+}
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { Window_QuestList };
+}
+
+
+//=============================================================================
+// RPG Maker MZ - SC4_Window_QuestDetail
+//=============================================================================
+/*:
+ * @target MZ
+ * @plugindesc [SC4 v1.0.0] Volet d'affichage détaillé et défilant d'une mission du Datapad.
+ * @author SimCraft
+ * 
+ * @help SC4_Window_QuestDetail.js
+ */
+
+const _BaseWindowQuestDetail = typeof Window_Scrollable !== "undefined" ? Window_Scrollable : (typeof Window_Base !== "undefined" ? Window_Base : Object);
+
+class Window_QuestDetail extends _BaseWindowQuestDetail {
     constructor(rect) {
         super(rect);
         this._quest = null;
@@ -552,7 +607,68 @@ class Window_QuestDetail extends Window_Scrollable {
     }
 }
 
-class Scene_QuestBook extends Scene_MenuBase {
+window.Window_QuestDetail = Window_QuestDetail;
+if (typeof global !== "undefined") {
+    global.Window_QuestDetail = Window_QuestDetail;
+}
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { Window_QuestDetail };
+}
+
+
+//=============================================================================
+// RPG Maker MZ - SC4_Scene_QuestBook
+//=============================================================================
+/*:
+ * @target MZ
+ * @plugindesc [SC4 v1.0.0] Scène du Datapad stellaire et journal de quêtes.
+ * @author SimCraft
+ * @base SC4_Window_QuestBookHeader
+ * @base SC4_Window_QuestFilter
+ * @base SC4_Window_QuestList
+ * @base SC4_Window_QuestDetail
+ * 
+ * @help SC4_Scene_QuestBook.js
+ */
+
+// Fallback loader pour les tests Node.js
+if (typeof Window_QuestBookHeader === "undefined") {
+    try {
+        const _getMod = (name) => {
+            if (typeof require === "function") return require(name);
+            if (typeof process !== "undefined" && process.mainModule && process.mainModule.require) return process.mainModule.require(name);
+            return null;
+        };
+        const _fs = _getMod('fs');
+        const _path = _getMod('path');
+        const _vm = _getMod('vm');
+        if (_fs && _path && _vm) {
+            let pluginsDir = _path.resolve('js/plugins');
+            if (!_fs.existsSync(pluginsDir) && typeof __dirname !== 'undefined') {
+                const candidate = _path.resolve(__dirname, '../js/plugins');
+                if (_fs.existsSync(candidate)) pluginsDir = candidate;
+            }
+            if (!_fs.existsSync(pluginsDir) && typeof process !== 'undefined') {
+                const candidate2 = _path.resolve(process.cwd(), 'js/plugins');
+                if (_fs.existsSync(candidate2)) pluginsDir = candidate2;
+            }
+            const files = [
+                'SC4_Window_QuestBookHeader.js',
+                'SC4_Window_QuestFilter.js',
+                'SC4_Window_QuestList.js',
+                'SC4_Window_QuestDetail.js'
+            ];
+            for (const f of files) {
+                const p = _path.join(pluginsDir, f);
+                if (_fs.existsSync(p)) _vm.runInThisContext(_fs.readFileSync(p, 'utf8'));
+            }
+        }
+    } catch (e) {}
+}
+
+const _BaseSceneQuestBook = typeof Scene_MenuBase !== "undefined" ? Scene_MenuBase : (typeof Scene_Base !== "undefined" ? Scene_Base : Object);
+
+class Scene_QuestBook extends _BaseSceneQuestBook {
     create() {
         super.create();
         //this.createBackground();
@@ -636,3 +752,9 @@ class Scene_QuestBook extends Scene_MenuBase {
 }
 
 window.Scene_QuestBook = Scene_QuestBook;
+if (typeof global !== "undefined") {
+    global.Scene_QuestBook = Scene_QuestBook;
+}
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { Scene_QuestBook };
+}
