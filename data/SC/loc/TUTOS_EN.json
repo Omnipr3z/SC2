@@ -1,0 +1,11 @@
+{
+  "tuto_1": "Put your gear on by accessing your inventory.\n Press the top button or the 0num key on the keyboard",
+  "tuto_sector": "1. ◈ Telemetry: Click a system to inspect celestial telemetry.\n2. ▷ Trajectory: Click again to plot the hyper-jump vector.\n3. ⚡ Navigation: FTL Warp jump requires 500 fuel units and a warp drive.\n4. ❖ System: Switch to detailed system view using the controls below.",
+  "tuto_system": "1. ◈ Navigation: Click a celestial body to analyze its composition.\n2. ▷ Propulsion: Click again to engage orbital approach vector.\n3. ❖ Velocity: Hold Shift to activate high-output hyperdrive.\n4. ⚓ Landing: Reach orbit to access surface landing sites and POIs.",
+  "tuto_subsystem": "◈ LANDING & SUBCOM COMMUNICATIONS\nLeave the cockpit console to reach a docked or surface destination.\nFor remote inquiries or negotiations, initiate contact via Subcom.",
+  "travel": {
+    "tuto_sector": "1. ◈ Telemetry: Click a system to inspect celestial telemetry.\n2. ▷ Trajectory: Click again to plot the hyper-jump vector.\n3. ⚡ Navigation: FTL Warp jump requires 500 fuel units and a warp drive.\n4. ❖ System: Switch to detailed system view using the controls below.",
+    "tuto_system": "1. ◈ Navigation: Click a celestial body to analyze its composition.\n2. ▷ Propulsion: Click again to engage orbital approach vector.\n3. ❖ Velocity: Hold Shift to activate high-output hyperdrive.\n4. ⚓ Landing: Reach orbit to access surface landing sites and POIs.",
+    "tuto_subsystem": "◈ LANDING & SUBCOM COMMUNICATIONS\nLeave the cockpit console to reach a docked or surface destination.\nFor remote inquiries or negotiations, initiate contact via Subcom."
+  }
+}

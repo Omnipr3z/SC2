@@ -1,0 +1,82 @@
+[
+  null,
+  {
+    "id": 1,
+    "name": "Federal Subcom Signal",
+    "description": "A high-priority encrypted transmission originating from Ankaros Prime requests immediate assistance.",
+    "alertTxt": [
+      {
+        "style": "info",
+        "txt": "Subcom Signal detected. Establishing link..."
+      },
+      {
+        "style": "info",
+        "txt": "Sworn Artis-4568 clearance. Decryption in progress..."
+      },
+      {
+        "style": "alert",
+        "txt": "This is the Governor Administrator of the Ankaros Sector hailing from Ankaros Prime."
+      },
+      {
+        "style": "alert",
+        "txt": "We require urgent assistance. Proceed to the spaceport immediately..."
+      },
+      {
+        "style": "info",
+        "txt": "Unexpected interruption of transmission..."
+      },
+      {
+        "style": "imperium",
+        "txt": "For the Federation."
+      }
+    ],
+    "locations": [
+      {
+        "id": "loc_prime_spaceport",
+        "name": "Magellan Spaceport",
+        "description": "Meet the Governor's emissary at the Ankaros Prime spaceport."
+      },
+      {
+        "id": "loc_altus_intel",
+        "name": "Altus Station - Auspex Logs",
+        "description": "Retrieve telemetry logs from the Altus surveillance orbital station."
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Echoes of Kalyxis",
+    "description": "Unusual radio emissions have been intercepted from the neighboring Kalyxis system.",
+    "alertTxt": [
+      {
+        "style": "alert",
+        "txt": "Unidentified relay signal intercepted in the Kalyxis system."
+      }
+    ],
+    "locations": [
+      {
+        "id": "loc_kalyxis_base",
+        "name": "Outpost Kalyxis-B",
+        "description": "Inspect the mining facilities on asteroid Kalyxis-B."
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Emergency Resupply",
+    "description": "Recurring freight contract: deliver spare components and rations to Magellan Spaceport on Ankaros Prime before time runs out.",
+    "alertTxt": [
+      {
+        "style": "info",
+        "txt": "Federal freight notice: Urgent spare parts needed at Magellan Spaceport."
+      }
+    ],
+    "locations": [
+      {
+        "id": "loc_prime_convoy",
+        "name": "Delivery to Magellan Spaceport",
+        "description": "Unload the components crate at the logistics dock of Ankaros Prime."
+      }
+    ]
+  }
+]

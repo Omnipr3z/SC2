@@ -1,0 +1,70 @@
+[
+  null,
+  {
+    "id": 1,
+    "name": "Ankaros Sector",
+    "description": "Secteur frontalier de l'Ultima Segmentum sous haute tension militaire, diplomatique et théocratique.",
+    "systems": [
+      {
+        "id": 1,
+        "name": "Ankaros",
+        "description": "Système primaire fédéral, abrite le siège administratif planétaire et la station orbitale Altus."
+      },
+      {
+        "id": 2,
+        "name": "Aethelgard",
+        "description": "Bastion hautement technologique sous contrôle exclusif de la Technocratie Elionne."
+      },
+      {
+        "id": 3,
+        "name": "Void-G3",
+        "description": "Ancien fleuron industriel elion ravagé par la révolte des machines Atronics."
+      },
+      {
+        "id": 4,
+        "name": "Arunia",
+        "description": "Coalition martiale et féodale regroupant les chevaliers Sfergrads et les tribus guerrières Yuma."
+      },
+      {
+        "id": 5,
+        "name": "Serenis",
+        "description": "Système aux contrastes extrêmes, entre les paradis de luxe d'Eden et le fanatisme glaciaire du Culte d'Angelus."
+      },
+      {
+        "id": 6,
+        "name": "Arakna",
+        "description": "Cauchemar biomécanique planétaire, cœur battant de la Grande Infestation combattu par la Coalition."
+      },
+      {
+        "id": 7,
+        "name": "Suro",
+        "description": "Carrefour diplomatique et commercial majeur abritant la métropole Neotori Prime et la flotte SAFE."
+      },
+      {
+        "id": 8,
+        "name": "Olk",
+        "description": "Enfer radioactif et toxique sous la coupe des décadents Barons Noirs d'Olkeris."
+      },
+      {
+        "id": 9,
+        "name": "Nebula",
+        "description": "Sanctuaire de l'ultracapitalisme courtois où Gentech et le Consortium Saurion s'affrontent en coulisses."
+      },
+      {
+        "id": 10,
+        "name": "Alpha-7",
+        "description": "Capitale politique clandestine et siège de l'Alliance des Mondes Libres de Karam Poulpard."
+      },
+      {
+        "id": 11,
+        "name": "Grak's Belt",
+        "description": "Repaire anarchique des corsaires, des ferrailleurs Gruks et des guerriers Draks bannis."
+      },
+      {
+        "id": 12,
+        "name": "Nexus",
+        "description": "Zone Morte abritant le colossal Nexus Ancien des Eleris, objet de toutes les convoitises de la galaxie."
+      }
+    ]
+  }
+]

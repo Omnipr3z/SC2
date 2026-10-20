@@ -1,34 +1,108 @@
 [
+  null,
   {
-    "id": 0,
+    "id": 1,
     "name": "Dawn Of Faith",
     "category": "Escort & Scout",
     "shipClass": "Viper",
     "captainId": 1,
-    "bitmapName": "B",
-    "sectorId": 0,
-    "systemId": 0,
+    "bitmapName": "ship_C",
+    "onBoard": null,
+    "sectorId": 1,
+    "systemId": 1,
     "x": 1100,
     "y": 160,
     "fuel": 800,
     "capacity": 200,
     "faction": "Astra Militarum",
-    "motorId": 4
+    "motorId": 4,
+    "mapId": 31,
+    "landingX": 10,
+    "landingY": 10,
+    "movingSE": {
+      "name": "Collapse3",
+      "volume": 90,
+      "pitch": 80
+    },
+    "hyperdriveBGS": {
+      "name": "FIREWIND2",
+      "volume": 90,
+      "pitch": 100
+    },
+    "warpjumpSE": {
+      "name": "ShipJump",
+      "volume": 90,
+      "pitch": 100
+    }
   },
   {
-    "id": 1,
+    "id": 2,
     "name": "Vigilance Prime",
     "category": "Patrol Cruiser",
     "shipClass": "Cobra",
     "captainId": 2,
-    "bitmapName": "B",
-    "sectorId": 0,
-    "systemId": 0,
+    "bitmapName": "ship_B",
+    "onBoard": null,
+    "sectorId": 1,
+    "systemId": 1,
     "x": 480,
     "y": 380,
     "fuel": 600,
     "capacity": 350,
-    "faction": "Imperial Navy",
-    "motorId": 2
+    "faction": "Flotte Fédérale",
+    "motorId": 2,
+    "mapId": 29,
+    "landingX": 15,
+    "landingY": 15,
+    "movingSE": {
+      "name": "Collapse3",
+      "volume": 90,
+      "pitch": 80
+    },
+    "hyperdriveBGS": {
+      "name": "FIREWIND2",
+      "volume": 90,
+      "pitch": 100
+    },
+    "warpjumpSE": {
+      "name": "ShipJump",
+      "volume": 90,
+      "pitch": 100
+    }
+  },
+  {
+    "id": 3,
+    "name": "Navette Test",
+    "category": "Shuttle",
+    "shipClass": "shuttle",
+    "captainId": 1,
+    "bitmapName": "ship_C",
+    "onBoard": "V1",
+    "sectorId": 1,
+    "systemId": 1,
+    "x": 580,
+    "y": 380,
+    "fuel": 100,
+    "capacity": 100,
+    "faction": "Flotte Fédérale",
+    "motorId": 2,
+    "mapId": 31,
+    "landingX": 10,
+    "landingY": 10,
+    "movingSE": {
+      "name": "Collapse3",
+      "volume": 90,
+      "pitch": 80
+    },
+    "hyperdriveBGS": {
+      "name": "FIREWIND2",
+      "volume": 90,
+      "pitch": 100
+    },
+    "warpjumpSE": {
+      "name": "ShipJump",
+      "volume": 90,
+      "pitch": 100
+    }
   }
 ]

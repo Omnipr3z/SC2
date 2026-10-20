@@ -1,7 +1,7 @@
 # 🛠️ SimCraft Engine V2 (SC4) — Journal de Développement & Walkthrough
 
 > **SimCraft Engine V2 (SC4)** — Architecture modulaire pour RPG Maker MZ  
-> *Dernière mise à jour : 18 Octobre 2026*  
+> *Dernière mise à jour : 20 Octobre 2026*  
 > *Auteur : Pierre André Hernandez (Omnipr3z)*
 
 ---
@@ -295,62 +295,91 @@ img/Titles2/Right.png      (z: 14) - Volet droit cinématique
 
 ## 8. Navigation Spatiale Multi-Échelles & Système Temporel (Étapes N1 à N3)
 
-### 8.1 Les 3 Échelles de Navigation
-1. **Échelle Galactique (Secteur FTL)** : Carte des constellations et des étoiles reliées. Sauts Warp animés avec progression visible le long des routes stellaires.
-2. **Échelle Système Solaire** : Vue orbitale temps réel autour de l'étoile centrale avec orbites elliptiques des planètes et lunes.
-3. **Échelle Sous-Système (Subsystem)** : Vue zoomée sur un astre en rotation continue avec ses Points d'Intérêt (POI). Vaisseau stationné en orbite à côté de la planète.
+### 8.1 Les 3 Échelles de Navigation & Grille UI Harmonisée (1760 × 990)
+1. **Échelle Galactique (Secteur FTL - `Scene_SectorTravel`)** : Carte des constellations et des étoiles reliées. Préchauffage et sauts Warp animés avec progression visible le long des routes stellaires. Identification visuelle des capitales de secteur (`capital: true`).
+2. **Échelle Système Solaire (`Scene_SpaceTravel`)** : Vue orbitale temps réel autour de l'étoile centrale avec orbites elliptiques des planètes, satellites, astres décoratifs (`interactive: false`) et vaisseaux PNJ.
+3. **Échelle Sous-Système (`Scene_SubsystemTravel`)** : Vue zoomée sur un astre en rotation continue avec ses Points d'Intérêt (POI) rotatifs et le vaisseau en orbite stationnaire.
 
-### 8.2 Procédure d'Atterrissage & Mode Hangar
-- L'accès au sous-système exige d'être préalablement placé en orbite de l'astre ciblé.
-- L'atterrissage ne se fait pas depuis la console cockpit mais physiquement dans le **Hangar** via la carte (`Scene_Map`).
-- L'activation de l'événement du vaisseau dans le hangar ouvre l'interface de descente : téléportation sur la carte du POI, héros invisible et déclenchement du self-switch `A` de l'événement d'atterrissage.
+#### Grille Pixel-Perfect Standardisée & Améliorations Ergonomiques :
+Toutes les scènes spatiales partagent une architecture graphique rigoureusement identique en 1760 × 990 :
+- **Zone de carte spatiale** : `1280 × 720` décalée de 12px en haut et à gauche (`mapOffsetX = 12`, `mapOffsetY = 12`).
+- **Terminal de log CRT (`Window_SpaceEventLog`)** : `Rectangle(12, 744, 388, 234)` recevant les alertes, télémétries et transmissions radio. **Persistance multi-scènes** : l'historique est conservé dans `$gameSystem` lors des transitions (plus de réinitialisation brutale).
+- **Description / Cible / POI (`Window_SpaceTargetInfo`)** : `Rectangle(412, 744, 880, 150)`. Support du défilement vertical à la molette (**Scroll Y**), textes tutoriels contextuels au lancement (4 lignes en secteur/système, invitation au débarquement ou contact Subcom en sous-système), et imagette / icône sur la gauche de la description.
+- **Barre de commandes (`Window_SpaceControls`)** : `Rectangle(412, 906, 1336, 72)` regroupant les actions de navigation et vol. **Désactivée automatiquement pendant les transits FTL et les sauts Warp** pour sécuriser le pilotage.
+- **Volet d'infos vaisseau (`Window_SpaceShipInfo`)** : `Rectangle(1304, 90, 444, 380)` avec **padding horizontal supérieur à 24px**, **portrait du Capitaine** dans le coin supérieur droit (avec badge "Capitaine" et nom de l'acteur), jauges de fuel, vitesse, coordonnées et **section "◈ Flotte à bord"** résolvant rigoureusement chaque vaisseau par ID.
+- **Transitions Visuelles Douces** : Toutes les entrées et sorties de scènes spatiales, écran titre et cartes au sol intègrent un fondu au noir soigné (`startFadeIn(24)` / `startFadeOut(24)`).
 
-### 8.3 Déplacement Persistant Hors-Scène
-- Les trajectoires interplanétaires et de croisière continuent en temps réel pendant que le joueur navigue à bord du vaisseau en `Scene_Map`.
+### 8.2 Découplage des POIs, Planètes & Indexation 1-based
+- **Indexation 1-based RMMZ** : Tous les jeux de données spatiales (`SECTORS.json`, `PLANETS.json`, `SPACESHIPS.json`, `SHIP_MOTORS.json`, `QUESTS.json`) intègrent `null` à l'index `0`. Le moteur garantit une recherche par identifiant explicite (`.find(e => e && e.id === id)`) prévenant tout décalage d'index.
+- **Astres Décoratifs & Tidal Lock** : Les astres avec `"interactive": false` (anneaux, lunes mineures, nébuleuses) restent visibles et orbitent sans capturer le clic ni bloquer la navigation. Le paramètre `"lookAtCenter": true` oriente en continu les corps en verrouillage de marée vers leur centre focal.
+- **Univers Neotori & Calendrier Stellaire** : Standard temporel Neotori :
+  `Era:[Millenaire]-cycle:[an]-séquence:[mois]/[DECADE]/[JR DE LA DECADE] - [Hr:min]`. Vocabulaire unifié : "Fédération / Fédéral" et communications "Subcom".
+- **Fichiers Découplés & Localisation Modulaire** : Répertoires modulaires `data/SC/loc/` (POIs, Planètes, Secteurs, Quêtes et UI) synchronisés automatiquement par `SC4_Localization`.
+- **Découverte dynamique (`.located`)** : Les POIs non découverts (`located: false`) sont masqués de la carte sous-système et signalés dans les quêtes actives par la mention `[À localiser : Coordonnées inconnues]`.
 
-### 8.4 Moteur Temporel (`Game_Date`)
-- Horloge continue et persistante (secondes, minutes, heures, jours, mois, années).
-- Rotation des planètes synchronisée sur `$gameDate`.
-- Dilatation temporelle : le temps s'écoule normalement à quai et sur la carte, et s'accélère proportionnellement lors des vols de croisière spatiale.
+### 8.3 Règles du Saut Warp FTL & Délai de Préchauffage (Warmup Delay)
+- **Propulsion FTL (`warpAllowed`)** : Les moteurs de saut spatial disposent d'un attribut `warpAllowed: true/false` dans `SHIP_MOTORS.json` (réservé aux Moteurs 2 et 4).
+- **Préchauffage Tactique de Saut** : Au déclenchement du saut Warp, un délai de 30 ticks (`_jumpWarmupTicks = 30`) prépare les générateurs avec le son `ShipJump.ogg`, la fenêtre de commande est désactivée et le CRT affiche *"Calcul des données de saut..."*.
+- **Coût fixe au lancement** : Le saut Warp inter-système déduit immédiatement **500 unités de carburant** à l'engagement du saut (`startInterSystemJump`). Aucune consommation continue n'est prélevée pendant le transit.
+- **Sécurité & Verrouillage** : Si le moteur n'est pas certifié Warp ou si le carburant est strictement inférieur à 500, le bouton de saut affiche explicitement *"Moteur non équipé"* ou *"Carburant insuffisant"*.
+
+### 8.4 Système d'Onboarding & Amarrage (`V`, `D`, `P`)
+Modélisation des relations physiques spatiales entre vaisseaux et corps célestes via l'attribut `onBoard` (persisté dans les sauvegardes) :
+- **`V[ID]` (À bord du Hangar)** : La nef (ex: navette `V1`) est arrimée à l'intérieur du hangar du vaisseau `[ID]`. Elle est **masquée** de la carte stellaire, suit l'hôte et apparaît dans sa section "◈ Flotte à bord".
+- **`D[ID]` (Amarré via Passerelle)** : Le vaisseau est amarré par un sas étanche au navire `[ID]`. Il reste **visible** sur la carte spatiale à proximité immédiate de l'hôte et se déplace solidairement avec lui.
+- **`P[ID]` (Posé sur Planète)** : Le vaisseau a atterri sur la planète `[ID]`. Il est masqué de la carte du système et sa position est verrouillée sur celle de la planète.
+
+### 8.5 Matrice de Compatibilité Inter-Classes & Accord d'Amarrage
+L'embarquement et l'amarrage obéissent à des règles de classes strictes via `ship.getOnboardingMode(targetShipId)` :
+- **Shuttle** -> Fregate ou Patrol Cruiser : `onBoard` (hangar adapté).
+- **Escort & Scout** -> Patrol Cruiser : `onBoard` | Escort & Scout ou Fregate : `docking`.
+- **Fregate** -> Escort & Scout, Fregate, Patrol Cruiser : `docking` | Shuttle : `notAllowed`.
+- **Patrol Cruiser** -> toute catégorie : `notAllowed` (gabarit trop important pour être embarqué ou amarré à plus petit).
+- **Autorisation requise (`_dockingAllowed`)** : Tout amarrage (`docking`) nécessite impérativement que le vaisseau hôte ait activé son autorisation (`target.dockingAllowed === true`). Vérifiable via `ship.isDockingAllowed(targetId)` et commutable via `ship.allowDocking(true/false)`.
+
+### 8.6 Procédure d'Atterrissage, Mode Hangar & Dispatching (Variable 41 `NEF_ID`)
+- **Accès Hangar** : Déclenché depuis la console ou le navire dans le hangar (`SC4.openHangar(nefId)` avec par défaut `nefId = 2`).
+- **Affichage ciblé** : `Scene_SubsystemTravel` affiche les caractéristiques complètes de la nef/navette sélectionnée, tandis que la console de log reste connectée au vaisseau principal.
+- **Débarquement automatisé** :
+  1. Stockage de l'ID de la nef dans la variable RMMZ dédiée (`nefVariableId`, par défaut **Variable 41 `NEF_ID`**).
+  2. Rendre le joueur invisible (`$gamePlayer.setTransparent(true)`).
+  3. Activation du Self-Switch `A` de l'événement d'atterrissage sur la carte cible.
+  4. Téléportation vers la carte de destination (pouvant être une carte vide servant de hub de transition et de dispatching scénarisé).
+
+### 8.7 Découplage Temporel Total & Vitesse Constante
+- **Indépendance Temps / Déplacement** : L'accélération artificielle du temps liée au simple fait que le vaisseau avance a été totalement supprimée. L'horloge stellaire `$gameDate` progresse de manière fluide à sa cadence propre.
+- **Vitesse Propre Constante** : Le vaisseau navigue vers ses coordonnées de destination à vitesse constante indexée sur ses propulseurs (`SHIP_MOTORS.json`).
+- **Simulation continue hors-scène** : Les trajectoires interplanétaires continuent en temps réel pendant que le joueur explore à pied (`Scene_Map`).
+- **Physique orbitale absolue** : Angles de révolution et de rotation planétaires calculés directement depuis le timestamp galactique sans dérive temporelle.
 
 ---
 
 ## 9. Système de Quêtes, Balises & Journal de Bord (Datapad)
 
-### 9.1 Séparation des Responsabilités
-- **`$storyManager`** : Supervise les jalons temporels, les dates limites et les déclenchements d'événements selon l'horloge `$gameDate`.
-- **`$gameQuests` (`SC4_QuestManager`)** : Suit l'état opérationnel des missions, leurs objectifs hiérarchiques et les récompenses associées.
+### 9.1 Séparation des Responsabilités & Architecture Modulaire
+- **`$storyManager`** : Supervise les jalons temporels, les délais critiques (`deadlineTimestamp`) et les déclenchements de missions selon l'horloge `$gameDate`.
+- **`$gameQuests` (`SC4_QuestManager`)** : Registre centralisé des quêtes et de leurs objectifs géolocalisés multi-échelles.
+- **Données Modulaires** : Structure dans `data/SC/QUESTS.json` et localisations dans `data/SC/loc/QUESTS_FR.json` & `QUESTS_EN.json`.
 
-### 9.2 Structure d'une Quête (`data/SC/Quests.json`)
-```json
-{
-  "id": "quest_space_01",
-  "title": "\\L[quest_01_title]",
-  "category": "main",
-  "level": 3,
-  "description": "\\L[quest_01_desc]",
-  "locations": [
-    { "systemId": "ankaros", "planetId": "ankaros_prime", "poiId": "landing_base", "active": true }
-  ],
-  "objectives": [
-    { "id": "obj_reach_ankaros", "text": "\\L[obj_reach_ankaros]", "completed": false }
-  ],
-  "rewards": { "exp": 250, "gold": 1200, "items": [{ "id": 5, "amount": 2 }] }
-}
-```
+### 9.2 Modèle Avancé de Quête (`Game_Quest`)
+- **Catégorisation** : `"main"` (principale), `"secondary"` (secondaire), `"recurring"` (contrat de guilde / répétable), `"bounty"` (prime).
+- **Récurrence & Compteur** : Les quêtes avec `repeatable: true` peuvent être réinitialisées et relancées (`quest.restart()`), avec comptabilisation précise des victoires (`quest.completedCount`).
+- **Délais Temporels & Échéances** : Paramétrage d'un `deadlineDuration` en secondes. Le `deadlineTimestamp` est vérifié à chaque tick temporel (`checkDeadline()`) : si l'échéance est franchie avant accomplissement, la quête passe automatiquement au statut `failed` (échec).
+- **Bascule de Suivi Tactique** : Le joueur peut choisir d'activer ou masquer les balises d'une quête sur le HUD et les cartes spatiales (`isTracking`, commutable via `quest.toggleTracking()`).
 
-### 9.3 Balises Spatiales & POI
+### 9.3 Balises Spatiales & Hotspots Multi-Quêtes
 - Balises spatiales redimensionnées à 0.25x avec animation de pulsation respiratoire (scale + fade).
+- **Hotspots Multi-Quêtes** : Lorsqu'un astre ou un POI réunit plusieurs objectifs simultanés, une pastille numérique (`+N`) apparaît automatiquement sur la balise (`updateHotspotBadge()`) pour informer immédiatement le joueur de la concentration d'opportunités.
 - Masquage automatique des marqueurs de POI neutres lorsqu'une quête active pointe déjà sur les mêmes coordonnées.
 - Alerte radio cockpit (`RadioComm`) signalant la mise à jour des objectifs.
 
 ### 9.4 Datapad / Journal de Bord (`Scene_QuestBook`)
 - Accessible via le menu ou par script rapide :
   ```javascript
-  SceneManager.push(Scene_QuestBook);
+  SC4.openQuestBook(); // ou SceneManager.openQuestBook();
   ```
 - Onglets : *En cours*, *Terminées*, *Toutes*.
-- Panneau d'informations complet : description localisée, localisation stellaire, statut des objectifs et aperçu des récompenses.
+- Affichage complet : description localisée, compte à rebours d'échéance pour les quêtes à délai, compteur de complétions pour les quêtes récurrentes, localisation hiérarchique stellaire (`Secteur ▹ Système ▹ Planète ▹ POI`) et aperçu des transmissions Subcom associées.
 
 ---
 
@@ -358,11 +387,20 @@ img/Titles2/Right.png      (z: 14) - Volet droit cinématique
 
 ### 10.1 Localisation Multi-Langue (`SC4_Localization`)
 - Dictionnaires JSON dans `data/SC/Localisation_FR.json` et `Localisation_EN.json`.
-- Balise universelle `\L[KEY]` résolue dynamiquement dans les messages, TextManager et propriétés d'objets (`name`, `description`).
+- Balise universelle `\L[KEY]` (et `\l[key]`) résolue dynamiquement dans les messages, le nom de l'interlocuteur, les choix (`Window_ChoiceList`), le TextManager et les objets de la base de données.
 - Changement de langue à la volée dans les Options, persistant dans `config.rpgsave`.
+- Synchronisation automatique avec `$dataQuests`, `$dataPlanets` et `$dataPois`.
 
-### 10.2 Messages en Bulles Flottantes (`SC4_BubbleMessage`)
+### 10.2 Messages en Bulles Flottantes & Portraits Déportés (`SC4_BubbleMessage`)
 - `Window_BubbleMsg` remplace contextuellement les fenêtres de message traditionnelles.
+- **Suppression des Facesets dans les Bulles** : Aucun portrait n'est dessiné à l'intérieur des bulles; leurs dimensions s'adaptent exclusivement au volume de texte.
+- **Gestion des Interlocuteurs & HUDs** :
+  - **Joueur qui parle avec le faceset `System:1`** : Le portrait dans `Sprite_PlayerHUD` s'illumine d'un cadre rouge interne de 2px (`_isSpeaking = true`).
+  - **Événement/PNJ qui parle avec le faceset `System:1`** :
+    - Si l'événement est un héros : affichage du portrait composite Paperdoll dans le nouveau HUD en haut à droite (`Sprite_InterlocutorHUD`).
+    - Sinon : aucun portrait.
+  - **Autre faceset sélectionné** : affiché dans `Sprite_InterlocutorHUD` avec cartouche du nom au liseré doré.
+  - **Nom du locuteur** : défini directement dans le champ "Nom" vanilla de l'éditeur RPG Maker MZ, avec support natif du tag `\L[clé]` ou `\l[clé]`.
 - Balises de ciblage :
   - `\A` : Cible le joueur (`$gamePlayer`).
   - `\E[ID]` : Cible l'événement désigné.

@@ -63,20 +63,32 @@ Le moteur de quêtes de SC4 est implémenté dans [`SC4_QuestManager.js`](file:/
 
 ---
 
-## 2. Spécification & Structure Complète de `data/SC/QUESTS.json`
+## 2. Spécification & Structure Complète des Données de Quête
 
-Le fichier `data/SC/QUESTS.json` contient un tableau d'objets Quête.
+Pour supporter le multi-langue dynamique et l'architecture modulaire, les quêtes sont scindées en données structurelles et localisations par langue :
+- `data/SC/QUESTS.json` : Squelette structurel (IDs, déclencheurs temporels, statuts, localisations de quête avec POIs).
+- `data/SC/loc/QUESTS_FR.json` : Textes français (titres, descriptions, alertes radio CRT, descriptions d'objectifs).
+- `data/SC/loc/QUESTS_EN.json` : Textes anglais correspondants.
+
+Au chargement, `SC4_Localization` et `SC_DataManager` fusionnent automatiquement les fichiers modulaires de `data/SC/loc/` dans les structures en mémoire. Tout changement de langue en jeu met à jour instantanément les textes sans altérer la progression (`active`, `completed`, `isTracking`).
 
 ### Exemple de Structure Complète :
 ```json
 [
+  null,
   {
-    "id": 0,
+    "id": 1,
     "name": "Signal Astropathique Impérial",
     "description": "Une balise de détresse de la Marine Impériale a été interceptée. Rendez-vous au spatioport Magellan pour identifier l'origine du message.",
+    "category": "main",
     "iconName": "mapIcon_qust",
     "triggerTimestamp": 55657647,
     "active": true,
+    "repeatable": false,
+    "completedCount": 0,
+    "deadlineDuration": 0,
+    "deadlineTimestamp": 0,
+    "isTracking": true,
     "alertTxt": [
       {
         "style": "alert",
@@ -92,8 +104,8 @@ Le fichier `data/SC/QUESTS.json` contient un tableau d'objets Quête.
         "id": "loc_prime_spaceport",
         "name": "Spatioport Magellan",
         "description": "Retrouver l'émissaire impérial aux quais d'embarquement.",
-        "sectorId": 0,
-        "systemId": 0,
+        "sectorId": 1,
+        "systemId": 1,
         "planetId": 4,
         "poiId": "prime_spatioport",
         "active": true,
@@ -103,8 +115,8 @@ Le fichier `data/SC/QUESTS.json` contient un tableau d'objets Quête.
         "id": "loc_vortex_investigation",
         "name": "Épave Dérivante Saint-Drusus",
         "description": "Explorer l'anomalie dans le vortex pour récupérer le journal de bord.",
-        "sectorId": 0,
-        "systemId": 0,
+        "sectorId": 1,
+        "systemId": 1,
         "planetId": 2,
         "poiId": "warp_derelict",
         "active": false,
@@ -121,12 +133,20 @@ Le fichier `data/SC/QUESTS.json` contient un tableau d'objets Quête.
 
 | Propriété | Type | Description |
 | :--- | :--- | :--- |
-| **`id`** | `number` | Identifiant numérique unique de la quête. |
+| **`id`** | `number` | Identifiant numérique unique de la quête (Indexation naturelle 1-based). |
 | **`name`** | `string` | Titre officiel de la mission (affiché dans les journaux et volets cibles). |
 | **`description`** | `string` | Descriptif global et contexte narratif. |
+| **`category`** | `string` | Catégorie de quête : `"main"` (principale), `"secondary"` (secondaire), `"recurring"` (récurrente/contrat de guilde), `"bounty"` (prime). |
 | **`iconName`** | `string` | Nom de l'icône de balise dans `img/GUI/ship/` (défaut : `"mapIcon_qust"`). |
 | **`triggerTimestamp`**| `number` | Date stellaire minimale requise pour l'activation automatique par le `$storyManager`. |
-| **`active`** | `boolean` | `true` si la quête commence déjà active dès le début du jeu. |
+| **`active`** | `boolean` | `true` si la quête est en cours d'exécution. |
+| **`completed`** | `boolean` | `true` si la quête est validée. |
+| **`failed`** | `boolean` | `true` si la quête a échoué (ex: temps limite dépassé). |
+| **`repeatable`** | `boolean` | Indique si la quête peut être réinitialisée et recommencée après complétion (`quest.restart()`). |
+| **`completedCount`** | `number` | Nombre de fois que la quête récurrente a été terminée. |
+| **`deadlineDuration`** | `number` | Durée limite en secondes de temps galactique (0 si aucune limite). Si définie, `deadlineTimestamp = triggerTimestamp + deadlineDuration`. |
+| **`deadlineTimestamp`** | `number` | Timestamp d'échéance calculé. Si dépassé, la méthode `checkDeadline()` marque la quête comme échouée. |
+| **`isTracking`** | `boolean` | Indique si la balise de quête est projetée sur le HUD et les cartes spatiales (activable/désactivable par `toggleTracking()`). |
 | **`alertTxt`** | `Array<Object>` | Liste des messages textuels diffusés sur le terminal CRT du cockpit lors du déclenchement. Chaque entrée contient `style` (`"alert"`, `"basicInfos"`, `"infos"`) et `txt`. |
 | **`locations`** | `Array<Object>` | Tableau des objectifs géolocalisés associés à la mission. |
 
@@ -387,20 +407,31 @@ list.forEach(item => {
 });
 ```
 
-### Manipulation des Objectifs (`Game_QuestLocation`)
+### Suivi Tactique, Récurrence & Délais (`Game_Quest`)
 ```javascript
-const loc = $gameQuests.quest(0).location("loc_prime_spaceport");
+const quest = $gameQuests.quest(1);
 
-loc.activate();   // Active la balise et l'objectif
-loc.deactivate(); // Masque la balise
-loc.complete();   // Marque l'objectif comme terminé
+// Basculer l'affichage de la balise HUD / Carte pour cette mission
+quest.toggleTracking(); // Alterne quest.isTracking entre true et false
+
+// Relancer une quête répétable / récurrente
+if (quest.repeatable && quest.completed) {
+    quest.restart(); // Réinitialise les objectifs et réactive la quête
+    console.log("Complétions cumulées :", quest.completedCount);
+}
+
+// Vérification d'échéance temporelle (appelé automatiquement par le StoryManager)
+quest.checkDeadline($gameDate.currentTimestamp());
+if (quest.failed) {
+    console.warn("Échec de mission : délai temporel dépassé !");
+}
 ```
 
-### Déclenchement Forcé via StoryManager (`$storyManager`)
-```javascript
-// Forcer le déclenchement immédiat d'une quête sans attendre son triggerTimestamp
-$storyManager.startQuest(1);
-```
+### Hotspots Multi-Quêtes (`Scene_SpaceTravel` / `Scene_SubsystemTravel`)
+Lorsqu'un astre ou un POI concentre plusieurs objectifs actifs simultanément :
+- Le système détecte la pluralité via `$gameQuests.getIndicatorsForPlanet(planetId)`.
+- La balise affiche automatiquement un badge numérique de hotspot (`+N` missions sur la cible) géré par `updateHotspotBadge()`.
+- L'infobulle détaille chaque quête liée pour guider le pilote dans ses priorités.
 
 ---
 

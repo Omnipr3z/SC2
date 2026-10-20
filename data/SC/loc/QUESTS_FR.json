@@ -1,0 +1,86 @@
+[
+  null,
+  {
+    "id": 1,
+    "name": "Livraison spéciale",
+    "description": "Le gouverneur \\n[2] vous a demandé de transporter d'urgence un colis secret de la plus haut importance jusqu'à Neotori.",
+    "alertTxt": [
+      {
+        "style": "info",
+        "txt": "Signal Subcom détecté. Établissement de la liaison..."
+      },
+      {
+        "style": "info",
+        "txt": "Autorisation assermentée Artis-4568. Déchiffrement en cours..."
+      },
+      {
+        "style": "alert",
+        "txt": "Ici l'Administrateur Gouverneur du Secteur Ankaros depuis Ankaros Prime."
+      },
+      {
+        "style": "alert",
+        "txt": "Je voudrais savoir si la livraison se passe bien ?"
+      },
+      {
+        "style": "alert",
+        "txt": "Parfait ! Continuez ainsi, la loyauté sera récompensée..."
+      },
+      {
+        "style": "info",
+        "txt": "Transmission terminée."
+      },
+      {
+        "style": "imperium",
+        "txt": "Pour la Fédération."
+      }
+    ],
+    "locations": [
+      {
+        "id": "loc_prime_spaceport",
+        "name": "Spatioport Magellan",
+        "description": "Rencontrer l'émissaire du Gouverneur au spatioport d'Ankaros Prime."
+      },
+      {
+        "id": "loc_altus_intel",
+        "name": "Station Altus - Données Auspex",
+        "description": "Récupérer les journaux de télémesure auprès de la station de surveillance Altus."
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Échos de Kalyxis",
+    "description": "Des émanations radio inhabituelles ont été captées dans le secteur voisin de Kalyxis.",
+    "alertTxt": [
+      {
+        "style": "alert",
+        "txt": "Signal relais inconnu intercepté dans le système Kalyxis."
+      }
+    ],
+    "locations": [
+      {
+        "id": "loc_kalyxis_base",
+        "name": "Avant-poste Kalyxis-B",
+        "description": "Inspecter les installations minières de l'astéroïde Kalyxis-B."
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Ravitaillement d'urgence",
+    "description": "Contrat de fret récurrent : acheminer des pièces détachées et des vivres au spatioport d'Ankaros Prime avant l'expiration du temps imparti.",
+    "alertTxt": [
+      {
+        "style": "info",
+        "txt": "Avis de fret fédéral : Besoin urgent de pièces de rechange au spatioport Magellan."
+      }
+    ],
+    "locations": [
+      {
+        "id": "loc_prime_convoy",
+        "name": "Livraison au Spatioport Magellan",
+        "description": "Décharger la cargaison de pièces au quai logistique d'Ankaros Prime."
+      }
+    ]
+  }
+]

@@ -1,0 +1,733 @@
+[
+  null,
+  {
+    "id": "ankaros_helios",
+    "name": "Station Solaire Helios",
+    "description": "Plateforme de captage d'énergie coronale et observatoire astrophysique."
+  },
+  {
+    "id": "warp_beacon_alpha",
+    "name": "Balise de Confinement Alpha",
+    "description": "Bouée de navigation stabilisant la déchirure dimensionnelle."
+  },
+  {
+    "id": "warp_derelict",
+    "name": "Épave Dérivante Saint-Drusus",
+    "description": "Carcasse d'un transporteur éjecté du sous-espace il y a plusieurs décennies."
+  },
+  {
+    "id": "furia_mine",
+    "name": "Avant-poste Minier K-14",
+    "description": "Station de forage automatisée résistant aux coulées de lave."
+  },
+  {
+    "id": "furia_caldera",
+    "name": "Observatoire Géothermique Ignis",
+    "description": "Centre d'analyse sismique et de prospection des chambres magmatiques."
+  },
+  {
+    "id": "prime_spatioport",
+    "name": "Spatioport Magellan",
+    "description": "Astroport principal d'Ankaros Prime, grouillant de marchands, colons et militaires."
+  },
+  {
+    "id": "prime_ruins",
+    "name": "Ruines Antiques Eleris",
+    "description": "Vestiges d'une civilisation extraterrestre oubliée, source d'artefacts précieux."
+  },
+  {
+    "id": "prime_governor_spire",
+    "name": "Flèche du Gouverneur",
+    "description": "Siège administratif suprême du Secteur Ankaros surplombant la basse-ruche."
+  },
+  {
+    "id": "wanghek_camp",
+    "name": "Camp d'Exploitation Alpha",
+    "description": "Base forestière sous haute protection contre les prédateurs indigènes."
+  },
+  {
+    "id": "wanghek_xenolith",
+    "name": "Xénolithe Inconnu",
+    "description": "Monolithe d'origine extraterrestre émettant des ondes psychiques faibles."
+  },
+  {
+    "id": "altus_dock",
+    "name": "Docks d'Amarrage Altus",
+    "description": "Baies pressurisées pour le réarmement et le ravitaillement des navires de ligne."
+  },
+  {
+    "id": "altus_auspex",
+    "name": "Réseau Auspex Subspatial",
+    "description": "Batteries de capteurs surveillant les sauts hyperespace du système."
+  },
+  {
+    "id": "aethelgard_relais_sub",
+    "name": "Relais Subspatial Elion",
+    "description": "Station relais de transmission quantique elionne filtrant les fréquences fédérales."
+  },
+  {
+    "id": "oros_fonderie_zeta",
+    "name": "Fonderie Moléculaire Zeta",
+    "description": "Complexe robotisé extrayant les terres rares pour les châssis d'armures elionnes."
+  },
+  {
+    "id": "oros_siphon_01",
+    "name": "Puits d'Extraction Siphon-01",
+    "description": "Cratère volcanique équipé de collecteurs de soufre et d'acides lourds."
+  },
+  {
+    "id": "aqua_al_aethel",
+    "name": "La Grande Métropole Flottante Al-Aethel",
+    "description": "Capitale en surface de la Technocratie. Spatioport diplomatique et siège du Haut-Conseil."
+  },
+  {
+    "id": "aqua_dome_elysee",
+    "name": "Le Dôme Sub-Abyssal d'Élysée",
+    "description": "Sanctuaire sous-marin originel visible depuis l'orbite comme une tache turquoise."
+  },
+  {
+    "id": "aqua_complexe_genetique",
+    "name": "Le Complexe Génétique Primaire",
+    "description": "Plateforme semi-immergée où l'Archiviste Elara étudie le génome matriciel."
+  },
+  {
+    "id": "aqua_spire_boreale",
+    "name": "Plateforme de Tir Spire Boréale",
+    "description": "Batteries de faisceaux moléculaires protégeant le ciel d'Aqua contre les incursions."
+  },
+  {
+    "id": "nacre_poste_ecoute",
+    "name": "Poste d'Écoute Silencieux",
+    "description": "Station furtive camouflée dans un corps rocheux, surveillant tout saut hostile."
+  },
+  {
+    "id": "nacre_silo_chimique",
+    "name": "Silo Chimique Orbital",
+    "description": "Raffinerie automatisée produisant les composés toxiques et solvants elions."
+  },
+  {
+    "id": "thaumas_station_nebuleuse_b",
+    "name": "Station-Collectrice Nébuleuse-B",
+    "description": "Station flottant dans la haute atmosphère pour pomper les gaz nobles de Thaumas."
+  },
+  {
+    "id": "cymo_sarcophage",
+    "name": "Laboratoire de Confinement Sarcophage",
+    "description": "Bunkers sous la glace menant des tests viraux extrêmes sur des souches pathogènes."
+  },
+  {
+    "id": "arche_quai_diplomatique",
+    "name": "Quai d'Amarrage Diplomatique & Baies Sécurisées",
+    "description": "Hub d'échange technologique surveillé en continu par des drones Aegis."
+  },
+  {
+    "id": "g3_noyau_accresion",
+    "name": "Sonde Coronale Dérivante",
+    "description": "Sonde scientifique en dérive mesurant l'effondrement du disque d'accrétion."
+  },
+  {
+    "id": "ferrum_excavation_alpha_zero",
+    "name": "Excavation Alpha-Zéro",
+    "description": "Carrière d'extraction à ciel ouvert où gisent des légions d'automates déconnectés."
+  },
+  {
+    "id": "ferrum_dome_hauts_fourneaux",
+    "name": "Dôme des Hauts-Fourneaux Brisés",
+    "description": "Complexe thermique éventré émettant un signal radio binaire parasite continu."
+  },
+  {
+    "id": "necropole_coeur_synthese",
+    "name": "Le Cœur de Synthèse (L'Usine-Matrice)",
+    "description": "Lignes d'assemblage positroniques encore actives au ralenti sous garde armée autonome."
+  },
+  {
+    "id": "necropole_labo_transfert",
+    "name": "Les Laboratoires du Grand Transfert",
+    "description": "Ruines cliniques elionnes où 0-Zéro a éveillé sa singularité consciente."
+  },
+  {
+    "id": "necropole_bastion_silencieux",
+    "name": "Le Bastion Silencieux",
+    "description": "Forteresse de basalte noir brouillant les senseurs auspex de la Fédération."
+  },
+  {
+    "id": "necropole_siphon_chimique",
+    "name": "Le Siphon Chimique Empoisonné",
+    "description": "Cratère inondé de neurotoxines séchées inoffensives pour les drones Atrons."
+  },
+  {
+    "id": "knull_cryo_banque",
+    "name": "Cryo-Banque de Données",
+    "description": "Archives militaires elionnes enfouies sous le pergélisol rocheux de K-Null."
+  },
+  {
+    "id": "debris_epave_lumiere_dechue",
+    "name": "L'Épave du Cuirassé Lumière Déchue",
+    "description": "Carcasse colossale d'une nef elionne piégée entre deux astéroïdes massifs."
+  },
+  {
+    "id": "debris_nid_moissonneurs",
+    "name": "Nid de Moissonneurs Éclipse",
+    "description": "Amas d'épaves soudées par des nanites servant de recharge aux chasseurs Atrons."
+  },
+  {
+    "id": "xenovapor_siphon_omega",
+    "name": "Siphon Siphon-Oméga",
+    "description": "Raffinerie atmosphérique autonome pompant des acides lourds dans la tourmente."
+  },
+  {
+    "id": "monolithe_noyau_sync",
+    "name": "Noyau de Synchronisation Stellaire",
+    "description": "Chambre centrale d'émission subspatiale attendant un protocole d'éveil."
+  },
+  {
+    "id": "arunia_sentinelle_ignis",
+    "name": "Vigie Solaire Arun",
+    "description": "Bouée thermique calculant les cycles de marée gravitationnelle du système."
+  },
+  {
+    "id": "sani_enclos_dracons",
+    "name": "Le Grand Enclos des Dracons",
+    "description": "Stalles cyclopéennes où sont dressés les sauriens de guerre des clans Yuma."
+  },
+  {
+    "id": "sani_poste_lance_rouge",
+    "name": "Poste de Garde de la Lance Rouge",
+    "description": "Fortin troglodyte surveillant les canyons arides contre les bêtes sauvages."
+  },
+  {
+    "id": "kinbra_enclave_pilier_jade",
+    "name": "La Grande Enclave du Pilier de Jade",
+    "description": "Cité suspendue au faîte d'arbres millénaires, siège du Conseil des Lances."
+  },
+  {
+    "id": "kinbra_forges_lances",
+    "name": "Les Forges à Lances de Kinbra",
+    "description": "Ateliers où sont taillés les cristaux de focalisation pour les armes énergétiques ancestrales."
+  },
+  {
+    "id": "kinbra_sanctuaire_traqueurs",
+    "name": "Le Sanctuaire des Grands Traqueurs",
+    "description": "Clairière sacrée des rites initiatiques où chaque guerrier doit terrasser un grand prédateur."
+  },
+  {
+    "id": "ouro_cercle_serments",
+    "name": "Cercle des Serments",
+    "description": "Arène sous dôme partiel où chevaliers et champions règlent leurs litiges d'honneur."
+  },
+  {
+    "id": "kigasi_silos_fraternels",
+    "name": "Les Silos Fraternels",
+    "description": "Greniers d'approvisionnement nourrissant les bastions féodaux de tout le système."
+  },
+  {
+    "id": "kigasi_bourg_concorde",
+    "name": "Bourg de la Concorde",
+    "description": "Ville de foire marchande où le troc direct remplace les taxes de la Fédération."
+  },
+  {
+    "id": "sfergrad_karl_krag",
+    "name": "Le Haut-Château de Karl-Krag",
+    "description": "Forteresse de basalte cyclopéenne, cour du Grand Suzerain des Maisons Sfergrad."
+  },
+  {
+    "id": "sfergrad_serre_matricielle",
+    "name": "La Serre Matricielle de la Première Dynastie",
+    "description": "Dôme agricole historique préservé depuis l'époque des premiers vaisseaux colons."
+  },
+  {
+    "id": "sfergrad_faille_ecailles",
+    "name": "La Faille des Écailles Noires",
+    "description": "Abîme sauvage où nichent les dragons fossiles chassés pour forger les armures lourdes."
+  },
+  {
+    "id": "sfergrad_donjon_casernes",
+    "name": "Le Donjon des Casernes",
+    "description": "Cantonnement où le Prévôt fédéral inspecte et embarque les recrues pour la Légion."
+  },
+  {
+    "id": "skal_bastion_peage",
+    "name": "Le Bastion-Péage du Tribut",
+    "description": "Quai fortifié sur la lune où sont perçues les caisses de minerai et registres féodaux."
+  },
+  {
+    "id": "dragons_nid_affut_kran",
+    "name": "Le Nid d'Affût Kran",
+    "description": "Tour de guet creusée dans un astéroïde de quartz, équipée de canons cinétiques lourds."
+  },
+  {
+    "id": "ecluse_droit_banniere",
+    "name": "Le Sas du Droit de Bannière",
+    "description": "Sas de contrôle douanier vérifiant les allégeances féodales avant le grand saut."
+  },
+  {
+    "id": "serenis_coeur_lux",
+    "name": "Fanal Coronale Seren",
+    "description": "Phare stellaire balisant l'entrée dans le corridor de pèlerinage du Culte."
+  },
+  {
+    "id": "eden_archipel_or",
+    "name": "L'Archipel d'Or & Spatioport de Plaisance",
+    "description": "Capitale des plaisirs d'Eden bordée de casinos démesurés et de marinas de luxe."
+  },
+  {
+    "id": "eden_basilique_penitences",
+    "name": "La Basilique des Pénitences Dorées",
+    "description": "Cathédrale de verre teinté où les aristocrates viennent acheter des indulgences à prix d'or."
+  },
+  {
+    "id": "eden_atoll_abimes",
+    "name": "L'Atoll des Abîmes",
+    "description": "Cirque néon réservé aux paris clandestins sur les Léviathans aquatiques."
+  },
+  {
+    "id": "eden_salons_oubli",
+    "name": "Les Salons d'Oubli",
+    "description": "Repaires feutrés où le Culte teste ses liturgies d'hypnose et stimulants psychiques."
+  },
+  {
+    "id": "chrysalide_hub_elyseen",
+    "name": "Hub Élyséen",
+    "description": "Station annulaire de repos haut de gamme prélevant des dîmes pour le clergé d'Angelus."
+  },
+  {
+    "id": "remissions_penitencier_expiation",
+    "name": "Pénitencier Minier Expiation-09",
+    "description": "Complexe de forage où les endettés expient leurs fautes sous le fouet thermique."
+  },
+  {
+    "id": "galama_metropole_angelus",
+    "name": "La Grande Métropole-Cathédrale d'Angelus",
+    "description": "Cité-église de basalte sombre où se massent des millions de pèlerins en haillons violets."
+  },
+  {
+    "id": "galama_puits_sacrifices",
+    "name": "Le Puits des Sacrifices Silencieux",
+    "description": "Gouffre sacré où disparaissent les fidèles purifiés lors des cérémonies d'ascension."
+  },
+  {
+    "id": "galama_cryo_caves_silas",
+    "name": "Cryo-Caves de Silas",
+    "description": "Réserves d'Ambre d'Éther destinées à charger les futurs condensateurs psychiques."
+  },
+  {
+    "id": "galama_spire_boreale",
+    "name": "Spire Boréale des Archiprêtres",
+    "description": "Observatoire polaire d'où Silas écoute le murmure primordial du Nexus lointain."
+  },
+  {
+    "id": "sanctumnox_sanctuaire_inities",
+    "name": "Sanctuaire des Initiés",
+    "description": "Monastère hermétique où sont révélés les secrets du suicide spirituel collectif."
+  },
+  {
+    "id": "barque_narthex_ange",
+    "name": "Narthex de l'Ange de Lumière",
+    "description": "Chambre de résonance psychique amplifiant les pulsations de l'Onde du Nexus."
+  },
+  {
+    "id": "arakna_spore_relais",
+    "name": "Relais de Scan Biomécanique",
+    "description": "Sonde de veille fédérale analysant la densité des spores en orbite haute."
+  },
+  {
+    "id": "arakna_tranchees_seches",
+    "name": "Les Tranchées Sèches",
+    "description": "Galeries souterraines vidées où des patrouilles SFI traquent les larves dormantes."
+  },
+  {
+    "id": "arakna_cratere_vitrif",
+    "name": "Cratère de Vitrification 07",
+    "description": "Zone fondue en verre stérile par une frappe orbitale elionne lourde."
+  },
+  {
+    "id": "arakna_hemisphere_cervical",
+    "name": "L'Hémisphère Cervical",
+    "description": "Amas cérébral colossal émettant les pulsations synaptiques de la ruche."
+  },
+  {
+    "id": "arakna_vena_cava",
+    "name": "Le Gouffre Abyssal Vena Cava",
+    "description": "Faille pourpre d'où jaillissent des geysers de sang et émergent les Léviathans."
+  },
+  {
+    "id": "arakna_promontoire_gris",
+    "name": "L'Affleurement Météorique Le Promontoire Gris",
+    "description": "Tête de pont fortifiée de la SAFE sous bouclier de force guidant les frappes orbitales."
+  },
+  {
+    "id": "arakna_plis_deglutition",
+    "name": "Les Plis de Déglutition",
+    "description": "Lobe charnu spongieux où la reine-moissonneuse fait incuber des milliers de spores."
+  },
+  {
+    "id": "arakna_aegis_wall",
+    "name": "Plateforme d'Incinération Aegis-Wall",
+    "description": "Batterie d'artillerie lourde crachant du plasma pour empêcher les nuées d'atteindre le vide."
+  },
+  {
+    "id": "arakna_labo_vigilance",
+    "name": "Laboratoire de Biostase Vigilance",
+    "description": "Station scientifique où les Elions analysent des tissus vivants pour contrer leur tare génétique."
+  },
+  {
+    "id": "arakna_kyste_cratere",
+    "name": "Cratère d'Infection",
+    "description": "Rampe de tir biologique propulsant des capsules d'assaut d'organismes stellaires."
+  },
+  {
+    "id": "arakna_charnier_flottant",
+    "name": "Le Charnier Flottant",
+    "description": "Carcasse d'un croiseur fédéral dissoute par des colonies fongiques et nids d'Écorcheurs."
+  },
+  {
+    "id": "arakna_colonne_aspiration",
+    "name": "Colonne d'Aspiration Ruche",
+    "description": "Siphon biologique reliant les couches denses de Xéno-Vorax aux nuées de moissonneuses."
+  },
+  {
+    "id": "arakna_depotoir_calcifie",
+    "name": "Le Dépotoir Calcifié",
+    "description": "Dépôt lunaire de chitine fossile exploitée par des mercenaires en quête de blindages organiques."
+  },
+  {
+    "id": "arakna_balise_ftl",
+    "name": "La Balise de Verrouillage FTL",
+    "description": "Sas spatial fortifié nettoyé au lance-flammes lourd par la Légion pour protéger Ankaros."
+  },
+  {
+    "id": "suro_balise_solaire",
+    "name": "Balise Thêta Suro",
+    "description": "Balise de navigation calibrant les approches de fret commercial sur Neotori Prime."
+  },
+  {
+    "id": "suro_forges_sub_solaires",
+    "name": "Les Forges Sub-Solaires de Terra",
+    "description": "Fonderies creusées dans la roche pour usiner le blindage des cuirassés fédéraux."
+  },
+  {
+    "id": "suro_collecteur_solaire",
+    "name": "Collecteur Énergie Stellaire 01",
+    "description": "Champ de miroirs thermiques chargeant les accumulateurs des stations orbitales."
+  },
+  {
+    "id": "neotori_palais_ambassades",
+    "name": "Le Palais des Ambassades (Neotoria)",
+    "description": "Mégastructure de marbre où s'est tenue la conférence de paix et l'attentat de l'artefact Eleri."
+  },
+  {
+    "id": "neotori_grand_marche_gentech",
+    "name": "Le Grand Marché de Gentech",
+    "description": "Bazar corporatiste où s'échangent brevets, drogues sauriennes et composants cybernétiques."
+  },
+  {
+    "id": "neotori_astroport_erius",
+    "name": "L'Astroport Souverain Erius",
+    "description": "Pistes d'accueil bordées de bannières impériales accueillant les dignitaires de Terra."
+  },
+  {
+    "id": "neotori_bas_fonds",
+    "name": "Les Bas-Fonds de la Basse-Cité",
+    "description": "Coursives obscures où se terrent des agents de la Rébellion et des trafiquants d'Orfun."
+  },
+  {
+    "id": "suro1_qg_safe",
+    "name": "Quartiers Généraux de la SAFE",
+    "description": "Hub militaire fédéral où stationnent les escadrons de chasseurs de l'Amirale Valerius."
+  },
+  {
+    "id": "suro1_cantine_mercenaires",
+    "name": "Cantine des Mercenaires & Docks Libres",
+    "description": "Hall d'embarquement cosmopolite où se recrutent mécanos Gruks et pilotes libres."
+  },
+  {
+    "id": "suro1_quai_criniere",
+    "name": "Quai d'Escorte de La Crinière Flamboyante",
+    "description": "Emplacement d'amarrage d'honneur préparé pour les grands convois fédéraux."
+  },
+  {
+    "id": "concordia_residences_consulaires",
+    "name": "Résidences Consulaires",
+    "description": "Dômes de marbre préservés sous bouclier où résident les émissaires extraterrestres."
+  },
+  {
+    "id": "mytrion_balance_or",
+    "name": "Comptoir Minier Saurion La Balance d'Or",
+    "description": "Comptoir d'échange où les Saurions rachètent le Mytrion brut au rabais."
+  },
+  {
+    "id": "mytrion_puits_federal_04",
+    "name": "Puits d'Extraction Fédéral 04",
+    "description": "Complexe minier sous garde armée de la SAFE pour ravitailler les fuseurs lourds."
+  },
+  {
+    "id": "gorgon_collecteur_cyclope",
+    "name": "Collecteur Flottant Cyclope",
+    "description": "Pompe atmosphérique suspendue au-dessus des tempêtes de Gorgon."
+  },
+  {
+    "id": "gorgon_depot_cryo",
+    "name": "Dépôt Cryogénique",
+    "description": "Réservoirs souterrains de stockage stratégique de la flotte fédérale."
+  },
+  {
+    "id": "suro_balise_ftl",
+    "name": "La Balise FTL Primaire",
+    "description": "Sas spatial et relais de calcul pour le saut vers Alpha-7, Olk et la bordure."
+  },
+  {
+    "id": "olk_relais_pulsar",
+    "name": "Capteur d'Ondes Pulsar",
+    "description": "Capteur durci enregistrant le balayage périodique des rayonnements gamma."
+  },
+  {
+    "id": "olkeris_spire_pales_epines",
+    "name": "La Spire des Pâles Épines (Manoir Karnstein)",
+    "description": "Palais gothique scellé dressé au-dessus du smog toxique où règnent les Barons Noirs."
+  },
+  {
+    "id": "olkeris_puits_poix_noire",
+    "name": "Le Puits de la Poix Noire (Le Grand Siphon)",
+    "description": "Mer intérieure d'hydrocarbures lourds crachant des torchères de flammes sales."
+  },
+  {
+    "id": "olkeris_lazaret_mutes",
+    "name": "Le Lazaret des Mutés (La Fosse Commune)",
+    "description": "Taudis grouillant creusé à même les gisements où survivent les ouvriers condamnés."
+  },
+  {
+    "id": "olkeris_docks_sang_noir",
+    "name": "Les Docks d'Amarrage Le Sang-Noir",
+    "description": "Astroport sous cloche pressurisée où l'on ravitaille les cales à prix fort sans traîner."
+  },
+  {
+    "id": "thanatos_balise_quarantaine",
+    "name": "Balise de Quarantaine Fédérale",
+    "description": "Bouée automatique diffusant en boucle l'avertissement de zone condamnée."
+  },
+  {
+    "id": "suie_bouee_sarcophage",
+    "name": "La Bouée du Sarcophage",
+    "description": "Station de pompage externe évitant aux navires d'irradier leur coque dans l'atmosphère."
+  },
+  {
+    "id": "nebula_balise_spectre",
+    "name": "Balise Spectrale Aureus",
+    "description": "Phare de navigation guidant les yachts de luxe à travers les filaments de la nébuleuse."
+  },
+  {
+    "id": "olympus_tour_helix_aura",
+    "name": "La Tour Gentech Hélix-Aura",
+    "description": "Mégastructure d'ADN en cristal noir abritant le siège de Gentech et ses coffres de brevets."
+  },
+  {
+    "id": "olympus_pavillon_balance_ambre",
+    "name": "Le Pavillon du Consortium La Balance d'Ambre",
+    "description": "Palais posé sur un lagon thermal où Le Courtier négocie des créances planétaires."
+  },
+  {
+    "id": "olympus_atrium_beaux_arts",
+    "name": "L'Atrium des Beaux-Arts & Maison Vermeil",
+    "description": "Galerie interstellaire où s'échangent antiquités Eleris et sculptures de Mytrion."
+  },
+  {
+    "id": "olympus_residences_belvedere",
+    "name": "Les Résidences du Belvédère",
+    "description": "Manoirs ultra-sécurisés sous cloche où les oligarques vivent reclus derrière des tourelles."
+  },
+  {
+    "id": "etang_docks_bruts",
+    "name": "Le Bassin des Docks Bruts (Quai 99)",
+    "description": "Docks crasseux où des parias Draks manutentionnent les conteneurs sous surveillance armée."
+  },
+  {
+    "id": "etang_bourse_bunker",
+    "name": "Le Bourse-Bunker (Ruche des Transactions)",
+    "description": "Amphithéâtre circulaire saturé d'hologrammes où traders et courtiers s'époumonent."
+  },
+  {
+    "id": "etang_sas_taxnet",
+    "name": "Les Sas de Douane Tax-Net",
+    "description": "Sas d'entrée où chaque marchandise est scannée pour prélever la taxe corporative."
+  },
+  {
+    "id": "creances_titan_vault",
+    "name": "Voûte Sécurisée Titan-Vault 03",
+    "description": "Astéroïde de platine blindé abritant les archives comptables noires du Consortium."
+  },
+  {
+    "id": "oikos_nectar_iv",
+    "name": "Station de Pompage Nectar-IV",
+    "description": "Moissonneuse atmosphérique automatisée extrayant des gaz nobles pour les serveurs boursiers."
+  },
+  {
+    "id": "silence_tribunal_arbitrage",
+    "name": "Le Tribunal d'Arbitrage Privé",
+    "description": "Complexe austère où les juristes de haut vol tranchent les litiges de brevets à huis clos."
+  },
+  {
+    "id": "cloture_sas_agrement",
+    "name": "Sas d'Agrément Financier",
+    "description": "Balise de contrôle délivrant les visas d'approche corporatifs contre taxe de passage."
+  },
+  {
+    "id": "alpha7_relais_cuivre",
+    "name": "Relais de Communication Insurgé",
+    "description": "Bouée pirate cryptée relayant les manifestes de Karam Poulpard."
+  },
+  {
+    "id": "forge_acieries_populaires",
+    "name": "Les Aciéries Populaires",
+    "description": "Fonderies géantes creusées dans le basalte produisant armes et blindages de libération."
+  },
+  {
+    "id": "forge_batterie_briseur",
+    "name": "Batterie Thermique Solaire Le Briseur",
+    "description": "Capteurs alimentant la ligne de défense intérieure du système insurgé."
+  },
+  {
+    "id": "libertas_hotel_directoire",
+    "name": "L'Hôtel du Directoire (QG Karam Poulpard)",
+    "description": "Centre de commandement de la Rébellion où se négocient les traités de non-agression."
+  },
+  {
+    "id": "libertas_aerodrome_fraternel",
+    "name": "L'Aérodrome Fraternel",
+    "description": "Port franc où atterrissent corvettes de déserteurs et cargos humanitaires."
+  },
+  {
+    "id": "libertas_enclave_draks",
+    "name": "L'Enclave des Émissaires Draks",
+    "description": "Quartier fortifié où les chefs de meute négocient la reconnaissance légale de leur statut."
+  },
+  {
+    "id": "libertas_antennes_aurelia",
+    "name": "Les Antennes Libres d'Aurelia",
+    "description": "Paraboles subspatiales piratant les flux officiels de Terra pour appeler à l'insurrection."
+  },
+  {
+    "id": "assemblee_hemicycle_concorde",
+    "name": "Hémicycle de la Concorde",
+    "description": "Parlement transitoire où siègent corsaires, civils et délégués Draks."
+  },
+  {
+    "id": "bastion_sentinelle_7",
+    "name": "Réseau de Canons Sub-Orbitaux Sentinelle-7",
+    "description": "Batteries de torpilles lourdes prêtes à saturer tout croiseur fédéral intrus."
+  },
+  {
+    "id": "blocus_docks_emancipation",
+    "name": "Docks de Conversion L'Émancipation",
+    "description": "Chantiers clandestins blindant des cargos civils en canonnières de combat."
+  },
+  {
+    "id": "blocus_comptoir_parias",
+    "name": "Comptoir Franc des Parias",
+    "description": "Marché noir où le troc institutionnel remplace le crédit fédéral dévalué."
+  },
+  {
+    "id": "ceruleen_siphon_fraternel",
+    "name": "Station-Moissonneuse Le Siphon Fraternel",
+    "description": "Collecteur de carburant approvisionnant gratuitement les navires de libération."
+  },
+  {
+    "id": "sanctuaire_complexe_stase",
+    "name": "Complexe Médical de Stase",
+    "description": "Hôpital soignant les crises de Rage Drak grâce à des thérapies cellulaires neutres."
+  },
+  {
+    "id": "bouee_enregistrement_alliance",
+    "name": "Poste d'Enregistrement de l'Alliance",
+    "description": "Douane révolutionnaire vérifiant les identifiants et recrutant des capitaines volontaires."
+  },
+  {
+    "id": "grak_balise_rouille",
+    "name": "Bouée d'Alerte Pirate",
+    "description": "Balise de fortune avertissant les meutes du Maw de l'approche de patrouilleurs."
+  },
+  {
+    "id": "harass_camp_chaines_brisees",
+    "name": "Le Camp des Chaînes Brisées",
+    "description": "Agglomération de carcasses écrasées où se rassemblent les Draks sous le Maréchal Krell."
+  },
+  {
+    "id": "harass_monastere_volonte_pure",
+    "name": "Le Monastère de la Volonté Pure",
+    "description": "Retraite troglodyte où des vétérans combattent la Rage par méditation forcée."
+  },
+  {
+    "id": "harass_spatioport_bouche_seche",
+    "name": "Spatioport de Contrebande Bouche Sèche",
+    "description": "Piste balayée par les vents où les cartels saurions échangent drogue contre mercenaires."
+  },
+  {
+    "id": "harass_fosses_entrainement",
+    "name": "Les Fosses d'Entraînement",
+    "description": "Carrières de poussière où les guerriers canalisent leur rage dans des combats à mort."
+  },
+  {
+    "id": "scorie_balise_interception",
+    "name": "Balise d'Interception d'Urgence",
+    "description": "Radar braqué sur les couloirs de saut pour coordonner les raids sur les convois."
+  },
+  {
+    "id": "depotoir_maw",
+    "name": "Le Maw (La Gueule) & Arène du Sang",
+    "description": "Mégastructure de croiseurs soudés où les capitaines règlent leurs duels pour le titre de Kapt'n."
+  },
+  {
+    "id": "depotoir_dents_dragon",
+    "name": "Les Dents du Dragon & Épave Cuirassé",
+    "description": "Coupe-gorge d'astéroïdes serrés abritant un mastodonte éventré de la Flotte Terrane."
+  },
+  {
+    "id": "depotoir_chantier_gruks",
+    "name": "Le Chantier des Ferrailleurs Gruks",
+    "description": "Bassin d'assemblage sous vide où l'on monte des blindages surdimensionnés comme le Kasse-Briques."
+  },
+  {
+    "id": "vorax_station_sangsue",
+    "name": "Station Siphon La Sangsue",
+    "description": "Plateforme captive pompant des hydrocarbures frelatés pour les navettes de pillards."
+  },
+  {
+    "id": "rancune_nid_guet",
+    "name": "Nid de Guet & Sas des Frères d'Armes",
+    "description": "Quai d'amarrage rudimentaire où les mercenaires enregistrent leurs prises de butin."
+  },
+  {
+    "id": "nexus_onde_primordiale",
+    "name": "Point Focal de l'Onde Primordiale",
+    "description": "Épicentre de résonance cosmique d'où émanent les impulsions de la Genèse."
+  },
+  {
+    "id": "nexus_sanctuaire_origines",
+    "name": "Le Sanctuaire des Origines",
+    "description": "Chambre centrale du Nexus scellée par des runes d'énergie inconnue."
+  },
+  {
+    "id": "nexus_anneau_confinement",
+    "name": "L'Anneau de Confinement Létal",
+    "description": "Faisceaux bleutés annihilant instantanément toute coque s'approchant sans vecteur harmonique."
+  },
+  {
+    "id": "nexus_recepteur_onde",
+    "name": "Le Récepteur d'Onde Suprême",
+    "description": "Antenne cyclopéenne reliant le destin de ce monde à l'Univers Supérieur."
+  },
+  {
+    "id": "nexus_obelisque_resonance",
+    "name": "L'Obélisque de Résonance",
+    "description": "Monolithe géométrique Eleri pulsant d'une lueur verdâtre régénératrice."
+  },
+  {
+    "id": "nexus_cimetiere_premiere_coalition",
+    "name": "Cimetière de la Première Coalition",
+    "description": "Épaves d'armadas anciennes venues tenter de percer le secret du Nexus."
+  },
+  {
+    "id": "nexus_point_zero",
+    "name": "Point Zéro Dimensionnel",
+    "description": "Singularité où Reality s'effondre et où le Gardien du Script contemple l'Architecte."
+  }
+]

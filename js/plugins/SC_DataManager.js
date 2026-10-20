@@ -24,11 +24,13 @@ class SC_DataManager {
     static loadDatabase() {
         this.loadScDataFile("$dataInventories", "INVENTORIES.json");
         this.loadScDataFile("$dataTimeSystem", "TIME_SYSTEM.json");
-        this.loadScDataFile("$dataSectors", "SECTORS.json");
-        this.loadScDataFile("$dataPlanets", "PLANETS.json");
         this.loadScDataFile("$dataShipMotors", "SHIP_MOTORS.json");
         this.loadScDataFile("$dataSpaceships", "SPACESHIPS.json");
-        this.loadScDataFile("$dataQuests", "QUESTS.json");
+
+        this.loadScDataFile("$dataSectors_PHYSICAL", "SECTORS.json");
+        this.loadScDataFile("$dataPlanets_PHYSICAL", "PLANETS.json");
+        this.loadScDataFile("$dataPois_PHYSICAL", "POIS.json");
+        this.loadScDataFile("$dataQuests_PHYSICAL", "QUESTS.json");
     }
 
     /**
@@ -46,18 +48,25 @@ class SC_DataManager {
             if (xhr.status < 400) {
                 try {
                     window[variableName] = JSON.parse(xhr.responseText);
+
+                    // Mise à jour et fusion dynamique de la localisation dès qu'un fichier physique arrive
+                    if (variableName.includes("_PHYSICAL") || variableName.includes("Planets") || variableName.includes("Sectors") || variableName.includes("Pois") || variableName.includes("Quests")) {
+                        if (typeof SC4_Localization !== "undefined" && typeof SC4_Localization.applyToDatabase === "function") {
+                            SC4_Localization.applyToDatabase();
+                        }
+                    }
                 } catch (e) {
                     console.warn(`[SC_DataManager] Erreur de parsing JSON pour ${url} :`, e);
-                    window[variableName] = {};
+                    window[variableName] = [];
                 }
             } else {
-                console.warn(`[SC_DataManager] Fichier non trouvé (${xhr.status}): ${url}, initialisation par défaut vide.`);
-                window[variableName] = {};
+                console.warn(`[SC_DataManager] Fichier non trouvé (${xhr.status}): ${url}, initialisation par défaut.`);
+                window[variableName] = [];
             }
         };
         xhr.onerror = () => {
             console.warn(`[SC_DataManager] Erreur de requête réseau pour ${url}, initialisation par défaut vide.`);
-            window[variableName] = {};
+            window[variableName] = [];
         };
         xhr.send();
     }
@@ -70,13 +79,20 @@ class SC_DataManager {
         const required = [
             "$dataInventories",
             "$dataTimeSystem",
-            "$dataSectors",
-            "$dataPlanets",
             "$dataShipMotors",
             "$dataSpaceships",
-            "$dataQuests"
+            "$dataSectors_PHYSICAL",
+            "$dataPlanets_PHYSICAL",
+            "$dataPois_PHYSICAL",
+            "$dataQuests_PHYSICAL"
         ];
-        return required.every(key => window[key] !== null && typeof window[key] !== "undefined");
+        const allLoaded = required.every(key => window[key] !== null && typeof window[key] !== "undefined");
+        if (allLoaded && !window.$dataPlanets) {
+            if (typeof SC4_Localization !== "undefined" && typeof SC4_Localization.applyToDatabase === "function") {
+                SC4_Localization.applyToDatabase();
+            }
+        }
+        return allLoaded && window.$dataPlanets !== null && typeof window.$dataPlanets !== "undefined";
     }
 
     /**

@@ -15,40 +15,25 @@ Le système de localisation de SimCraft 4 permet de traduire dynamiquement l'int
 
 ---
 
-## 📁 2. Structure des Fichiers Dictionnaires JSON
+## 📁 2. Architecture & Modularité des Fichiers (`data/SC/loc/`)
 
-Les dictionnaires sont situés dans le dossier `data/SC/` :
-- `data/SC/Localisation_FR.json` (Français)
-- `data/SC/Localisation_EN.json` (Anglais)
+L'intégralité des textes et traductions est ordonnée de façon modulaire dans le répertoire `data/SC/loc/`, assurant la séparation stricte entre données physiques/règles et données linguistiques :
 
-### Exemple de structure :
-```json
-{
-  "title": {
-    "newGame": "Débuter",
-    "continue": "Continuer",
-    "options": "Options",
-    "exit": "Quitter"
-  },
-  "menu": {
-    "item": "Objets",
-    "skill": "Compétences",
-    "equip": "Équipement",
-    "status": "Statut",
-    "save": "Sauvegarder"
-  },
-  "dialogues": {
-    "guard_intro": "Halte là, \\N[1] ! Présentez votre laissez-passer.",
-    "guard_pass": "Tout est en ordre. Circulez."
-  },
-  "items": {
-    "potion_name": "Potion de Soin",
-    "potion_desc": "Restaure \\C[2]500 PV\\C[0] immédiatement."
-  },
-  "newgame": "Débuter",
-  "item": "Objets"
-}
 ```
+data/SC/loc/
+├── UI_FR.json / UI_EN.json               # Menus, options, inventaire, termes système, Datapad
+├── DIALOGUES_FR.json / DIALOGUES_EN.json # Dialogues scénarisés, répliques PNJ (dial_1, etc.)
+├── TUTOS_FR.json / TUTOS_EN.json         # Tutoriels, briefings, aides contextuelles (tuto_1, etc.)
+├── SECTORS_FR.json / SECTORS_EN.json     # Noms et descriptions des constellations et systèmes
+├── PLANETS_FR.json / PLANETS_EN.json     # Noms, types et descriptions encyclopédiques des astres
+├── POIS_FR.json / POIS_EN.json           # Noms et descriptions des sites d'atterrissage et stations
+└── QUESTS_FR.json / QUESTS_EN.json       # Noms de missions, briefings, logs et libellés d'objectifs
+```
+
+### Fonctionnement & Fusion Automatisée :
+- `SC4_Localization` charge dynamiquement tous les sous-fichiers selon la langue active (`FR` ou `EN`) et les fusionne de manière totalement transparente.
+- Les fichiers racine `data/SC/PLANETS.json`, `SECTORS.json`, `POIS.json`, `QUESTS.json` constituent la **source physique unique** (orbites, coordonnées, liaisons, mécaniques) et ne contiennent aucun texte dupliqué.
+- **Rétrocompatibilité totale** : Les balises `\L[KEY]` continuent de fonctionner à l'identique dans le jeu, que ce soit pour les dialogues, les menus, ou les objets.
 
 ### Règles de Résolution des Clés :
 Le système supporte à la fois :

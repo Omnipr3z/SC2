@@ -1,0 +1,513 @@
+[
+  null,
+  {
+    "id": 1,
+    "name": "Ankaros Star",
+    "type": "Star",
+    "description": "Central star of the system, primary source of solar radiation and energetic flares."
+  },
+  {
+    "id": 2,
+    "name": "Warp Vortex",
+    "type": "Warp Anomaly",
+    "description": "Residual spatio-temporal rift enabling high-speed sub-space transits."
+  },
+  {
+    "id": 3,
+    "name": "Secondary Warp Vortex",
+    "type": "Warp Anomaly",
+    "description": "Fluctuating gravitational sub-space anomaly."
+  },
+  {
+    "id": 4,
+    "name": "Furia",
+    "type": "Volcanic World",
+    "description": "Hostile magmatic world rich in heavy metals and rare silicates."
+  },
+  {
+    "id": 5,
+    "name": "Ankaros Prime",
+    "type": "Hive World",
+    "description": "Main hive-world of the system, administrative seat of the Federal Governor and densely populated metropolis."
+  },
+  {
+    "id": 6,
+    "name": "Wanghek",
+    "type": "Hostile Jungle World",
+    "description": "Hostile world blanketed by dense canopy and hyper-aggressive predator fauna."
+  },
+  {
+    "id": 7,
+    "name": "Altus Station",
+    "type": "Orbital Station",
+    "description": "Federal orbital defense hub regulating freight shipping lanes over Ankaros Prime."
+  },
+  {
+    "id": 10,
+    "name": "Aethel-Sol",
+    "type": "White Star (Type A)",
+    "description": "White star with a cold bluish glare, drenching the inner system in intense UV radiation."
+  },
+  {
+    "id": 11,
+    "name": "Oros",
+    "type": "Calcined Telluric",
+    "description": "The Chemical Furnace. Tidally locked world where Elions extract heavy minerals and toxic weapon reagents."
+  },
+  {
+    "id": 12,
+    "name": "Aqua (Aelthel)",
+    "type": "Global Ocean World",
+    "description": "Original homeworld of the Elion race, 100% submerged. Features abyssal sanctums and floating hexagonal metropolises."
+  },
+  {
+    "id": 13,
+    "name": "The Nacre Belt",
+    "type": "Asteroid & Ice Belt",
+    "description": "Dense field of silicate asteroids and ice comets acting as a natural outer shield for Elion territory."
+  },
+  {
+    "id": 14,
+    "name": "Thaumas",
+    "type": "Glacial Gas Giant",
+    "description": "Glacial-blue gas giant harvested for heavy hydrogen used in Elion antigravity sub-light thrusters."
+  },
+  {
+    "id": 15,
+    "name": "Cymo",
+    "type": "Frozen Quarantine Moon",
+    "description": "Frozen moon of Thaumas under absolute quarantine, housing extreme viral and genetic biostudy facilities."
+  },
+  {
+    "id": 16,
+    "name": "The Sentinel-Ark",
+    "type": "Orbital Megastructure",
+    "description": "Majestic white and gold border outpost, the sole authorized docking port for foreign Federation vessels."
+  },
+  {
+    "id": 20,
+    "name": "G3-Mortis",
+    "type": "Dying White Dwarf",
+    "description": "Dying white dwarf surrounded by a pale accretion disk, casting sharp cold shadows over machine wrecks."
+  },
+  {
+    "id": 21,
+    "name": "Ferrum-Sub",
+    "type": "Hyperdense Telluric",
+    "description": "The Dead Furnace. Irradiated slag world where the earliest Atron mechanical chassis were forged."
+  },
+  {
+    "id": 22,
+    "name": "G3-02 Necropolis",
+    "type": "Ruined Machine World",
+    "description": "Epicenter of the Schism. Barren world covered in collapsed industrial megastructures and dormant synth nodes."
+  },
+  {
+    "id": 23,
+    "name": "K-Null",
+    "type": "Permafrost Moon",
+    "description": "Frozen permafrost moon housing classified Elion military archives from ancient wars."
+  },
+  {
+    "id": 24,
+    "name": "The Debris Belt",
+    "type": "Wreck Cemetery & Asteroids",
+    "description": "Colossal graveyard of pulverized Elion starships and deactivated Atron drone barges."
+  },
+  {
+    "id": 25,
+    "name": "Xeno-Vapor",
+    "type": "Corrosive Gas Giant",
+    "description": "Toxic sulfur and chlorine atmosphere sheltering rogue autonomous vacuum vessels."
+  },
+  {
+    "id": 26,
+    "name": "The Black Monolith",
+    "type": "Alien Monolith Structure",
+    "description": "Geometric alien megastructure erected by the Central AI before vanishing into dark silence."
+  },
+  {
+    "id": 30,
+    "name": "Arun-Ignis",
+    "type": "Yellow-White Dwarf (F8V)",
+    "description": "Hot stellar body shining brightly on a rugged, high-gravity martial border territory."
+  },
+  {
+    "id": 31,
+    "name": "Sani",
+    "type": "Arid Telluric",
+    "description": "The Blazing Steppe. Sun-baked plateaus and canyon stables where war dracons are raised."
+  },
+  {
+    "id": 32,
+    "name": "Kinbra",
+    "type": "Dense Jungle World",
+    "description": "Homeworld of the proud Yuma warriors. Immense rainforest canopies and laser lance forges."
+  },
+  {
+    "id": 33,
+    "name": "Ouro",
+    "type": "Duel Rock Moon",
+    "description": "The Challenge Rock. Arena crater where Sfergrad knights and Yuma champions engage in honorable duels."
+  },
+  {
+    "id": 34,
+    "name": "Kigasi",
+    "type": "Agrarian Telluric",
+    "description": "The Free Lands. Fertile plains and river basins feeding the fortresses of Sfergrad."
+  },
+  {
+    "id": 35,
+    "name": "Sfergrad",
+    "type": "High-G Mountain Fortress",
+    "description": "Matrix world of Sfergrad chivalric houses. Cyclopean stone fortresses, dragon hunting, and elite Legion recruits."
+  },
+  {
+    "id": 36,
+    "name": "Skal",
+    "type": "Fortified Moon",
+    "description": "Customs watchpost moon where the Terra Council levies its annual military tithe of recruits."
+  },
+  {
+    "id": 37,
+    "name": "The Dragon Belt",
+    "type": "Quartz Asteroid Belt",
+    "description": "Jagged ring of razor-sharp quartz asteroids patrolled by feudal vanguard skirmishers."
+  },
+  {
+    "id": 38,
+    "name": "The Stone Gate",
+    "type": "Feudal FTL Gateway",
+    "description": "Heavy armored jump relay connecting Arunia with Void-G3 and central Ankaros."
+  },
+  {
+    "id": 40,
+    "name": "Seren-Lux",
+    "type": "Yellow-White Star (Type F)",
+    "description": "Brilliant yellow-white star flooding the inner orbits with golden, dazzling light."
+  },
+  {
+    "id": 41,
+    "name": "Eden",
+    "type": "Tropical Pleasure World",
+    "description": "The Paradise of Sin. Luxury coral archipelagos, mega-casinos, and gilded front for the Angelus Cult."
+  },
+  {
+    "id": 42,
+    "name": "Chrysalis",
+    "type": "Orbital Ring Station",
+    "description": "High-end resort ring station and lax customs post catering to the wealthiest galactic travelers."
+  },
+  {
+    "id": 43,
+    "name": "The Remission Belt",
+    "type": "Penitential Mining Belt",
+    "description": "Iron asteroid ring where debtors and cult penitents toil under brutal thermal drilling rays."
+  },
+  {
+    "id": 44,
+    "name": "Galama",
+    "type": "Glacial Gothic World",
+    "description": "Seat of Ascension. Glacial world under eternal blizzards, covered in gothic basilicas and catacombs."
+  },
+  {
+    "id": 45,
+    "name": "Sanctum-Nox",
+    "type": "Alabaster Monastic Moon",
+    "description": "Sealed alabaster moon where Silas and the high priesthood practice esoteric nihilistic rites."
+  },
+  {
+    "id": 46,
+    "name": "The Celestial Ark",
+    "type": "Mobile Cathedral-Ark",
+    "description": "Colossal drifting ark broadcasting psycho-resonant echoes from the distant Nexus."
+  },
+  {
+    "id": 50,
+    "name": "Eliora-Prime",
+    "type": "Spore-Veiled Dwarf",
+    "description": "Dying orange dwarf choked by a thick torus of necrotic debris and drifting purple cosmic spores."
+  },
+  {
+    "id": 51,
+    "name": "Eliora-01 Scorched-Bone",
+    "type": "Hollowed Telluric",
+    "description": "Porous calcined shell of an ancient mining world devoured down to the core by insectoid swarms."
+  },
+  {
+    "id": 52,
+    "name": "Arakna Prime",
+    "type": "Living Macro-Organism",
+    "description": "The Living Planetary Beast. Organic hive-world pulsing with purple blood rivers and muscular ravines."
+  },
+  {
+    "id": 53,
+    "name": "Thorn Cordon",
+    "type": "Orbital Blockade Line",
+    "description": "Modular military fire platforms constantly burning bio-spores attempting to escape into the vacuum."
+  },
+  {
+    "id": 54,
+    "name": "Cyst-Alpha",
+    "type": "Bio-Tumor Moon",
+    "description": "Sterile moon engulfed by a massive bio-nodule used as a spore launching catapult."
+  },
+  {
+    "id": 55,
+    "name": "The Chitin Belt",
+    "type": "Chitin & Bio-Wreck Belt",
+    "description": "Asteroid field littered with acid-dissolved dreadnought hulls and giant dead bio-carapaces."
+  },
+  {
+    "id": 56,
+    "name": "Xeno-Vorax",
+    "type": "Ammonia Gas Giant",
+    "description": "Violent ammonia and sulfurous gas giant harvested by swarming bio-drones."
+  },
+  {
+    "id": 57,
+    "name": "Osteotheque",
+    "type": "Calcified Chalk Moon",
+    "description": "Chalk-white moon accumulated from millions of shed chitinous exoskeletons ejected into orbit."
+  },
+  {
+    "id": 58,
+    "name": "Fallen Gate",
+    "type": "Encrusted FTL Relay",
+    "description": "Ancient hyperlane jump gate heavily encrusted in bio-webs, held under continuous flame purge."
+  },
+  {
+    "id": 60,
+    "name": "Suro-Sol",
+    "type": "Yellow Dwarf (G2V)",
+    "description": "Stable yellow dwarf reminiscent of ancient Sol, warming the galactic diplomatic crossroads."
+  },
+  {
+    "id": 61,
+    "name": "Suro-Alpha The Crucible",
+    "type": "Scorched World & Forges",
+    "description": "Tidally locked furnace planet hosting heavy automated foundries for SAFE armor plates."
+  },
+  {
+    "id": 62,
+    "name": "Neotori Prime",
+    "type": "City-World (Ecumenopolis)",
+    "description": "Diplomatic and Trade Heart. Colossal spaceports, Council Embassies, and vast Gentech bazaar."
+  },
+  {
+    "id": 63,
+    "name": "Suro-1 Station",
+    "type": "Federal Orbital Hub",
+    "description": "Military megastructure hosting SAFE headquarters, escort docks, and cosmopolitan mercenary canteen."
+  },
+  {
+    "id": 64,
+    "name": "Concordia",
+    "type": "Ambassadors' Moon",
+    "description": "Protected lunar retreat with biodomes housing foreign dignitaries far from urban tumult."
+  },
+  {
+    "id": 65,
+    "name": "The Mytrion Belt",
+    "type": "Mytrion Mining Ring",
+    "description": "Dense asteroid ring packed with raw Mytrion veins, contested between SAFE and Saurian cartels."
+  },
+  {
+    "id": 66,
+    "name": "Gorgon",
+    "type": "Ochre & Purple Gas Giant",
+    "description": "Ochre and purple gas giant surrounded by ice rings, heavily pumped for fleet propulsion propellant."
+  },
+  {
+    "id": 67,
+    "name": "Gorgon-Mine",
+    "type": "Cryo Storage Moon",
+    "description": "Sterile moon housing subterranean cryogenic fuel reserves for the federal naval armada."
+  },
+  {
+    "id": 68,
+    "name": "Gate of Suro",
+    "type": "Sentinel Border Relay",
+    "description": "Sentinel of the Outskirts. Fortified relay controlling hyperlane navigation vectors toward Alpha-7 and Olk."
+  },
+  {
+    "id": 70,
+    "name": "The Binary Sepulcher",
+    "type": "Red Dwarf & X-Ray Pulsar",
+    "description": "Destructive binary pair of a dim red dwarf and a lethal pulsar sweeping space with hard gamma rays."
+  },
+  {
+    "id": 71,
+    "name": "Olkeris",
+    "type": "Acidic & Petrochemical World",
+    "description": "The Toxic Purgatory. Pitch-black hydrocarbon oceans, radiation rains, and spires of the decadent Black Barons."
+  },
+  {
+    "id": 72,
+    "name": "Thanatos",
+    "type": "Desolate Quarantine Moon",
+    "description": "The Abandon Watch. Silent moon broadcasting a looping obsolete Federal quarantine decree."
+  },
+  {
+    "id": 73,
+    "name": "The Soot Belt",
+    "type": "Icy Carbonaceous Ring",
+    "description": "Outer black asteroid ring where refined fuel is offloaded by cyborg crews at exorbitant rates."
+  },
+  {
+    "id": 80,
+    "name": "Nebula-Aureus",
+    "type": "White-Gold Subgiant (F5IV)",
+    "description": "Gentle white-gold star surrounded by the purple and silver shimmering filaments of a planetary nebula."
+  },
+  {
+    "id": 81,
+    "name": "Olympus Velvet",
+    "type": "Luxurious Corporate Telluric",
+    "description": "Sanctuary of Capital. Sleek black marble towers, curated archipelagos, Gentech labs, and private Saurian lounges."
+  },
+  {
+    "id": 82,
+    "name": "The Negotiation Pond",
+    "type": "Double-Ring Orbital Station",
+    "description": "Massive dual-ring station: gritty freight docks below and frenzied financial stock-trading floors above."
+  },
+  {
+    "id": 83,
+    "name": "The Debt Belt",
+    "type": "Vault Asteroid Belt",
+    "description": "Hardened platinum asteroid vaults containing classified bank registries and private industrial patents."
+  },
+  {
+    "id": 84,
+    "name": "Oikos-Major",
+    "type": "Pearlescent Gas Giant",
+    "description": "Pearlescent gas giant fueling orbital high-frequency trading server arrays."
+  },
+  {
+    "id": 85,
+    "name": "Fiscal-Silence",
+    "type": "Basalt Arbitration Moon",
+    "description": "Austere basalt moon hosting sealed private corporate tribunals between Gentech and Saurians."
+  },
+  {
+    "id": 86,
+    "name": "The Closing Buoy",
+    "type": "Customs Watchpost",
+    "description": "Slender checkpoint buoy where corporate defense frigates levy heavy transit tariffs."
+  },
+  {
+    "id": 90,
+    "name": "Alpha-7 Prime",
+    "type": "Coppery Orange Dwarf (K0V)",
+    "description": "Coppery star illuminating the political and industrial bastion of the Free Worlds."
+  },
+  {
+    "id": 91,
+    "name": "Ember-Forge",
+    "type": "Volcanic Arsenal World",
+    "description": "The Autonomous Arsenal. Nationalized basalt foundries forging guns and armor for the rebel coalition."
+  },
+  {
+    "id": 92,
+    "name": "Libertas",
+    "type": "Wooded Continental Telluric",
+    "description": "Seat of the Free Worlds Alliance. Headquarters of Karam Poulpard and haven for emancipated factions."
+  },
+  {
+    "id": 93,
+    "name": "The Assembly of Freemen",
+    "type": "Floating Orbital Senate",
+    "description": "Modular orbital parliament forging the transitional constitution of the sovereign free worlds."
+  },
+  {
+    "id": 94,
+    "name": "Bastion-Watch",
+    "type": "Republican Defense Moon",
+    "description": "Sub-orbital missile and cannon batteries guarding Libertas against Terra punitive incursions."
+  },
+  {
+    "id": 95,
+    "name": "The Broken Blockade Belt",
+    "type": "Clandestine Asteroid Belt",
+    "description": "The Logistics Ring. Shipyards converting industrial freighters into armed gunships away from SAFE radar."
+  },
+  {
+    "id": 96,
+    "name": "Cerulean",
+    "type": "Deep Blue Gas Giant",
+    "description": "Deep blue gas giant fueling the liberation fleets of the Free Worlds Alliance."
+  },
+  {
+    "id": 97,
+    "name": "Drak-Sanctuary",
+    "type": "Stasis Hospital Moon",
+    "description": "Field hospital treating afflicted Drak refugees with therapeutic care rather than coercive narcotics."
+  },
+  {
+    "id": 98,
+    "name": "The Emancipated Buoy",
+    "type": "Revolutionary Customs Buoy",
+    "description": "Frontier checkpoint delivering honorary visas and letters of marque for the rebel fleet."
+  },
+  {
+    "id": 100,
+    "name": "Grak-Ignis",
+    "type": "Rusty Red Dwarf (Late K)",
+    "description": "Volatile rusty star whose energetic flares scramble long-range communications, masking outlaws."
+  },
+  {
+    "id": 101,
+    "name": "Harass",
+    "type": "Red Sandstone Desert World",
+    "description": "World of Exile and Blood. Harsh penal refuge of exiled Draks, iron dust storms, and combat pits."
+  },
+  {
+    "id": 102,
+    "name": "Scoria",
+    "type": "Desolate Slag Moon",
+    "description": "Jury-rigged intercept radar moon tracking merchant convoys jumping through the hyperlanes."
+  },
+  {
+    "id": 103,
+    "name": "Grak's Scrapyard",
+    "type": "Mega-Scrap Field & The Maw",
+    "description": "The Tortuga of the sector. Welded cruiser hulls, gladiator pits, and Gruk salvage yards."
+  },
+  {
+    "id": 104,
+    "name": "Vorax",
+    "type": "Methane Ice Giant",
+    "description": "The Pirate Siphon. Methane ice giant whose murky storms allow outlaws to cool their thermal heat signatures."
+  },
+  {
+    "id": 105,
+    "name": "The Grudge Buoy",
+    "type": "Pirate Watchpost Buoy",
+    "description": "Improvised listening post ambushing any starship lacking the recognized corsair transponder code."
+  },
+  {
+    "id": 110,
+    "name": "Nexus-Core",
+    "type": "Ancient Eleri Stellar Core",
+    "description": "Pure energy core radiating intense cyan and emerald pulsations, beating heart of the Eleri mystery."
+  },
+  {
+    "id": 111,
+    "name": "The Ancient Nexus",
+    "type": "Primordial Eleri Megastructure",
+    "description": "Cyclopean alien structure emitting lethal defensive cyan arcs and revitalizing emerald wavefields."
+  },
+  {
+    "id": 112,
+    "name": "Ruins of the Predecessors",
+    "type": "Artifact & Obelisk Field",
+    "description": "Field of drifting ancient monoliths and ruined first-generation exploration dreadnoughts."
+  },
+  {
+    "id": 113,
+    "name": "The Void Breach",
+    "type": "Spatio-Temporal Singularity",
+    "description": "Dimensional zero-point rift radiating intuitive reality fractures and metaphysical Concordance."
+  }
+]

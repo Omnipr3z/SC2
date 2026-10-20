@@ -469,10 +469,12 @@
         if (this._nameBoxWindow) {
             this._nameBoxWindow.start();
         }
+        this.updateDialogueHuds(parsed, rawText);
     }
 
     /**
      * Ajuste dynamiquement les dimensions de la fenêtre au contenu textuel.
+     * Les facesets sont gérés par le HUD Joueur et l'Interlocuteur HUD (non dessinés dans la bulle).
      * @param {string} cleanText 
      */
     adjustBubbleSize(cleanText) {
@@ -486,18 +488,6 @@
 
         let w = size.width + pad * 2 + 16;
         let h = size.height + pad * 2 + 8;
-
-        // Support du portrait (face)
-        if (typeof $gameMessage !== "undefined" && $gameMessage.faceName && $gameMessage.faceName()) {
-            const faceW = (typeof ImageManager !== "undefined" && ImageManager.standardFaceWidth)
-                ? ImageManager.standardFaceWidth
-                : 144;
-            const faceH = (typeof ImageManager !== "undefined" && ImageManager.standardFaceHeight)
-                ? ImageManager.standardFaceHeight
-                : 144;
-            w += faceW + 16;
-            h = Math.max(h, faceH + pad * 2 + 8);
-        }
 
         const boxW = (typeof Graphics !== "undefined" && Graphics.boxWidth) ? Graphics.boxWidth : 1280;
         const boxH = (typeof Graphics !== "undefined" && Graphics.boxHeight) ? Graphics.boxHeight : 720;
@@ -517,6 +507,14 @@
         if (typeof this._refreshPauseSignArea === "function") {
             this._refreshPauseSignArea();
         }
+    }
+
+    checkToSeeIfFaceExists() {
+        return false;
+    }
+
+    drawMessageFace() {
+        // Les visages ne sont pas dessinés dans les bulles mais gérés par les HUDs dédiés
     }
 
     /**
@@ -671,12 +669,117 @@
     }
 
     /**
+     * Met à jour les HUDs selon qui parle et le faceset spécifié dans $gameMessage :
+     * - Si le joueur parle et face = "System":1 -> Aucun faceset dans le HUD interlocuteur,
+     *   mais surbrillance du HUD joueur (bordure rouge interne 2px).
+     * - Si un événement parle et face = "System":1 ->
+     *   * Événement héros -> Paperdoll face dans Sprite_InterlocutorHUD avec nom de l'acteur ou du message.
+     *   * Sinon -> rien.
+     * - Si autre faceset -> Affiché dans Sprite_InterlocutorHUD en haut à droite avec nom.
+     * - Si aucun faceset -> Masquage / désactivation des surbrillances.
+     */
+    updateDialogueHuds(parsed, rawText) {
+        const currentScene = (typeof SceneManager !== "undefined") ? SceneManager._scene : null;
+        if (!currentScene) return;
+        const playerHud = currentScene._playerHud;
+        const interlocutorHud = currentScene._interlocutorHud;
+
+        const faceName = (typeof $gameMessage !== "undefined" && $gameMessage.faceName) ? $gameMessage.faceName() : "";
+        const faceIndex = (typeof $gameMessage !== "undefined" && $gameMessage.faceIndex) ? $gameMessage.faceIndex() : 0;
+        const rawSpeakerName = (typeof $gameMessage !== "undefined" && $gameMessage.speakerName) ? $gameMessage.speakerName() : "";
+        const speakerName = (typeof SC4_Localization !== "undefined") ? SC4_Localization.parse(rawSpeakerName) : rawSpeakerName;
+
+        const leader = (typeof $gameParty !== "undefined" && $gameParty.leader) ? $gameParty.leader() : null;
+        const leaderName = leader ? (typeof leader.name === "function" ? leader.name() : leader.name) : "";
+
+        const isPlayerSpeaker = Boolean(
+            (this._mapTarget && typeof $gamePlayer !== "undefined" && this._mapTarget === $gamePlayer) ||
+            (parsed && parsed.target && typeof $gamePlayer !== "undefined" && parsed.target === $gamePlayer) ||
+            (rawText && /(?:\x1b|\\)[Aa]/.test(rawText)) ||
+            (speakerName && leaderName && speakerName.toLowerCase() === leaderName.toLowerCase()) ||
+            (typeof $gameMessage !== "undefined" && $gameMessage._speakerIsPlayer)
+        );
+
+        const isSystemFace = Boolean(faceName && faceName.toLowerCase() === "system" && faceIndex === 1);
+
+        if (faceName) {
+            if (isPlayerSpeaker) {
+                // Joueur parle
+                if (playerHud && typeof playerHud.setSpeakingHighlight === "function") {
+                    playerHud.setSpeakingHighlight(true);
+                }
+                if (interlocutorHud && typeof interlocutorHud.hideInterlocutor === "function") {
+                    interlocutorHud.hideInterlocutor();
+                }
+            } else {
+                // PNJ / Événement parle
+                if (playerHud && typeof playerHud.setSpeakingHighlight === "function") {
+                    playerHud.setSpeakingHighlight(false);
+                }
+                if (isSystemFace) {
+                    // Événement héros ?
+                    let heroActor = null;
+                    const tgt = this._mapTarget;
+                    if (tgt) {
+                        if (typeof tgt.hero === "function" && tgt.hero()) {
+                            heroActor = tgt.hero();
+                        } else if (tgt._heroActorId && typeof $gameActors !== "undefined") {
+                            heroActor = $gameActors.actor(tgt._heroActorId);
+                        } else if (tgt._actorId && typeof $gameActors !== "undefined") {
+                            heroActor = $gameActors.actor(tgt._actorId);
+                        } else if (typeof tgt.event === "function") {
+                            const evData = tgt.event();
+                            if (evData && evData.note) {
+                                const m = evData.note.match(/<Hero(?::(\d+))?>/i);
+                                if (m) {
+                                    const actId = m[1] ? parseInt(m[1], 10) : 1;
+                                    heroActor = (typeof $gameActors !== "undefined") ? $gameActors.actor(actId) : null;
+                                }
+                            }
+                        }
+                    }
+                    if (!heroActor && speakerName && typeof $gameActors !== "undefined" && $gameActors._data) {
+                        heroActor = $gameActors._data.find(a => a && typeof a.name === "function" && a.name() === speakerName);
+                    }
+
+                    if (heroActor && interlocutorHud && typeof interlocutorHud.showInterlocutor === "function") {
+                        interlocutorHud.showInterlocutor(faceName, faceIndex, speakerName, heroActor);
+                    } else if (interlocutorHud && typeof interlocutorHud.hideInterlocutor === "function") {
+                        interlocutorHud.hideInterlocutor();
+                    }
+                } else {
+                    // Faceset classique pour l'événement
+                    if (interlocutorHud && typeof interlocutorHud.showInterlocutor === "function") {
+                        interlocutorHud.showInterlocutor(faceName, faceIndex, speakerName, null);
+                    }
+                }
+            }
+        } else {
+            if (playerHud && typeof playerHud.setSpeakingHighlight === "function") {
+                playerHud.setSpeakingHighlight(false);
+            }
+            if (interlocutorHud && typeof interlocutorHud.hideInterlocutor === "function") {
+                interlocutorHud.hideInterlocutor();
+            }
+        }
+    }
+
+    /**
      * Réinitialisation lors de la fermeture du message.
      * Conserve le rect et skin de la bulle pendant la fermeture (openness > 0) pour éviter tout flash vanilla.
      */
     terminateMessage() {
         super.terminateMessage();
         this._mapTarget = null;
+        const currentScene = (typeof SceneManager !== "undefined") ? SceneManager._scene : null;
+        if (currentScene) {
+            if (currentScene._playerHud && typeof currentScene._playerHud.setSpeakingHighlight === "function") {
+                currentScene._playerHud.setSpeakingHighlight(false);
+            }
+            if (currentScene._interlocutorHud && typeof currentScene._interlocutorHud.hideInterlocutor === "function") {
+                currentScene._interlocutorHud.hideInterlocutor();
+            }
+        }
         if (this.isClosed()) {
             this._isBubbleMode = false;
             this.resetToVanillaRect();
@@ -964,6 +1067,29 @@ window.clearBubbleTarget = function() {
         SceneManager._scene._messageWindow.setMapTarget(null);
     }
 };
+
+// ============================================================================
+// Capture de l'émetteur du message dans Game_Interpreter
+// ============================================================================
+if (typeof Game_Interpreter !== "undefined") {
+    const _Game_Interpreter_command101 = Game_Interpreter.prototype.command101;
+    Game_Interpreter.prototype.command101 = function(params) {
+        if (typeof $gameMessage !== "undefined") {
+            $gameMessage._speakerEventId = this._eventId;
+            $gameMessage._speakerIsPlayer = (this._eventId === 0);
+        }
+        return _Game_Interpreter_command101.call(this, params);
+    };
+}
+
+if (typeof Window_Message !== "undefined") {
+    Window_Message.prototype.checkToSeeIfFaceExists = function() {
+        return false;
+    };
+    Window_Message.prototype.drawMessageFace = function() {
+        // Désactivé : Les visages ne sont pas dessinés dans les messages mais gérés par les HUDs dédiés
+    };
+}
 
 // ============================================================================
 // Préchargement des polices personnalisées au démarrage

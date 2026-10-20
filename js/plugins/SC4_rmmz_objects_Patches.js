@@ -1800,8 +1800,13 @@
         const _Game_System_initialize = Game_System.prototype.initialize;
         Game_System.prototype.initialize = function () {
             if (_Game_System_initialize) _Game_System_initialize.call(this);
-            this._playerHudVisible = true;
-            this._weaponHudVisible = true;
+            const p = (typeof PluginManager !== "undefined" && typeof PluginManager.parameters === "function")
+                ? PluginManager.parameters("SC4_rmmz_scenes_Patches") : {};
+            const defHud = (p && p.defaultHudVisible !== undefined) ? p.defaultHudVisible !== "false" : true;
+            const defPlayer = (p && p.defaultPlayerHud !== undefined) ? p.defaultPlayerHud !== "false" : defHud;
+            const defWeapon = (p && p.defaultWeaponHud !== undefined) ? p.defaultWeaponHud !== "false" : defHud;
+            this._playerHudVisible = defPlayer;
+            this._weaponHudVisible = defWeapon;
         };
 
         Game_System.prototype.isPlayerHudVisible = function () {

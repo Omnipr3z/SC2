@@ -1,9 +1,7 @@
 [
+  null,
   {
-    "id": 0,
-    "name": "Ankaros Star",
-    "type": "Star",
-    "description": "Étoile centrale du système, source de radiations intenses et d'énergie solaire.",
+    "id": 1,
     "x": 640,
     "y": 310,
     "zoom": 1,
@@ -25,26 +23,14 @@
         "max": 160
       }
     ],
-    "pois": [
-      {
-        "id": "ankaros_helios",
-        "name": "Station Solaire Helios",
-        "description": "Plateforme de captage d'énergie coronale et observatoire astrophysique.",
-        "icon": "poi_station",
-        "mapX": 0.52,
-        "mapY": 0.46,
-        "landingMapId": 1,
-        "landingX": 10,
-        "landingY": 10,
-        "landingEventId": 1
-      }
-    ]
+    "poiIds": [
+      "ankaros_helios"
+    ],
+    "landingAllowed": false
   },
   {
-    "id": 1,
-    "name": "Vortex Warp",
-    "type": "Warp",
-    "description": "Déchirure spatio-temporelle résiduelle permettant des transits à haute vitesse.",
+    "id": 2,
+    "interactive": false,
     "x": 1165,
     "y": 132,
     "zoom": 0.1,
@@ -66,26 +52,11 @@
         "max": 160
       }
     ],
-    "pois": [
-      {
-        "id": "warp_beacon_alpha",
-        "name": "Balise de Confinement Alpha",
-        "description": "Bouée de navigation stabilisant la déchirure dimensionnelle.",
-        "icon": "poi_beacon",
-        "mapX": 0.5,
-        "mapY": 0.48,
-        "landingMapId": 1,
-        "landingX": 10,
-        "landingY": 10,
-        "landingEventId": 1
-      }
-    ]
+    "poiIds": [],
+    "landingAllowed": false
   },
   {
-    "id": 2,
-    "name": "Vortex Warp Secondaire",
-    "type": "Warp",
-    "description": "Anomalie gravitationnelle fluctuante.",
+    "id": 3,
     "x": 1165,
     "y": 132,
     "zoom": 0.15,
@@ -107,26 +78,14 @@
         "max": 200
       }
     ],
-    "pois": [
-      {
-        "id": "warp_derelict",
-        "name": "Épave Dérivante Saint-Drusus",
-        "description": "Carcasse d'un transporteur éjecté du sous-espace il y a plusieurs décennies.",
-        "icon": "poi_wreck",
-        "mapX": 0.48,
-        "mapY": 0.52,
-        "landingMapId": 1,
-        "landingX": 10,
-        "landingY": 10,
-        "landingEventId": 1
-      }
-    ]
+    "poiIds": [
+      "warp_beacon_alpha",
+      "warp_derelict"
+    ],
+    "landingAllowed": false
   },
   {
-    "id": 3,
-    "name": "Furia",
-    "type": "Volcanic World",
-    "description": "Monde magmatique hostile riche en métaux lourds et en silicates rares.",
+    "id": 4,
     "x": 1165,
     "y": 132,
     "zoom": 0.1,
@@ -150,38 +109,14 @@
         "radiusY": 160
       }
     ],
-    "pois": [
-      {
-        "id": "furia_mine",
-        "name": "Avant-poste Minier K-14",
-        "description": "Station de forage automatisée résistant aux coulées de lave.",
-        "icon": "poi_mine",
-        "mapX": 0.42,
-        "mapY": 0.55,
-        "landingMapId": 1,
-        "landingX": 10,
-        "landingY": 15,
-        "landingEventId": 1
-      },
-      {
-        "id": "furia_caldera",
-        "name": "Observatoire Géothermique Ignis",
-        "description": "Station de surveillance des flux de magma et des activités telluriques.",
-        "icon": "poi_science",
-        "mapX": 0.6,
-        "mapY": 0.38,
-        "landingMapId": 1,
-        "landingX": 15,
-        "landingY": 12,
-        "landingEventId": 1
-      }
-    ]
+    "poiIds": [
+      "furia_mine",
+      "furia_caldera"
+    ],
+    "landingAllowed": false
   },
   {
-    "id": 4,
-    "name": "Ankaros Prime",
-    "type": "Hive World",
-    "description": "Monde-ruche principal du système, siège du Gouverneur impérial et métropole surpeuplée.",
+    "id": 5,
     "x": 350,
     "y": 240,
     "zoom": 0.2,
@@ -205,50 +140,15 @@
         "radiusY": 240
       }
     ],
-    "pois": [
-      {
-        "id": "prime_spatioport",
-        "name": "Spatioport Magellan",
-        "description": "Plateforme d'atterrissage majeure pour vaisseaux de transport et marchands.",
-        "icon": "poi_spaceport",
-        "mapX": 0.5,
-        "mapY": 0.4,
-        "landingMapId": 3,
-        "landingX": 15,
-        "landingY": 20,
-        "landingEventId": 1
-      },
-      {
-        "id": "prime_ruins",
-        "name": "Ruche Effondrée Mortis",
-        "description": "Vestiges d'une ancienne cité industrielle frappée par un cataclysme.",
-        "icon": "poi_ruins",
-        "mapX": 0.65,
-        "mapY": 0.62,
-        "landingMapId": 3,
-        "landingX": 8,
-        "landingY": 12,
-        "landingEventId": 1
-      },
-      {
-        "id": "prime_governor_spire",
-        "name": "Flèche Magistrale de l'Administratum",
-        "description": "Cœur névralgique de la bureaucratie impériale et palais du Gouverneur sous haute sécurité.",
-        "icon": "poi_palace",
-        "mapX": 0.42,
-        "mapY": 0.32,
-        "landingMapId": 3,
-        "landingX": 12,
-        "landingY": 8,
-        "landingEventId": 1
-      }
-    ]
+    "poiIds": [
+      "prime_spatioport",
+      "prime_ruins",
+      "prime_governor_spire"
+    ],
+    "landingAllowed": true
   },
   {
-    "id": 5,
-    "name": "Wanghek",
-    "type": "Hostile Jungle World",
-    "description": "Monde hostile recouvert d'une canopée dense et d'une faune prédatrice mortelle.",
+    "id": 6,
     "x": 350,
     "y": 240,
     "zoom": 0.12,
@@ -272,38 +172,14 @@
         "radiusY": 300
       }
     ],
-    "pois": [
-      {
-        "id": "wanghek_camp",
-        "name": "Campement de Recherche Valdor",
-        "description": "Camp scientifique retranché au cœur de la jungle équatoriale.",
-        "icon": "poi_camp",
-        "mapX": 0.48,
-        "mapY": 0.52,
-        "landingMapId": 1,
-        "landingX": 12,
-        "landingY": 18,
-        "landingEventId": 1
-      },
-      {
-        "id": "wanghek_xenolith",
-        "name": "Structure Xénos Oméga",
-        "description": "Monolithe énigmatique enfoui sous les strates végétales émettant des impulsions bio-acoustiques.",
-        "icon": "poi_ancient",
-        "mapX": 0.58,
-        "mapY": 0.65,
-        "landingMapId": 1,
-        "landingX": 16,
-        "landingY": 22,
-        "landingEventId": 1
-      }
-    ]
+    "poiIds": [
+      "wanghek_camp",
+      "wanghek_xenolith"
+    ],
+    "landingAllowed": false
   },
   {
-    "id": 8,
-    "name": "Station Altus",
-    "type": "Orbital Station",
-    "description": "Station de défense impériale assurant la surveillance des couloirs de fret d'Ankaros Prime.",
+    "id": 7,
     "x": 350,
     "y": 240,
     "zoom": 0.03,
@@ -313,47 +189,221 @@
         "type": "orbitPlanet",
         "value": 0.5,
         "speed": 0.0026,
-        "planetId": 4,
+        "planetId": 5,
         "radiusX": 48,
         "radiusY": 48
       }
     ],
-    "pois": [
-      {
-        "id": "altus_dock",
-        "name": "Baie d'Amarrage Alpha",
-        "description": "Sas de pressurisation principal pour l'accueil des vaisseaux de patrouille.",
-        "icon": "poi_dock",
-        "mapX": 0.5,
-        "mapY": 0.5,
-        "landingMapId": 1,
-        "landingX": 10,
-        "landingY": 10,
-        "landingEventId": 1
-      },
-      {
-        "id": "altus_auspex",
-        "name": "Matrice Auspex Longue Portée",
-        "description": "Station de surveillance radar scannant les arrivées de navires et les fluctuations Warp du secteur.",
-        "icon": "poi_radar",
-        "mapX": 0.52,
-        "mapY": 0.42,
-        "landingMapId": 1,
-        "landingX": 15,
-        "landingY": 14,
-        "landingEventId": 1
-      }
-    ]
+    "poiIds": [
+      "altus_dock",
+      "altus_auspex"
+    ],
+    "landingAllowed": false
   },
   {
     "id": 10,
-    "name": "Kalyxis Prime",
-    "type": "Desert World",
-    "description": "Monde aride balayé par des tempêtes de sable électrostatiques.",
     "x": 640,
     "y": 320,
-    "zoom": 0.16,
-    "bitmapName": "planet_4",
+    "zoom": 0.6,
+    "bitmapName": "sun_aethelgard",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.15,
+        "speed": 0.001
+      },
+      {
+        "type": "rotation",
+        "value": 0.0002
+      },
+      {
+        "type": "opacity",
+        "speed": 0.004,
+        "min": 110,
+        "max": 170
+      }
+    ],
+    "poiIds": [
+      "aethelgard_relais_sub"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 11,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.1,
+    "bitmapName": "planet_oros",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0008
+      },
+      {
+        "type": "orbit",
+        "value": 0.1,
+        "speed": 0.00018,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 250,
+        "radiusY": 140
+      }
+    ],
+    "poiIds": [
+      "oros_fonderie_zeta",
+      "oros_siphon_01"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 12,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.12,
+    "bitmapName": "planet_aqua",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0005
+      },
+      {
+        "type": "orbit",
+        "value": 0.35,
+        "speed": 0.00012,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 300,
+        "radiusY": 180
+      }
+    ],
+    "poiIds": [
+      "aqua_al_aethel",
+      "aqua_dome_elysee",
+      "aqua_complexe_genetique",
+      "aqua_spire_boreale"
+    ],
+    "landingAllowed": true
+  },
+  {
+    "id": 13,
+    "x": 1170,
+    "y": 615,
+    "zoom": 0.15,
+    "bitmapName": "belt_nacre",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0003
+      },
+      {
+        "type": "scale",
+        "value": 0.08,
+        "speed": 0.0009
+      }
+    ],
+    "poiIds": [
+      "nacre_poste_ecoute",
+      "nacre_silo_chimique"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 14,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.2,
+    "bitmapName": "planet_thaumas",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0006
+      },
+      {
+        "type": "orbit",
+        "value": 0.65,
+        "speed": 0.00007,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 420,
+        "radiusY": 230
+      }
+    ],
+    "poiIds": [
+      "thaumas_station_nebuleuse_b"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 15,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.06,
+    "bitmapName": "planet_cymo",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.4,
+        "speed": 0.00004,
+        "planetId": 14,
+        "radiusX": 580,
+        "radiusY": 280
+      }
+    ],
+    "poiIds": [
+      "cymo_sarcophage"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 16,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.08,
+    "bitmapName": "station_arche_sentinelle",
+    "moves": [
+      {
+        "type": "orbit",
+        "value": 0.85,
+        "speed": 0.00004,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 620,
+        "radiusY": 310
+      }
+    ],
+    "poiIds": [
+      "arche_quai_diplomatique"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 20,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.7,
+    "bitmapName": "sun_g3_mortis",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.1,
+        "speed": 0.001
+      },
+      {
+        "type": "rotation",
+        "value": 0.0001
+      }
+    ],
+    "poiIds": [
+      "g3_noyau_accresion"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 21,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.13,
+    "bitmapName": "planet_ferrum_sub",
     "moves": [
       {
         "type": "rotation",
@@ -362,156 +412,168 @@
       {
         "type": "orbit",
         "value": 0.2,
-        "speed": 0.00012,
+        "speed": 0.00017,
         "centerX": 640,
         "centerY": 320,
-        "radiusX": 380,
-        "radiusY": 200
+        "radiusX": 290,
+        "radiusY": 145
       }
     ],
-    "pois": [
-      {
-        "id": "kalyxis_settlement",
-        "name": "Cité-Dôme de Silice",
-        "description": "Agglomération protégée par un champ de force hermétique contre les tempêtes de sable électrostatiques.",
-        "icon": "poi_colony",
-        "mapX": 0.46,
-        "mapY": 0.54,
-        "landingMapId": 1,
-        "landingX": 10,
-        "landingY": 10,
-        "landingEventId": 1
-      },
-      {
-        "id": "kalyxis_extractor",
-        "name": "Extracteur Géothermique 7-B",
-        "description": "Puits de forage puisant dans les nappes de gaz sous la croûte aride.",
-        "icon": "poi_extractor",
-        "mapX": 0.62,
-        "mapY": 0.4,
-        "landingMapId": 1,
-        "landingX": 12,
-        "landingY": 15,
-        "landingEventId": 1
-      }
-    ]
-  },
-  {
-    "id": 11,
-    "name": "Avant-poste Kalyxis-B",
-    "type": "Asteroid Base",
-    "description": "Complexe minier creusé dans un astéroïde riche en titane.",
-    "x": 640,
-    "y": 320,
-    "zoom": 0.03,
-    "bitmapName": "ship_1",
-    "moves": [
-      {
-        "type": "orbitPlanet",
-        "value": 0.3,
-        "speed": 0.002,
-        "planetId": 10,
-        "radiusX": 60,
-        "radiusY": 60
-      }
+    "poiIds": [
+      "ferrum_excavation_alpha_zero",
+      "ferrum_dome_hauts_fourneaux"
     ],
-    "pois": [
-      {
-        "id": "kalyxis_mine_b",
-        "name": "Puits de Titane B-Prime",
-        "description": "Exploitation minière automatisée creusée au cœur du noyau ferreux de l'astéroïde.",
-        "icon": "poi_mine",
-        "mapX": 0.5,
-        "mapY": 0.5,
-        "landingMapId": 1,
-        "landingX": 10,
-        "landingY": 10,
-        "landingEventId": 1
-      }
-    ]
+    "landingAllowed": false
   },
   {
-    "id": 12,
-    "name": "Mortis Alpha",
-    "type": "Tomb World",
-    "description": "Planète sans atmosphère couverte de mégalithes antédiluviens.",
+    "id": 22,
     "x": 640,
     "y": 320,
-    "zoom": 0.18,
-    "bitmapName": "planet_5",
+    "zoom": 0.2,
+    "bitmapName": "planet_necropole",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0008
+        "value": 0.0004
       },
       {
         "type": "orbit",
-        "value": 0.8,
-        "speed": 0.00008,
+        "value": 0.45,
+        "speed": 0.00011,
         "centerX": 640,
         "centerY": 320,
-        "radiusX": 420,
-        "radiusY": 220
+        "radiusX": 400,
+        "radiusY": 200
       }
     ],
-    "pois": [
-      {
-        "id": "mortis_tomb",
-        "name": "Cité Nécropole Sans Nom",
-        "description": "Gigantesques cryptes d'obsidienne antérieures à l'Imperium, totalement silencieuses.",
-        "icon": "poi_ancient",
-        "mapX": 0.48,
-        "mapY": 0.52,
-        "landingMapId": 1,
-        "landingX": 10,
-        "landingY": 10,
-        "landingEventId": 1
-      }
-    ]
+    "poiIds": [
+      "necropole_coeur_synthese",
+      "necropole_labo_transfert",
+      "necropole_bastion_silencieux",
+      "necropole_siphon_chimique"
+    ],
+    "landingAllowed": true
   },
   {
-    "id": 13,
-    "name": "Station Relais Mortis",
-    "type": "Orbital Station",
-    "description": "Relais de communication automatisé émettant des signaux brouillés.",
+    "id": 23,
     "x": 640,
     "y": 320,
-    "zoom": 0.03,
-    "bitmapName": "ship_1",
+    "zoom": 0.05,
+    "bitmapName": "planet_knull",
     "moves": [
       {
         "type": "orbitPlanet",
-        "value": 0.1,
-        "speed": 0.003,
-        "planetId": 12,
-        "radiusX": 50,
-        "radiusY": 50
+        "value": 0.2,
+        "speed": 0.0025,
+        "planetId": 22,
+        "radiusX": 38,
+        "radiusY": 38
       }
     ],
-    "pois": [
-      {
-        "id": "mortis_relay_hub",
-        "name": "Module de Commutateur Vox",
-        "description": "Antennes relais abandonnées émettant des harmoniques fantômes à intervalles réguliers.",
-        "icon": "poi_relay",
-        "mapX": 0.5,
-        "mapY": 0.5,
-        "landingMapId": 1,
-        "landingX": 10,
-        "landingY": 10,
-        "landingEventId": 1
-      }
-    ]
+    "poiIds": [
+      "knull_cryo_banque"
+    ],
+    "landingAllowed": false
   },
   {
-    "id": 14,
-    "name": "Ophidia Prime",
-    "type": "Ice World",
-    "description": "Monde gelé abritant des enclaves de pirates dissimulées sous la calotte glaciaire.",
+    "id": 24,
     "x": 640,
     "y": 320,
-    "zoom": 0.17,
-    "bitmapName": "planet_4",
+    "zoom": 0.16,
+    "bitmapName": "belt_debris_void",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0002
+      },
+      {
+        "type": "scale",
+        "value": 0.03,
+        "speed": 0.0005
+      }
+    ],
+    "poiIds": [
+      "debris_epave_lumiere_dechue",
+      "debris_nid_moissonneurs"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 25,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.24,
+    "bitmapName": "planet_xenovapor",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0005
+      },
+      {
+        "type": "orbit",
+        "value": 0.7,
+        "speed": 0.00007,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 530,
+        "radiusY": 265
+      }
+    ],
+    "poiIds": [
+      "xenovapor_siphon_omega"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 26,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.07,
+    "bitmapName": "station_monolithe_noir",
+    "moves": [
+      {
+        "type": "orbit",
+        "value": 0.9,
+        "speed": 0.00003,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 630,
+        "radiusY": 315
+      }
+    ],
+    "poiIds": [
+      "monolithe_noyau_sync"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 30,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.8,
+    "bitmapName": "sun_arun_ignis",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.15,
+        "speed": 0.001
+      },
+      {
+        "type": "rotation",
+        "value": 0.0003
+      }
+    ],
+    "poiIds": [
+      "arunia_sentinelle_ignis"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 31,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.12,
+    "bitmapName": "planet_sani",
     "moves": [
       {
         "type": "rotation",
@@ -519,39 +581,1470 @@
       },
       {
         "type": "orbit",
-        "value": 0.4,
+        "value": 0.15,
+        "speed": 0.00017,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 270,
+        "radiusY": 135
+      }
+    ],
+    "poiIds": [
+      "sani_enclos_dracons",
+      "sani_poste_lance_rouge"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 32,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.19,
+    "bitmapName": "planet_kinbra",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0006
+      },
+      {
+        "type": "orbit",
+        "value": 0.35,
+        "speed": 0.00013,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 360,
+        "radiusY": 180
+      }
+    ],
+    "poiIds": [
+      "kinbra_enclave_pilier_jade",
+      "kinbra_forges_lances",
+      "kinbra_sanctuaire_traqueurs"
+    ],
+    "landingAllowed": true
+  },
+  {
+    "id": 33,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.05,
+    "bitmapName": "planet_ouro",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.6,
+        "speed": 0.002,
+        "planetId": 32,
+        "radiusX": 48,
+        "radiusY": 48
+      }
+    ],
+    "poiIds": [
+      "ouro_cercle_serments"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 34,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.15,
+    "bitmapName": "planet_kigasi",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0007
+      },
+      {
+        "type": "orbit",
+        "value": 0.55,
         "speed": 0.00009,
         "centerX": 640,
         "centerY": 320,
-        "radiusX": 400,
-        "radiusY": 210
+        "radiusX": 450,
+        "radiusY": 225
       }
     ],
-    "pois": [
+    "poiIds": [
+      "kigasi_silos_fraternels",
+      "kigasi_bourg_concorde"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 35,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.18,
+    "bitmapName": "planet_sfergrad",
+    "moves": [
       {
-        "id": "ophidia_pirate_den",
-        "name": "Crique des Corsaires de l'Ombre",
-        "description": "Refuge clandestin dissimulé sous une faille glaciaire de 3 kilomètres de profondeur.",
-        "icon": "poi_pirate",
-        "mapX": 0.42,
-        "mapY": 0.58,
-        "landingMapId": 1,
-        "landingX": 10,
-        "landingY": 10,
-        "landingEventId": 1
+        "type": "rotation",
+        "value": 0.0005
       },
       {
-        "id": "ophidia_ice_station",
-        "name": "Avant-poste Cryo-Thermique",
-        "description": "Station de forage de glace lourde et de purification d'eau riche en minéraux.",
-        "icon": "poi_station",
-        "mapX": 0.6,
-        "mapY": 0.45,
-        "landingMapId": 1,
-        "landingX": 10,
-        "landingY": 10,
-        "landingEventId": 1
+        "type": "orbit",
+        "value": 0.72,
+        "speed": 0.00007,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 530,
+        "radiusY": 265
       }
-    ]
+    ],
+    "poiIds": [
+      "sfergrad_karl_krag",
+      "sfergrad_serre_matricielle",
+      "sfergrad_faille_ecailles",
+      "sfergrad_donjon_casernes"
+    ],
+    "landingAllowed": true
+  },
+  {
+    "id": 36,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.06,
+    "bitmapName": "planet_skal",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.1,
+        "speed": 0.0024,
+        "planetId": 35,
+        "radiusX": 50,
+        "radiusY": 50
+      }
+    ],
+    "poiIds": [
+      "skal_bastion_peage"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 37,
+    "x": 65,
+    "y": 615,
+    "zoom": 0.15,
+    "bitmapName": "belt_dragons",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0003
+      }
+    ],
+    "poiIds": [
+      "dragons_nid_affut_kran"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 38,
+    "x": 46,
+    "y": 64,
+    "zoom": 0.08,
+    "bitmapName": "station_ecluse_pierre",
+    "moves": [
+      {
+        "type": "orbit",
+        "value": 0.92,
+        "speed": 0.00003,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 610,
+        "radiusY": 310
+      }
+    ],
+    "poiIds": [
+      "ecluse_droit_banniere"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 40,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.95,
+    "bitmapName": "sun_seren_lux",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.18,
+        "speed": 0.001
+      },
+      {
+        "type": "rotation",
+        "value": 0.0002
+      }
+    ],
+    "poiIds": [
+      "serenis_coeur_lux"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 41,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.22,
+    "bitmapName": "planet_eden",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0006
+      },
+      {
+        "type": "orbit",
+        "value": 0.2,
+        "speed": 0.00014,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 310,
+        "radiusY": 155
+      }
+    ],
+    "poiIds": [
+      "eden_archipel_or",
+      "eden_basilique_penitences",
+      "eden_atoll_abimes",
+      "eden_salons_oubli"
+    ],
+    "landingAllowed": true
+  },
+  {
+    "id": 42,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.07,
+    "bitmapName": "station_chrysalide",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.3,
+        "speed": 0.0022,
+        "planetId": 41,
+        "radiusX": 42,
+        "radiusY": 42
+      }
+    ],
+    "poiIds": [
+      "chrysalide_hub_elyseen"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 43,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.15,
+    "bitmapName": "belt_remissions",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0003
+      }
+    ],
+    "poiIds": [
+      "remissions_penitencier_expiation"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 44,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.2,
+    "bitmapName": "planet_galama",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0004
+      },
+      {
+        "type": "orbit",
+        "value": 0.6,
+        "speed": 0.00008,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 480,
+        "radiusY": 240
+      }
+    ],
+    "poiIds": [
+      "galama_metropole_angelus",
+      "galama_puits_sacrifices",
+      "galama_cryo_caves_silas",
+      "galama_spire_boreale"
+    ],
+    "landingAllowed": true
+  },
+  {
+    "id": 45,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.05,
+    "bitmapName": "planet_sanctum_nox",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.7,
+        "speed": 0.002,
+        "planetId": 44,
+        "radiusX": 38,
+        "radiusY": 38
+      }
+    ],
+    "poiIds": [
+      "sanctumnox_sanctuaire_inities"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 46,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.08,
+    "bitmapName": "station_barque_celeste",
+    "moves": [
+      {
+        "type": "orbit",
+        "value": 0.9,
+        "speed": 0.00003,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 620,
+        "radiusY": 310
+      }
+    ],
+    "poiIds": [
+      "barque_narthex_ange"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 50,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.8,
+    "bitmapName": "sun_eliora_prime",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.12,
+        "speed": 0.001
+      },
+      {
+        "type": "rotation",
+        "value": 0.0002
+      }
+    ],
+    "poiIds": [
+      "arakna_spore_relais"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 51,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.12,
+    "bitmapName": "planet_os_brule",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.001
+      },
+      {
+        "type": "orbit",
+        "value": 0.15,
+        "speed": 0.00017,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 270,
+        "radiusY": 135
+      }
+    ],
+    "poiIds": [
+      "arakna_tranchees_seches",
+      "arakna_cratere_vitrif"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 52,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.24,
+    "bitmapName": "planet_arakna_prime",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.05,
+        "speed": 0.003
+      },
+      {
+        "type": "rotation",
+        "value": 0.0003
+      },
+      {
+        "type": "orbit",
+        "value": 0.38,
+        "speed": 0.00012,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 370,
+        "radiusY": 185
+      }
+    ],
+    "poiIds": [
+      "arakna_hemisphere_cervical",
+      "arakna_vena_cava",
+      "arakna_promontoire_gris",
+      "arakna_plis_deglutition"
+    ],
+    "landingAllowed": true
+  },
+  {
+    "id": 53,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.06,
+    "bitmapName": "station_cordon_epines",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.2,
+        "speed": 0.0028,
+        "planetId": 52,
+        "radiusX": 48,
+        "radiusY": 48
+      }
+    ],
+    "poiIds": [
+      "arakna_aegis_wall",
+      "arakna_labo_vigilance"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 54,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.05,
+    "bitmapName": "planet_kyste_alpha",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.7,
+        "speed": 0.002,
+        "planetId": 52,
+        "radiusX": 36,
+        "radiusY": 36
+      }
+    ],
+    "poiIds": [
+      "arakna_kyste_cratere"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 55,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.16,
+    "bitmapName": "belt_chitine",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0003
+      }
+    ],
+    "poiIds": [
+      "arakna_charnier_flottant"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 56,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.23,
+    "bitmapName": "planet_xeno_vorax",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0006
+      },
+      {
+        "type": "orbit",
+        "value": 0.65,
+        "speed": 0.00007,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 510,
+        "radiusY": 255
+      }
+    ],
+    "poiIds": [
+      "arakna_colonne_aspiration"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 57,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.05,
+    "bitmapName": "planet_osteotheque",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.4,
+        "speed": 0.0022,
+        "planetId": 56,
+        "radiusX": 40,
+        "radiusY": 40
+      }
+    ],
+    "poiIds": [
+      "arakna_depotoir_calcifie"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 58,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.07,
+    "bitmapName": "station_porte_dechue",
+    "moves": [
+      {
+        "type": "orbit",
+        "value": 0.9,
+        "speed": 0.00003,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 620,
+        "radiusY": 310
+      }
+    ],
+    "poiIds": [
+      "arakna_balise_ftl"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 60,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.95,
+    "bitmapName": "sun_suro_sol",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.15,
+        "speed": 0.001
+      },
+      {
+        "type": "rotation",
+        "value": 0.0003
+      }
+    ],
+    "poiIds": [
+      "suro_balise_solaire"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 61,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.13,
+    "bitmapName": "planet_suro_alpha",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0009
+      },
+      {
+        "type": "orbit",
+        "value": 0.12,
+        "speed": 0.00018,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 270,
+        "radiusY": 135
+      }
+    ],
+    "poiIds": [
+      "suro_forges_sub_solaires",
+      "suro_collecteur_solaire"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 62,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.23,
+    "bitmapName": "planet_neotori_prime",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0005
+      },
+      {
+        "type": "orbit",
+        "value": 0.35,
+        "speed": 0.00013,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 370,
+        "radiusY": 185
+      }
+    ],
+    "poiIds": [
+      "neotori_palais_ambassades",
+      "neotori_grand_marche_gentech",
+      "neotori_astroport_erius",
+      "neotori_bas_fonds"
+    ],
+    "landingAllowed": true
+  },
+  {
+    "id": 63,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.05,
+    "bitmapName": "station_suro_1",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.3,
+        "speed": 0.0026,
+        "planetId": 62,
+        "radiusX": 46,
+        "radiusY": 46
+      }
+    ],
+    "poiIds": [
+      "suro1_qg_safe",
+      "suro1_cantine_mercenaires",
+      "suro1_quai_criniere"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 64,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.05,
+    "bitmapName": "planet_concordia",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.75,
+        "speed": 0.0019,
+        "planetId": 62,
+        "radiusX": 34,
+        "radiusY": 34
+      }
+    ],
+    "poiIds": [
+      "concordia_residences_consulaires"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 65,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.16,
+    "bitmapName": "belt_mytrion",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0003
+      }
+    ],
+    "poiIds": [
+      "mytrion_balance_or",
+      "mytrion_puits_federal_04"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 66,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.24,
+    "bitmapName": "planet_gorgon",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0006
+      },
+      {
+        "type": "orbit",
+        "value": 0.65,
+        "speed": 0.00007,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 520,
+        "radiusY": 260
+      }
+    ],
+    "poiIds": [
+      "gorgon_collecteur_cyclope"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 67,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.05,
+    "bitmapName": "planet_gorgon_mine",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.4,
+        "speed": 0.0022,
+        "planetId": 66,
+        "radiusX": 42,
+        "radiusY": 42
+      }
+    ],
+    "poiIds": [
+      "gorgon_depot_cryo"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 68,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.07,
+    "bitmapName": "station_porte_suro",
+    "moves": [
+      {
+        "type": "orbit",
+        "value": 0.88,
+        "speed": 0.00003,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 630,
+        "radiusY": 315
+      }
+    ],
+    "poiIds": [
+      "suro_balise_ftl"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 70,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.8,
+    "bitmapName": "sun_sepulcre_binaire",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.12,
+        "speed": 0.002
+      },
+      {
+        "type": "rotation",
+        "value": 0.002
+      }
+    ],
+    "poiIds": [
+      "olk_relais_pulsar"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 71,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.22,
+    "bitmapName": "planet_olkeris",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0005
+      },
+      {
+        "type": "orbit",
+        "value": 0.3,
+        "speed": 0.00014,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 360,
+        "radiusY": 180
+      }
+    ],
+    "poiIds": [
+      "olkeris_spire_pales_epines",
+      "olkeris_puits_poix_noire",
+      "olkeris_lazaret_mutes",
+      "olkeris_docks_sang_noir"
+    ],
+    "landingAllowed": true
+  },
+  {
+    "id": 72,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.05,
+    "bitmapName": "planet_thanatos",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.5,
+        "speed": 0.0024,
+        "planetId": 71,
+        "radiusX": 40,
+        "radiusY": 40
+      }
+    ],
+    "poiIds": [
+      "thanatos_balise_quarantaine"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 73,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.16,
+    "bitmapName": "belt_suie",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0003
+      }
+    ],
+    "poiIds": [
+      "suie_bouee_sarcophage"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 80,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.9,
+    "bitmapName": "sun_nebula_aureus",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.14,
+        "speed": 0.001
+      },
+      {
+        "type": "rotation",
+        "value": 0.0002
+      }
+    ],
+    "poiIds": [
+      "nebula_balise_spectre"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 81,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.22,
+    "bitmapName": "planet_olympus_velvet",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0005
+      },
+      {
+        "type": "orbit",
+        "value": 0.25,
+        "speed": 0.00013,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 350,
+        "radiusY": 175
+      }
+    ],
+    "poiIds": [
+      "olympus_tour_helix_aura",
+      "olympus_pavillon_balance_ambre",
+      "olympus_atrium_beaux_arts",
+      "olympus_residences_belvedere"
+    ],
+    "landingAllowed": true
+  },
+  {
+    "id": 82,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.06,
+    "bitmapName": "station_etang_negoces",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.2,
+        "speed": 0.0026,
+        "planetId": 81,
+        "radiusX": 46,
+        "radiusY": 46
+      }
+    ],
+    "poiIds": [
+      "etang_docks_bruts",
+      "etang_bourse_bunker",
+      "etang_sas_taxnet"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 83,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.15,
+    "bitmapName": "belt_creances",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0003
+      }
+    ],
+    "poiIds": [
+      "creances_titan_vault"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 84,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.23,
+    "bitmapName": "planet_oikos_major",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0005
+      },
+      {
+        "type": "orbit",
+        "value": 0.6,
+        "speed": 0.00008,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 490,
+        "radiusY": 245
+      }
+    ],
+    "poiIds": [
+      "oikos_nectar_iv"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 85,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.05,
+    "bitmapName": "planet_silence_fiscal",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.5,
+        "speed": 0.002,
+        "planetId": 84,
+        "radiusX": 38,
+        "radiusY": 38
+      }
+    ],
+    "poiIds": [
+      "silence_tribunal_arbitrage"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 86,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.07,
+    "bitmapName": "station_bouee_cloture",
+    "moves": [
+      {
+        "type": "orbit",
+        "value": 0.88,
+        "speed": 0.00003,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 620,
+        "radiusY": 310
+      }
+    ],
+    "poiIds": [
+      "cloture_sas_agrement"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 90,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.88,
+    "bitmapName": "sun_alpha7_prime",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.15,
+        "speed": 0.001
+      },
+      {
+        "type": "rotation",
+        "value": 0.0003
+      }
+    ],
+    "poiIds": [
+      "alpha7_relais_cuivre"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 91,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.13,
+    "bitmapName": "planet_forge_braises",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0009
+      },
+      {
+        "type": "orbit",
+        "value": 0.15,
+        "speed": 0.00017,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 280,
+        "radiusY": 140
+      }
+    ],
+    "poiIds": [
+      "forge_acieries_populaires",
+      "forge_batterie_briseur"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 92,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.22,
+    "bitmapName": "planet_libertas",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0005
+      },
+      {
+        "type": "orbit",
+        "value": 0.35,
+        "speed": 0.00013,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 370,
+        "radiusY": 185
+      }
+    ],
+    "poiIds": [
+      "libertas_hotel_directoire",
+      "libertas_aerodrome_fraternel",
+      "libertas_enclave_draks",
+      "libertas_antennes_aurelia"
+    ],
+    "landingAllowed": true
+  },
+  {
+    "id": 93,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.06,
+    "bitmapName": "station_assemblee_libres",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.25,
+        "speed": 0.0025,
+        "planetId": 92,
+        "radiusX": 44,
+        "radiusY": 44
+      }
+    ],
+    "poiIds": [
+      "assemblee_hemicycle_concorde"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 94,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.05,
+    "bitmapName": "planet_bastion_vigie",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.7,
+        "speed": 0.002,
+        "planetId": 92,
+        "radiusX": 34,
+        "radiusY": 34
+      }
+    ],
+    "poiIds": [
+      "bastion_sentinelle_7"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 95,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.16,
+    "bitmapName": "belt_blocus_rompu",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0003
+      }
+    ],
+    "poiIds": [
+      "blocus_docks_emancipation",
+      "blocus_comptoir_parias"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 96,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.23,
+    "bitmapName": "planet_ceruleen",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0005
+      },
+      {
+        "type": "orbit",
+        "value": 0.65,
+        "speed": 0.00007,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 500,
+        "radiusY": 250
+      }
+    ],
+    "poiIds": [
+      "ceruleen_siphon_fraternel"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 97,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.05,
+    "bitmapName": "planet_sanctuaire_drak",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.45,
+        "speed": 0.0022,
+        "planetId": 96,
+        "radiusX": 40,
+        "radiusY": 40
+      }
+    ],
+    "poiIds": [
+      "sanctuaire_complexe_stase"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 98,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.07,
+    "bitmapName": "station_bouee_emancipee",
+    "moves": [
+      {
+        "type": "orbit",
+        "value": 0.88,
+        "speed": 0.00003,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 620,
+        "radiusY": 310
+      }
+    ],
+    "poiIds": [
+      "bouee_enregistrement_alliance"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 100,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.85,
+    "bitmapName": "sun_grak_ignis",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.15,
+        "speed": 0.001
+      },
+      {
+        "type": "rotation",
+        "value": 0.0004
+      }
+    ],
+    "poiIds": [
+      "grak_balise_rouille"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 101,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.2,
+    "bitmapName": "planet_harass",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0008
+      },
+      {
+        "type": "orbit",
+        "value": 0.18,
+        "speed": 0.00016,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 290,
+        "radiusY": 145
+      }
+    ],
+    "poiIds": [
+      "harass_camp_chaines_brisees",
+      "harass_monastere_volonte_pure",
+      "harass_spatioport_bouche_seche",
+      "harass_fosses_entrainement"
+    ],
+    "landingAllowed": true
+  },
+  {
+    "id": 102,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.05,
+    "bitmapName": "planet_scorie",
+    "moves": [
+      {
+        "type": "orbitPlanet",
+        "value": 0.5,
+        "speed": 0.0022,
+        "planetId": 101,
+        "radiusX": 38,
+        "radiusY": 38
+      }
+    ],
+    "poiIds": [
+      "scorie_balise_interception"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 103,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.25,
+    "bitmapName": "belt_depotoir_grak",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0002
+      },
+      {
+        "type": "scale",
+        "value": 0.04,
+        "speed": 0.0006
+      }
+    ],
+    "poiIds": [
+      "depotoir_maw",
+      "depotoir_dents_dragon",
+      "depotoir_chantier_gruks"
+    ],
+    "landingAllowed": true
+  },
+  {
+    "id": 104,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.22,
+    "bitmapName": "planet_vorax",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0006
+      },
+      {
+        "type": "orbit",
+        "value": 0.6,
+        "speed": 0.00008,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 490,
+        "radiusY": 245
+      }
+    ],
+    "poiIds": [
+      "vorax_station_sangsue"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 105,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.07,
+    "bitmapName": "station_bouee_rancune",
+    "moves": [
+      {
+        "type": "orbit",
+        "value": 0.88,
+        "speed": 0.00003,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 620,
+        "radiusY": 310
+      }
+    ],
+    "poiIds": [
+      "rancune_nid_guet"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 110,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.85,
+    "bitmapName": "sun_nexus_core",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.2,
+        "speed": 0.002
+      },
+      {
+        "type": "rotation",
+        "value": 0.0005
+      },
+      {
+        "type": "opacity",
+        "speed": 0.008,
+        "min": 120,
+        "max": 200
+      }
+    ],
+    "poiIds": [
+      "nexus_onde_primordiale"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 111,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.25,
+    "bitmapName": "station_nexus_ancien",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0003
+      },
+      {
+        "type": "orbit",
+        "value": 0.3,
+        "speed": 0.00012,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 350,
+        "radiusY": 175
+      }
+    ],
+    "poiIds": [
+      "nexus_sanctuaire_origines",
+      "nexus_anneau_confinement",
+      "nexus_recepteur_onde"
+    ],
+    "landingAllowed": true
+  },
+  {
+    "id": 112,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.17,
+    "bitmapName": "belt_ruines_elerys",
+    "moves": [
+      {
+        "type": "rotation",
+        "value": 0.0002
+      }
+    ],
+    "poiIds": [
+      "nexus_obelisque_resonance",
+      "nexus_cimetiere_premiere_coalition"
+    ],
+    "landingAllowed": false
+  },
+  {
+    "id": 113,
+    "x": 640,
+    "y": 320,
+    "zoom": 0.12,
+    "bitmapName": "singularity_breche_vide",
+    "moves": [
+      {
+        "type": "scale",
+        "value": 0.1,
+        "speed": 0.003
+      },
+      {
+        "type": "rotation",
+        "value": 0.02
+      },
+      {
+        "type": "orbit",
+        "value": 0.75,
+        "speed": 0.00006,
+        "centerX": 640,
+        "centerY": 320,
+        "radiusX": 520,
+        "radiusY": 260
+      }
+    ],
+    "poiIds": [
+      "nexus_point_zero"
+    ],
+    "landingAllowed": false
   }
 ]

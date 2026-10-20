@@ -1,0 +1,513 @@
+[
+  null,
+  {
+    "id": 1,
+    "name": "Ankaros Star",
+    "type": "Étoile",
+    "description": "Étoile centrale du système, source de radiations intenses et d'énergie solaire."
+  },
+  {
+    "id": 2,
+    "name": "Vortex Warp",
+    "type": "Anomalie Warp",
+    "description": "Déchirure spatio-temporelle résiduelle permettant des transits à haute vitesse."
+  },
+  {
+    "id": 3,
+    "name": "Vortex Warp Secondaire",
+    "type": "Anomalie Warp",
+    "description": "Anomalie gravitationnelle fluctuante."
+  },
+  {
+    "id": 4,
+    "name": "Furia",
+    "type": "Monde Volcanique",
+    "description": "Monde magmatique hostile riche en métaux lourds et en silicates rares."
+  },
+  {
+    "id": 5,
+    "name": "Ankaros Prime",
+    "type": "Monde-Ruche",
+    "description": "Monde-ruche principal du système, siège du Gouverneur fédéral et métropole surpeuplée."
+  },
+  {
+    "id": 6,
+    "name": "Wanghek",
+    "type": "Monde Jungle Hostile",
+    "description": "Monde hostile recouvert d'une canopée dense et d'une faune prédatrice mortelle."
+  },
+  {
+    "id": 7,
+    "name": "Station Altus",
+    "type": "Station Orbitale",
+    "description": "Station de défense fédérale assurant la surveillance des couloirs de fret d'Ankaros Prime."
+  },
+  {
+    "id": 10,
+    "name": "Aethel-Sol",
+    "type": "Étoile Blanche (Type A)",
+    "description": "Étoile blanche à l'éclat froid et bleuté, baignant le système dans un rayonnement UV intense."
+  },
+  {
+    "id": 11,
+    "name": "Oros",
+    "type": "Tellurique Calcinée",
+    "description": "Le Fourneau Chimique. Monde verrouillé par les marées où les Elions extraient terres rares et composés toxiques."
+  },
+  {
+    "id": 12,
+    "name": "Aqua (Aelthel)",
+    "type": "Monde Océanique Total",
+    "description": "Monde matrice 100% submergé de la race Elionne. Cités sous-marines et métropoles hexagonales flottantes."
+  },
+  {
+    "id": 13,
+    "name": "La Ceinture de Nacre",
+    "type": "Ceinture d'Astéroïdes & Glace",
+    "description": "Champ dense d'astéroïdes silicatés et comètes de glace servant de rempart défensif naturel aux Elions."
+  },
+  {
+    "id": 14,
+    "name": "Thaumas",
+    "type": "Géante Gazeuse Glacier",
+    "description": "Géante gazeuse aux reflets bleus polaires, pompée pour son hydrogène lourd servant aux propulseurs antigrav."
+  },
+  {
+    "id": 15,
+    "name": "Cymo",
+    "type": "Lune Gelée de Quarantaine",
+    "description": "Lune de glace de Thaumas en quarantaine absolue, abritant des laboratoires de pathogènes extrêmes."
+  },
+  {
+    "id": 16,
+    "name": "L'Arche-Sentinelle",
+    "type": "Mégastructure Orbitale",
+    "description": "Avant-poste frontalier majestueux blanc et or, unique point d'amarrage autorisé aux vaisseaux étrangers."
+  },
+  {
+    "id": 20,
+    "name": "G3-Mortis",
+    "type": "Naine Blanche Mourante",
+    "description": "Cadavre stellaire entouré d'un disque d'accrétion livide, projetant des ombres froides sur les ruines mécaniques."
+  },
+  {
+    "id": 21,
+    "name": "Ferrum-Sub",
+    "type": "Tellurique Hyperdense",
+    "description": "Le Fourneau Mort. Monde de scories irradié où étaient forgés les premiers châssis Atrons."
+  },
+  {
+    "id": 22,
+    "name": "G3-02 Nécropole",
+    "type": "Monde-Machine Ruiné",
+    "description": "L'Épicentre du Schisme. Monde stérile couvert de mégastructures effondrées et bastion de la résistance synthétique."
+  },
+  {
+    "id": 23,
+    "name": "K-Null",
+    "type": "Lune de Pergélisol",
+    "description": "Lune glacée abritant les archives militaires elionnes datant des guerres antiques."
+  },
+  {
+    "id": 24,
+    "name": "La Ceinture des Débris",
+    "type": "Cimetière d'Épaves & Astéroïdes",
+    "description": "Champ colossal d'épaves de destroyers elions et de barges atroniques désactivées."
+  },
+  {
+    "id": 25,
+    "name": "Xeno-Vapor",
+    "type": "Géante Gazeuse Corrosive",
+    "description": "Atmosphère sulfurique toxique où patrouillent encore des sous-marins du vide automatisés."
+  },
+  {
+    "id": 26,
+    "name": "Le Monolithe Noir",
+    "type": "Mégastructure Nécronide",
+    "description": "Antenne interstellaire géométrique érigée par l'IA Centrale avant sa mise en sommeil."
+  },
+  {
+    "id": 30,
+    "name": "Arun-Ignis",
+    "type": "Naine Blanc-Jaune (F8V)",
+    "description": "Étoile chaude éclairant un système rustique, martial et minéral à forte gravité."
+  },
+  {
+    "id": 31,
+    "name": "Sani",
+    "type": "Tellurique Aride",
+    "description": "La Steppe Ardente. Steppes jaunies et canyons où sont dressés les sauriens de guerre des clans Yuma."
+  },
+  {
+    "id": 32,
+    "name": "Kinbra",
+    "type": "Monde Jungle Sauvage",
+    "description": "Monde matrice du fier peuple Yuma. Canopées millénaires et sanctuaires de guerriers aux lances laser."
+  },
+  {
+    "id": 33,
+    "name": "Ouro",
+    "type": "Lune de Duel",
+    "description": "Le Roc du Défi. Arène rituelle où chevaliers de Sfergrad et champions Yuma s'affrontent en combat singulier."
+  },
+  {
+    "id": 34,
+    "name": "Kigasi",
+    "type": "Tellurique Agraire",
+    "description": "Les Terres Franches. Plaines fertiles cultivées en commun par les vétérans des Maisons de Sfergrad."
+  },
+  {
+    "id": 35,
+    "name": "Sfergrad",
+    "type": "Bastion Montagneux (1.4G)",
+    "description": "Monde matrice des chevaliers Sfergrads. Châteaux de basalte, bêtes carnassières titanesques et tribut pour la Légion."
+  },
+  {
+    "id": 36,
+    "name": "Skal",
+    "type": "Lune Fortifiée",
+    "description": "Bastion-péage douanier où la Fédération vient embarquer le contingent militaire annuel de Sfergrad."
+  },
+  {
+    "id": 37,
+    "name": "La Ceinture des Dragons",
+    "type": "Ceinture d'Astéroïdes de Quartz",
+    "description": "Anneau d'astéroïdes tranchants et nids de charognards sillonnés par les patrouilleurs féodaux."
+  },
+  {
+    "id": 38,
+    "name": "L'Écluse de Pierre",
+    "type": "Relais FTL Féodal",
+    "description": "Porte de saut massive liant Arunia à Void-G3 et Ankaros sous les bannières conjointes Sfergrad/Yuma."
+  },
+  {
+    "id": 40,
+    "name": "Seren-Lux",
+    "type": "Étoile Jaune-Blanche (Type F)",
+    "description": "Étoile éclatante baignant les mondes intérieurs d'une clarté idyllique et dorée."
+  },
+  {
+    "id": 41,
+    "name": "Eden",
+    "type": "Monde Océanique Tropical",
+    "description": "Le Paradis du Péché. Archipels de luxe, casinos démesurés et vitrine dorée du Culte d'Angelus."
+  },
+  {
+    "id": 42,
+    "name": "Chrysalide",
+    "type": "Station-Anneau Orbitale",
+    "description": "Anneau de plaisance haut de gamme et douane complaisante filtrant les fortunes arrivant sur Eden."
+  },
+  {
+    "id": 43,
+    "name": "La Ceinture des Rémissions",
+    "type": "Anneau Minier Pénitentiaire",
+    "description": "Astéroïdes forés où les débiteurs et pénitents du Culte extraient les minerais sous lasers thermiques."
+  },
+  {
+    "id": 44,
+    "name": "Galama",
+    "type": "Tellurique Glaciaire Gothique",
+    "description": "Le Siège de l'Ascension. Monde glacé sous les blizzards, hérissé de cathédrales et nécropoles du Culte."
+  },
+  {
+    "id": 45,
+    "name": "Sanctum-Nox",
+    "type": "Lune Monastique d'Albâtre",
+    "description": "Lune de silence scellée où Silas et les archiprêtres accomplissent leurs transes mystiques secrètes."
+  },
+  {
+    "id": 46,
+    "name": "La Barque Céleste",
+    "type": "Vaisseau-Cathédrale Mobile",
+    "description": "Mégastructure dérivante aux confins du système captant et relayant l'Onde du Nexus."
+  },
+  {
+    "id": 50,
+    "name": "Eliora-Prime",
+    "type": "Naine Voilée de Spores",
+    "description": "Étoile orangée mourante voilée par un anneau de débris nécrotiques et de spores cosmiques pourpres."
+  },
+  {
+    "id": 51,
+    "name": "Eliora-01 L'Os-Brûlé",
+    "type": "Tellurique Dévorée",
+    "description": "Monde rocheux calcaire entièrement perforé et sucé jusqu'à la moelle par la ruche."
+  },
+  {
+    "id": 52,
+    "name": "Arakna Prime",
+    "type": "Macro-Organisme Vivant",
+    "description": "La Bête Planétaire. Monde-ruche organique pulsant de chair violette, de sang nutritif et de Léviathans."
+  },
+  {
+    "id": 53,
+    "name": "Cordon d'Épines",
+    "type": "Ligne de Blocus Orbitale",
+    "description": "Réseau de plateformes d'incinération fédérales tirant au plasma pour confiner les essaims."
+  },
+  {
+    "id": 54,
+    "name": "Kyste-Alpha",
+    "type": "Lune Tumeur Biologique",
+    "description": "Lune stérile recouverte d'un nodule boursouflé servant de rampe de lancement biologique."
+  },
+  {
+    "id": 55,
+    "name": "La Ceinture de Chitine",
+    "type": "Cimetière Biologique & Épaves",
+    "description": "Champ d'astéroïdes jonché de carapaces d'organismes stellaires géants et d'épaves corrodées."
+  },
+  {
+    "id": 56,
+    "name": "Xéno-Vorax",
+    "type": "Géante d'Ammoniac",
+    "description": "Atmosphère suffocante d'ammoniac et de vapeurs organiques pompée par les Léviathans d'assaut."
+  },
+  {
+    "id": 57,
+    "name": "Ostéothèque",
+    "type": "Lune Calcifiée Blanche",
+    "description": "Lune blanche de craie formée par l'accumulation de millions de mues de carapaces de chitine."
+  },
+  {
+    "id": 58,
+    "name": "Porte Déchue",
+    "type": "Relais FTL Encroûté",
+    "description": "Relais FTL antique partiellement encroûté de toile biologique et défendu par la Légion."
+  },
+  {
+    "id": 60,
+    "name": "Suro-Sol",
+    "type": "Naine Jaune (G2V)",
+    "description": "Étoile semblable au Soleil de Terra offrant une zone habitable stable propice au carrefour galactique."
+  },
+  {
+    "id": 61,
+    "name": "Suro-Alpha Le Creuset",
+    "type": "Tellurique Calcinée & Forges",
+    "description": "Monde rocheux calciné sous les feux solaires, creusé d'immenses forges automatisées pour le blindage SAFE."
+  },
+  {
+    "id": 62,
+    "name": "Neotori Prime",
+    "type": "Monde-Cité (Œcuménopole)",
+    "description": "Le Cœur Diplomatique & Commercial. Spatioports démesurés, Palais des Ambassades et bazar corporatiste Gentech."
+  },
+  {
+    "id": 63,
+    "name": "Station Suro-1",
+    "type": "Hub Orbital Fédéral",
+    "description": "Mégastructure militaire abritant le QG SAFE, les docks d'escorte et la cantine des mercenaires."
+  },
+  {
+    "id": 64,
+    "name": "Concordia",
+    "type": "Lune des Ambassadeurs",
+    "description": "Lune préservée sous dômes où résident les consuls étrangers à l'écart des foules de Neotori."
+  },
+  {
+    "id": 65,
+    "name": "La Ceinture de Mytrion",
+    "type": "Anneau Minier de Mytrion",
+    "description": "Anneau d'astéroïdes très riche en Mytrion brut, disputé entre mineurs fédéraux et cartels saurions."
+  },
+  {
+    "id": 66,
+    "name": "Gorgon",
+    "type": "Géante Gazeuse Ocre & Pourpre",
+    "description": "Géante gazeuse cernée d'anneaux de glace servant de réserve atmosphérique de carburant pour la flotte."
+  },
+  {
+    "id": 67,
+    "name": "Gorgon-Mine",
+    "type": "Lune de Stockage Cryogénique",
+    "description": "Lune stérile abritant les immenses cuves cryogéniques automatisées de la flotte fédérale."
+  },
+  {
+    "id": 68,
+    "name": "Porte de Suro",
+    "type": "Station-Relais Sentinelle",
+    "description": "La Sentinelle des Confins. Relais fortifié contrôlant le trafic FTL vers Alpha-7, Olk et Serenis."
+  },
+  {
+    "id": 70,
+    "name": "Le Sépulcre Binaire",
+    "type": "Naine Rouge & Pulsar X",
+    "description": "Tandem destructeur d'une naine rouge froide et d'un pulsar balayant le système de rayons gamma."
+  },
+  {
+    "id": 71,
+    "name": "Olkeris",
+    "type": "Tellurique Acide & Pétrochimique",
+    "description": "Le Purgatoire Toxique. Océans de poix noire, pluies radioactives et flèches gothiques des Barons Noirs."
+  },
+  {
+    "id": 72,
+    "name": "Thanatos",
+    "type": "Lune de Quarantaine Déserte",
+    "description": "Le Guet d'Abandon. Lune balayée de parasites diffusant en boucle l'interdiction de séjour de la Fédération."
+  },
+  {
+    "id": 73,
+    "name": "La Ceinture de Suie",
+    "type": "Anneau Carboné Glacé",
+    "description": "Anneau d'astéroïdes d'encre noire où le carburant raffiné d'Olkeris est vendu à prix d'or par des cyborgs."
+  },
+  {
+    "id": 80,
+    "name": "Nebula-Aureus",
+    "type": "Sous-Géante Blanc-Doré (F5IV)",
+    "description": "Étoile noble nimbée des volutes d'une nébuleuse planétaire pourpre et argentée."
+  },
+  {
+    "id": 81,
+    "name": "Olympus Velvet",
+    "type": "Tellurique Luxuriant Corporatiste",
+    "description": "Le Sanctuaire du Capital. Parcs géométriques, marbre noir, spires de brevets Gentech et suites sauriennes."
+  },
+  {
+    "id": 82,
+    "name": "L'Étang-des-Négoces",
+    "type": "Station Orbitale Double-Anneau",
+    "description": "Mégastructure à double anneau : docks bruts et manutention au fond, ruche de traders et gratte-papiers au sommet."
+  },
+  {
+    "id": 83,
+    "name": "La Ceinture des Créances",
+    "type": "Champ d'Astéroïdes Coffres-Forts",
+    "description": "Astéroïdes de platine blindés et forés pour abriter les archives financières occultes des cartels."
+  },
+  {
+    "id": 84,
+    "name": "Oikos-Major",
+    "type": "Géante Gazeuse Nacrée",
+    "description": "Géante aux volutes nacrées alimentant les serveurs de la bourse orbitale en énergie propre."
+  },
+  {
+    "id": 85,
+    "name": "Silence-Fiscal",
+    "type": "Lune de Basalte Arbitrale",
+    "description": "Lune stérile abritant les tribunaux d'arbitrage corporatifs secrets entre Gentech et les Saurions."
+  },
+  {
+    "id": 86,
+    "name": "La Bouée de Clôture",
+    "type": "Station-Vigie Douanière",
+    "description": "Écluse de contrôle effilée où les patrouilles privées corporatives taxent tout navire franchissant le vecteur."
+  },
+  {
+    "id": 90,
+    "name": "Alpha-7 Prime",
+    "type": "Naine Jaune-Orangée (K0V)",
+    "description": "Étoile au spectre cuivré éclairant le carrefour insurrectionnel de la Rébellion."
+  },
+  {
+    "id": 91,
+    "name": "Forge-Braises",
+    "type": "Tellurique Volcanique & Arsenal",
+    "description": "L'Arsenal Autonome. Fonderies populaires nationalisées coulant le blindage de la flotte dissidente."
+  },
+  {
+    "id": 92,
+    "name": "Libertas",
+    "type": "Tellurique Continental Boisé",
+    "description": "Le Siège de l'Alliance des Mondes Libres. Cœur politique de Karam Poulpard et ambassades insurgées."
+  },
+  {
+    "id": 93,
+    "name": "L'Assemblée des Libres",
+    "type": "Sénat Flottant Orbital",
+    "description": "Station spatiale modulaire servant de parlement transitoire pour forger la constitution républicaine."
+  },
+  {
+    "id": 94,
+    "name": "Bastion-Vigie",
+    "type": "Lune de Défense Républicaine",
+    "description": "Silos de canons et torpilleurs sub-orbitaux prêts à repousser toute incursion de la flotte fédérale."
+  },
+  {
+    "id": 95,
+    "name": "La Ceinture du Blocus Rompu",
+    "type": "Champ d'Astéroïdes Clandestin",
+    "description": "L'Anneau Logistique. Docks de conversion et marché libre à l'abri des sondes espionnes de la SAFE."
+  },
+  {
+    "id": 96,
+    "name": "Céruléen",
+    "type": "Géante Gazeuse Bleue",
+    "description": "Géante bleue fournissant le carburant de la flotte de libération de Karam Poulpard."
+  },
+  {
+    "id": 97,
+    "name": "Sanctuaire-Drak",
+    "type": "Lune Hôpital de Stase",
+    "description": "Hôpital de campagne géant où des médecins soignent les crises de Rage Drak sans drogues d'asservissement."
+  },
+  {
+    "id": 98,
+    "name": "La Bouée Émancipée",
+    "type": "Douane Révolutionnaire",
+    "description": "Poste de contrôle frontière où sont délivrées les lettres de marque et visas de l'Alliance."
+  },
+  {
+    "id": 100,
+    "name": "Grak-Ignis",
+    "type": "Naine Rouge Rouillée (K Tardif)",
+    "description": "Étoile aux éruptions chromosphériques parasitantes masquant les repaires hors-la-loi."
+  },
+  {
+    "id": 101,
+    "name": "Harass",
+    "type": "Tellurique Désertique Grès Rouge",
+    "description": "Le Monde de l'Exil et du Sang. Bagne involontaire des Draks bannis, tempêtes de fer et arènes de combat."
+  },
+  {
+    "id": 102,
+    "name": "Scorie",
+    "type": "Lune Tellurique Désolée",
+    "description": "Radar pirate bricolé pointé sur les couloirs de saut pour chronométrer les raids de corsaires."
+  },
+  {
+    "id": 103,
+    "name": "Le Dépotoir de Grak",
+    "type": "Champ de Ferraille & Mégastructures",
+    "description": "La Tortuga du secteur. Croiseurs soudés en forteresses, arènes de sang et chantiers de ferrailleurs Gruks."
+  },
+  {
+    "id": 104,
+    "name": "Vorax",
+    "type": "Géante de Glace & Méthane",
+    "description": "La Pompe Pirate. Géante verdâtre dont les brumes permettent aux pillards de purger leurs signatures thermiques."
+  },
+  {
+    "id": 105,
+    "name": "La Bouée de la Rancune",
+    "type": "Avant-Poste Vigie Pirate",
+    "description": "Nid de guet rudimentaire déclenchant des embuscades sur les navires sans code de reconnaissance."
+  },
+  {
+    "id": 110,
+    "name": "Nexus-Core",
+    "type": "Noyau Stellaire Eleri",
+    "description": "Source d'énergie pure pulsant de teintes néon bleutées et émeraudes, cœur secret de l'édifice."
+  },
+  {
+    "id": 111,
+    "name": "Le Nexus Ancien",
+    "type": "Mégastructure Primordiale Eleri",
+    "description": "Construction cyclopéenne protégée de faisceaux bleutés létaux et d'ondes verdâtres régénératrices."
+  },
+  {
+    "id": 112,
+    "name": "Les Ruines des Prédécesseurs",
+    "type": "Champ d'Artefacts & Obélisques",
+    "description": "Cimetière d'anciennes armadas et obélisques géométriques flottant en résonance harmonique."
+  },
+  {
+    "id": 113,
+    "name": "La Brèche du Vide",
+    "type": "Singularité Spatio-Temporelle",
+    "description": "Point Zéro Dimensionnel d'où émanent les flux d'aberration intuitive et la Concordance."
+  }
+]

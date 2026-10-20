@@ -1,0 +1,11 @@
+{
+  "tuto_1": "Enfiler votre equipement accedant à votre inventaire.\nbouton en haut ou touche 0num du clavier",
+  "tuto_sector": "1. ◈ Télémesure : Cliquez sur un système pour inspecter ses données.\n2. ▷ Trajectoire : Cliquez à nouveau sur la cible pour tracer le vecteur de saut.\n3. ⚡ Navigation : Le saut FTL Warp consomme 500 unités de carburant.\n4. ❖ Système : Basculez vers la vue système détaillée via le menu inférieur.",
+  "tuto_system": "1. ◈ Navigation : Cliquez sur un corps céleste pour analyser sa composition.\n2. ▷ Propulsion : Cliquez à nouveau pour engager l approche orbitale.\n3. ❖ Vitesse : Maintenez Shift pour activer l hyperdrive à forte poussée.\n4. ⚓ Débarquement : Atteignez l orbite pour accéder aux installations et POI.",
+  "tuto_subsystem": "◈ DÉBARQUEMENT & COMMUNICATIONS SUBCOM\nQuittez la console de pilotage pour rejoindre une destination à quai ou en surface.\nPour toute négociation ou liaison à distance, initiez un contact par Subcom.",
+  "travel": {
+    "tuto_sector": "1. ◈ Télémesure : Cliquez sur un système pour inspecter ses données.\n2. ▷ Trajectoire : Cliquez à nouveau sur la cible pour tracer le vecteur de saut.\n3. ⚡ Navigation : Le saut FTL Warp consomme 500 unités de carburant.\n4. ❖ Système : Basculez vers la vue système détaillée via le menu inférieur.",
+    "tuto_system": "1. ◈ Navigation : Cliquez sur un corps céleste pour analyser sa composition.\n2. ▷ Propulsion : Cliquez à nouveau pour engager l approche orbitale.\n3. ❖ Vitesse : Maintenez Shift pour activer l hyperdrive à forte poussée.\n4. ⚓ Débarquement : Atteignez l orbite pour accéder aux installations et POI.",
+    "tuto_subsystem": "◈ DÉBARQUEMENT & COMMUNICATIONS SUBCOM\nQuittez la console de pilotage pour rejoindre une destination à quai ou en surface.\nPour toute négociation ou liaison à distance, initiez un contact par Subcom."
+  }
+}

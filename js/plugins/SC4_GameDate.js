@@ -199,14 +199,27 @@ class Game_Date {
 // ============================================================================
 class Game_DateFormatter {
     /**
-     * Formate la date au style "Warhammer 40K" : 2.dayOfYear.year.M41
+     * Formate la date au style stellaire Neotori :
+     * Era:[Millenaire]-cycle:[an]-séquence:[mois]/[DECADE]/[JR DE LA DECADE] - [Hr:min]
      */
-    static format40K(gameDate) {
+    static formatNeotori(gameDate) {
         if (!gameDate) return "";
-        const dayOfYear = (gameDate.getMonth() - 1) * 31 + gameDate.getDayMonth() + 1;
+        const year = gameDate.getYear();
+        const era = Math.floor(year / 1000) + 1;
+        const cycle = year;
+        const sequence = String(gameDate.getMonth()).padStart(2, '0');
+        const decade = gameDate.getDecadeIndex();
+        const jrDecade = (gameDate.getDayMonth() % 10) + 1;
         const hr = String(gameDate.getHr()).padStart(2, '0');
         const min = String(gameDate.getMin()).padStart(2, '0');
-        return `2.${dayOfYear}.${gameDate.getYear()}.M41 [${hr}:${min}]`;
+        return `Era:${era}-cycle:${cycle}-séquence:${sequence}/${decade}/${jrDecade} - [${hr}:${min}]`;
+    }
+
+    /**
+     * Rétrocompatibilité 40K : redirige vers le formatage Neotori
+     */
+    static format40K(gameDate) {
+        return this.formatNeotori(gameDate);
     }
 
     static getHrWording(gameDate) {

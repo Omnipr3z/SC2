@@ -1,0 +1,70 @@
+[
+  null,
+  {
+    "id": 1,
+    "name": "Ankaros Sector",
+    "description": "Frontier sector of the Ultima Segmentum under heavy military, diplomatic, and theocratic tension.",
+    "systems": [
+      {
+        "id": 1,
+        "name": "Ankaros",
+        "description": "Primary federal system, home to the planetary administrative seat and Altus orbital station."
+      },
+      {
+        "id": 2,
+        "name": "Aethelgard",
+        "description": "High-tech stronghold under exclusive control of the Elion Technocracy."
+      },
+      {
+        "id": 3,
+        "name": "Void-G3",
+        "description": "Former Elion industrial powerhouse devastated by the Atronics machine uprising."
+      },
+      {
+        "id": 4,
+        "name": "Arunia",
+        "description": "Martial and feudal coalition uniting Sfergrad knights and fierce Yuma warrior clans."
+      },
+      {
+        "id": 5,
+        "name": "Serenis",
+        "description": "System of extreme contrasts between the tropical luxury retreats of Eden and the glacial fanaticism of the Angelus Cult."
+      },
+      {
+        "id": 6,
+        "name": "Arakna",
+        "description": "Biomechanical planetary nightmare, pulsating heart of the Great Infestation contested by the Coalition."
+      },
+      {
+        "id": 7,
+        "name": "Suro",
+        "description": "Major diplomatic and trade hub housing the ecumenopolis Neotori Prime and the SAFE federal fleet."
+      },
+      {
+        "id": 8,
+        "name": "Olk",
+        "description": "Radioactive and toxic purgatory ruled by the decadent Black Barons of Olkeris."
+      },
+      {
+        "id": 9,
+        "name": "Nebula",
+        "description": "Sanctuary of polite ultra-capitalism where Gentech and the Saurian Consortium wage silent corporate warfare."
+      },
+      {
+        "id": 10,
+        "name": "Alpha-7",
+        "description": "Clandestine political capital and headquarters of Karam Poulpard's Free Worlds Alliance."
+      },
+      {
+        "id": 11,
+        "name": "Grak's Belt",
+        "description": "Anarchic haven for outlaws, Gruk salvagers, and exiled Drak warriors."
+      },
+      {
+        "id": 12,
+        "name": "Nexus",
+        "description": "Dead Zone housing the cyclopean Ancient Eleri Nexus, coveted by every galactic faction."
+      }
+    ]
+  }
+]

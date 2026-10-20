@@ -47,6 +47,25 @@
  * @value false
  * @default toggle
  * ============================================================================
+ *
+ * @param defaultHudVisible
+ * @text HUDs visibles au départ
+ * @type boolean
+ * @desc Active ou masque l'ensemble des HUDs de la carte au début d'une nouvelle partie.
+ * @default true
+ *
+ * @param defaultPlayerHud
+ * @text HUD Joueur visible au départ
+ * @type boolean
+ * @desc Active ou masque spécifiquement le HUD Joueur (portrait, jauges) au départ.
+ * @default true
+ *
+ * @param defaultWeaponHud
+ * @text HUD Arme visible au départ
+ * @type boolean
+ * @desc Active ou masque spécifiquement le HUD Arme (munitions) au départ.
+ * @default true
+ * ============================================================================
  */
 
 (() => {
@@ -131,6 +150,10 @@
         if (typeof Sprite_PlayerHUD !== "undefined") {
             this._playerHud = new Sprite_PlayerHUD();
             this.addChild(this._playerHud);
+        }
+        if (typeof Sprite_InterlocutorHUD !== "undefined") {
+            this._interlocutorHud = new Sprite_InterlocutorHUD();
+            this.addChild(this._interlocutorHud);
         }
     };
 

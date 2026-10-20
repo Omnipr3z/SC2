@@ -250,6 +250,54 @@ if ($gameSystem.locale !== "EN") {
 }
 console.log("✅ 7. Sélecteur de langue dans Window_Options et synchronisation ConfigManager / $gameSystem : OK");
 
+// --- TEST 8 : \L[KEY] dans les fenêtres de commande (Window_Command) ---
+SC4_Localization.setLocale("FR");
+const testCmdWin = new Window_Command();
+testCmdWin.addCommand("\\L[travel.cmd_warp_jump]", "warp");
+testCmdWin.addCommand("\\l[quest.filter_active]", "activeQuests");
+if (testCmdWin.commandName(0) !== "⚡ Saut FTL / Warp") {
+    console.error(`❌ Échec commandName FR: attendu '⚡ Saut FTL / Warp', obtenu: '${testCmdWin.commandName(0)}'`);
+    process.exit(1);
+}
+if (testCmdWin.commandName(1) !== "En cours") {
+    console.error(`❌ Échec commandName FR: attendu 'En cours', obtenu: '${testCmdWin.commandName(1)}'`);
+    process.exit(1);
+}
+
+// Bascule EN et vérification dynamique
+SC4_Localization.setLocale("EN");
+if (testCmdWin.commandName(0) !== "⚡ FTL / Warp Jump") {
+    console.error(`❌ Échec commandName EN: attendu '⚡ FTL / Warp Jump', obtenu: '${testCmdWin.commandName(0)}'`);
+    process.exit(1);
+}
+if (testCmdWin.commandName(1) !== "In Progress") {
+    console.error(`❌ Échec commandName EN: attendu 'In Progress', obtenu: '${testCmdWin.commandName(1)}'`);
+    process.exit(1);
+}
+console.log("✅ 8. Support dynamique de \\L[KEY] dans Window_Command (commandName) : OK");
+
+// --- TEST 9 : Dictionnaires Quest & Travel ---
+SC4_Localization.setLocale("FR");
+if (SC4_Localization.getText("quest.header") !== "DATAPAD FÉDÉRAL ▷ REGISTRE DES MISSIONS & TRANSMISSIONS") {
+    console.error("❌ Échec quest.header FR");
+    process.exit(1);
+}
+if (SC4_Localization.getText("travel.warp_transit") !== "Transit Warp FTL") {
+    console.error("❌ Échec travel.warp_transit FR");
+    process.exit(1);
+}
+
+SC4_Localization.setLocale("EN");
+if (SC4_Localization.getText("quest.header") !== "FEDERAL DATAPAD ▷ MISSIONS & TRANSMISSIONS LOG") {
+    console.error("❌ Échec quest.header EN");
+    process.exit(1);
+}
+if (SC4_Localization.getText("travel.warp_transit") !== "FTL Warp Transit") {
+    console.error("❌ Échec travel.warp_transit EN");
+    process.exit(1);
+}
+console.log("✅ 9. Dictionnaires Quest & Travel opérationnels en FR et EN : OK");
+
 console.log("\n==============================================================");
 console.log("🎉 TOUS LES TESTS DE L'ÉTAPE 16 (LOCALISATION) SONT VALIDÉS !");
 console.log("==============================================================");

@@ -1,16 +1,5 @@
 [
-  {
-    "id": 0,
-    "name": "Ion Thrusters",
-    "description": "Propulseurs ioniques standards pour petits vaisseaux légers.",
-    "fuelname": "Ion Cells",
-    "capacity": -1,
-    "speed": 0.15,
-    "hyperdrive": {
-      "consumeRate": 3.0,
-      "buffRate": 1.15
-    }
-  },
+  null,
   {
     "id": 1,
     "name": "Fusion Drive",
@@ -18,6 +7,7 @@
     "fuelname": "Fusion Cores",
     "capacity": 150,
     "speed": 0.35,
+    "warpAllowed": false,
     "hyperdrive": {
       "consumeRate": 1.5,
       "buffRate": 1.3
@@ -30,9 +20,10 @@
     "fuelname": "Warp Flux",
     "capacity": 300,
     "speed": 0.55,
+    "warpAllowed": true,
     "hyperdrive": {
       "consumeRate": 1.8,
-      "buffRate": 3.0
+      "buffRate": 3
     }
   },
   {
@@ -42,6 +33,7 @@
     "fuelname": "Plasma Tanks",
     "capacity": 1000,
     "speed": 0.8,
+    "warpAllowed": false,
     "hyperdrive": false
   },
   {
@@ -50,9 +42,10 @@
     "description": "Générateur à matière noire de facture archéotechnologique.",
     "fuelname": "DarkStone Energy",
     "capacity": 800,
-    "speed": 1.0,
+    "speed": 1,
+    "warpAllowed": true,
     "hyperdrive": {
-      "consumeRate": 1.0,
+      "consumeRate": 1,
       "buffRate": 1.25
     }
   },
@@ -62,10 +55,24 @@
     "description": "Moteur à impulsion quantique de haute précision militaire.",
     "fuelname": "Impulsion Cells",
     "capacity": -1,
-    "speed": 1.0,
+    "speed": 1,
+    "warpAllowed": false,
     "hyperdrive": {
       "consumeRate": 1.5,
       "buffRate": 1.5
+    }
+  },
+  {
+    "id": 6,
+    "name": "Ion Thrusters",
+    "description": "Propulseurs ioniques standards pour petits vaisseaux légers.",
+    "fuelname": "Ion Cells",
+    "capacity": -1,
+    "speed": 0.15,
+    "warpAllowed": false,
+    "hyperdrive": {
+      "consumeRate": 3,
+      "buffRate": 1.15
     }
   }
 ]

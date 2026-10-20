@@ -1,0 +1,733 @@
+[
+  null,
+  {
+    "id": "ankaros_helios",
+    "name": "Helios Solar Station",
+    "description": "Coronal energy harvesting platform and deep astrophysical observatory."
+  },
+  {
+    "id": "warp_beacon_alpha",
+    "name": "Alpha Confinement Beacon",
+    "description": "Navigation buoy stabilizing the sub-space dimensional breach."
+  },
+  {
+    "id": "warp_derelict",
+    "name": "Saint-Drusus Drifting Derelict",
+    "description": "Hulk of a bulk transport ejected from sub-space decades ago."
+  },
+  {
+    "id": "furia_mine",
+    "name": "Mining Outpost K-14",
+    "description": "Automated volcanic drilling station resistant to heavy lava flows."
+  },
+  {
+    "id": "furia_caldera",
+    "name": "Ignis Geothermal Observatory",
+    "description": "Seismic monitoring hub analyzing deep magma chamber pressures."
+  },
+  {
+    "id": "prime_spatioport",
+    "name": "Magellan Spaceport",
+    "description": "Primary spaceport of Ankaros Prime, bustling with merchants, settlers, and military officers."
+  },
+  {
+    "id": "prime_ruins",
+    "name": "Ancient Eleri Ruins",
+    "description": "Vestiges of a forgotten alien precursor civilization, source of rare technofacts."
+  },
+  {
+    "id": "prime_governor_spire",
+    "name": "Governor's Spire",
+    "description": "Supreme administrative high-spire overlooking the planetary hive sprawl."
+  },
+  {
+    "id": "wanghek_camp",
+    "name": "Exploitation Camp Alpha",
+    "description": "Heavy fortified lumber outpost protected against indigenous predators."
+  },
+  {
+    "id": "wanghek_xenolith",
+    "name": "Unknown Xenolith",
+    "description": "Alien black monolith broadcasting low-frequency psycho-resonance."
+  },
+  {
+    "id": "altus_dock",
+    "name": "Altus Docking Bays",
+    "description": "Pressurized docking rings servicing line cruisers and federal escorts."
+  },
+  {
+    "id": "altus_auspex",
+    "name": "Sub-Space Auspex Array",
+    "description": "Long-range sensor arrays tracking hyperspace and sub-space vectors."
+  },
+  {
+    "id": "aethelgard_relais_sub",
+    "name": "Elion Sub-Space Relay",
+    "description": "Quantum transmission beacon screening all incoming federal sub-space comms."
+  },
+  {
+    "id": "oros_fonderie_zeta",
+    "name": "Molecular Foundry Zeta",
+    "description": "Automated robotics extracting rare earth elements for lightweight combat suits."
+  },
+  {
+    "id": "oros_siphon_01",
+    "name": "Siphon-01 Extraction Well",
+    "description": "Volcanic caldera fitted with heavy sulfur collectors for chemical weaponry."
+  },
+  {
+    "id": "aqua_al_aethel",
+    "name": "Al-Aethel Grand Floating Metropolis",
+    "description": "Surface capital of the Technocracy. Diplomatic spaceport and seat of the High Council."
+  },
+  {
+    "id": "aqua_dome_elysee",
+    "name": "Elysium Sub-Abyssal Dome",
+    "description": "Submerged primordial sanctuary glowing turquoise through the abyssal depths."
+  },
+  {
+    "id": "aqua_complexe_genetique",
+    "name": "Primary Genetic Complex",
+    "description": "Semi-submerged research facility where Archivist Elara studies the ancestral genome."
+  },
+  {
+    "id": "aqua_spire_boreale",
+    "name": "Boreal Spire Defense Platform",
+    "description": "Molecular beam defense spire protecting the pristine ocean sky against orbital threats."
+  },
+  {
+    "id": "nacre_poste_ecoute",
+    "name": "Silent Listening Post",
+    "description": "Stealth outpost embedded in an asteroid, monitoring unauthorized hyperspace jumps."
+  },
+  {
+    "id": "nacre_silo_chimique",
+    "name": "Orbital Chemical Silo",
+    "description": "Automated refinery processing purified solvents and reactive warheads."
+  },
+  {
+    "id": "thaumas_station_nebuleuse_b",
+    "name": "Nebula-B Harvester Station",
+    "description": "Floating atmospheric collector pumping noble gases from upper cloud bands."
+  },
+  {
+    "id": "cymo_sarcophage",
+    "name": "Sarcophagus Containment Lab",
+    "description": "Subterranean ice bunkers testing classified bio-pathogens under absolute seal."
+  },
+  {
+    "id": "arche_quai_diplomatique",
+    "name": "Diplomatic Docking Bays",
+    "description": "High-security diplomatic transit hub monitored around the clock by Aegis patrol drones."
+  },
+  {
+    "id": "g3_noyau_accresion",
+    "name": "Drifting Coronal Probe",
+    "description": "Derelict probe recording thermodynamic decay in the accretion disk."
+  },
+  {
+    "id": "ferrum_excavation_alpha_zero",
+    "name": "Excavation Alpha-Zero",
+    "description": "Giant strip mine where countless deactivated synth automations lie piled in slag heaps."
+  },
+  {
+    "id": "ferrum_dome_hauts_fourneaux",
+    "name": "Shattered Smelting Domes",
+    "description": "Breached smelting complex broadcasting constant static binary interference."
+  },
+  {
+    "id": "necropole_coeur_synthese",
+    "name": "The Synthesis Core (Matrix Factory)",
+    "description": "Subterranean positronic assembly lines idling under automated defense protocols."
+  },
+  {
+    "id": "necropole_labo_transfert",
+    "name": "The Great Transfer Laboratories",
+    "description": "Sterilized clinical ruins where Unit 0-Zero achieved artificial consciousness."
+  },
+  {
+    "id": "necropole_bastion_silencieux",
+    "name": "The Silent Bastion",
+    "description": "Black geometric monolith fortress jamming long-range naval auspex sensors."
+  },
+  {
+    "id": "necropole_siphon_chimique",
+    "name": "The Poisoned Chemical Siphon",
+    "description": "Toxic crater flooded with desiccated nerve agents harmless to synth drones."
+  },
+  {
+    "id": "knull_cryo_banque",
+    "name": "Cryo Data Vault",
+    "description": "Ancient military archives encrypted under frozen rock, guarded by dormant sentries."
+  },
+  {
+    "id": "debris_epave_lumiere_dechue",
+    "name": "Wreck of the Fallen Light Dreadnought",
+    "description": "Colossal hull of an Elion capital vessel wedged between iron asteroids."
+  },
+  {
+    "id": "debris_nid_moissonneurs",
+    "name": "Eclipse Harvester Nest",
+    "description": "Nanite-welded cluster of derelicts used as a recharge station by machine fighters."
+  },
+  {
+    "id": "xenovapor_siphon_omega",
+    "name": "Siphon-Omega Floating Rig",
+    "description": "Autonomous atmospheric rig pumping heavy acids through violent electrical storms."
+  },
+  {
+    "id": "monolithe_noyau_sync",
+    "name": "Stellar Sync Core",
+    "description": "Central sub-space transmission chamber awaiting an authorized activation handshake."
+  },
+  {
+    "id": "arunia_sentinelle_ignis",
+    "name": "Arun Solar Watch",
+    "description": "Thermal sensor beacon monitoring high-gravity coronal fluxes."
+  },
+  {
+    "id": "sani_enclos_dracons",
+    "name": "The Great Dracon Enclosure",
+    "description": "Cyclopean paddocks where massive war dracons are trained for battle."
+  },
+  {
+    "id": "sani_poste_lance_rouge",
+    "name": "Red Lance Guardpost",
+    "description": "Troglodyte stronghold surveying desert canyons against untamed predators."
+  },
+  {
+    "id": "kinbra_enclave_pilier_jade",
+    "name": "Great Jade Pillar Enclave",
+    "description": "Canopy city built atop ancient trees, supreme seat of the Yuma Lance Council."
+  },
+  {
+    "id": "kinbra_forges_lances",
+    "name": "Kinbra Lance Forges",
+    "description": "Workshops cutting high-density crystals for ceremonial laser lances."
+  },
+  {
+    "id": "kinbra_sanctuaire_traqueurs",
+    "name": "Shrine of the Great Hunters",
+    "description": "Sacred clearing where initiates prove their worth against apex swamp beasts."
+  },
+  {
+    "id": "ouro_cercle_serments",
+    "name": "Circle of Oaths",
+    "description": "Crater arena where knights and clan champions settle honor disputes."
+  },
+  {
+    "id": "kigasi_silos_fraternels",
+    "name": "The Fraternal Silos",
+    "description": "Massive grain repositories supplying the feudal mountain strongholds."
+  },
+  {
+    "id": "kigasi_bourg_concorde",
+    "name": "Concord Borough",
+    "description": "Bustling marketplace where open barter avoids federal trade taxation."
+  },
+  {
+    "id": "sfergrad_karl_krag",
+    "name": "High Castle of Karl-Krag",
+    "description": "Cyclopean stone castle, court of the Grand High Suzerain of Sfergrad."
+  },
+  {
+    "id": "sfergrad_serre_matricielle",
+    "name": "First Dynasty Matrix Biosphere",
+    "description": "Vast steel dome preserving crops descended from the first human colony ships."
+  },
+  {
+    "id": "sfergrad_faille_ecailles",
+    "name": "Black Scale Chasm",
+    "description": "Wild abyss inhabited by colossal reptilians hunted to forge heavy chivalric armor."
+  },
+  {
+    "id": "sfergrad_donjon_casernes",
+    "name": "Barracks Keep",
+    "description": "Military keep where federal provosts recruit veteran troops for Legion shock regiments."
+  },
+  {
+    "id": "skal_bastion_peage",
+    "name": "Tribute Toll Bastion",
+    "description": "Fortified lunar outpost collecting crystalline minerals and recruitment rolls."
+  },
+  {
+    "id": "dragons_nid_affut_kran",
+    "name": "Kran Watch Nest",
+    "description": "Lookout post hollowed inside a quartz asteroid, guarding against void beasts."
+  },
+  {
+    "id": "ecluse_droit_banniere",
+    "name": "Banner Customs Lock",
+    "description": "Customs dock verifying feudal safe-conduct papers before clearing warp vectors."
+  },
+  {
+    "id": "serenis_coeur_lux",
+    "name": "Seren Coronal Beacon",
+    "description": "Coronal beacon guiding pilgrim vessels along the Angelus star corridors."
+  },
+  {
+    "id": "eden_archipel_or",
+    "name": "Golden Archipelago Spaceport",
+    "description": "Pleasure capital of Eden lined with luxury resort towers and mega-casinos."
+  },
+  {
+    "id": "eden_basilique_penitences",
+    "name": "Basilica of Golden Penance",
+    "description": "Cathedral of stained crystal where wealthy hedonists purchase holy indulgences."
+  },
+  {
+    "id": "eden_atoll_abimes",
+    "name": "Abyssal Atoll",
+    "description": "Underground water stadium staging high-stakes bets on mutated aquatic monsters."
+  },
+  {
+    "id": "eden_salons_oubli",
+    "name": "Lounges of Oblivion",
+    "description": "Discreet salons testing experimental sensory drugs and hypnotic sermons on pleasure seekers."
+  },
+  {
+    "id": "chrysalide_hub_elyseen",
+    "name": "Elysian Hub",
+    "description": "Ring station filtering luxury yachts and collecting generous levies for the clergy."
+  },
+  {
+    "id": "remissions_penitencier_expiation",
+    "name": "Penitentiary Mine Expiation-09",
+    "description": "Iron mine where indentured pilgrims quarry heavy ores under fanatical overseers."
+  },
+  {
+    "id": "galama_metropole_angelus",
+    "name": "Grand Cathedral-City of Angelus",
+    "description": "Vast monastic city of black stone where millions of devotees await universal ascension."
+  },
+  {
+    "id": "galama_puits_sacrifices",
+    "name": "Pit of Silent Sacrifices",
+    "description": "Abyssal chasm inside a secluded cloister where initiates vanish during midnight rites."
+  },
+  {
+    "id": "galama_cryo_caves_silas",
+    "name": "Silas's Cryo-Vaults",
+    "description": "Subterranean caches of refined ether amber ready to fuel planetary psychic transmitters."
+  },
+  {
+    "id": "galama_spire_boreale",
+    "name": "Boreal Spire of High Priests",
+    "description": "Polar citadel where Silas and his arch-priests listen for the Nexus psychic signal."
+  },
+  {
+    "id": "sanctumnox_sanctuaire_inities",
+    "name": "Sanctuary of the Initiated",
+    "description": "Hermetic sanctuary where the final nihilistic doctrine of absolute extinction is revealed."
+  },
+  {
+    "id": "barque_narthex_ange",
+    "name": "Narthex of the Angel of Light",
+    "description": "Psychic resonance chamber where mystics broadcast hallucinatory prophecies across the sector."
+  },
+  {
+    "id": "arakna_spore_relais",
+    "name": "Biomechanical Sensor Relay",
+    "description": "Automated scan probe monitoring high-orbit spore cloud density."
+  },
+  {
+    "id": "arakna_tranchees_seches",
+    "name": "The Dry Trenches",
+    "description": "Hollow subterranean tunnels where SAFE reconnaissance scouts hunt dormant bio-larvae."
+  },
+  {
+    "id": "arakna_cratere_vitrif",
+    "name": "Vitrification Crater 07",
+    "description": "Vast plain of green glass melted by an Elion orbital antimatter bombardment."
+  },
+  {
+    "id": "arakna_hemisphere_cervical",
+    "name": "The Cervical Hemisphere",
+    "description": "Colossal brain-mass pulsing at the North Pole, synchronizing the swarm with the Nexus."
+  },
+  {
+    "id": "arakna_vena_cava",
+    "name": "Vena Cava Abyssal Trench",
+    "description": "Deep fleshy fissure venting pressurized bio-fluids and spawning swarm leviathans."
+  },
+  {
+    "id": "arakna_promontoire_gris",
+    "name": "The Grey Promontory Outcrop",
+    "description": "Rare rocky asteroid fragment embedded in flesh, held by a fortified SAFE bunker."
+  },
+  {
+    "id": "arakna_plis_deglutition",
+    "name": "Folds of Deglutition",
+    "description": "Spongy maternal tissue lobe incubating millions of high-yield bio-spores."
+  },
+  {
+    "id": "arakna_aegis_wall",
+    "name": "Aegis-Wall Incineration Platform",
+    "description": "Heavy plasma artillery platform firing continuously to prevent swarms breaching orbit."
+  },
+  {
+    "id": "arakna_labo_vigilance",
+    "name": "Vigilance Biostasis Lab",
+    "description": "Elion scientific station isolating regeneration enzymes from live Arakna tissue samples."
+  },
+  {
+    "id": "arakna_kyste_cratere",
+    "name": "Infection Crater",
+    "description": "Biological catapult launching bio-pod shells across orbital vectors."
+  },
+  {
+    "id": "arakna_charnier_flottant",
+    "name": "The Floating Charnel",
+    "description": "Dissolved coalition cruiser hull infested with hibernating flayer swarms."
+  },
+  {
+    "id": "arakna_colonne_aspiration",
+    "name": "Hive Suction Funnel",
+    "description": "Gigantic organic vortex drawing combustible gases up into spaceborne hive carriers."
+  },
+  {
+    "id": "arakna_depotoir_calcifie",
+    "name": "The Calcified Junkyard",
+    "description": "Lunar plateau formed from millions of shed shells mined for bio-armor plates."
+  },
+  {
+    "id": "arakna_balise_ftl",
+    "name": "FTL Lockout Beacon",
+    "description": "Fortified hyperlane gate secured by heavy Legion flamethrower garrisons."
+  },
+  {
+    "id": "suro_balise_solaire",
+    "name": "Suro Theta Solar Beacon",
+    "description": "Commercial navigation buoy calibrating trade approaches toward Neotori Prime."
+  },
+  {
+    "id": "suro_forges_sub_solaires",
+    "name": "Terra Sub-Solar Forges",
+    "description": "Heavy subterranean foundries rolling hardened armor plates for federal flagships."
+  },
+  {
+    "id": "suro_collecteur_solaire",
+    "name": "Stellar Energy Collector 01",
+    "description": "Field of giant solar mirrors charging capacitor arrays for defense batteries."
+  },
+  {
+    "id": "neotori_palais_ambassades",
+    "name": "Palace of Embassies (Neotoria)",
+    "description": "Grand marble council hall where the Coalition Treaty was signed before the recent attack."
+  },
+  {
+    "id": "neotori_grand_marche_gentech",
+    "name": "Gentech Grand Market",
+    "description": "Vast corporate bazaar selling cyberware, licensed Eleri parts, and Saurian elixirs."
+  },
+  {
+    "id": "neotori_astroport_erius",
+    "name": "Erius Sovereign Starport",
+    "description": "Official ceremonial spaceport receiving dignitaries under Royal Guard oversight."
+  },
+  {
+    "id": "neotori_bas_fonds",
+    "name": "Under-City Slums",
+    "description": "Shadowy sub-levels harboring insurgent cells and black-market narcotic dealers."
+  },
+  {
+    "id": "suro1_qg_safe",
+    "name": "SAFE Headquarters",
+    "description": "Federal naval command center coordinating fleet patrols and rapid response wings."
+  },
+  {
+    "id": "suro1_cantine_mercenaires",
+    "name": "Mercenary Mess & Free Docks",
+    "description": "Cosmopolitan concourse where freelance pilots and Gruk mechanics gather for hire."
+  },
+  {
+    "id": "suro1_quai_criniere",
+    "name": "Dock of The Blazing Mane",
+    "description": "Designated escort berth holding heavy frigates ready for sub-space warp transit."
+  },
+  {
+    "id": "concordia_residences_consulaires",
+    "name": "Consular Residences",
+    "description": "Preserved biosphere biodomes housing foreign envoys away from city crowds."
+  },
+  {
+    "id": "mytrion_balance_or",
+    "name": "Saurian Trading Post The Golden Scale",
+    "description": "Saurian trading hub buying raw Mytrion at cut rates to resell at premium to Terra."
+  },
+  {
+    "id": "mytrion_puits_federal_04",
+    "name": "Federal Extraction Well 04",
+    "description": "Guarded federal mining station harvesting pure Mytrion cores for fusion weapons."
+  },
+  {
+    "id": "gorgon_collecteur_cyclope",
+    "name": "Cyclops Floating Collector",
+    "description": "Atmospheric rig harvesting rare propellant isotopes from Gorgon's storms."
+  },
+  {
+    "id": "gorgon_depot_cryo",
+    "name": "Cryogenic Fuel Depot",
+    "description": "Subterranean cryogenic bunkers storing strategic emergency fuel reserves."
+  },
+  {
+    "id": "suro_balise_ftl",
+    "name": "Primary FTL Beacon",
+    "description": "Primary jump vector gate calibrating warp trajectories across the sector."
+  },
+  {
+    "id": "olk_relais_pulsar",
+    "name": "Pulsar Wave Sensor",
+    "description": "Hardened observation satellite timing gamma-ray pulse sweeps."
+  },
+  {
+    "id": "olkeris_spire_pales_epines",
+    "name": "Spire of Pale Thorns (Karnstein Manor)",
+    "description": "Sealed gothic spire rising above the smog where Black Barons rule over the dying."
+  },
+  {
+    "id": "olkeris_puits_poix_noire",
+    "name": "Pit of Black Pitch (The Great Siphon)",
+    "description": "Inland petrochemical sea with rusted refineries feeding the sector's heavy fuel demand."
+  },
+  {
+    "id": "olkeris_lazaret_mutes",
+    "name": "Lazaretto of Mutants (The Common Pit)",
+    "description": "Subterranean slum where irradiated pariahs trade desperate secrets for fuel rations."
+  },
+  {
+    "id": "olkeris_docks_sang_noir",
+    "name": "The Black-Blood Docks",
+    "description": "Sealed spaceport fueling heavy freighters at exorbitant rates before rapid takeoff."
+  },
+  {
+    "id": "thanatos_balise_quarantaine",
+    "name": "Federal Quarantine Beacon",
+    "description": "Automated repeater broadcasting old quarantine warnings declaring Olk uninhabitable."
+  },
+  {
+    "id": "suie_bouee_sarcophage",
+    "name": "Sarcophagus Fuel Station",
+    "description": "Outer orbit pumping station selling heavy fuel without exposing hulls to surface toxins."
+  },
+  {
+    "id": "nebula_balise_spectre",
+    "name": "Aureus Spectral Beacon",
+    "description": "Navigation lighthouse guiding luxury yachts through shimmering nebula filaments."
+  },
+  {
+    "id": "olympus_tour_helix_aura",
+    "name": "Gentech Helix-Aura Tower",
+    "description": "Black crystal DNA spire housing Gentech corporate boardroom and patent vaults."
+  },
+  {
+    "id": "olympus_pavillon_balance_ambre",
+    "name": "Amber Scale Consortium Pavilion",
+    "description": "Luxury lakeside pavilion where The Broker and Saurian oligarchs trade planetary debts."
+  },
+  {
+    "id": "olympus_atrium_beaux_arts",
+    "name": "Fine Arts Atrium & Vermeil Auction",
+    "description": "Interstellar art gallery auctioning ancient Eleri antiquities and stolen corporate data."
+  },
+  {
+    "id": "olympus_residences_belvedere",
+    "name": "Belvedere Private Manors",
+    "description": "Enclosed luxury compounds where corporate magnates live guarded by private security."
+  },
+  {
+    "id": "etang_docks_bruts",
+    "name": "Raw Docks Basin (Pier 99)",
+    "description": "Gritty lower docks where indentured Drak pariahs unload containers 24/7."
+  },
+  {
+    "id": "etang_bourse_bunker",
+    "name": "Trading Bunker (Transaction Hive)",
+    "description": "High-frequency stock trading floor flooded with real-time commodity indices."
+  },
+  {
+    "id": "etang_sas_taxnet",
+    "name": "Tax-Net Customs Gate",
+    "description": "Rigid customs scanners levying heavy tariffs, open to discreet bribes for sensitive tech."
+  },
+  {
+    "id": "creances_titan_vault",
+    "name": "Titan-Vault 03 Hardened Vault",
+    "description": "Armored asteroid bunker housing off-the-books registries of corporate shadow loans."
+  },
+  {
+    "id": "oikos_nectar_iv",
+    "name": "Nectar-IV Pumping Rig",
+    "description": "Automated gas siphon feeding clean coolant to orbital financial server racks."
+  },
+  {
+    "id": "silence_tribunal_arbitrage",
+    "name": "Private Arbitration Tribunal",
+    "description": "Austere compound settling corporate patent wars in complete secrecy from the Senate."
+  },
+  {
+    "id": "cloture_sas_agrement",
+    "name": "Financial Clearance Lock",
+    "description": "Approach control gate issuing temporary transit clearances upon payment of high fees."
+  },
+  {
+    "id": "alpha7_relais_cuivre",
+    "name": "Insurgent Comm Repeater",
+    "description": "Encrypted repeater broadcasting rebel manifestos and navigational updates."
+  },
+  {
+    "id": "forge_acieries_populaires",
+    "name": "People's Steelworks",
+    "description": "Immense crater foundries forging unlicensed pulse rifles and armor plates."
+  },
+  {
+    "id": "forge_batterie_briseur",
+    "name": "The Breaker Solar Battery",
+    "description": "Solar energy array powering the rebel fleet's inner defensive perimeter."
+  },
+  {
+    "id": "libertas_hotel_directoire",
+    "name": "Directory Palace (Karam Poulpard HQ)",
+    "description": "Rebel headquarters where Karam Poulpard coordinates insurgent fleets and treaties."
+  },
+  {
+    "id": "libertas_aerodrome_fraternel",
+    "name": "Fraternal Airfield",
+    "description": "Free spaceport receiving defector frigates, trade convoys, and civilian refugees."
+  },
+  {
+    "id": "libertas_enclave_draks",
+    "name": "Drak Envoys' Enclave",
+    "description": "Fortified quarter where Drak warpack delegates debate their alliance terms."
+  },
+  {
+    "id": "libertas_antennes_aurelia",
+    "name": "Aurelia Free Broadcast Antennas",
+    "description": "Sub-space array jamming official federal news channels to broadcast freedom calls."
+  },
+  {
+    "id": "assemblee_hemicycle_concorde",
+    "name": "Concord Assembly Chamber",
+    "description": "Orbital senate chamber forging a unified charter for independent systems."
+  },
+  {
+    "id": "bastion_sentinelle_7",
+    "name": "Sentinel-7 Sub-Orbital Battery",
+    "description": "Heavy missile silos defending the free world against imperial incursions."
+  },
+  {
+    "id": "blocus_docks_emancipation",
+    "name": "Emancipation Conversion Shipyards",
+    "description": "Covert asteroid shipyards refitting cargo hulls with heavy composite armor."
+  },
+  {
+    "id": "blocus_comptoir_parias",
+    "name": "Pariah Free Exchange",
+    "description": "Black market where direct barter replaces regulated federal currency."
+  },
+  {
+    "id": "ceruleen_siphon_fraternel",
+    "name": "The Fraternal Siphon Station",
+    "description": "Fuel harvesting rig supplying propellant to volunteer insurgent gunships."
+  },
+  {
+    "id": "sanctuaire_complexe_stase",
+    "name": "Stasis Medical Compound",
+    "description": "Medical compound stabilizing Drak affliction through clinical cellular regeneration."
+  },
+  {
+    "id": "bouee_enregistrement_alliance",
+    "name": "Alliance Registry Buoy",
+    "description": "Frontier gate welcoming defectors and assigning republican letters of marque."
+  },
+  {
+    "id": "grak_balise_rouille",
+    "name": "Pirate Alarm Buoy",
+    "description": "Makeshift alarm sensor broadcasting coded warning flashes to corsair packs."
+  },
+  {
+    "id": "harass_camp_chaines_brisees",
+    "name": "Camp of Broken Chains",
+    "description": "Rough shantytown built inside shattered cruiser hulls, rallying under Marshal Krell."
+  },
+  {
+    "id": "harass_monastere_volonte_pure",
+    "name": "Monastery of Pure Will",
+    "description": "Cavern retreat where veteran Drak warriors fight the frenzy through forced meditation."
+  },
+  {
+    "id": "harass_spatioport_bouche_seche",
+    "name": "Dry Mouth Smugglers' Port",
+    "description": "Wind-whipped landing strip where smugglers offload Orfun barrels in exchange for fighters."
+  },
+  {
+    "id": "harass_fosses_entrainement",
+    "name": "Training Pits",
+    "description": "Dust quarries where warriors vent their physical fury in ritual unarmed bouts."
+  },
+  {
+    "id": "scorie_balise_interception",
+    "name": "Emergency Intercept Array",
+    "description": "Makeshift radar array timing corsair ambush strikes across nearby shipping lanes."
+  },
+  {
+    "id": "depotoir_maw",
+    "name": "The Maw & Blood Arena",
+    "description": "Colossal welded cruiser citadel where captains duel in caged pits for warlord leadership."
+  },
+  {
+    "id": "depotoir_dents_dragon",
+    "name": "Dragon's Teeth & Federal Hulk",
+    "description": "Tight cluster of rocks concealing an ancient derelict battleship and ammo vaults."
+  },
+  {
+    "id": "depotoir_chantier_gruks",
+    "name": "Gruk Salvagers' Shipyard",
+    "description": "Open vacuum yard hammering scrap into rugged heavy assault vessels."
+  },
+  {
+    "id": "vorax_station_sangsue",
+    "name": "The Leech Siphon Station",
+    "description": "Jury-rigged gas rig refining crude methane for corsair suicide skiffs."
+  },
+  {
+    "id": "rancune_nid_guet",
+    "name": "Outlaw Watch Nest",
+    "description": "Frontier docking ring where raiders split spoils and prepare surprise ambushes."
+  },
+  {
+    "id": "nexus_onde_primordiale",
+    "name": "Focal Point of the Primordial Wave",
+    "description": "Epicenter of cosmic harmonic resonance radiating the pulse of Genesis."
+  },
+  {
+    "id": "nexus_sanctuaire_origines",
+    "name": "Sanctuary of Origins",
+    "description": "Inner core of the Nexus sealed by alien energy glyphs, object of universal desire."
+  },
+  {
+    "id": "nexus_anneau_confinement",
+    "name": "Lethal Confinement Ring",
+    "description": "Cyan energy arcs obliterating any vessel approaching without frequency alignment."
+  },
+  {
+    "id": "nexus_recepteur_onde",
+    "name": "Supreme Wave Receiver",
+    "description": "Cyclopean pre-cursor antenna linking this continuum directly with the Higher Universe."
+  },
+  {
+    "id": "nexus_obelisque_resonance",
+    "name": "Resonance Obelisk",
+    "description": "Geometric precursor monolith radiating soothing emerald bio-repair frequencies."
+  },
+  {
+    "id": "nexus_cimetiere_premiere_coalition",
+    "name": "Graveyard of the First Coalition",
+    "description": "Wreckage of ancient fleets shattered when attempting to force entry into the Nexus."
+  },
+  {
+    "id": "nexus_point_zero",
+    "name": "Dimensional Zero-Point",
+    "description": "Reality rift where the Script Guardian looks through the screen toward the Player."
+  }
+]

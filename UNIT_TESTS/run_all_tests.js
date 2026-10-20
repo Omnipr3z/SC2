@@ -32,7 +32,10 @@ const testFiles = [
     'test_step13_5_and_step14.js',
     'test_step15_gunfight.js',
     'test_step16_localization.js',
-    'test_step17_bubble_ring.js'
+    'test_step17_bubble_ring.js',
+    'test_dial_review.js',
+    'test_review_test2.js',
+    'test_review_additions.js'
 ];
 
 console.log("==============================================================");
