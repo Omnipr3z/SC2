@@ -168,11 +168,11 @@ global.Game_Map = Game_Map;
 global.$gameMap = new Game_Map();
 
 // Chargement des plugins SC4
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Hub_Hero.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Bitmap_Composite.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Game_Hero.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Character_Hero.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Sprite_Hero.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Hub_Hero.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Bitmap_Composite.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Game_Hero.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Character_Hero.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Sprite_Hero.js'), 'utf8'));
 eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_rmmz_core_Patches.js'), 'utf8'));
 eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_rmmz_objects_Patches.js'), 'utf8'));
 eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_rmmz_scenes_Patches.js'), 'utf8'));

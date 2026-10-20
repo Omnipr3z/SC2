@@ -220,8 +220,8 @@ function loadPlugin(relPath) {
 loadPlugin('js/plugins/SC4_rmmz_core_Patches.js');
 loadPlugin('js/plugins/SC4_rmmz_sprites_Patches.js');
 loadPlugin('js/plugins/SC4_rmmz_scenes_Patches.js');
-loadPlugin('js/plugins/IAManager.js');
-loadPlugin('js/plugins/FightManager.js');
+loadPlugin('js/plugins/SC4_IAManager.js');
+loadPlugin('js/plugins/SC4_FightManager.js');
 
 let passed = 0;
 let failed = 0;

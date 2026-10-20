@@ -149,9 +149,9 @@ global.Spriteset_Map = class Spriteset_Map {
 };
 
 // Chargement des plugins nécessaires
-require('../js/plugins/Bitmap_Composite.js');
-require('../js/plugins/Game_Hero.js');
-require('../js/plugins/Sprite_PaperdollFace.js');
+require('../js/plugins/SC4_Bitmap_Composite.js');
+require('../js/plugins/SC4_Game_Hero.js');
+require('../js/plugins/SC4_Sprite_PaperdollFace.js');
 require('../js/plugins/SC4_rmmz_sprites_Patches.js');
 
 let passCount = 0;

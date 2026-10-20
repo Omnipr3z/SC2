@@ -322,12 +322,12 @@ global.$dataSkills = {
 
 // Chargement des plugins nécessaires
 const ROOT_DIR = path.resolve(__dirname, '..');
-const debugtoolCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/DEBUGTOOL.js'), 'utf8');
+const debugtoolCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_DEBUGTOOL.js'), 'utf8');
 eval(debugtoolCode);
-const heroCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Game_Hero.js'), 'utf8');
+const heroCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Game_Hero.js'), 'utf8');
 eval(heroCode);
 global.Game_Actor.prototype.getAttackConfig = global.Game_Hero.prototype.getAttackConfig;
-const compositeCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Bitmap_Composite.js'), 'utf8');
+const compositeCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Bitmap_Composite.js'), 'utf8');
 eval(compositeCode);
 const gunfightCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Gunfight.js'), 'utf8');
 eval(gunfightCode);

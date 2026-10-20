@@ -325,10 +325,15 @@ const pluginsDir = path.resolve(__dirname, '../js/plugins');
 vm.runInThisContext(fs.readFileSync(path.join(pluginsDir, 'SC4_Localization.js'), 'utf8'));
 vm.runInThisContext(fs.readFileSync(path.join(pluginsDir, 'SC4_GameDate.js'), 'utf8'));
 vm.runInThisContext(fs.readFileSync(path.join(pluginsDir, 'SC4_SpaceTravel.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(pluginsDir, 'SC4_Window_SpaceCalendar.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(pluginsDir, 'SC4_Window_SpaceControls.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(pluginsDir, 'SC4_Window_SpaceEventLog.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(pluginsDir, 'SC4_Window_SpaceShipInfo.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(pluginsDir, 'SC4_Window_SpaceTargetInfo.js'), 'utf8'));
 vm.runInThisContext(fs.readFileSync(path.join(pluginsDir, 'SC4_QuestManager.js'), 'utf8'));
 vm.runInThisContext(fs.readFileSync(path.join(pluginsDir, 'SC4_BubbleMessage.js'), 'utf8'));
 vm.runInThisContext(fs.readFileSync(path.join(pluginsDir, 'SC4_rmmz_sprites_Patches.js'), 'utf8'));
-vm.runInThisContext(fs.readFileSync(path.join(pluginsDir, 'SC4_SpaceScenes.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(pluginsDir, 'SC4_Interface.js'), 'utf8'));
 
 console.log("==============================================================");
 console.log("       TESTS UNITAIRES : AJOUTS & REVIEWS SIMCRAFT 4         ");

@@ -178,19 +178,19 @@ global.PluginManager = {
 };
 
 // Chargement des plugins du projet
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/DEBUGTOOL.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Hub_Hero.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Bitmap_Composite.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Game_Hero.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Character_Hero.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Sprite_CharacterIndicator.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Spriteset_FightGauges.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Sprite_Hero.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/FightManager.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/IAManager.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/IA_melee.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/IA_range.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Enemy_AI.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_DEBUGTOOL.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Hub_Hero.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Bitmap_Composite.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Game_Hero.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Character_Hero.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Sprite_CharacterIndicator.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Spriteset_FightGauges.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Sprite_Hero.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_FightManager.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_IAManager.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_IA_Melee.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_IA_Range.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Enemy_AI.js'), 'utf8'));
 eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_rmmz_objects_Patches.js'), 'utf8'));
 
 // Initialisation de la carte et du joueur

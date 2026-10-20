@@ -378,11 +378,11 @@ function loadPlugin(relPath) {
     eval(code);
 }
 
-loadPlugin('js/plugins/Hub_Hero.js');
-loadPlugin('js/plugins/Bitmap_Composite.js');
-loadPlugin('js/plugins/Game_Hero.js');
-loadPlugin('js/plugins/Character_Hero.js');
-loadPlugin('js/plugins/Sprite_Hero.js');
+loadPlugin('js/plugins/SC4_Hub_Hero.js');
+loadPlugin('js/plugins/SC4_Bitmap_Composite.js');
+loadPlugin('js/plugins/SC4_Game_Hero.js');
+loadPlugin('js/plugins/SC4_Character_Hero.js');
+loadPlugin('js/plugins/SC4_Sprite_Hero.js');
 loadPlugin('js/plugins/SC4_rmmz_core_Patches.js');
 loadPlugin('js/plugins/SC4_rmmz_objects_Patches.js');
 loadPlugin('js/plugins/SC4_rmmz_sprites_Patches.js');

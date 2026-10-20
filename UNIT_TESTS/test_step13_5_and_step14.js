@@ -364,7 +364,7 @@ global.Sprite_Character = class Sprite_Character extends global.Sprite {
 const objectsCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_rmmz_objects_Patches.js'), 'utf8');
 eval(objectsCode);
 
-const heroSpriteCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Sprite_Hero.js'), 'utf8');
+const heroSpriteCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Sprite_Hero.js'), 'utf8');
 eval(heroSpriteCode);
 
 const titleScreenCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_TitleScreen.js'), 'utf8');

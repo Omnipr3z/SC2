@@ -291,8 +291,8 @@ global.LocalisationManager = {
 global.SC4 = {};
 
 // Chargement des plugins
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Game_Inventory.js'), 'utf8'));
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Game_Inventories.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Game_Inventory.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Game_Inventories.js'), 'utf8'));
 eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_rmmz_objects_Patches.js'), 'utf8'));
 
 // Chargement de data/SC/INVENTORIES.json
@@ -501,7 +501,7 @@ assert("Interrupteur local B repasse à FALSE quand C_1 est re-rempli", $gameSel
 
 console.log('\n--- TEST 16 : Règles de Dépôt dans Scene_Inventory ---');
 // Mock minimal de Scene_Inventory pour tester isTargetPersistent
-eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/Scene_Inventory.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Scene_Inventory.js'), 'utf8'));
 
 const sceneInv = new Scene_Inventory();
 sceneInv._targetId = 'E_1'; // Cadavre

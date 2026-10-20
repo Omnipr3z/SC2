@@ -22,7 +22,7 @@
  * @type string[]
  * @default []
  * 
- * @help DEBUGTOOL.js
+ * @help SC4_DEBUGTOOL.js
  * 
  * Gestionnaire statique de débogage pour SimCraft 4.
  * 

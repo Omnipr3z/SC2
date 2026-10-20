@@ -134,8 +134,22 @@ global.$gamePlayer = {
 // Chargement des scripts
 const ROOT_DIR = path.resolve(__dirname, '..');
 vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Localization.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Game_Planet.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Game_PlanetarySystem.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Game_Sector.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Game_Spaceship.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Game_Spaceships.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_SystemMapManager.js'), 'utf8'));
 vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_SpaceTravel.js'), 'utf8'));
-vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_SpaceScenes.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Window_SpaceCalendar.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Window_SpaceControls.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Window_SpaceEventLog.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Window_SpaceShipInfo.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Window_SpaceTargetInfo.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Scene_SectorTravel.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Scene_SpaceTravel.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Scene_SubsystemTravel.js'), 'utf8'));
+vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Interface.js'), 'utf8'));
 
 console.log("==============================================================");
 console.log("--- TEST VALIDATION REVIEW TEST 2 ---");
