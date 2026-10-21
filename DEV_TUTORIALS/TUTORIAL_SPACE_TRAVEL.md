@@ -197,28 +197,33 @@ Définit les planètes, étoiles, anomalies et stations, leurs mouvements orbita
 
 #### Propriétés Clés des Corps Célestes :
 * **`interactive`** : Booléen (`true`/`false`, défaut `true`). Si défini à `false`, l'astre est **purement décoratif** (ex: anneaux planétaires visuels, nébuleuses locales, débris cosmiques d'arrière-plan). Il est rendu et animé avec sa physique orbitale complète, mais n'affiche pas de curseur de survol, ne peut pas être ciblé par le curseur et ne bloque pas les trajectoires du vaisseau.
-* **`zoom`** : Facteur d'échelle du sprite céleste (ex: `0.2` pour une planète standard, `0.08` pour une lune mineure).
+* **`zoom`** : Facteur d'échelle du sprite céleste (calibré pour l'ergonomie : $0.16 - 0.28$ pour les planètes, surdimensionné à **$0.12$ pour les lunes** afin de garantir la cliquabilité souris sans miss-click, et $0.05 - 0.08$ pour les stations).
 * **`orbitLine`** : Booléen (`true`/`false`) indiquant si le tracé elliptique de l'orbite doit être dessiné à l'écran.
 
-#### Types de Mouvements (`moves`) :
+#### Types de Mouvements (`moves`) & Paramètres Astronomiques Lore :
 1. **`rotation`** :
-   * `value` : Vitesse angulaire propre (radians par frame à vitesse normale). Utilisé pour la rotation procédurale de la planète sur elle-même.
+   * `rotationHours` : Durée du jour local en heures virtuelles (ex: `24` pour un monde habitable étalon, `12` à `16` pour une géante gazeuse).
+   * `value` : Décalage angulaire initial (phase $0.0$ à $1.0$).
 2. **`orbit`** :
-   * `centerX`, `centerY` : Point focal orbital (généralement l'étoile centrale).
-   * `radiusX`, `radiusY` : Demi-grand axe et demi-petit axe de l'orbite elliptique.
-   * `speed` : Vitesse de révolution orbitale.
+   * `orbitRadiusUA` : Rayon orbital en Unités Astronomiques ($1\text{ UA} = 100\text{ px}$).
+   * `orbitalDays` : Période de révolution en jours virtuels selon la 3ème loi de Kepler ($60$ à $110\text{ j}$ pour les telluriques intérieures, **$360\text{ j}$ pour Neotori Prime**, $650$ à $1800\text{ j}$ pour les géantes extérieures).
+   * `centerX`, `centerY` : Point focal orbital (généralement l'étoile centrale en $640, 320$).
+   * `radiusX`, `radiusY` : Demi-grand axe et demi-petit axe de l'orbite elliptique (pixels RMMZ).
    * `value` : Décalage angulaire initial (phase $0.0$ à $1.0$).
 3. **`orbitPlanet`** :
-   * Pour les satellites/lunes/stations : orbite autour d'une planète parente (`planetId`).
+   * Pour les satellites/lunes/stations : orbite autour d'une planète parente (`planetId`). Rayon type $58\text{ px}$ ($0.58\text{ UA}$) pour les lunes avec révolution en $18$ à $36\text{ jours}$.
 4. **`lookAtCenter` / Verrouillage par Marée (Tidal Lock)** :
    * Pour les satellites, ceintures ou stations synchrones : `"lookAtCenter": true` oriente en permanence le sprite vers l'étoile ou le corps céleste parent autour duquel il gravite.
 
-#### Configuration des POIs (`pois`) :
+#### Configuration des POIs (`pois`) & Éclairage au Sol :
 * **`id`** : Identifiant unique de chaîne du POI (ex: `"prime_spatioport"`), référencé par les quêtes.
 * **`mapX`, `mapY`** : Coordonnées normalisées relatives sur la planète ($0.5, 0.5$ = centre exact de la sphère).
 * **`landingMapId`** : ID de la carte RPG Maker MZ sur laquelle le joueur atterrit.
 * **`landingX`, `landingY`** : Coordonnées de tuiles RMMZ d'arrivée du joueur.
 * **`landingEventId`** : ID de l'événement sur la carte cible dont le **Self-Switch A** est automatiquement activé à l'atterrissage (par défaut : `1`).
+* **Heure Solaire & Teinte Dynamique au Sol** :
+  * Lors du transfert sur la carte, le moteur calcule l'angle 2D du POI face au soleil pour injecter la teinte appropriée dans `$gameScreen.startTint()` (Midi = lumière neutre `[0, 0, 0, 0]`, Minuit = nuit sombre `[-70, -60, -30, 120]`, Aube/Crépuscule).
+  * Les ceintures d'astéroïdes et stations spatiales disposent automatiquement d'une ambiance lumineuse fixe (`[-40, -35, -20, 90]`), sans cycle jour/nuit.
 
 ---
 

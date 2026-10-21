@@ -1,7 +1,7 @@
 # 🛠️ SimCraft Engine V2 (SC4) — Journal de Développement & Walkthrough
 
 > **SimCraft Engine V2 (SC4)** — Architecture modulaire pour RPG Maker MZ  
-> *Dernière mise à jour : 20 Octobre 2026*  
+> *Dernière mise à jour : 21 Octobre 2026*  
 > *Auteur : Pierre André Hernandez (Omnipr3z)*
 
 ---
