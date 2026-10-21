@@ -65,12 +65,12 @@ class Window_SpaceEventLog extends Window_Base {
     // 1. DONNÉES & GETTERS MÉTIER
     // ========================================================================
 
-    get lineHeight() {
+    lineHeight() {
         return 20;
     }
 
     get maxLines() {
-        return Math.floor(this.contentsHeight() / this.lineHeight);
+        return Math.floor(this.contentsHeight() / this.lineHeight());
     }
 
     get hasPending() {
@@ -95,11 +95,13 @@ class Window_SpaceEventLog extends Window_Base {
     // ========================================================================
 
     entryRect(index) {
-        return new Rectangle(8, index * this.lineHeight, this.contentsWidth() - 16, this.lineHeight);
+        const lh = this.lineHeight();
+        return new Rectangle(8, index * lh, this.contentsWidth() - 16, lh);
     }
 
     pendingRect(index) {
-        return new Rectangle(8, index * this.lineHeight, this.contentsWidth() - 16, this.lineHeight);
+        const lh = this.lineHeight();
+        return new Rectangle(8, index * lh, this.contentsWidth() - 16, lh);
     }
 
     // ========================================================================
