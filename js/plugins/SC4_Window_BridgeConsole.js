@@ -62,22 +62,28 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
     }
 
     get targetShip() {
-        if (typeof window === "undefined" || !window.$gameSpaceships) return null;
+        const spaceships = (typeof $gameSpaceships !== "undefined" && $gameSpaceships)
+            ? $gameSpaceships
+            : (typeof window !== "undefined" ? window.$gameSpaceships : null);
+        if (!spaceships) return null;
         // Priorité 1 : ID explicite passé en argument (prise de contrôle à distance, piratage, etc.)
-        if (this._shipId !== null) {
-            const explicitShip = window.$gameSpaceships.ship(this._shipId);
+        if (this._shipId !== null && typeof spaceships.ship === "function") {
+            const explicitShip = spaceships.ship(this._shipId);
             if (explicitShip) return explicitShip;
         }
         // Priorité 2 : Vaisseau associé à la carte courante (mapId)
-        if (typeof window.$gameMap !== "undefined" && window.$gameMap && typeof window.$gameMap.mapId === "function") {
-            const curMapId = window.$gameMap.mapId();
-            const mapShip = typeof window.$gameSpaceships.shipByMapId === "function"
-                ? window.$gameSpaceships.shipByMapId(curMapId)
-                : window.$gameSpaceships.spaceships().find(s => s && s.mapId === curMapId);
+        const gameMap = (typeof $gameMap !== "undefined" && $gameMap)
+            ? $gameMap
+            : (typeof window !== "undefined" ? window.$gameMap : null);
+        if (gameMap && typeof gameMap.mapId === "function") {
+            const curMapId = gameMap.mapId();
+            const mapShip = typeof spaceships.shipByMapId === "function"
+                ? spaceships.shipByMapId(curMapId)
+                : (typeof spaceships.spaceships === "function" ? spaceships.spaceships().find(s => s && s.mapId === curMapId) : null);
             if (mapShip) return mapShip;
         }
         // Priorité 3 : Repli sur le vaisseau principal du joueur
-        return typeof window.$gameSpaceships.playerShip === "function" ? window.$gameSpaceships.playerShip() : null;
+        return typeof spaceships.playerShip === "function" ? spaceships.playerShip() : null;
     }
 
     get playerShip() {
@@ -106,10 +112,17 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
         if (planetId === null || planetId === undefined) return [];
 
         let pois = [];
-        if (typeof window !== "undefined" && window.$gamePOIs && typeof window.$gamePOIs.getAll === "function") {
-            pois = window.$gamePOIs.getAll();
-        } else if (typeof window !== "undefined" && window.$dataPois) {
-            pois = window.$dataPois;
+        const gamePOIs = (typeof $gamePOIs !== "undefined" && $gamePOIs)
+            ? $gamePOIs
+            : (typeof window !== "undefined" ? window.$gamePOIs : null);
+        const dataPois = (typeof $dataPois !== "undefined" && $dataPois)
+            ? $dataPois
+            : (typeof window !== "undefined" ? window.$dataPois : null);
+
+        if (gamePOIs && typeof gamePOIs.getAll === "function") {
+            pois = gamePOIs.getAll();
+        } else if (dataPois) {
+            pois = dataPois;
         }
         return (pois || []).filter(p => p && p.planetId === planetId && p.landingMapId > 0);
     }
@@ -156,8 +169,11 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
     getPoiName(poi) {
         if (!poi) return "";
         if (poi.name) return poi.name;
-        if (typeof window !== "undefined" && window.$dataPois) {
-            const dp = window.$dataPois.find(p => p && p.id === poi.id);
+        const dataPois = (typeof $dataPois !== "undefined" && $dataPois)
+            ? $dataPois
+            : (typeof window !== "undefined" ? window.$dataPois : null);
+        if (dataPois) {
+            const dp = dataPois.find(p => p && p.id === poi.id);
             if (dp && dp.name) return dp.name;
         }
         return String(poi.id).replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
@@ -405,16 +421,18 @@ if (typeof Scene_Map !== "undefined") {
         if (_Scene_Map_start) {
             _Scene_Map_start.call(this);
         }
-        if (window.$gameSystem && window.$gameSystem._bridgeConsoleOpen) {
-            const shipId = window.$gameSystem._bridgeConsoleShipId;
+        const gs = (typeof $gameSystem !== "undefined" && $gameSystem) ? $gameSystem : (typeof window !== "undefined" ? window.$gameSystem : null);
+        if (gs && gs._bridgeConsoleOpen) {
+            const shipId = gs._bridgeConsoleShipId;
             this.openBridgeConsole(shipId);
         }
     };
 
     Scene_Map.prototype.openBridgeConsole = function(shipId) {
-        if (window.$gameSystem) {
-            window.$gameSystem._bridgeConsoleOpen = true;
-            window.$gameSystem._bridgeConsoleShipId = (shipId !== undefined && shipId !== null) ? Number(shipId) : null;
+        const gs = (typeof $gameSystem !== "undefined" && $gameSystem) ? $gameSystem : (typeof window !== "undefined" ? window.$gameSystem : null);
+        if (gs) {
+            gs._bridgeConsoleOpen = true;
+            gs._bridgeConsoleShipId = (shipId !== undefined && shipId !== null) ? Number(shipId) : null;
         }
         if (this._bridgeConsoleWindow) {
             this._bridgeConsoleWindow.setShipId(shipId);
@@ -427,9 +445,10 @@ if (typeof Scene_Map !== "undefined") {
     };
 
     Scene_Map.prototype.closeBridgeConsole = function() {
-        if (window.$gameSystem) {
-            window.$gameSystem._bridgeConsoleOpen = false;
-            window.$gameSystem._bridgeConsoleShipId = null;
+        const gs = (typeof $gameSystem !== "undefined" && $gameSystem) ? $gameSystem : (typeof window !== "undefined" ? window.$gameSystem : null);
+        if (gs) {
+            gs._bridgeConsoleOpen = false;
+            gs._bridgeConsoleShipId = null;
         }
         if (this._bridgeConsoleWindow) {
             this._bridgeConsoleWindow.close();
@@ -506,7 +525,8 @@ if (typeof Scene_Map !== "undefined") {
 
     const _Scene_Map_isMenuEnabled = Scene_Map.prototype.isMenuEnabled;
     Scene_Map.prototype.isMenuEnabled = function() {
-        if (window.$gameSystem && window.$gameSystem._bridgeConsoleOpen) {
+        const gs = (typeof $gameSystem !== "undefined" && $gameSystem) ? $gameSystem : (typeof window !== "undefined" ? window.$gameSystem : null);
+        if (gs && gs._bridgeConsoleOpen) {
             return false;
         }
         return _Scene_Map_isMenuEnabled ? _Scene_Map_isMenuEnabled.call(this) : true;

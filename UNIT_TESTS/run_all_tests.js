@@ -41,7 +41,8 @@ const testFiles = [
     'test_step18_testing_mode_fixes.js',
     'test_step19_astronomy_deterministic.js',
     'test_step20_safezone_and_poses.js',
-    'test_step21_bridge_and_landing.js'
+    'test_step21_bridge_and_landing.js',
+    'test_step22_subscenes.js'
 ];
 
 console.log("==============================================================");

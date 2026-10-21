@@ -493,18 +493,29 @@ Le mode Hangar est une possibilité scénaristique permettant de lancer une nave
 ### 3.5 Transitions Douces Inter-Scènes
 Toutes les transitions entre les différentes échelles de voyage spatial (`Scene_SectorTravel`, `Scene_SpaceTravel`, `Scene_SubsystemTravel`) et l'écran de titre ou la carte RPG utilisent désormais des fondus au noir harmonieux (`startFadeIn(24)` / `startFadeOut(24)`). Ce fondu élimine tout scintillement ou affichage abrupt des sprites lors des changements de scènes.
 
-### 3.6 Console de Passerelle de Commandement (`Window_BridgeConsole`)
-La console de pont remplace les arborescences d'événements complexes par un terminal de commande contextuel intégré directement sur `Scene_Map` :
+### 3.6 Architecture SubScene & Pupitre de Passerelle (`SubScene_Console`)
+Pour éviter de surcharger `Scene_Map` tout en maintenant le monde actif en arrière-plan (parallaxe des étoiles animée par les hublots, lueurs de la passerelle), le cockpit de commandement utilise l'infrastructure modulaire **SubScene** :
+
+* **Infrastructure Générique (`SubScene_Base extends Scene_Base`)** :
+  - Dérivée de manière sécurisée de `Scene_Base` (qui est nativement un `PIXI.Container / Stage`).
+  - Fournit nativement le calque de fenêtrage officiel (`createWindowLayer()`, `addWindow()`), un voile d'ombrage semi-transparent (`createDimmer()`) et un cycle de vie standardisé (`create` ➔ `start` ➔ `update` ➔ `stop` ➔ `terminate`).
+  - Gérée par `Scene_Map` via `openSubScene(subSceneClass, ...args)` et `closeSubScene()`. Verrouille le déplacement du joueur et l'ouverture du menu pendant l'activité de la sous-scène.
+
+* **Pupitre Bi-Écran (`SubScene_Console`)** :
+  À l'ouverture du pupitre de commandement, deux fenêtres coordonnées s'ouvrent côte à côte au centre de l'écran (largeur totale 900px) :
+  1. **Volet Gauche (420px) - Télémétrie du Vaisseau (`Window_SpaceShipInfo`)** :
+     - Portrait face composite du Capitaine (Paperdoll 144x144).
+     - Nom, classe et armoiries du bâtiment (`Dawn of Faith`).
+     - Jauges de coque, bouclier, carburant et oxygène.
+     - État des compartiments, vitesse orbitale et flotte de nefs embarquées.
+  2. **Volet Droit (460px) - Commandes de Passerelle (`Window_BridgeConsole`)** :
+     - Titre stylisé et barre de statut télémétrique de l'astre orbité.
+     - Commandes contextuelles d'actions spatiales.
+
 * **Déclenchement événementiel** :
-  - Créer un événement sur la passerelle (déclencheur *Touche d'action* ou *Événement commun*).
-  - Insérer la commande événementielle : **Script** ➔ `SC4.openBridgeConsole([shipId]);` (ou commande de plugin `openBridgeConsole`).
-  - *Prérequis d'activation* : Le plugin `SC4_Window_BridgeConsole` doit impérativement être actif dans le gestionnaire de plugins de RPG Maker MZ (**F10**).
-* **Hiérarchie de Détection du Vaisseau Contrôlé** :
-  La console détermine automatiquement le vaisseau à piloter selon 3 niveaux de priorité :
-  1. **Priorité 1 (Explicite)** : Argument `shipId` passé à la méthode `SC4.openBridgeConsole(shipId)` (idéal pour la prise de contrôle à distance, le piratage informatique, les consoles auxiliaires ou les vaisseaux multi-cartes).
-  2. **Priorité 2 (Contextuelle par carte)** : Vaisseau dont l'attribut `mapId` dans `SPACESHIPS.json` correspond à la carte où se trouve le joueur (`$gameSpaceships.shipByMapId($gameMap.mapId())`).
-  3. **Priorité 3 (Repli)** : Vaisseau principal du joueur (`$gameSpaceships.playerShip()`).
-* **Architecture 5 Sections** : Implémentée selon le standard SimCraft (`SC4_Window_BridgeConsole.js`).
+  - Commande de script : `SC4.openBridgeConsole([shipId]);` (ou `SceneManager._scene.openSubScene(SubScene_Console, [shipId])`).
+  - *Prérequis d'activation* : Les plugins `SC4_SubScene_Base` et `SC4_SubScene_Console` doivent être actifs dans le gestionnaire de plugins de RPG Maker MZ (**F10**).
+
 * **Matrice des Commandes Disponibles** :
   | Commande | Icône | Condition d'Activation | Effet |
   | :--- | :---: | :--- | :--- |
@@ -513,7 +524,7 @@ La console de pont remplace les arborescences d'événements complexes par un te
   | **Décoller** | 🛫 | Vaisseau posé (`isLanded === true`) | Lance la séquence cinématique de décollage vers l'orbite stationnaire. |
   | **Amarrage / Sas** | ⚓ | *(Désactivé WIP)* | Amarrage sas à sas vers une station ou navire ami. |
   | **Subcom** | 📡 | *(Désactivé WIP)* | Communications radio (clearance, secours, avis météo). |
-  | **Quitter la Console** | ❌ | Toujours disponible | Referme la fenêtre et restitue le contrôle au joueur sur le pont. |
+  | **Quitter la Console** | ❌ | Toujours disponible | Referme le pupitre bi-écran et restitue le contrôle au joueur sur le pont. |
 
 * **Sélection Multizone de Site d'Atterrissage (Option A)** :
   Au clic sur **Atterrir**, la console bascule en mode `land_sites` et liste l'ensemble des POIs atterrissables (`landingMapId > 0`) de la planète orbitée :
@@ -521,9 +532,6 @@ La console de pont remplace les arborescences d'événements complexes par un te
   - Un site individuel autorisé peut être sélectionné même si la planète globale est sous embargo.
   - La sélection d'un site autorisé lance la descente ciblée vers ce POI (`SC4.performLandingSequence(poi.id)`).
   - L'option `◀ Retour au menu` ou la touche Échap permet de revenir instantanément au menu principal de la console.
-
-* **Persistance au `pop()` de scène** :
-  Lorsque le joueur quitte la console pour consulter la carte spatiale via `SceneManager.push(Scene_SpaceTravel)` et en revient par `SceneManager.pop()`, la variable d'état `$gameSystem._bridgeConsoleOpen` réouvre automatiquement la console sur la carte sans manipulation supplémentaire.
 
 ### 3.7 Séquences Scénarisées V1 : Atterrissage & Décollage Directs
 Ces séquences automatisent les transitions entre l'espace et la surface planétaire avec effets audio et visuels :
