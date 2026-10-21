@@ -55,6 +55,7 @@ class Scene_SpaceTravel extends Scene_Base {
             spr.scale.x = planet.zoom || 1.0;
             spr.scale.y = planet.zoom || 1.0;
             spr.planetData = planet;
+            spr.planetId = planet.id || planet.dbId;
             spr.planetIndex = index;
             this.addChild(spr);
             this._planetSprites.push(spr);
@@ -362,19 +363,20 @@ class Scene_SpaceTravel extends Scene_Base {
             const dist = Math.hypot(screenX - spr.x, screenY - spr.y);
             const radius = Math.max(20, (spr.width * spr.scale.x * 0.5));
             if (dist <= radius) {
-                this.selectPlanet(spr.planetIndex, spr.planetData);
+                const planetId = spr.planetId !== undefined ? spr.planetId : (spr.planetData ? (spr.planetData.id || spr.planetData.dbId) : spr.planetIndex);
+                this.selectPlanet(planetId, spr.planetData);
                 return true;
             }
         }
         return false;
     }
 
-    selectPlanet(index, planetData) {
+    selectPlanet(planetId, planetData) {
         const ship = window.$gameSpaceships ? window.$gameSpaceships.playerShip() : null;
         this._selectedTargetShipId = null;
-        if (this._selectedPlanetId === index && ship) {
+        if (this._selectedPlanetId === planetId && ship) {
             // Deuxième clic -> Mise en orbite ou contact station
-            ship.setOrbitingPlanet(index);
+            ship.setOrbitingPlanet(planetId);
             SoundManager.playOk();
             if (window.$systemMapManager) {
                 const loc = (k, def) => typeof SC4_Localization !== "undefined" ? SC4_Localization.getText(k, def) : def;
@@ -389,7 +391,7 @@ class Scene_SpaceTravel extends Scene_Base {
             }
         } else {
             // Premier clic -> Sélection et télémesure
-            this._selectedPlanetId = index;
+            this._selectedPlanetId = planetId;
             this._targetWindow.setTarget("planet", planetData);
             SoundManager.playCursor();
         }
@@ -407,6 +409,8 @@ class Scene_SpaceTravel extends Scene_Base {
 
         const ship = window.$gameSpaceships ? window.$gameSpaceships.playerShip() : null;
         if (ship) {
+            this._selectedPlanetId = -1;
+            this._selectedTargetShipId = null;
             ship.setTarget(logicalX, logicalY);
             this.playSpaceShipSe("movingSE");
             if (window.$systemMapManager) {

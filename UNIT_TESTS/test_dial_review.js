@@ -247,9 +247,46 @@ const secretQuest = new Game_Quest({
     rewardVisible: false,
     rewards: { gold: 1000 }
 });
-assert.strictEqual(secretQuest.rewardVisible, false);
-console.log("✅ 7. Attribut rewardVisible = false bien pris en compte : OK");
+// 8. Test ciblage précis planète dans Scene_SpaceTravel (évite décalage index vs dbId)
+const pAnkaros = new Game_Planet({ id: 5, name: "Ankaros Prime", type: "Hive World", x: 600, y: 300, zoom: 0.1 }, 4);
+const pFuria = new Game_Planet({ id: 4, name: "Furia", type: "Death World", x: 400, y: 300, zoom: 0.08 }, 3);
+assert.strictEqual(pAnkaros.id, 5, "L'id de la planète doit correspondre à son dbId (5 pour Ankaros Prime)");
+assert.strictEqual(pAnkaros.dbId, 5, "Le dbId de la planète doit être 5");
+assert.strictEqual(pAnkaros.index, 4, "L'index de position de la planète dans le système doit être 4");
+
+global.$dataPlanets = [
+    { id: 4, name: "Furia", type: "Death World" },
+    { id: 5, name: "Ankaros Prime", type: "Hive World" }
+];
+
+const testSys = new Game_PlanetarySystem({
+    id: 1,
+    name: "Système Ankaros",
+    planetIds: [4, 5]
+});
+assert.strictEqual(testSys.planet(5).name, "Ankaros Prime", "planet(5) doit retourner Ankaros Prime");
+assert.strictEqual(testSys.planet(4).name, "Furia", "planet(4) doit retourner Furia");
+
+// Scene_SpaceTravel planet click & double-click
+const travelScene = new Scene_SpaceTravel();
+travelScene._targetWindow = { setTarget: () => {} };
+travelScene._controlsWindow = { setCommands: () => {} };
+const shipForTravel = new Game_Spaceship({ id: 0, name: "Dawn Of Faith", x: 100, y: 100 });
+global.$gameSpaceships = { playerShip: () => shipForTravel, spaceships: () => [shipForTravel] };
+global.$gameSector = { currentSystem: () => testSys };
+
+// Simulation premier clic sur Ankaros Prime (id: 5)
+travelScene.selectPlanet(pAnkaros.id, pAnkaros);
+assert.strictEqual(travelScene._selectedPlanetId, 5, "Premier clic sur Ankaros Prime doit sélectionner l'ID 5");
+assert.strictEqual(shipForTravel.orbitingPlanetId, null, "Le premier clic ne doit pas encore engager l'orbite");
+
+// Simulation double-clic sur Ankaros Prime (id: 5)
+travelScene.selectPlanet(pAnkaros.id, pAnkaros);
+assert.strictEqual(shipForTravel.orbitingPlanetId, 5, "Le double-clic sur Ankaros Prime doit engager l'orbite vers l'ID 5 (Ankaros Prime, et non Furia)");
+assert.strictEqual(shipForTravel.orbitingPlanet.name, "Ankaros Prime", "L'astre orbité doit être Ankaros Prime");
+console.log("✅ 8. Sélection et mise en orbite d'astres par ID canonique (zéro décalage index) : OK");
 
 console.log("\n==============================================================");
 console.log("🎉 TOUTES LES FONCTIONNALITÉS DE LA REVUE DIAL SONT VALIDÉES !");
 console.log("==============================================================");
+

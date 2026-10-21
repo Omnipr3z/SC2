@@ -11,8 +11,9 @@
 
 class Game_Planet {
     constructor(data, id) {
-        this._id = id;
-        this._dbId = data.id;
+        this._index = id !== undefined ? id : 0;
+        this._dbId = (data && data.id !== undefined) ? data.id : id;
+        this._id = this._dbId;
         this._type = data.type || "Planet";
         this._name = data.name || "Inconnu";
         this._description = data.description || "";
@@ -31,6 +32,7 @@ class Game_Planet {
 
     get id() { return this._id; }
     get dbId() { return this._dbId; }
+    get index() { return this._index; }
     get interactive() { return this._interactive; }
     get type() {
         if (window.$dataPlanets) {
