@@ -65,9 +65,9 @@
     "icon": "poi_station",
     "mapX": 0.45,
     "mapY": 0.52,
-    "landingMapId": 1,
-    "landingX": 20,
-    "landingY": 14,
+    "landingMapId": 37,
+    "landingX": 127,
+    "landingY": 58,
     "landingEventId": 1,
     "planetId": 5,
     "located": true
