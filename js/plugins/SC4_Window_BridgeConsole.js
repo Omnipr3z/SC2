@@ -102,10 +102,17 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
         const planetId = this.orbitingPlanetId;
         if (planetId === null || planetId === undefined) return false;
 
+        const poi = this.landingPoi;
         if (typeof SC4 !== "undefined" && typeof SC4.isLandingAuthorized === "function") {
+            if (poi && poi.id && SC4.isLandingAuthorized(poi.id)) {
+                return true;
+            }
             return SC4.isLandingAuthorized(planetId);
         }
         if (typeof $gameSystem !== "undefined" && $gameSystem && typeof $gameSystem.isLandingAuthorized === "function") {
+            if (poi && poi.id && $gameSystem.isLandingAuthorized(poi.id)) {
+                return true;
+            }
             return $gameSystem.isLandingAuthorized(planetId);
         }
         return false;
@@ -393,6 +400,27 @@ if (typeof Scene_Map !== "undefined") {
 
     Scene_Map.prototype.onBridgeConsoleQuit = function() {
         this.closeBridgeConsole();
+    };
+
+    const _Scene_Map_isMenuEnabled = Scene_Map.prototype.isMenuEnabled;
+    Scene_Map.prototype.isMenuEnabled = function() {
+        if (window.$gameSystem && window.$gameSystem._bridgeConsoleOpen) {
+            return false;
+        }
+        return _Scene_Map_isMenuEnabled ? _Scene_Map_isMenuEnabled.call(this) : true;
+    };
+}
+
+// ============================================================================
+// BLOCAGE DU DÉPLACEMENT JOUEUR TANT QUE LA CONSOLE EST ACTIVE
+// ============================================================================
+if (typeof Game_Player !== "undefined") {
+    const _Game_Player_canMove = Game_Player.prototype.canMove;
+    Game_Player.prototype.canMove = function() {
+        if (window.$gameSystem && window.$gameSystem._bridgeConsoleOpen) {
+            return false;
+        }
+        return _Game_Player_canMove ? _Game_Player_canMove.call(this) : true;
     };
 }
 

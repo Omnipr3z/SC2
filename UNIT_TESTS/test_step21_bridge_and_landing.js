@@ -106,6 +106,9 @@ global.Game_Player = class {
         this._d = 2;
         this._fadeType = 0;
     }
+    canMove() { return true; }
+    isAttacking() { return false; }
+    isActing() { return false; }
     reserveTransfer(mapId, x, y, d, fadeType) {
         this._mapId = mapId;
         this._x = x;
@@ -116,6 +119,7 @@ global.Game_Player = class {
 };
 
 global.$gamePlayer = new global.Game_Player();
+global.$gameParty = { leader() { return null; } };
 
 global.Game_Screen = class {
     constructor() {
@@ -393,7 +397,17 @@ SC4.setLandingAuthorized("furia", true);
 assert.strictEqual(SC4.isLandingAuthorized("furia"), true, "Landing authorized for furia");
 SC4.setLandingAuthorized("furia", false);
 assert.strictEqual(SC4.isLandingAuthorized("furia"), false, "Landing revoked for furia");
-console.log("✓ SC4 Landing Authorization API functions as expected.");
+
+assert.strictEqual(typeof SC4.isLandingAllowed, "function", "SC4.isLandingAllowed is exported");
+
+// Verification of player movement block when bridge console is active
+assert.strictEqual($gamePlayer.canMove(), true, "Player can move normally when console closed");
+$gameSystem._bridgeConsoleOpen = true;
+assert.strictEqual($gamePlayer.canMove(), false, "Player CANNOT move while bridge console is open");
+$gameSystem._bridgeConsoleOpen = false;
+assert.strictEqual($gamePlayer.canMove(), true, "Player can move again when bridge console is closed");
+
+console.log("✓ SC4 Landing Authorization API & Input Lock function as expected.");
 
 // ----------------------------------------------------------------------------
 // TEST 4: Scripted Landing Sequence V1

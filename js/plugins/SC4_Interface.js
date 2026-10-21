@@ -268,6 +268,31 @@ SC4.openBridgeConsole = function(shipId) {
 };
 
 /**
+ * Vérifie si l'atterrissage est physiquement possible (landingAllowed) pour une planète ou un POI donné.
+ * @param {string|number} planetOrPoiId 
+ * @returns {boolean}
+ */
+SC4.isLandingAllowed = function(planetOrPoiId) {
+    if (typeof window === "undefined") return false;
+    // Vérification par POI
+    if (window.$gamePOIs && typeof window.$gamePOIs.get === "function") {
+        const poi = window.$gamePOIs.get(planetOrPoiId);
+        if (poi && poi.landingAllowed !== undefined) {
+            return Boolean(poi.landingAllowed);
+        }
+    }
+    // Vérification par Planète
+    if (window.$gameSector && typeof window.$gameSector.currentSystem === "function") {
+        const sys = window.$gameSector.currentSystem();
+        const planet = sys ? sys.planet(planetOrPoiId) : null;
+        if (planet && planet.landingAllowed !== undefined) {
+            return Boolean(planet.landingAllowed);
+        }
+    }
+    return false;
+};
+
+/**
  * Vérifie si l'atterrissage est autorisé pour une planète ou un POI donné.
  * @param {string|number} planetOrPoiId 
  * @returns {boolean}
