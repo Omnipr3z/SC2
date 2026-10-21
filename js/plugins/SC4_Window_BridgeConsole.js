@@ -95,6 +95,14 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
         return !!(ship && typeof ship.isLanded === "function" && ship.isLanded() !== null);
     }
 
+    get canLand() {
+        const ship = this.playerShip;
+        if (!ship) return false;
+        if (this.orbitingPlanetId === null || this.orbitingPlanetId === undefined) return false;
+        if (typeof ship.canLand === "function") return ship.canLand();
+        return true;
+    }
+
     get orbitingPlanetId() {
         const ship = this.playerShip;
         return (ship && typeof ship.orbitingPlanetId !== "undefined") ? ship.orbitingPlanetId : null;

@@ -152,12 +152,14 @@ class SC4_Localization {
 
         this._dictionaries[upper] = dict;
 
-        // 2. Fichiers de localisation d'entités (Secteurs, Planètes, POIs, Quêtes)
+        // 2. Fichiers de localisation d'entités (Secteurs, Planètes, POIs, Quêtes, Factions, Catégories)
         this._locEntities[upper] = {
             sectors: this.readJsonSync(`data/SC/loc/SECTORS_${upper}.json`),
             planets: this.readJsonSync(`data/SC/loc/PLANETS_${upper}.json`),
             pois: this.readJsonSync(`data/SC/loc/POIS_${upper}.json`),
-            quests: this.readJsonSync(`data/SC/loc/QUESTS_${upper}.json`)
+            quests: this.readJsonSync(`data/SC/loc/QUESTS_${upper}.json`),
+            factions: this.readJsonSync(`data/SC/loc/FACTIONS_${upper}.json`),
+            shipCategories: this.readJsonSync(`data/SC/loc/SHIP_CATEGORIES_${upper}.json`)
         };
     }
 
@@ -266,6 +268,41 @@ class SC4_Localization {
             }
             return res;
         }
+
+        if (type === "factions") {
+            const rawPhys = window.$dataFactions_PHYSICAL || window.$dataFactions || [];
+            const locFactions = loc.factions || [];
+            const res = [null];
+            rawPhys.forEach(f => {
+                if (!f || typeof f !== "object") return;
+                const fLoc = (Array.isArray(locFactions) ? locFactions.find(l => l && l.id === f.id) : null) || {};
+                res[f.id] = {
+                    ...f,
+                    name: fLoc.name || f.name || `Faction #${f.id}`,
+                    description: fLoc.description || f.description || ""
+                };
+            });
+            for (let i = 0; i < res.length; i++) {
+                if (res[i] === undefined) res[i] = null;
+            }
+            return res;
+        }
+
+        if (type === "shipCategories") {
+            const rawPhys = window.$dataShipCategories_PHYSICAL || window.$dataShipCategories || [];
+            const locCats = loc.shipCategories || [];
+            const res = [null];
+            rawPhys.forEach(c => {
+                if (!c || typeof c !== "object") return;
+                const cLoc = (Array.isArray(locCats) ? locCats.find(l => l && l.id === c.id) : null) || {};
+                res.push({
+                    ...c,
+                    name: cLoc.name || c.name || c.id,
+                    description: cLoc.description || c.description || ""
+                });
+            });
+            return res;
+        }
         return [];
     }
 
@@ -298,6 +335,18 @@ class SC4_Localization {
             window.$dataQuests_FR = this.buildLocalizedData("quests", "FR");
             window.$dataQuests_EN = this.buildLocalizedData("quests", "EN");
             window.$dataQuests = targetLocale === "EN" ? window.$dataQuests_EN : window.$dataQuests_FR;
+        }
+
+        if (window.$dataFactions_PHYSICAL || window.$dataFactions) {
+            window.$dataFactions_FR = this.buildLocalizedData("factions", "FR");
+            window.$dataFactions_EN = this.buildLocalizedData("factions", "EN");
+            window.$dataFactions = targetLocale === "EN" ? window.$dataFactions_EN : window.$dataFactions_FR;
+        }
+
+        if (window.$dataShipCategories_PHYSICAL || window.$dataShipCategories) {
+            window.$dataShipCategories_FR = this.buildLocalizedData("shipCategories", "FR");
+            window.$dataShipCategories_EN = this.buildLocalizedData("shipCategories", "EN");
+            window.$dataShipCategories = targetLocale === "EN" ? window.$dataShipCategories_EN : window.$dataShipCategories_FR;
         }
     }
 

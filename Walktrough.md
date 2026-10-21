@@ -517,12 +517,70 @@ DEBUGTOOL.logFormat({ actor: "Paolo", hp: 120 }, "Acteur : %[actor], PV : %[hp]"
   - API : `$gamePlayer.setPose(name, opts)`, `$heroHub.setPose(actorId, name, opts)`, `SC4.setHeroPose(...)`, `SC4.clearHeroPose(...)`.
 
 ### 11.4 Architecture Modulaire Standard des Fenêtres (`Window_*`)
-Toutes les fenêtres du projet (`SC4_Window_*.js`) adoptent une architecture stricte en 5 sections standardisées (basée sur le pattern de référence `SC4_Window_SpaceShipInfo.js`) :
-1. **Section 1 : Données & Getters Métier** : Isolation des accesseurs de données, calculs dérivés et passerelles de localisation (`get xxx()`, `loc(key, fallback)`).
-2. **Section 2 : Rectangles & Géométrie** : Délimitation géométrique stricte isolée dans des méthodes retournant des instances de `Rectangle` (`xxxRect(lineRect)`).
-3. **Section 3 : Styles & Typographie** : Configuration dédiée des polices, couleurs thématiques, ombrages et contours (`styliseXxx()`).
-4. **Section 4 : Dessin par Bloc** : Méthodes atomiques de rendu visuel par composant (`drawXxxBlock(...)`).
-5. **Section 5 : Orchestration & Rafraîchissement** : Méthode `refresh()` ou `drawItem(index)` succincte (10-15 lignes), agissant en pur chef d'orchestre des blocs de dessin.
+### 11.6 Architecture des Sous-Scènes Superposées (`SubScene_Base` & `SubScene_Console`)
+- **Infrastructure Générique (`SC4_SubScene_Base.js`)** :
+  - Dérive de `Scene_Base` et s'exécute superposée sur `Scene_Map` sans décharger le contexte de jeu actif.
+  - Gestion indépendante de la pile de fenêtres (`addWindow`, `updateWindowPositions`) et capture transparente des clics souris et touches clavier.
+  - Découplage complet : protège le joueur contre toute fermeture intempestive et garantit une restitution propre des contrôles à la sortie.
+- **Console de Passerelle de Commandement (`SubScene_Console`, `SC4_Window_BridgeConsole.js`)** :
+  - Menu contextuel intelligent du cockpit de pilotage :
+    1. 🛰️ **Navigation Stellaire** : Active en vol ou en orbite, ouvre `Scene_SpaceTravel` ou `Scene_SectorTravel`.
+    2. 🛬 **Atterrir (Débarquement)** : Conditionné à la présence en orbite, au gabarit du navire (`canLand`), et à l'autorisation (`isLandingAuthorized`).
+    3. 🛫 **Décoller** : Activé uniquement lorsque le vaisseau est posé au sol (`isLanded`).
+    4. ⚓ **Amarrage / Sas** & 📡 **Subcom** (Réservés WIP).
+    5. ❌ **Quitter la console** : Referme la sous-scène et rend le contrôle du déplacement au sol.
+- **Séquences Scénarisées V1 (`SC4_Interface.js`)** :
+  - `SC4.performLandingSequence(poiId)` : Joue le SE `FIREWIND2`, affiche l'overlay `Landing_placeholder.png`, amarre le vaisseau à l'astre (`ship.aboard(planetId, "P")`), téléporte le joueur sur les coordonnées du tarmac du spatioport (Map 37, x: 127, y: 58 pour `prime_spatioport`) et effectue un fondu sortant.
+  - `SC4.performTakeoffSequence()` : Joue le SE `ShipJump`, affiche l'overlay, replace le navire en orbite (`ship.leaveHost()`), et téléporte le joueur à bord du vaisseau (Map 31, x: 10, y: 10).
+  - Gestion d'autorisation universelle : `SC4.isLandingAuthorized(id)` et `SC4.setLandingAuthorized(id, val)`.
+
+### 11.7 Hiérarchie Spatiale & Classification des Vaisseaux
+- **Hiérarchie Universelle en 5 Niveaux** :
+  - 1. **Galaxie** : Macro-univers.
+  - 2. **Segment** : Vaste région galactique majeure reliée par des Giga-Portes.
+  - 3. **Secteur** : Zone stellaire locale (ex: Secteur Ankaros) reliée par des Portes Stellaires.
+  - 4. **Système** : Système planétaire articulé autour d'une étoile centrale (Sol, Alpha Centauri).
+  - 5. **Sous-système** : Corps célestes et structures locales (Planètes, Lunes, Ceintures d'astéroïdes, Stations, POIs).
+  *(Documenté exhaustivement dans [TUTORIAL_SPACE_TRAVEL.md](file:///c:/SERVER/htdocs/SimCraft/SC4/DEV_TUTORIALS/TUTORIAL_SPACE_TRAVEL.md))*.
+- **Classification par Gabarits Entiers (`SHIP_CATEGORIES.json`)** :
+  - Fichier de données `data/SC/SHIP_CATEGORIES.json` et localisations `SHIP_CATEGORIES_[FR/EN].json`.
+  - Attribut numérique `size` (1 à 4) déterminant les capacités physiques :
+    - **Taille 1 (Nefs, Chasseurs, Navettes)** : Ultra-légers, capables d'atterrir sur tous les sols et d'entrer dans les hangars de vaisseaux porteurs.
+    - **Taille 2 (Escorteurs légers, Scouts)** : Gabarit intermédiaire, atterrissage autorisé sur spatioports et plaines solides.
+    - **Taille 3 (Frégates, Escorteurs lourds)** : Bâtiments de ligne, atterrissage atmosphérique strictement interdit. Opèrent en orbite ou amarrage sas.
+    - **Taille 4 (Croiseurs, Cuirassés capitaux)** : Géants de flotte. Strictement spatiaux, utilisation obligatoire de nefs embarquées pour descendre à terre.
+
+### 11.8 Contrôles Temporels Spatiaux & Lissage Déterministe de la Rotation (Option 2)
+- **Volet de Contrôle Temporel (`SC4_Window_SpaceTimeControls.js`, `SC4_Scene_SpaceTravel.js`)** :
+  - Fenêtre dédiée intégrée au tableau de bord spatial : Pause (0x), Vitesse Normale (1x), Avance Rapide (5x), Voyage Warp (20x).
+  - Règle de réinitialisation automatique : Lors d'un transit de navigation vers un astre ou un POI, la vitesse repasse obligatoirement en 1x dès l'arrivée à destination pour éviter tout dépassement.
+- **Lissage Visuel Continu de la Rotation Planétaire (Option 2)** :
+  - Découplage de l'ancienne quantification par paliers de 5 minutes (`Math.floor(progress / 5) * 5`).
+  - Calcul direct frame-accurate à 60 FPS basé sur le timestamp universel et le ratio de ticks par minute (`progress = timestamp + (_tick / tickPerMin)`).
+  - Fluidité soyeuse sans aucune saccade visuelle, tout en conservant une synchronisation parfaite à 100% avec les coordonnées orbitales, les POIs de surface et le calendrier stellaire.
+
+### 11.9 Ergonomie Multi-Inventaires : Commande "Tout vider" & Alerte Surcharge
+- **Commande "Tout vider" (`SC4_Window_InventoryCommand.js`)** :
+  - Ajout d'une 4e option dans la barre supérieure de transfert d'inventaire permettant de piller d'un bloc un conteneur secondaire vers l'inventaire du joueur.
+  - Commande automatiquement grisée si le poids cumulé du conteneur dépasse la capacité de charge restante du joueur.
+- **Alerte Modale de Surcharge à la Fermeture (`SC4_Scene_Inventory.js`)** :
+  - Lors de la fermeture de la scène d'inventaire, si le joueur se trouve en surcharge (`isOverweight`), suspension de la sortie et affichage d'un dialogue de confirmation :
+    `"[Acteur] est en surpoids et ne pourra plus se déplacer. Voulez-vous confirmer ?"`
+  - Permet d'éviter de se retrouver bloqué au sol sur la carte sans possibilité de manœuvre.
+
+### 11.10 Parallaxe des Hublots en Orbite & Vue Extérieure (`Inner Map`)
+- Déclaration dans le notetag de la carte intérieure de vaisseau : `<spaceshipIdParalaxes:[id]>`.
+- Comportement dynamique selon l'état du vaisseau :
+  - En orbite stationnaire : vue de la planète (`!planet_[id]`) en zero-parallax fixe.
+  - En saut FTL / Hyperdrive : effet `Warp` avec défilement rapide `sx = 8`.
+  - En espace profond : ciel étoilé `StarlitSky` avec défilement doux `sx = 0.5`.
+  - Au sol : vue de la surface planétaire.
+
+### 11.11 Registre des Factions & Système de Relations (Nemesis)
+- **Fichier de données `data/SC/FACTIONS.json` et localisations `FACTIONS_[FR/EN].json`** :
+  - 8 factions majeures avec ID 1-based, index 0 `null`, affinité (-100 à +100), balance de pouvoir et matrice relationnelle croisée.
+  - Modèles métiers `Game_Faction` (`SC4_Game_Faction.js`) et registre global `$gameFactions` (`SC4_Game_Factions.js`) intégrés à `SC4_DataManager.js` pour chargement et persistance dans les sauvegardes.
+  - Document maître exhaustif : [SC4_RELATIONSHIP_SYSTEM.md](file:///c:/SERVER/htdocs/SimCraft/SC4/SC4_RELATIONSHIP_SYSTEM.md).
 
 ---
 

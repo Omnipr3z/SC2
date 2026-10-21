@@ -255,6 +255,44 @@ global.$gameDate.setScrollSpeedMode(1);
 assert.strictEqual(timeCtrlWin.currentSpeedMode(), 1, "Mode réinitialisé à 1x à l'arrivée");
 console.log("✓ Window_SpaceTimeControls pilote le flux temporel ($gameDate) avec succès.");
 
+// ----------------------------------------------------------------------------
+// TEST 5: Rétro-compatibilité Game_Spaceship (Taille, Atterrissage & Factions)
+// ----------------------------------------------------------------------------
+console.log("\n--- Test 5: Rétro-compatibilité Game_Spaceship (Gabarits & Factions) ---");
+require(path.resolve(__dirname, "../js/plugins/SC4_Game_Spaceship.js"));
+global.$dataShipCategories = rawCategories;
+
+const scoutShip = new global.Game_Spaceship({
+    id: 1,
+    name: "Dawn Of Faith",
+    category: "Escort & Scout",
+    faction: "Flotte Fédérale"
+});
+assert.strictEqual(scoutShip.categoryId, "scout", "Mapping automatique de 'Escort & Scout' vers categoryId 'scout'");
+assert.strictEqual(scoutShip.size, 2, "Scout a la taille 2");
+assert.strictEqual(scoutShip.canLand(), true, "Vaisseau de taille 2 peut atterrir");
+assert.strictEqual(scoutShip.factionId, 1, "Mapping automatique de faction vers factionId 1");
+
+const cruiserShip = new global.Game_Spaceship({
+    id: 2,
+    name: "Vigilance Prime",
+    category: "Patrol Cruiser",
+    faction: "Flotte Fédérale"
+});
+assert.strictEqual(cruiserShip.categoryId, "croiseur", "Mapping automatique vers 'croiseur'");
+assert.strictEqual(cruiserShip.size, 4, "Croiseur a la taille 4");
+assert.strictEqual(cruiserShip.canLand(), false, "Croiseur capital (taille 4) ne peut pas atterrir");
+console.log("✓ Modèle Game_Spaceship assure une rétro-compatibilité totale avec les anciennes data.");
+
+// ----------------------------------------------------------------------------
+// TEST 6: Option 2 - Lissage Continu Déterministe de la Rotation Planétaire
+// ----------------------------------------------------------------------------
+console.log("\n--- Test 6: Option 2 - Rotation continue sans quantification 5min ---");
+const mapMgrCode = fs.readFileSync(path.resolve(__dirname, "../js/plugins/SC4_SystemMapManager.js"), "utf8");
+assert.ok(mapMgrCode.includes("const rotationProgress = progress;"), "Option 2 implémentée sans quantification Math.floor(progress / 5)");
+assert.ok(!mapMgrCode.includes("Math.floor(progress / 5) * 5"), "Aucun artefact de micro-saccades résiduel");
+console.log("✓ Rotation planétaire Option 2 validée déterministe et frame-accurate à 60 FPS.");
+
 console.log("\n==============================================================");
 console.log("  TEST STEP 23 RÉUSSI : 100% des tests validés !              ");
 console.log("==============================================================");

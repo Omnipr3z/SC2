@@ -91,7 +91,8 @@ class SystemMapManager {
 
         const isFastForward = Boolean(window.$gameDate && window.$gameDate._scrollSpeedMode > 2);
         const orbitProgress = isFastForward ? progress : Math.floor(progress / 60) * 60;
-        const rotationProgress = isFastForward ? progress : Math.floor(progress / 5) * 5;
+        // Option 2 : rotation visuelle continue et déterministe basée sur le temps universel exact (ticks/min)
+        const rotationProgress = progress;
 
         this.planets.forEach(planet => {
             // 1. Rotation axiale

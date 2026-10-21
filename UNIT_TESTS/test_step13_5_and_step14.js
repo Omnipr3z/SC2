@@ -370,6 +370,15 @@ eval(heroSpriteCode);
 const titleScreenCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_TitleScreen.js'), 'utf8');
 eval(titleScreenCode);
 
+const freeGameCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Scene_FreeGameStart.js'), 'utf8');
+eval(freeGameCode);
+
+const codexCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Scene_Codex.js'), 'utf8');
+eval(codexCode);
+
+const creditsCode = fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Scene_Credits.js'), 'utf8');
+eval(creditsCode);
+
 console.log("==============================================================");
 console.log("--- TEST ÉTAPE 13.5 : GARDE & BLOCAGE DE COURSE (CLIC DROIT) ---");
 console.log("==============================================================");

@@ -15,6 +15,7 @@ class Game_Spaceship {
         const defShip = typeof SC4_Localization !== "undefined" ? SC4_Localization.getText("travel.default_ship_name", "Navire sans nom") : "Navire sans nom";
         this._name = data.name || defShip;
         this._category = data.category || "Vaisseau";
+        this._categoryId = data.categoryId || null;
         this._shipClass = data.shipClass || "Standard";
         this._captainId = data.captainId || 1;
         this._bitmapName = data.bitmapName || "PlayerShip";
@@ -28,6 +29,7 @@ class Game_Spaceship {
         this._contactShipId = null;
         this._capacity = data.capacity || 100;
         this._faction = data.faction || "Neutre";
+        this._factionId = (typeof data.factionId === "number") ? data.factionId : null;
         this._motorId = typeof data.motorId === "number" ? data.motorId : 1;
         this._fuel = typeof data.fuel === "number" ? data.fuel : 500;
         this._status = "Static"; // Static | Orbiting | MoveToOrbit | MoveToDest | InterSystemJump
@@ -153,7 +155,46 @@ class Game_Spaceship {
         return !!(target && target.dockingAllowed);
     }
     get name() { return this._name; }
-    get category() { return this._category; }
+    get category() {
+        const sc = this.shipCategory;
+        if (sc && sc.name) return sc.name;
+        return this._category;
+    }
+    get categoryId() {
+        if (this._categoryId) return this._categoryId;
+        const cat = (this._category || "").toLowerCase();
+        if (cat.includes("shuttle") || cat.includes("navette")) return "navette";
+        if (cat.includes("scout")) return "scout";
+        if (cat.includes("escort")) return "escorteur_leger";
+        if (cat.includes("fregate") || cat.includes("frigate")) return "fregate";
+        if (cat.includes("cruiser") || cat.includes("croiseur") || cat.includes("patrol")) return "croiseur";
+        return "scout";
+    }
+    get shipCategory() {
+        const catId = this.categoryId;
+        const dataCats = (typeof $dataShipCategories !== "undefined" && $dataShipCategories) 
+            ? $dataShipCategories 
+            : (typeof window !== "undefined" ? window.$dataShipCategories : null);
+        if (Array.isArray(dataCats)) {
+            return dataCats.find(c => c && c.id === catId) || null;
+        }
+        return null;
+    }
+    get size() {
+        const sc = this.shipCategory;
+        if (sc && typeof sc.size === "number") return sc.size;
+        const cat = (this._category || "").toLowerCase();
+        if (cat.includes("shuttle") || cat.includes("navette") || cat.includes("chasseur")) return 1;
+        if (cat.includes("escort") || cat.includes("scout")) return 2;
+        if (cat.includes("fregate") || cat.includes("frigate")) return 3;
+        if (cat.includes("cruiser") || cat.includes("croiseur") || cat.includes("patrol")) return 4;
+        return 2;
+    }
+    canLand() {
+        const sc = this.shipCategory;
+        if (sc && typeof sc.landingAllowed === "boolean") return sc.landingAllowed;
+        return this.size <= 2;
+    }
     get shipClass() { return this._shipClass; }
     get captainId() { return this._captainId; }
     get captain() {
@@ -231,7 +272,26 @@ class Game_Spaceship {
     }
     get orbitingPlanetId() { return this._orbitingPlanetId; }
     get capacity() { return this._capacity; }
-    get faction() { return this._faction; }
+    get factionId() {
+        if (this._factionId) return this._factionId;
+        const fStr = (this._faction || "").toLowerCase();
+        if (fStr.includes("fédérale") || fStr.includes("federale") || fStr.includes("astra") || fStr.includes("militarum") || fStr.includes("humaine")) return 1;
+        if (fStr.includes("elion")) return 2;
+        if (fStr.includes("saurion") || fStr.includes("consortium")) return 3;
+        if (fStr.includes("drak")) return 4;
+        if (fStr.includes("rebelle") || fStr.includes("alliance")) return 5;
+        if (fStr.includes("atronic")) return 6;
+        if (fStr.includes("arakna")) return 7;
+        if (fStr.includes("gentech")) return 8;
+        return 1;
+    }
+    get faction() {
+        if (this._factionId && window.$gameFactions) {
+            const f = window.$gameFactions.faction(this._factionId);
+            if (f && f.name) return f.name;
+        }
+        return this._faction;
+    }
     get motorId() { return this._motorId; }
     get motor() {
         const motors = window.$dataShipMotors || [];
