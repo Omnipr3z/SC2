@@ -108,6 +108,17 @@ class Scene_SpaceTravel extends Scene_Base {
         this._calendarWindow = new Window_SpaceCalendar(new Rectangle(0, 0, Graphics.width, 48));
         this.addWindow(this._calendarWindow);
 
+        // Contrôles du flux temporel (haut droite)
+        if (typeof Window_SpaceTimeControls !== "undefined") {
+            const timeCtrlRect = new Rectangle(Graphics.width - 332, 0, 320, 48);
+            this._timeControlsWindow = new Window_SpaceTimeControls(timeCtrlRect);
+            this._timeControlsWindow.setHandler("pause", this.onSetTimeSpeed.bind(this, 0));
+            this._timeControlsWindow.setHandler("play", this.onSetTimeSpeed.bind(this, 1));
+            this._timeControlsWindow.setHandler("fast", this.onSetTimeSpeed.bind(this, 2));
+            this._timeControlsWindow.setHandler("hyper", this.onSetTimeSpeed.bind(this, 3));
+            this.addWindow(this._timeControlsWindow);
+        }
+
         // Terminal d'événements CRT (bas gauche)
         const logRect = new Rectangle(12, 744, 388, 234);
         this._logWindow = new Window_SpaceEventLog(logRect);
@@ -171,6 +182,17 @@ class Scene_SpaceTravel extends Scene_Base {
         this.updateShipGraphics();
         this.updateQuestPins();
         this.updateInput();
+
+        // Réinitialisation automatique en 1x dès qu'un objectif est atteint
+        if (typeof $gameDate !== "undefined" && $gameDate && $gameDate.getScrollSpeedMode() > 1) {
+            const playerShip = window.$gameSpaceships ? window.$gameSpaceships.playerShip() : null;
+            if (playerShip && (playerShip.orbitingPlanetId !== null || (playerShip.isLanded && playerShip.isLanded() !== null))) {
+                $gameDate.setScrollSpeedMode(1);
+                if (this._timeControlsWindow) {
+                    this._timeControlsWindow.refresh();
+                }
+            }
+        }
 
         const loc = (k, def) => typeof SC4_Localization !== "undefined" ? SC4_Localization.getText(k, def) : def;
         this._calendarWindow.refresh(loc("travel.target_system_solar", "Système Solaire"));
@@ -293,6 +315,9 @@ class Scene_SpaceTravel extends Scene_Base {
         if (!ship) return;
 
         if (TouchInput.isTriggered()) {
+            if (this.isAnyWindowTouched(TouchInput.x, TouchInput.y)) {
+                return;
+            }
             if (!this.checkShipClick(TouchInput.x, TouchInput.y) && !this.checkPlanetClick(TouchInput.x, TouchInput.y)) {
                 this.checkTravelClick(TouchInput.x, TouchInput.y);
             }
@@ -487,6 +512,29 @@ class Scene_SpaceTravel extends Scene_Base {
         }
         if (typeof AudioManager !== "undefined" && typeof AudioManager.playSe === "function") {
             AudioManager.playSe(seData);
+        }
+    }
+
+    isAnyWindowTouched(x, y) {
+        const windows = [this._controlsWindow, this._timeControlsWindow, this._shipWindow, this._logWindow, this._targetWindow, this._calendarWindow];
+        for (const win of windows) {
+            if (win && win.visible && (typeof win.isOpen !== "function" || win.isOpen()) && x >= win.x && x < win.x + win.width && y >= win.y && y < win.y + win.height) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    onSetTimeSpeed(speedMode) {
+        if (typeof $gameDate !== "undefined" && $gameDate) {
+            $gameDate.setScrollSpeedMode(speedMode);
+        }
+        if (typeof SoundManager !== "undefined" && typeof SoundManager.playCursor === "function") {
+            SoundManager.playCursor();
+        }
+        if (this._timeControlsWindow) {
+            this._timeControlsWindow.refresh();
+            this._timeControlsWindow.activate();
         }
     }
 

@@ -8,4 +8,4 @@ null,
 {"id":6,"battlerName":"","characterIndex":5,"characterName":"Actors1","classId":2,"equips":[7,0,65,21,0],"faceIndex":5,"faceName":"Actor1","traits":[],"initialLevel":1,"maxLevel":99,"name":"Kasey","nickname":"Reload_RMMZ","note":"","profile":""},
 {"id":7,"battlerName":"","characterIndex":6,"characterName":"Actors1","classId":3,"equips":[7,0,0,20,0],"faceIndex":6,"faceName":"Actor1","traits":[],"initialLevel":1,"maxLevel":99,"name":"Élliot","nickname":"","note":"","profile":""},
 {"id":8,"battlerName":"","characterIndex":7,"characterName":"Actors1","classId":3,"equips":[7,0,0,20,4],"faceIndex":7,"faceName":"Actor1","traits":[],"initialLevel":1,"maxLevel":99,"name":"Roza","nickname":"","note":"","profile":""}
-]
+] 

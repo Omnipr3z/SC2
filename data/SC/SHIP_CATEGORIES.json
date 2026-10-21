@@ -1,0 +1,51 @@
+[
+  null,
+  {
+    "id": "chasseur",
+    "size": 1,
+    "landingAllowed": true,
+    "hangarAllowed": true
+  },
+  {
+    "id": "navette",
+    "size": 1,
+    "landingAllowed": true,
+    "hangarAllowed": true
+  },
+  {
+    "id": "escorteur_leger",
+    "size": 2,
+    "landingAllowed": true,
+    "hangarAllowed": false
+  },
+  {
+    "id": "scout",
+    "size": 2,
+    "landingAllowed": true,
+    "hangarAllowed": false
+  },
+  {
+    "id": "fregate",
+    "size": 3,
+    "landingAllowed": false,
+    "hangarAllowed": false
+  },
+  {
+    "id": "escorteur_lourd",
+    "size": 3,
+    "landingAllowed": false,
+    "hangarAllowed": false
+  },
+  {
+    "id": "croiseur",
+    "size": 4,
+    "landingAllowed": false,
+    "hangarAllowed": false
+  },
+  {
+    "id": "cuirasse",
+    "size": 4,
+    "landingAllowed": false,
+    "hangarAllowed": false
+  }
+]

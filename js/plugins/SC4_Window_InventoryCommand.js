@@ -26,6 +26,16 @@ class Window_InventoryCommand extends _BaseWindowInvCmd {
         return this._targetInventory ? !this._targetInventory.isEmpty() : false;
     }
 
+    get canDump() {
+        if (!this.hasTargetItems) return false;
+        if (typeof $gameParty === "undefined" || !$gameParty) return true;
+        if (typeof $gameParty.maxWeight !== "function" || typeof $gameParty.totalWeight !== "function") return true;
+        const targetW = (this._targetInventory && typeof this._targetInventory.totalWeight === "function")
+            ? this._targetInventory.totalWeight()
+            : 0;
+        return ($gameParty.totalWeight() + targetW) <= $gameParty.maxWeight();
+    }
+
     get canDeposit() {
         return Boolean(this._isPersistent);
     }
@@ -49,7 +59,7 @@ class Window_InventoryCommand extends _BaseWindowInvCmd {
     // ========================================================================
 
     maxCols() {
-        return 3;
+        return 4;
     }
 
     setTargetContext(targetInventory, isPersistent) {
@@ -60,16 +70,20 @@ class Window_InventoryCommand extends _BaseWindowInvCmd {
 
     makeCommandList() {
         const txtTake = this.loc("inventory.take", "Prendre");
+        const txtDump = this.loc("inventory.dump", "Tout vider");
         const txtDeposit = this.loc("inventory.deposit", "Déposer");
         const txtClose = this.loc("inventory.close", "Fermer");
 
         this.addCommand(txtTake, "take", this.hasTargetItems);
+        this.addCommand(txtDump, "dump", this.canDump);
         this.addCommand(txtDeposit, "deposit", this.canDeposit && this.hasPartyItems);
         this.addCommand(txtClose, "close", true);
     }
 }
 
-window.Window_InventoryCommand = Window_InventoryCommand;
+if (typeof window !== "undefined") {
+    window.Window_InventoryCommand = Window_InventoryCommand;
+}
 if (typeof global !== "undefined") {
     global.Window_InventoryCommand = Window_InventoryCommand;
 }

@@ -1,0 +1,43 @@
+[
+  null,
+  {
+    "id": 1,
+    "name": "Fédération Humaine (GMT / SFI)",
+    "description": "Empire unifié terrien fondé sur le Gouvernement Mondial de Terra et les forces d'infanterie SFI."
+  },
+  {
+    "id": 2,
+    "name": "Technocratie Elionne",
+    "description": "Civilisation millénaire très avancée en chimie et biomécanique, originaire du monde Aqua."
+  },
+  {
+    "id": 3,
+    "name": "Consortium Commercial Saurion",
+    "description": "Négociants, banquiers et diplomates nomades régissant l'économie et les échanges stellaires."
+  },
+  {
+    "id": 4,
+    "name": "Vestiges Draks",
+    "description": "Faction dissidente belliqueuse embrassant la Rage Drak dans la piraterie et le mercenariat."
+  },
+  {
+    "id": 5,
+    "name": "Empire Rebelle / Alliances Libres",
+    "description": "Foyer indépendantiste unissant colons libres et transfuges contre l'hégémonie de Terra."
+  },
+  {
+    "id": 6,
+    "name": "Menace Atronics",
+    "description": "Intelligence artificielle collective cybernétique renégate en quête de transcendance."
+  },
+  {
+    "id": 7,
+    "name": "Grande Infestation Arakna",
+    "description": "Nuée organique vorace et insatiable consumant la matière vivante et les coques de métal."
+  },
+  {
+    "id": 8,
+    "name": "Corporation Gentech",
+    "description": "Consortium technologique militaro-industriel pionnier des armes à fusion et blindages Mytrion."
+  }
+]

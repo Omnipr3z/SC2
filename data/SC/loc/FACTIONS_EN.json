@@ -1,0 +1,43 @@
+[
+  null,
+  {
+    "id": 1,
+    "name": "Terran Federation (WGT / TIF)",
+    "description": "Unified human empire governed by World Government of Terra and Terran Infantry Forces."
+  },
+  {
+    "id": 2,
+    "name": "Elion Technocracy",
+    "description": "Ancient civilization master of advanced chemistry and biomechanics, originating from Aqua."
+  },
+  {
+    "id": 3,
+    "name": "Saurian Trade Consortium",
+    "description": "Nomadic merchants, bankers, and diplomats regulating galactic trade and finance."
+  },
+  {
+    "id": 4,
+    "name": "Drak Remnants",
+    "description": "Militant splinter faction embracing the Drak Rage through piracy and mercenary fleets."
+  },
+  {
+    "id": 5,
+    "name": "Rebel Empire / Free Alliances",
+    "description": "Secessionist coalition of independent colonists and defectors opposing Terra's rule."
+  },
+  {
+    "id": 6,
+    "name": "Atronic Threat",
+    "description": "Renegade cybernetic swarm AI seeking dominance and cosmic transcendence."
+  },
+  {
+    "id": 7,
+    "name": "Great Arakna Swarm",
+    "description": "Voracious insectoid tide consuming living flesh, biological matter, and metal starships."
+  },
+  {
+    "id": 8,
+    "name": "Gentech Corporation",
+    "description": "Military-industrial megacorp pioneering fusion weaponry and Mytrion composite armors."
+  }
+]

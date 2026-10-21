@@ -18,6 +18,7 @@ Cette suite de guides détaille le fonctionnement, la syntaxe des notetags/flags
 | 🚀 **Navigation & Simulation Spatiale** | Navigation multi-échelles (Galaxie FTL, Système Solaire, Sous-système), console de passerelle, atterrissage/décollage V1, autorisations de clearance et hublot parallaxe dynamique. | [Tutoriel Navigation Spatiale](./TUTORIAL_SPACE_TRAVEL.md) |
 | 📜 **Système de Quêtes & Balises** | Gestionnaire `$gameQuests`, déclencheur temporel `$storyManager`, balises spatiales multi-échelles, objectifs hiérarchiques et alertes radio cockpit. | [Tutoriel Quêtes & Balises](./TUTORIAL_QUEST_SYSTEM.md) |
 | 🧘 **Poses Persistantes du Hero** | Postures durables statiques (`sit`, `lay`) et de locomotion (`sneak`, `rampe`), contraintes `canMove` et `allowDash`, vitesse, réveil automatique `onAlert` et intégration Paperdoll. | [Tutoriel Poses du Hero](./TUTORIAL_HERO_POSES.md) |
+| 🪟 **Sous-Scènes (SubScenes)** | Infrastructure modulaire de sous-scènes superposées sur Scene_Map (`SubScene_Base`), cycle de vie standardisé, isolation des fenêtres, et cockpit bi-écran (`SubScene_Console`). | [Tutoriel Sous-Scènes](./TUTORIAL_SUBSCENES.md) |
 
 ---
 

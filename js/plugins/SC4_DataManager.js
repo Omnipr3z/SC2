@@ -31,6 +31,8 @@ class SC_DataManager {
         this.loadScDataFile("$dataPlanets_PHYSICAL", "PLANETS.json");
         this.loadScDataFile("$dataPois_PHYSICAL", "POIS.json");
         this.loadScDataFile("$dataQuests_PHYSICAL", "QUESTS.json");
+        this.loadScDataFile("$dataFactions_PHYSICAL", "FACTIONS.json");
+        this.loadScDataFile("$dataShipCategories_PHYSICAL", "SHIP_CATEGORIES.json");
     }
 
     /**
@@ -117,6 +119,9 @@ class SC_DataManager {
         if (typeof StoryManager !== "undefined") {
             window.$storyManager = new StoryManager();
         }
+        if (typeof Game_Factions !== "undefined") {
+            window.$gameFactions = new Game_Factions();
+        }
     }
 
     /**
@@ -142,6 +147,9 @@ class SC_DataManager {
         if (window.$storyManager && typeof window.$storyManager.makeSavefileData === "function") {
             contents.sc_story = window.$storyManager.makeSavefileData();
         }
+        if (window.$gameFactions && typeof window.$gameFactions.makeSavefileData === "function") {
+            contents.sc_factions = window.$gameFactions.makeSavefileData();
+        }
     }
 
     /**
@@ -166,6 +174,9 @@ class SC_DataManager {
         }
         if (contents && contents.sc_story && window.$storyManager && typeof window.$storyManager.loadSavefileData === "function") {
             window.$storyManager.loadSavefileData(contents.sc_story);
+        }
+        if (contents && contents.sc_factions && window.$gameFactions && typeof window.$gameFactions.extractSavefileData === "function") {
+            window.$gameFactions.extractSavefileData(contents.sc_factions);
         }
     }
 }

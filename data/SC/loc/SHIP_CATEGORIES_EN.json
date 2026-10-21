@@ -1,0 +1,43 @@
+[
+  null,
+  {
+    "id": "chasseur",
+    "name": "Starfighter",
+    "description": "Ultra-light and agile craft designed for dogfights and surface-to-orbit liaisons."
+  },
+  {
+    "id": "navette",
+    "name": "Landing Shuttle",
+    "description": "Light transport capable of landing on any terrain and docking in ship hangars."
+  },
+  {
+    "id": "escorteur_leger",
+    "name": "Light Escort",
+    "description": "Versatile starship with reinforced landing gear suitable for spaceports and solid plains."
+  },
+  {
+    "id": "scout",
+    "name": "Scout Ship",
+    "description": "Long-range fast reconnaissance vessel capable of atmospheric landing."
+  },
+  {
+    "id": "fregate",
+    "name": "Combat Frigate",
+    "description": "Heavy line warship operating in stationary orbit. Atmospheric landing prohibited."
+  },
+  {
+    "id": "escorteur_lourd",
+    "name": "Heavy Escort",
+    "description": "Armored patrol vessel too massive to withstand surface planetary gravity."
+  },
+  {
+    "id": "croiseur",
+    "name": "Star Cruiser",
+    "description": "Major capital starship housing shuttle hangars and orbital bombardment batteries."
+  },
+  {
+    "id": "cuirasse",
+    "name": "Fleet Battleship",
+    "description": "Giant mobile fortress commanding entire stellar sectors. Strictly orbital."
+  }
+]

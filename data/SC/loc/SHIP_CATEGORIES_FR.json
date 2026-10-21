@@ -1,0 +1,43 @@
+[
+  null,
+  {
+    "id": "chasseur",
+    "name": "Chasseur Stellaire",
+    "description": "Appareil ultra-léger et maniable pour les combats rapprochés et liaisons sol-orbite."
+  },
+  {
+    "id": "navette",
+    "name": "Navette de Débarquement",
+    "description": "Transport léger capable de se poser sur toutes surfaces et d'embarquer dans les hangars."
+  },
+  {
+    "id": "escorteur_leger",
+    "name": "Escorteur Léger",
+    "description": "Bâtiment polyvalent doté de trains d'atterrissage renforcés pour spatioports et plaines."
+  },
+  {
+    "id": "scout",
+    "name": "Vaisseau Éclaireur",
+    "description": "Navire de reconnaissance rapide à longue portée capable d'atterrissage d'urgence."
+  },
+  {
+    "id": "fregate",
+    "name": "Frégate de Ligne",
+    "description": "Bâtiment de guerre lourd opérant en orbite stationnaire. Atterrissage atmosphérique interdit."
+  },
+  {
+    "id": "escorteur_lourd",
+    "name": "Escorteur Lourd",
+    "description": "Bâtiment de patrouille blindé trop massif pour supporter la gravité planétaire."
+  },
+  {
+    "id": "croiseur",
+    "name": "Croiseur Stellaire",
+    "description": "Vaisseau capital majeur équipé de hangars de nefs et de batteries de bombardement orbital."
+  },
+  {
+    "id": "cuirasse",
+    "name": "Cuirassé de Flotte",
+    "description": "Forteresse mobile géante régnant sur les secteurs spatiaux. Maintien orbital absolu."
+  }
+]

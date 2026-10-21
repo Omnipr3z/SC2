@@ -42,7 +42,8 @@ const testFiles = [
     'test_step19_astronomy_deterministic.js',
     'test_step20_safezone_and_poses.js',
     'test_step21_bridge_and_landing.js',
-    'test_step22_subscenes.js'
+    'test_step22_subscenes.js',
+    'test_step23_phase3_features.js'
 ];
 
 console.log("==============================================================");

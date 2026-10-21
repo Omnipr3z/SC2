@@ -114,9 +114,10 @@ class Scene_Inventory extends _BaseSceneInventory {
         this._commandWindow = new Window_InventoryCommand(rect);
         this._commandWindow.setTargetContext(this._targetInventory, this.isTargetPersistent());
         this._commandWindow.setHandler("take", this.onCommandTake.bind(this));
+        this._commandWindow.setHandler("dump", this.onCommandDump.bind(this));
         this._commandWindow.setHandler("deposit", this.onCommandDeposit.bind(this));
-        this._commandWindow.setHandler("close", this.popScene.bind(this));
-        this._commandWindow.setHandler("cancel", this.popScene.bind(this));
+        this._commandWindow.setHandler("close", this.onCommandClose.bind(this));
+        this._commandWindow.setHandler("cancel", this.onCommandClose.bind(this));
         this.addWindow(this._commandWindow);
     }
 
@@ -219,6 +220,42 @@ class Scene_Inventory extends _BaseSceneInventory {
         const wx = Math.floor((Graphics.boxWidth - ww) / 2);
         const wy = Math.floor((Graphics.boxHeight - wh) / 2);
         return new Rectangle(wx, wy, ww, wh);
+    }
+
+    onCommandDump() {
+        if (!this._targetInventory || this._targetInventory.isEmpty()) {
+            this._commandWindow.activate();
+            return;
+        }
+        const items = this._targetInventory.allItems();
+        for (const item of items) {
+            const amount = this._targetInventory.numItems(item);
+            if (amount > 0) {
+                this._targetInventory.removeItem(item, amount);
+                if (typeof $gameParty !== "undefined" && $gameParty) {
+                    $gameParty.gainItem(item, amount);
+                }
+            }
+        }
+        if (typeof SoundManager !== "undefined" && typeof SoundManager.playShop === "function") {
+            SoundManager.playShop();
+        }
+        this.refreshAll();
+        this._commandWindow.refresh();
+        this._commandWindow.activate();
+    }
+
+    onCommandClose() {
+        if (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.isOverweight === "function" && $gameParty.isOverweight()) {
+            if (typeof SoundManager !== "undefined" && typeof SoundManager.playBuzzer === "function") {
+                SoundManager.playBuzzer();
+            }
+            if (typeof $gameMessage !== "undefined" && $gameMessage) {
+                const actorName = ($gameParty.leader() ? $gameParty.leader().name() : "Le joueur");
+                $gameMessage.add(`⚠️ ${actorName} est en surpoids et ne pourra plus courir ni se déplacer normalement !`);
+            }
+        }
+        this.popScene();
     }
 
     onCommandTake() {
