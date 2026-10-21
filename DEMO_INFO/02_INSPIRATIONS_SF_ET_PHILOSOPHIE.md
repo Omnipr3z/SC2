@@ -59,6 +59,13 @@ Bien qu'ancré dans la science-fiction, SimCraft est habité par la sève des gr
 - **L'héritage de J.R.R. Tolkien** : La profondeur d'un *Legendarium* séculaire où chaque faction, chaque lignée et chaque planète possède son histoire, ses mythes d'origine et son identité culturelle propre. La dynamique de l'équipage rappelle la *Communauté de l'Anneau* : des héros aux origines, croyances et passés contrastés qui apprennent à se faire confiance face à un destin écrasant.
 - **L'empreinte de *The Elder Scrolls* (Morrowind, Skyrim)** : Un univers encyclopédique foisonnant d'écrits, de religions et de mystères. Le mystère des précurseurs de SimCraft (les Anciens Elerys) fait directement écho aux légendaires **Dwemers** : cette civilisation technologique disparue dont les citadelles silencieuses, les automates et les relais continuent de tourner dans le vide sans que personne n'en maîtrise plus tous les secrets.
 
+#### F. L'Héritage du Jeu de Rôle Papier & L'Empreinte de *Fallout*
+- **L'univers de *Fallout* (Interplay, Obsidian, Bethesda)** : L'un des univers les plus chers au cœur de l'auteur. SimCraft en partage la vision sans concession : la survie en milieu hostile, les choix moraux en clair-obscur, la pluralité des résolutions de quêtes (diplomatie, hacking, infiltration ou confrontation armée) et l'ironie tragique de civilisations qui s'autodétruisent par démesure technologique.
+- **La profondeur des JDR sur Table (TTRPG)** :
+  - ***Pendragon* (Greg Stafford)** : Le chef-d'œuvre du jeu de rôle arthurien qui inspire directement le système de relations et de personnalité (*Relationship / Nemesis*) de SimCraft. L'accent mis sur les passions intérieures, la loyauté, les conflits de devoirs et la fragilité des serments transforme les membres d'équipage en êtres vivants complexes.
+  - ***Dungeons & Dragons* (Gary Gygax & Dave Arneson)** : La matrice de l'aventure collective, l'équilibre des compétences et le frisson de l'inconnu à chaque lancer de dés.
+  - ***Cyberpunk* (Mike Pondsmith)** : La puissance étouffante des méga-corporations, les prothèses cybernétiques, la rue contre les citadelles de verre et l'éthique de la survie en marge du système.
+
 ---
 
 ### 4. Panthéon des Inspirations Pop-Culture, Littérature & Jeux Vidéo
@@ -67,8 +74,11 @@ SimCraft rend hommage aux chefs-d'œuvre qui ont façonné l'imaginaire collecti
 
 | Œuvre de Référence | Influence & Écho dans SimCraft 4 |
 | :--- | :--- |
+| **Fallout** *(Interplay / Obsidian / Bethesda)* | Univers de cœur : Survie sans concession, liberté de choix moraux, résolutions alternatives de quêtes et mélancolie des Terres Dévastées. |
+| **Pendragon** *(Greg Stafford)* | Le système de passions, de loyautés et de vertus féodales inspirant la dynamique relationnelle intime de l'équipage. |
 | **Le Seigneur des Anneaux / Silmarillion** *(J.R.R. Tolkien)* | Profondeur mythologique millénaire (Legendarium), identités culturelles des peuples et dynamique fraternelle d'un équipage aux destins liés. |
 | **The Elder Scrolls** *(Bethesda - Morrowind / Skyrim)* | L'immersion d'un monde encyclopédique et le mystère fascinant des citadelles de précurseurs abandonnées (l'écho des Dwemers). |
+| **Cyberpunk** *(Mike Pondsmith)* | Omnipotence des conglomérats industriels, transhumanisme, marché noir et rébellion aux marges des cités spatiales. |
 | **La Nuit des temps** *(René Barjavel)* | Le mystère des civilisations technologiques oubliées sous les glaces, la mélancolie de l'histoire humaine et l'archéologie du futur. |
 | **Niourk** *(Stefan Wul)* | L'émerveillement et l'effroi face aux mégastructures désertes, l'incompréhension des artefacts anciens et l'élévation de conscience. |
 | **Mass Effect** *(BioWare)* | La carte stellaire immersive, les relais de transit subspatiaux, la vie d'équipage riche en dynamiques relationnelles et les mystères des précurseurs. |
