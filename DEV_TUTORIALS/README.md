@@ -15,8 +15,9 @@ Cette suite de guides détaille le fonctionnement, la syntaxe des notetags/flags
 | 💬 **Bubble Messages** | Fenêtres de message flottantes en bulle (`Window_BubbleMsg`), ciblage dynamique (`\A`, `\E[id]`, `\PX`, `\PY`), auto-taille et edge-clamping hors-écran. | [Tutoriel Bubble Messages](./TUTORIAL_BUBBLE_MESSAGE.md) |
 | ⭕ **Ring Command Menu** | Fenêtre de commandes circulaire rotative (`Window_RingCommand`), animation d'ouverture Ease-Out, icônes, navigation angulaire et trigger tactile/souris sur la carte. | [Tutoriel Ring Command](./TUTORIAL_RING_COMMAND.md) |
 | 🎒 **Conteneurs & Multi-Inventaires** | Gestion des inventaires secondaires (`Game_Inventories`), conteneurs persistants vs auto-erase, support items/armes/armures, sauvegarde/chargement. | [Tutoriel Conteneurs](./TUTORIAL_CONTAINERS_INVENTORIES.md) |
-| 🚀 **Navigation & Simulation Spatiale** | Navigation multi-échelles (Galaxie FTL, Système Solaire, Sous-système), sauts Warp animés, physique orbitale `$gameDate`, mode Hangar et atterrissage sur POI. | [Tutoriel Navigation Spatiale](./TUTORIAL_SPACE_TRAVEL.md) |
+| 🚀 **Navigation & Simulation Spatiale** | Navigation multi-échelles (Galaxie FTL, Système Solaire, Sous-système), console de passerelle, atterrissage/décollage V1, autorisations de clearance et hublot parallaxe dynamique. | [Tutoriel Navigation Spatiale](./TUTORIAL_SPACE_TRAVEL.md) |
 | 📜 **Système de Quêtes & Balises** | Gestionnaire `$gameQuests`, déclencheur temporel `$storyManager`, balises spatiales multi-échelles, objectifs hiérarchiques et alertes radio cockpit. | [Tutoriel Quêtes & Balises](./TUTORIAL_QUEST_SYSTEM.md) |
+| 🧘 **Poses Persistantes du Hero** | Postures durables statiques (`sit`, `lay`) et de locomotion (`sneak`, `rampe`), contraintes `canMove` et `allowDash`, vitesse, réveil automatique `onAlert` et intégration Paperdoll. | [Tutoriel Poses du Hero](./TUTORIAL_HERO_POSES.md) |
 
 ---
 

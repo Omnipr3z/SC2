@@ -24,6 +24,11 @@ Ce document constitue la référence technique et conceptuelle complète du syst
    - [3.2 Système Solaire, Navigation & Vaisseaux PNJ ("En contact")](#32-système-solaire-navigation--vaisseaux-pnj-en-contact)
    - [3.3 Vue Sous-Système : Vaisseau en Orbite & POIs Rotatifs](#33-vue-sous-système--vaisseau-en-orbite--pois-rotatifs)
    - [3.4 Mode Hangar & Atterrissage Automatisé avec Variable 41 (NEF_ID)](#34-mode-hangar--atterrissage-automatisé-avec-variable-41-nef_id)
+   - [3.5 Transitions Douces Inter-Scènes](#35-transitions-douces-inter-scènes)
+   - [3.6 Console de Passerelle de Commandement (Window_BridgeConsole)](#36-console-de-passerelle-de-commandement-window_bridgeconsole)
+   - [3.7 Séquences Scénarisées V1 : Atterrissage & Décollage Directs](#37-séquences-scénarisées-v1--atterrissage--décollage-directs)
+   - [3.8 Système de Clearance & Autorisation d'Atterrissage](#38-système-de-clearance--autorisation-datterrissage)
+   - [3.9 Hublot & Parallaxe Dynamique des Cartes de Vaisseau](#39-hublot--parallaxe-dynamique-des-cartes-de-vaisseau)
 4. [Moteur Temporel `$gameDate` & Déplacement Persistant Hors Scène](#4-moteur-temporel-gamedate--déplacement-persistant-hors-scène)
    - [4.1 Écoulement Continu & Modes de Vitesse](#41-écoulement-continu--modes-de-vitesse)
    - [4.2 Physique Orbitale Indexée sur le Temps](#42-physique-orbitale-indexée-sur-le-temps)
@@ -479,6 +484,52 @@ Lorsqu'il est appelé depuis la console de la navette dans le hangar du vaisseau
 ### 3.5 Transitions Douces Inter-Scènes
 Toutes les transitions entre les différentes échelles de voyage spatial (`Scene_SectorTravel`, `Scene_SpaceTravel`, `Scene_SubsystemTravel`) et l'écran de titre ou la carte RPG utilisent désormais des fondus au noir harmonieux (`startFadeIn(24)` / `startFadeOut(24)`). Ce fondu élimine tout scintillement ou affichage abrupt des sprites lors des changements de scènes.
 
+### 3.6 Console de Passerelle de Commandement (`Window_BridgeConsole`)
+La console de pont remplace les arborescences d'événements complexes par un terminal de commande contextuel intégré sur `Scene_Map` :
+* **Déclenchement** : Appel de script `SC4.openBridgeConsole()` ou interaction avec l'ordinateur de bord.
+* **Architecture 5 Sections** : Implémentée selon le standard SimCraft (`SC4_Window_BridgeConsole.js`).
+* **Matrice des Commandes Disponibles** :
+  | Commande | Icône | Condition d'Activation | Effet |
+  | :--- | :---: | :--- | :--- |
+  | **Navigation Stellaire** | 🛰️ | En vol / Orbite (`!isLanded`) | Ouvre `Scene_SpaceTravel` (Système) ou `Scene_SectorTravel` (Secteur). |
+  | **Atterrir** | 🛬 | `!isLanded && canLand && isLandingAuthorized` | Lance la séquence cinématique d'atterrissage sur le POI ciblé. |
+  | **Décoller** | 🛫 | Vaisseau posé (`isLanded === true`) | Lance la séquence cinématique de décollage vers l'orbite stationnaire. |
+  | **Amarrage / Sas** | ⚓ | *(Désactivé WIP)* | Amarrage sas à sas vers une station ou navire ami. |
+  | **Subcom** | 📡 | *(Désactivé WIP)* | Communications radio (clearance, secours, avis météo). |
+  | **Quitter la Console** | ❌ | Toujours disponible | Referme la fenêtre et restitue le contrôle au joueur sur le pont. |
+* **Persistance au `pop()` de scène** :
+  Lorsque le joueur quitte la console pour consulter la carte spatiale via `SceneManager.push(Scene_SpaceTravel)` et en revient par `SceneManager.pop()`, la variable d'état `$gameSystem._bridgeConsoleOpen` réouvre automatiquement la console sur la carte sans manipulation supplémentaire.
+
+### 3.7 Séquences Scénarisées V1 : Atterrissage & Décollage Directs
+Ces séquences automatisent les transitions entre l'espace et la surface planétaire avec effets audio et visuels :
+* **Atterrissage (`SC4.performLandingSequence(poiId)`)** :
+  1. Joue l'effet sonore de rentrée atmosphérique et réacteurs (`FIREWIND2.ogg`).
+  2. Affiche l'overlay cinématique `Landing_placeholder.png` (`$gameScreen.showPicture`).
+  3. Met à jour le modèle de vaisseau : `ship.aboard(planetId, "P")` et statut `Static`.
+  4. Téléporte silencieusement le joueur vers les coordonnées du spatioport (ex: Map 37, x: 127, y: 58 pour `prime_spatioport`).
+  5. Effectue un fondu sortant fluide de l'overlay (`$gameScreen.movePicture`).
+* **Décollage (`SC4.performTakeoffSequence()`)** :
+  1. Joue l'effet sonore de propulsion spatiale (`ShipJump.ogg`).
+  2. Affiche l'overlay `Landing_placeholder.png`.
+  3. Réinitialise le statut du vaisseau : quitte la surface (`ship.leaveHost()`) et le repositionne en orbite stationnaire autour de l'astre (`ship.setOrbitingPlanet()`).
+  4. Téléporte silencieusement le joueur à l'intérieur du vaisseau (ex: Map 31, x: 10, y: 10 pour l'Escorteur 1).
+  5. Fondu sortant fluide de l'overlay.
+
+### 3.8 Système de Clearance & Autorisation d'Atterrissage
+La clearance d'atterrissage régit l'accès aux spatioports et mondes civilisés :
+* **Vérification** : `SC4.isLandingAuthorized(planetOrPoiId)` ou `$gameSystem.isLandingAuthorized(id)`.
+* **Modification** : `SC4.setLandingAuthorized(planetOrPoiId, authorized = true)`.
+* **Valeur par défaut** : `false` pour les mondes protégés (nécessitant une clearance via quête, dialogue ou transmission radio) ou définie par `landingAuthorized` dans `PLANETS.json` / `POIS.json`.
+
+### 3.9 Hublot & Parallaxe Dynamique des Cartes de Vaisseau
+Pour donner une sensation d'immersion immédiate depuis l'intérieur du vaisseau, les cartes intérieures (passerelle, cabines) adaptent automatiquement leur décor de fond visible par les hublots :
+* **Notetag de carte RMMZ** : `<spaceshipIdParalaxes:[id]>` (ex: `<spaceshipIdParalaxes: 1>`).
+* **Gestion automatique du parallaxe** :
+  * **En orbite stationnaire** : Affiche la planète correspondante (`!planet_[id].png` depuis `img/parallaxes/`), en zero-parallax fixe (défilement figé `[0, 0]`).
+  * **En saut FTL / Hyperdrive** : Affiche l'animation de défilement rapide `Warp.png` (`sx = 8`).
+  * **En vol libre / espace profond** : Affiche le ciel étoilé `StarlitSky.png` avec dérive douce (`sx = 0.5`).
+  * **Au sol / atterri** : Conserve le panorama fixe planétaire du site d'atterrissage.
+
 ---
 
 ## 4. Moteur Temporel `$gameDate` & Déplacement Persistant Hors Scène
@@ -624,6 +675,25 @@ if (curPlanet.isLandingAllowed()) {
 if (playerShip.isWarpAllowed() && playerShip.fuel >= 500) {
     playerShip.startInterSystemJump(targetSystemId);
 }
+
+// 12. Ouvrir la console de passerelle de commandement
+SC4.openBridgeConsole();
+
+// 13. Ouvrir la navigation stellaire (Système / Secteur)
+SC4.openNavigation();
+
+// 14. Déclencher la séquence scénarisée d'atterrissage direct
+SC4.performLandingSequence("prime_spatioport"); // ou sans argument pour le POI de l'orbite courante
+
+// 15. Déclencher la séquence scénarisée de décollage direct vers l'orbite
+SC4.performTakeoffSequence();
+
+// 16. Vérifier si l'atterrissage est autorisé sur un astre ou spatioport
+const isClearanceGranted = SC4.isLandingAuthorized(5); // planète 5
+
+// 17. Accorder ou révoquer une autorisation d'atterrissage
+SC4.setLandingAuthorized(5, true); // Accorde la clearance
+SC4.setLandingAuthorized("prime_spatioport", true);
 ```
 
 ---

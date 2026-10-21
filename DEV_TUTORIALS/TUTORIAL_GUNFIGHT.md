@@ -138,3 +138,38 @@ Pour filtrer ou masquer ces logs en jeu :
   DEBUGTOOL.removeAllowedKey("gunfight");
   DEBUGTOOL.addAllowedKey("gunfight");
   ```
+
+---
+
+## 🛡️ 5. Zones Sécurisées (Safe Zones) & Mode Combat Automatique
+
+Le moteur intègre une régulation dynamique des hostilités et du comportement des armes selon la dangerosité de l'environnement :
+
+### A. Déclaration d'une Zone Sécurisée
+Une carte est considérée comme naturellement pacifique si :
+1. L'option native RMMZ **Interdire la Course (Disable Dashing)** est cochée dans les propriétés de la carte.
+2. Ou le champ Note de la carte contient l'un des notetags suivants : `<safe_zone>`, `<safeMap>` ou `<safe>`.
+
+### B. Comportements en Zone Sûre
+* **Armes rengainées** : Le héros et ses compagnons adoptent automatiquement une posture pacifique (`"walk"` / `"run"` standard), sans affichage de paperdoll d'arme ni visée au curseur.
+* **Tir & Attaque verrouillés** : Clic gauche, clic droit et rechargement (touche `R`) sont totalement désactivés.
+* **Ambiance sonore & BGM** : Maintien de l'ambiance sonore pacifique de la carte.
+
+### C. Bascule Automatique en Mode Combat
+* **Détection active** : Dès qu'au moins un ennemi hostile et vivant est alerté sur la carte (`IAManager.countActiveHostileEnemies() > 0`), le mode combat s'enclenche automatiquement (`$gameMap.isCombatMode() === true`).
+* **Priorité Absolue au Sprint** : En mode combat, la course est **débloquée en priorité absolue**, permettant au joueur d'esquiver et de fuir même sur les cartes où `disableDashing` est actif.
+* **Sortie de combat** : Dès que les menaces sont neutralisées, la carte repasse immédiatement en mode zone sécurisée.
+
+### D. Appels de Script Disponibles
+```javascript
+// Vérifier si la carte courante est sécurisée
+const isSafe = SC4.isSafeZone();
+
+// Vérifier si la carte est en état de combat actif
+const inCombat = SC4.isCombatMode();
+
+// Forcer manuellement l'état de combat (alarme de base, script de cinématique)
+SC4.setCombatMode(true);
+SC4.setCombatMode(false);
+```
+
