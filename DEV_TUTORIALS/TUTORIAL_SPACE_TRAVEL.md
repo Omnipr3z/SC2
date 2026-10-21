@@ -509,11 +509,19 @@ La console de pont remplace les arborescences d'événements complexes par un te
   | Commande | Icône | Condition d'Activation | Effet |
   | :--- | :---: | :--- | :--- |
   | **Navigation Stellaire** | 🛰️ | En vol / Orbite (`!isLanded`) | Ouvre `Scene_SpaceTravel` (Système) ou `Scene_SectorTravel` (Secteur). |
-  | **Atterrir** | 🛬 | `!isLanded && canLand && isLandingAuthorized` | Lance la séquence cinématique d'atterrissage sur le POI ciblé. |
+  | **Atterrir** | 🛬 | `!isLanded && canLand && isLandingAuthorized` | Bascule vers le **sous-menu de sélection de site (Option A)**. |
   | **Décoller** | 🛫 | Vaisseau posé (`isLanded === true`) | Lance la séquence cinématique de décollage vers l'orbite stationnaire. |
   | **Amarrage / Sas** | ⚓ | *(Désactivé WIP)* | Amarrage sas à sas vers une station ou navire ami. |
   | **Subcom** | 📡 | *(Désactivé WIP)* | Communications radio (clearance, secours, avis météo). |
   | **Quitter la Console** | ❌ | Toujours disponible | Referme la fenêtre et restitue le contrôle au joueur sur le pont. |
+
+* **Sélection Multizone de Site d'Atterrissage (Option A)** :
+  Au clic sur **Atterrir**, la console bascule en mode `land_sites` et liste l'ensemble des POIs atterrissables (`landingMapId > 0`) de la planète orbitée :
+  - Chaque site affiche son nom localisé et son badge de clearance : `[Autorisé]` (blanc cliquable) ou `[Autorisation requise]` (grisé et bloqué).
+  - Un site individuel autorisé peut être sélectionné même si la planète globale est sous embargo.
+  - La sélection d'un site autorisé lance la descente ciblée vers ce POI (`SC4.performLandingSequence(poi.id)`).
+  - L'option `◀ Retour au menu` ou la touche Échap permet de revenir instantanément au menu principal de la console.
+
 * **Persistance au `pop()` de scène** :
   Lorsque le joueur quitte la console pour consulter la carte spatiale via `SceneManager.push(Scene_SpaceTravel)` et en revient par `SceneManager.pop()`, la variable d'état `$gameSystem._bridgeConsoleOpen` réouvre automatiquement la console sur la carte sans manipulation supplémentaire.
 
