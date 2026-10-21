@@ -30,7 +30,21 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
         this.opacity = 240;
         this._headerHeight = 70;
         this._shipId = null;
+        this._mode = "main";
         this.refresh();
+    }
+
+    setMode(mode) {
+        this._mode = mode || "main";
+        this.select(0);
+        this.refresh();
+    }
+
+    close() {
+        this._mode = "main";
+        if (typeof super.close === "function") {
+            super.close();
+        }
     }
 
     loadWindowskin() {
@@ -85,15 +99,38 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
         return (ship && typeof ship.orbitingPlanet !== "undefined") ? ship.orbitingPlanet : null;
     }
 
-    get canLand() {
+    get landingPois() {
         const ship = this.playerShip;
-        if (!ship || this.isLanded) return false;
+        if (!ship) return [];
         const planetId = this.orbitingPlanetId;
-        if (planetId === null || planetId === undefined) return false;
+        if (planetId === null || planetId === undefined) return [];
 
-        const planet = this.orbitingPlanet;
-        if (planet && planet.landingAllowed !== false) return true;
-        return this.landingPoi !== null;
+        let pois = [];
+        if (typeof window !== "undefined" && window.$gamePOIs && typeof window.$gamePOIs.getAll === "function") {
+            pois = window.$gamePOIs.getAll();
+        } else if (typeof window !== "undefined" && window.$dataPois) {
+            pois = window.$dataPois;
+        }
+        return (pois || []).filter(p => p && p.planetId === planetId && p.landingMapId > 0);
+    }
+
+    isPoiAuthorized(poi) {
+        if (!poi) return false;
+        const planetId = this.orbitingPlanetId;
+        if (typeof SC4 !== "undefined" && typeof SC4.isLandingAuthorized === "function") {
+            if (poi.id && SC4.isLandingAuthorized(poi.id)) return true;
+            if (planetId !== null && planetId !== undefined && SC4.isLandingAuthorized(planetId)) return true;
+        }
+        if (typeof $gameSystem !== "undefined" && $gameSystem && typeof $gameSystem.isLandingAuthorized === "function") {
+            if (poi.id && $gameSystem.isLandingAuthorized(poi.id)) return true;
+            if (planetId !== null && planetId !== undefined && $gameSystem.isLandingAuthorized(planetId)) return true;
+        }
+        return false;
+    }
+
+    get hasAnyAuthorizedPoi() {
+        const pois = this.landingPois;
+        return pois.some(p => this.isPoiAuthorized(p));
     }
 
     get isLandingAuthorized() {
@@ -102,34 +139,39 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
         const planetId = this.orbitingPlanetId;
         if (planetId === null || planetId === undefined) return false;
 
-        const poi = this.landingPoi;
         if (typeof SC4 !== "undefined" && typeof SC4.isLandingAuthorized === "function") {
-            if (poi && poi.id && SC4.isLandingAuthorized(poi.id)) {
-                return true;
-            }
-            return SC4.isLandingAuthorized(planetId);
+            if (SC4.isLandingAuthorized(planetId)) return true;
+        } else if (typeof $gameSystem !== "undefined" && $gameSystem && typeof $gameSystem.isLandingAuthorized === "function") {
+            if ($gameSystem.isLandingAuthorized(planetId)) return true;
         }
-        if (typeof $gameSystem !== "undefined" && $gameSystem && typeof $gameSystem.isLandingAuthorized === "function") {
-            if (poi && poi.id && $gameSystem.isLandingAuthorized(poi.id)) {
-                return true;
-            }
-            return $gameSystem.isLandingAuthorized(planetId);
-        }
-        return false;
+        return this.hasAnyAuthorizedPoi;
     }
 
     get landingPoi() {
-        const ship = this.playerShip;
-        if (!ship) return null;
-        const planetId = this.orbitingPlanetId;
-        if (planetId === null || planetId === undefined) return null;
+        const pois = this.landingPois;
+        const authorizedPoi = pois.find(p => this.isPoiAuthorized(p));
+        return authorizedPoi || (pois.length > 0 ? pois[0] : null);
+    }
 
-        if (typeof window !== "undefined" && window.$gamePOIs && typeof window.$gamePOIs.getAll === "function") {
-            const pois = window.$gamePOIs.getAll();
-            const found = pois.find(p => p && p.planetId === planetId && p.landingMapId > 0);
-            if (found) return found;
+    getPoiName(poi) {
+        if (!poi) return "";
+        if (poi.name) return poi.name;
+        if (typeof window !== "undefined" && window.$dataPois) {
+            const dp = window.$dataPois.find(p => p && p.id === poi.id);
+            if (dp && dp.name) return dp.name;
         }
-        return null;
+        return String(poi.id).replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    get canLand() {
+        const ship = this.playerShip;
+        if (!ship || this.isLanded) return false;
+        const planetId = this.orbitingPlanetId;
+        if (planetId === null || planetId === undefined) return false;
+
+        const planet = this.orbitingPlanet;
+        if (planet && planet.landingAllowed === false) return false;
+        return this.landingPois.length > 0;
     }
 
     loc(key, def) {
@@ -210,6 +252,13 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
     drawTitleBlock() {
         const rect = this.titleRect();
         this.styliseTitle();
+        if (this._mode === "land_sites") {
+            const titleText = this.loc("bridge.title_land_sites", "SÉLECTION DU SITE D'ATTERRISSAGE");
+            if (typeof this.drawText === "function") {
+                this.drawText(titleText, rect.x, rect.y, rect.width, "left");
+            }
+            return;
+        }
         const ship = this.playerShip;
         const shipName = ship ? (ship.name || "Dawn Of Faith") : "Vaisseau";
         const titleText = this.loc("bridge.title", `CONSOLE DE PASSERELLE ▷ ${shipName.toUpperCase()}`);
@@ -222,6 +271,15 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
         const rect = this.statusRect();
         this.styliseStatus();
         let statusText = "";
+        if (this._mode === "land_sites") {
+            const planet = this.orbitingPlanet;
+            const pName = planet ? (planet.name || `Astre #${planet.id}`) : `Astre #${this.orbitingPlanetId}`;
+            statusText = this.loc("bridge.status_land_sites", `[ASTRE] ${pName} ▷ Choisissez votre zone d'approche`);
+            if (typeof this.drawText === "function") {
+                this.drawText(statusText, rect.x, rect.y, rect.width, "left");
+            }
+            return;
+        }
         if (this.isLanded) {
             const pId = this.playerShip.isLanded();
             statusText = this.loc("bridge.status_landed", `[STATUT] Amarré au sol / Spatioport (Astre #${pId})`);
@@ -251,13 +309,15 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
         const iconMap = {
             navigation: "🛰️",
             land: "🛬",
+            select_poi: "🛬",
+            back_main: "◀",
             takeoff: "🛫",
             dock: "⚓",
             subcom: "📡",
             quit: "❌"
         };
         const icon = iconMap[cmd.symbol] || "▶";
-        const fullText = `${icon}  ${cmd.name}`;
+        const fullText = (cmd.symbol === "back_main") ? `${cmd.name}` : `${icon}  ${cmd.name}`;
 
         if (typeof this.drawText === "function") {
             this.drawText(fullText, rect.x + 8, rect.y, rect.width - 16, "left");
@@ -269,6 +329,24 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
     // ========================================================================
 
     makeCommandList() {
+        if (this._mode === "land_sites") {
+            const pois = this.landingPois;
+            if (pois.length === 0) {
+                this.addCommand(this.loc("bridge.no_sites", "(Aucun site répertorié)"), "back_main", false);
+            } else {
+                pois.forEach(poi => {
+                    const authorized = this.isPoiAuthorized(poi);
+                    const tag = authorized
+                        ? this.loc("bridge.poi_authorized", "[Autorisé]")
+                        : this.loc("bridge.poi_unauthorized", "[Autorisation requise]");
+                    const name = this.getPoiName(poi);
+                    this.addCommand(`${name}  ${tag}`, "select_poi", authorized, poi);
+                });
+            }
+            this.addCommand(this.loc("bridge.back", "◀ Retour au menu"), "back_main", true);
+            return;
+        }
+
         const landed = this.isLanded;
         const canLand = this.canLand;
         const authorized = this.isLandingAuthorized;
@@ -310,11 +388,13 @@ if (typeof Scene_Map !== "undefined") {
         this._bridgeConsoleWindow = new Window_BridgeConsole();
         this._bridgeConsoleWindow.setHandler("navigation", this.onBridgeConsoleNavigation.bind(this));
         this._bridgeConsoleWindow.setHandler("land", this.onBridgeConsoleLand.bind(this));
+        this._bridgeConsoleWindow.setHandler("select_poi", this.onBridgeConsoleSelectPoi.bind(this));
+        this._bridgeConsoleWindow.setHandler("back_main", this.onBridgeConsoleBackMain.bind(this));
         this._bridgeConsoleWindow.setHandler("takeoff", this.onBridgeConsoleTakeoff.bind(this));
         this._bridgeConsoleWindow.setHandler("dock", this.onBridgeConsoleDock.bind(this));
         this._bridgeConsoleWindow.setHandler("subcom", this.onBridgeConsoleSubcom.bind(this));
         this._bridgeConsoleWindow.setHandler("quit", this.onBridgeConsoleQuit.bind(this));
-        this._bridgeConsoleWindow.setHandler("cancel", this.onBridgeConsoleQuit.bind(this));
+        this._bridgeConsoleWindow.setHandler("cancel", this.onBridgeConsoleCancel.bind(this));
         this._bridgeConsoleWindow.close();
         this._bridgeConsoleWindow.deactivate();
         this.addWindow(this._bridgeConsoleWindow);
@@ -338,6 +418,7 @@ if (typeof Scene_Map !== "undefined") {
         }
         if (this._bridgeConsoleWindow) {
             this._bridgeConsoleWindow.setShipId(shipId);
+            this._bridgeConsoleWindow.setMode("main");
             this._bridgeConsoleWindow.refresh();
             this._bridgeConsoleWindow.select(0);
             this._bridgeConsoleWindow.open();
@@ -370,9 +451,33 @@ if (typeof Scene_Map !== "undefined") {
     };
 
     Scene_Map.prototype.onBridgeConsoleLand = function() {
+        if (this._bridgeConsoleWindow) {
+            this._bridgeConsoleWindow.setMode("land_sites");
+            this._bridgeConsoleWindow.activate();
+        }
+    };
+
+    Scene_Map.prototype.onBridgeConsoleSelectPoi = function() {
+        const poi = this._bridgeConsoleWindow ? this._bridgeConsoleWindow.currentExt() : null;
         this.closeBridgeConsole();
         if (typeof SC4 !== "undefined" && typeof SC4.performLandingSequence === "function") {
-            SC4.performLandingSequence();
+            SC4.performLandingSequence(poi ? poi.id : undefined);
+        }
+    };
+
+    Scene_Map.prototype.onBridgeConsoleBackMain = function() {
+        if (this._bridgeConsoleWindow) {
+            this._bridgeConsoleWindow.setMode("main");
+            this._bridgeConsoleWindow.activate();
+        }
+    };
+
+    Scene_Map.prototype.onBridgeConsoleCancel = function() {
+        if (this._bridgeConsoleWindow && this._bridgeConsoleWindow._mode === "land_sites") {
+            this._bridgeConsoleWindow.setMode("main");
+            this._bridgeConsoleWindow.activate();
+        } else {
+            this.closeBridgeConsole();
         }
     };
 

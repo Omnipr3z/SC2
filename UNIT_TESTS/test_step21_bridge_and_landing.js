@@ -493,6 +493,39 @@ $gameMap.updateSpaceshipParallax();
 assert.strictEqual($gameMap._parallaxName, "CustomBackground", "Untagged map parallax preserved");
 console.log("✓ Dynamic ship parallax reacts accurately to all navigation states.");
 
+// ----------------------------------------------------------------------------
+// TEST 7: Landing Site Selection (Option A)
+// ----------------------------------------------------------------------------
+console.log("\n--- Test 7: Landing Site Selection (Option A) ---");
+mockShip.leaveHost();
+mockShip.setOrbitingPlanet(5);
+$gameSystem.setLandingAuthorized(5, false);
+$gameSystem.setLandingAuthorized("prime_spatioport", false);
+
+// In land_sites mode with no authorization
+consoleWin.setMode("land_sites");
+assert.strictEqual(consoleWin._mode, "land_sites", "Console is in land_sites mode");
+let poiCmd = consoleWin._list.find(c => c.symbol === "select_poi" && c.ext && c.ext.id === "prime_spatioport");
+assert.ok(poiCmd, "prime_spatioport present in landing sites list");
+assert.strictEqual(poiCmd.enabled, false, "prime_spatioport disabled when unauthorized");
+assert.ok(poiCmd.name.includes("[Autorisation requise]"), "Shows [Autorisation requise]");
+
+// Authorize prime_spatioport specifically
+$gameSystem.setLandingAuthorized("prime_spatioport", true);
+consoleWin.refresh();
+poiCmd = consoleWin._list.find(c => c.symbol === "select_poi" && c.ext && c.ext.id === "prime_spatioport");
+assert.strictEqual(poiCmd.enabled, true, "prime_spatioport enabled when authorized");
+assert.ok(poiCmd.name.includes("[Autorisé]"), "Shows [Autorisé]");
+
+// Return to main menu
+let backCmd = consoleWin._list.find(c => c.symbol === "back_main");
+assert.ok(backCmd, "back_main button present");
+consoleWin.setMode("main");
+assert.strictEqual(consoleWin._mode, "main", "Returned to main mode");
+let mainLandCmd = consoleWin._list.find(c => c.symbol === "land");
+assert.ok(mainLandCmd, "Main land command present");
+console.log("✓ Option A: Landing site selection list and authorization states validated.");
+
 console.log("\n==============================================================");
 console.log("  TEST STEP 21 RÉUSSI : 100% des tests validés !              ");
 console.log("==============================================================");
