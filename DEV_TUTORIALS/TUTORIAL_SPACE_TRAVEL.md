@@ -468,12 +468,21 @@ Dans `Scene_SubsystemTravel` :
 * **Priorité de quête** : Si une quête active vise un POI, l'icône de base d'alerte est masquée pour laisser place à la balise de quête animée sans superposition disgracieuse.
 * Le volet d'information met en surbrillance en jaune vif l'objectif de quête associé au POI sélectionné.
 
-### 3.4 Mode Hangar & Atterrissage Automatisé avec Variable 41 (`NEF_ID`)
-Lorsqu'il est appelé depuis la console de la navette dans le hangar du vaisseau :
+### 3.4 Capacité d'Atterrissage selon la Catégorie du Vaisseau & Mode Hangar
+La capacité d'un vaisseau à atterrir directement sur la surface d'un astre dépend de son gabarit et de sa catégorie :
+* **Vaisseaux capables d'atterrir** :
+  - **Taille 1 (Nefs, Navettes, Chasseurs)** : Conçus pour les liaisons surface-orbite et les insertions atmosphériques.
+  - **Taille 2 (Escorteurs légers, Scouts, Débarqueurs)** : Équipés de trains d'atterrissage renforcés et de rétrofusées de freinage.
+* **Vaisseaux lourds (Non-atterrisseurs)** :
+  - **Taille 3 (Frégates, Escorteurs lourds)** et **Taille 4 (Croiseurs, Cuirassés)** : Trop massifs pour supporter l'attraction gravitationnelle sans effondrement structurel. Ils demeurent obligatoirement en orbite stationnaire et utilisent leurs navettes de hangar ou les sas d'amarrage des stations orbitales.
+
+#### Déploiement depuis le Hangar (Nefs embarquées `onBoard: "V[ID]"`)
+Le mode Hangar est une possibilité scénaristique permettant de lancer une navette secondaire depuis les coursives d'un bâtiment porteur :
 1. **Sélection de la Nef** : La scène est appelée avec l'ID de la navette (par exemple `nefId = 2`) via `SC4.openHangar(nefId)`.
 2. **Affichage adapté** :
    - Le volet d'informations du vaisseau affiche les caractéristiques complètes de la navette sélectionnée (`Navette Test`, id 2).
    - Le terminal d'événements CRT reste connecté au vaisseau principal pour recevoir les communications générales.
+   - Sur la console de bord d'un vaisseau embarqué (`onBoard`), les commandes contextuelles proposent : *Décoller / Se désarrimer*, *S'amarrer*, et en orbite *Atterrir*.
 3. **Au clic sur "Débarquer sur le POI"** :
    - L'ID de la nef est stocké dans la variable RMMZ dédiée définie par le paramètre `@param nefVariableId` (par défaut **Variable 41**, nommée `NEF_ID`).
    - Le joueur devient transparent : `$gamePlayer.setTransparent(true)`.
