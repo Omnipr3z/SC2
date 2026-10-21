@@ -54,6 +54,11 @@ Le goût prononcé de SimCraft pour les citadelles désertes, les relais spatiau
 - ***La Nuit des temps* (René Barjavel, 1968)** : La découverte sous les glaces de la civilisation engloutie de Gondawa, le signal radio millénaire dans la nuit des âges, et la tragédie intemporelle de sociétés parvenues au sommet de la science avant de s'effondrer.
 Dans SimCraft, chaque secteur porte les cicatrices et les ruines de précurseurs : explorer le cosmos, c'est aussi fouiller la mémoire perdue des étoiles.
 
+#### E. Le Souffle Mythologique, la Diversité des Peuples et l'Héritage Fantastique
+Bien qu'ancré dans la science-fiction, SimCraft est habité par la sève des grands récits mythologiques et fantastiques :
+- **L'héritage de J.R.R. Tolkien** : La profondeur d'un *Legendarium* séculaire où chaque faction, chaque lignée et chaque planète possède son histoire, ses mythes d'origine et son identité culturelle propre. La dynamique de l'équipage rappelle la *Communauté de l'Anneau* : des héros aux origines, croyances et passés contrastés qui apprennent à se faire confiance face à un destin écrasant.
+- **L'empreinte de *The Elder Scrolls* (Morrowind, Skyrim)** : Un univers encyclopédique foisonnant d'écrits, de religions et de mystères. Le mystère des précurseurs de SimCraft (les Anciens Elerys) fait directement écho aux légendaires **Dwemers** : cette civilisation technologique disparue dont les citadelles silencieuses, les automates et les relais continuent de tourner dans le vide sans que personne n'en maîtrise plus tous les secrets.
+
 ---
 
 ### 4. Panthéon des Inspirations Pop-Culture, Littérature & Jeux Vidéo
@@ -62,6 +67,8 @@ SimCraft rend hommage aux chefs-d'œuvre qui ont façonné l'imaginaire collecti
 
 | Œuvre de Référence | Influence & Écho dans SimCraft 4 |
 | :--- | :--- |
+| **Le Seigneur des Anneaux / Silmarillion** *(J.R.R. Tolkien)* | Profondeur mythologique millénaire (Legendarium), identités culturelles des peuples et dynamique fraternelle d'un équipage aux destins liés. |
+| **The Elder Scrolls** *(Bethesda - Morrowind / Skyrim)* | L'immersion d'un monde encyclopédique et le mystère fascinant des citadelles de précurseurs abandonnées (l'écho des Dwemers). |
 | **La Nuit des temps** *(René Barjavel)* | Le mystère des civilisations technologiques oubliées sous les glaces, la mélancolie de l'histoire humaine et l'archéologie du futur. |
 | **Niourk** *(Stefan Wul)* | L'émerveillement et l'effroi face aux mégastructures désertes, l'incompréhension des artefacts anciens et l'élévation de conscience. |
 | **Mass Effect** *(BioWare)* | La carte stellaire immersive, les relais de transit subspatiaux, la vie d'équipage riche en dynamiques relationnelles et les mystères des précurseurs. |
