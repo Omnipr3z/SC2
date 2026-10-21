@@ -116,6 +116,103 @@ class Game_Planet {
         return t.includes("station") || t.includes("base") || t.includes("relais") || t.includes("relay");
     }
 
+    isBelt() {
+        const t = (this._type || "").toLowerCase();
+        const b = (this._bitmapName || "").toLowerCase();
+        return t.includes("belt") || t.includes("ceinture") || b.startsWith("belt_");
+    }
+
+    isMoon() {
+        if (this.isStation() || this.isBelt()) return false;
+        return Array.isArray(this._moves) && this._moves.some(m => m && m.type === "orbitPlanet");
+    }
+
+    hasDynamicDayNight() {
+        return !this.isBelt() && !this.isStation();
+    }
+
+    get orbitRadiusUA() {
+        if (Array.isArray(this._moves)) {
+            const m = this._moves.find(mv => mv && (mv.type === "orbit" || mv.type === "orbitPlanet"));
+            if (m) {
+                if (typeof m.orbitRadiusUA === "number") return m.orbitRadiusUA;
+                if (typeof m.radiusX === "number") return m.radiusX / 100;
+            }
+        }
+        return 1.0;
+    }
+
+    get orbitalDays() {
+        if (Array.isArray(this._moves)) {
+            const m = this._moves.find(mv => mv && (mv.type === "orbit" || mv.type === "orbitPlanet"));
+            if (m) {
+                if (typeof m.orbitalDays === "number") return m.orbitalDays;
+                if (typeof m.speed === "number" && m.speed > 0) {
+                    return Math.max(1, Math.round((Math.PI * 2 / m.speed) / (60 * 1440)));
+                }
+            }
+        }
+        return 360;
+    }
+
+    get rotationHours() {
+        if (Array.isArray(this._moves)) {
+            const m = this._moves.find(mv => mv && mv.type === "rotation");
+            if (m) {
+                if (typeof m.rotationHours === "number") return m.rotationHours;
+                if (typeof m.value === "number" && m.value > 0) {
+                    return Math.max(1, Math.round((Math.PI * 2 / m.value) / 3600));
+                }
+            }
+        }
+        return 24;
+    }
+
+    calculateLocalSolarTime(poiAngle = 0, starPos = { x: 640, y: 320 }) {
+        const sunAngle = Math.atan2(starPos.y - this._y, starPos.x - this._x);
+        const currentPoiAngle = poiAngle + this._rotationAngle;
+        let deltaTheta = (currentPoiAngle - sunAngle) % (Math.PI * 2);
+        if (deltaTheta > Math.PI) deltaTheta -= Math.PI * 2;
+        if (deltaTheta < -Math.PI) deltaTheta += Math.PI * 2;
+        let localHour = 12 + (deltaTheta / Math.PI) * 12;
+        localHour = (localHour + 24) % 24;
+        return Math.round(localHour * 10) / 10;
+    }
+
+    getLocalTint(poiAngle = 0, starPos = { x: 640, y: 320 }) {
+        if (!this.hasDynamicDayNight()) {
+            return [-40, -35, -20, 90];
+        }
+        const hour = this.calculateLocalSolarTime(poiAngle, starPos);
+        let r = 0, g = 0, b = 0, gray = 0;
+        if (hour >= 6 && hour < 12) {
+            const t = (hour - 6) / 6;
+            r = Math.round(20 * (1 - t));
+            g = Math.round(-10 * (1 - t));
+            b = Math.round(-20 * (1 - t));
+            gray = Math.round(30 * (1 - t));
+        } else if (hour >= 12 && hour < 18) {
+            const t = (hour - 12) / 6;
+            r = Math.round(30 * t);
+            g = Math.round(-20 * t);
+            b = Math.round(-30 * t);
+            gray = Math.round(60 * t);
+        } else if (hour >= 18 && hour < 24) {
+            const t = (hour - 18) / 6;
+            r = Math.round(30 * (1 - t) - 70 * t);
+            g = Math.round(-20 * (1 - t) - 60 * t);
+            b = Math.round(-30 * (1 - t) - 30 * t);
+            gray = Math.round(60 * (1 - t) + 120 * t);
+        } else {
+            const t = hour / 6;
+            r = Math.round(-70 * (1 - t) + 20 * t);
+            g = Math.round(-60 * (1 - t) - 10 * t);
+            b = Math.round(-30 * (1 - t) - 20 * t);
+            gray = Math.round(120 * (1 - t) + 30 * t);
+        }
+        return [r || 0, g || 0, b || 0, gray || 0];
+    }
+
     makeSavefileData() {
         return {
             x: this._x,

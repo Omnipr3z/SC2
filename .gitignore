@@ -22,6 +22,7 @@ SC4_RELATIONSHIP_SYSTEM.md
 scratch/
 **/scratch/
 EDITOR/
+*.backup.json
 
 # Librairies tierces
 js/libs/

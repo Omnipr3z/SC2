@@ -295,13 +295,18 @@ class Scene_SubsystemTravel extends Scene_Base {
             }
 
             if (poi.landingMapId && $gamePlayer) {
-                // 1. Rendre le joueur invisible
+                // 1. Calcul et application de la teinte d'ambiance au sol (solaire ou fixe)
+                if (this._planet && typeof this._planet.getLocalTint === "function" && typeof $gameScreen !== "undefined" && $gameScreen) {
+                    const tint = this._planet.getLocalTint(poi.angle || 0);
+                    $gameScreen.startTint(tint, 1);
+                }
+                // 2. Rendre le joueur invisible
                 $gamePlayer.setTransparent(true);
-                // 2. Activer le selfswitch A de l'event spécifié dans les data du POI (défaut 1)
+                // 3. Activer le selfswitch A de l'event spécifié dans les data du POI (défaut 1)
                 const eventId = poi.landingEventId || 1;
                 const switchKey = [poi.landingMapId, eventId, "A"];
                 $gameSelfSwitches.setValue(switchKey, true);
-                // 3. Téléporter sur la carte indiquée
+                // 4. Téléporter sur la carte indiquée
                 $gamePlayer.reserveTransfer(poi.landingMapId, poi.landingX || 10, poi.landingY || 10, 2, 0);
                 SceneManager.goto(Scene_Map);
             } else {

@@ -367,6 +367,29 @@ L'embarquement et l'amarrage obéissent à des règles de classes strictes via `
 - **Standardisation de la Hiérarchie Galactique** :
   - Remplacement de `segmentum` par `segment` dans `SECTORS.json` et prise en charge native dans `SC4_Window_SpaceCalendar.js` (`Galaxie ▷ Segment ▹ Secteur ▹ Système ▹ POI`).
 
+### 8.9 Modèle Astronomique Lore, Déterminisme Absolu & Éclairage Solaire au Sol
+- **Échelle Astronomique In-Lore ($1\text{ UA} = 100\text{ px}$)** :
+  - Standardisation de toutes les distances planétaires en Unités Astronomiques (`orbitRadiusUA`). Les vitesses des vaisseaux s'expriment en UA/h.
+- **Réalisme Chronologique & Calibrage Keplerien** :
+  - Fin des rotations orbitales aberrantes en 11h : chaque astre possède une période de révolution (`orbitalDays`) et une rotation axiale (`rotationHours`) cohérentes selon son type et sa distance à l'étoile centrale :
+    - *Planètes telluriques intérieures* ($1.5$ à $2.8\text{ UA}$) : année de $60$ à $110\text{ jours}$, rotation de $20\text{h}$ à $32\text{h}$, zoom $0.16$.
+    - *Planète habitable de référence (Neotori Prime - ID 62)* ($3.7\text{ UA}$) : année étalon de **$360\text{ jours}$**, jour de **$24\text{h}$**, zoom $0.22$.
+    - *Géantes gazeuses extérieures* ($4.8$ à $6.5\text{ UA}$) : année de $650$ à $1\,800\text{ jours}$, rotation rapide de $10\text{h}$ à $16\text{h}$, zoom $0.26 - 0.28$.
+- **Surdimensionnement Ergonomique des Lunes & Satellites** :
+  - *Règle de cliquabilité* : Les lunes naturelles (ex: Concordia, Knull, Ouro) sont volontairement agrandies (zoom passé de $0.05$ à **$0.12$**, soit ~43px) et leur rayon orbital légèrement étendu ($58\text{ px} = 0.58\text{ UA}$). Cela élimine les miss-clicks à la souris et offre une excellente lisibilité graphique de leurs cratères.
+  - *Préservation stricte des Stations & Belts* : La taille et le zoom des stations orbitales, relais et champs d'astéroïdes V1 restent strictement inchangés.
+- **Moteur Déterministe & Cadencement d'Update (`SystemMapManager`)** :
+  - Tout mouvement est une fonction pure du temps universel `timestamp` : $\theta(t) = \theta_0 + 2\pi \times (t / P)$. Zéro dérive temporelle au changement de vitesse ou pause.
+  - *Optimisation de la cadence* : En vol normal, les coordonnées orbitales progressent par pas horaire in-game (aucun jitter sub-pixel inutile pour un déplacement de $0{,}004\text{ px/min}$), tandis que la rotation axiale s'actualise toutes les 5 minutes in-game. En vitesse accélérée (x4, x12), le calcul redevient continu et fluide.
+- **Calcul 2D de l'Heure Solaire Locale & Teinte au Landing** :
+  - Calcul trigonométrique 2D en temps réel entre le vecteur Soleil $\theta_{\text{soleil}}$ et l'angle instantané du POI $\theta_{\text{poi}}$ :
+    - $\Delta\theta \approx 0 \implies$ **12h00 (Plein Midi)** $\rightarrow$ Teinte neutre $[0, 0, 0, 0]$.
+    - $\Delta\theta \approx \pm\pi \implies$ **00h00 (Minuit)** $\rightarrow$ Teinte nuit $[-70, -60, -30, 120]$.
+    - $\Delta\theta \approx -\pi/2 \implies$ **06h00 (Aube)** $\rightarrow$ Teinte dorée matinale $[20, -10, -20, 30]$.
+    - $\Delta\theta \approx +\pi/2 \implies$ **18h00 (Crépuscule)** $\rightarrow$ Teinte crépusculaire $[30, -20, -30, 60]$.
+  - *Exception Ceintures d'Astéroïdes, Épaves & Stations* : Ambiance lumineuse fixe (`[-40, -35, -20, 90]`, obscurité froide du vide lointain et néons industriels), sans bascule dynamique de lever/coucher de soleil.
+  - *Application continue au transfert* : La teinte est injectée dans `$gameScreen.startTint()` dès l'atterrissage dans `Scene_SubsystemTravel`.
+
 ---
 
 ## 9. Système de Quêtes, Balises & Journal de Bord (Datapad)

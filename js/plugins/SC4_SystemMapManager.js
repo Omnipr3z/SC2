@@ -89,16 +89,31 @@ class SystemMapManager {
         const totalTicks = progress * 60;
         const pi2 = Math.PI * 2;
 
-        this.planets.forEach(planet => {
-            let rotSpeed = 0.0006;
-            if (Array.isArray(planet.moves)) {
-                const rotMove = planet.moves.find(m => m.type === "rotation");
-                if (rotMove && typeof rotMove.value === "number") {
-                    rotSpeed = rotMove.value;
-                }
-            }
-            planet.rotationAngle = (totalTicks * rotSpeed) % pi2;
+        const isFastForward = Boolean(window.$gameDate && window.$gameDate._scrollSpeedMode > 2);
+        const orbitProgress = isFastForward ? progress : Math.floor(progress / 60) * 60;
+        const rotationProgress = isFastForward ? progress : Math.floor(progress / 5) * 5;
 
+        this.planets.forEach(planet => {
+            // 1. Rotation axiale
+            if (Array.isArray(planet.moves)) {
+                const rotMove = planet.moves.find(m => m && m.type === "rotation");
+                if (rotMove) {
+                    if (typeof rotMove.rotationHours === "number" && rotMove.rotationHours > 0) {
+                        const periodMinutes = rotMove.rotationHours * 60;
+                        const initialOffset = (typeof rotMove.value === "number" ? rotMove.value : 0) * pi2;
+                        planet.rotationAngle = (initialOffset + (rotationProgress / periodMinutes) * pi2) % pi2;
+                    } else {
+                        const rotSpeed = typeof rotMove.value === "number" ? rotMove.value : 0.0006;
+                        planet.rotationAngle = (totalTicks * rotSpeed) % pi2;
+                    }
+                } else {
+                    planet.rotationAngle = (totalTicks * 0.0006) % pi2;
+                }
+            } else {
+                planet.rotationAngle = (totalTicks * 0.0006) % pi2;
+            }
+
+            // 2. Mouvement orbital
             if (Array.isArray(planet.moves)) {
                 planet.moves.forEach(move => {
                     if (move.type === "orbit" || move.type === "orbitPlanet") {
@@ -113,12 +128,26 @@ class SystemMapManager {
                             }
                         }
 
-                        const spd = move.speed || 0.0001;
                         const initialOffset = (typeof move.value === "number" ? move.value : 0) * pi2;
-                        planet.orbitAngle = (initialOffset + totalTicks * spd) % pi2;
 
-                        planet.x = cx + Math.cos(planet.orbitAngle) * (move.radiusX || 100);
-                        planet.y = cy + Math.sin(planet.orbitAngle) * (move.radiusY || 100);
+                        if (typeof move.orbitalDays === "number" && move.orbitalDays > 0) {
+                            const periodMinutes = move.orbitalDays * 1440;
+                            planet.orbitAngle = (initialOffset + (orbitProgress / periodMinutes) * pi2) % pi2;
+                        } else {
+                            const spd = move.speed || 0.0001;
+                            planet.orbitAngle = (initialOffset + totalTicks * spd) % pi2;
+                        }
+
+                        // Rayons en pixels (1 UA = 100 px)
+                        const rx = typeof move.orbitRadiusUA === "number"
+                            ? move.orbitRadiusUA * 100
+                            : (move.radiusX || 100);
+                        const ry = typeof move.radiusY === "number"
+                            ? move.radiusY
+                            : (move.type === "orbitPlanet" ? rx : Math.round(rx * 0.55));
+
+                        planet.x = cx + Math.cos(planet.orbitAngle) * rx;
+                        planet.y = cy + Math.sin(planet.orbitAngle) * ry;
                     }
                 });
 
@@ -148,8 +177,8 @@ class SystemMapManager {
                     } else if (lookMove.target === "tangent") {
                         const theta = planet.orbitAngle || 0;
                         const orbitMove = planet.moves.find(m => m && (m.type === "orbit" || m.type === "orbitPlanet"));
-                        const rx = orbitMove ? (orbitMove.radiusX || 100) : 100;
-                        const ry = orbitMove ? (orbitMove.radiusY || 100) : 100;
+                        const rx = orbitMove ? (typeof orbitMove.orbitRadiusUA === "number" ? orbitMove.orbitRadiusUA * 100 : (orbitMove.radiusX || 100)) : 100;
+                        const ry = orbitMove ? (typeof orbitMove.radiusY === "number" ? orbitMove.radiusY : (rx * 0.55)) : 100;
                         const vx = -Math.sin(theta) * rx;
                         const vy = Math.cos(theta) * ry;
                         planet.rotationAngle = (Math.atan2(vy, vx) + (lookMove.offsetAngle || 0)) % pi2;

@@ -38,7 +38,8 @@ const testFiles = [
     'test_review_additions.js',
     'test_advanced_quests.js',
     'test_atlas_galaxy.js',
-    'test_step18_testing_mode_fixes.js'
+    'test_step18_testing_mode_fixes.js',
+    'test_step19_astronomy_deterministic.js'
 ];
 
 console.log("==============================================================");

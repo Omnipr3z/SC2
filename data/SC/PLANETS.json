@@ -14,7 +14,8 @@
       },
       {
         "type": "rotation",
-        "value": 0.0003
+        "value": 0.0003,
+        "rotationHours": 720
       },
       {
         "type": "opacity",
@@ -26,7 +27,8 @@
     "poiIds": [
       "ankaros_helios"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Star"
   },
   {
     "id": 2,
@@ -88,7 +90,7 @@
     "id": 4,
     "x": 1165,
     "y": 132,
-    "zoom": 0.1,
+    "zoom": 0.21,
     "bitmapName": "planet_2",
     "moves": [
       {
@@ -97,7 +99,8 @@
       },
       {
         "type": "rotation",
-        "value": 0.001
+        "value": 0.001,
+        "rotationHours": 24
       },
       {
         "type": "orbit",
@@ -106,20 +109,23 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 330,
-        "radiusY": 160
+        "radiusY": 160,
+        "orbitRadiusUA": 3.3,
+        "orbitalDays": 315
       }
     ],
     "poiIds": [
       "furia_mine",
       "furia_caldera"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 5,
     "x": 350,
     "y": 240,
-    "zoom": 0.2,
+    "zoom": 0.21,
     "bitmapName": "planet_0",
     "moves": [
       {
@@ -128,7 +134,8 @@
       },
       {
         "type": "rotation",
-        "value": 0.001
+        "value": 0.001,
+        "rotationHours": 25
       },
       {
         "type": "orbit",
@@ -137,7 +144,9 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 440,
-        "radiusY": 240
+        "radiusY": 240,
+        "orbitRadiusUA": 4.4,
+        "orbitalDays": 392
       }
     ],
     "poiIds": [
@@ -145,13 +154,14 @@
       "prime_ruins",
       "prime_governor_spire"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Planet"
   },
   {
     "id": 6,
     "x": 350,
     "y": 240,
-    "zoom": 0.12,
+    "zoom": 0.26,
     "bitmapName": "planet_3",
     "moves": [
       {
@@ -160,7 +170,8 @@
       },
       {
         "type": "rotation",
-        "value": 0.002
+        "value": 0.002,
+        "rotationHours": 12
       },
       {
         "type": "orbit",
@@ -169,14 +180,17 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 550,
-        "radiusY": 300
+        "radiusY": 300,
+        "orbitRadiusUA": 5.5,
+        "orbitalDays": 854
       }
     ],
     "poiIds": [
       "wanghek_camp",
       "wanghek_xenolith"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 7,
@@ -198,7 +212,8 @@
       "altus_dock",
       "altus_auspex"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 10,
@@ -214,7 +229,8 @@
       },
       {
         "type": "rotation",
-        "value": 0.0002
+        "value": 0.0002,
+        "rotationHours": 720
       },
       {
         "type": "opacity",
@@ -226,18 +242,20 @@
     "poiIds": [
       "aethelgard_relais_sub"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Star"
   },
   {
     "id": 11,
     "x": 640,
     "y": 320,
-    "zoom": 0.1,
+    "zoom": 0.16,
     "bitmapName": "planet_oros",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0008
+        "value": 0.0008,
+        "rotationHours": 31
       },
       {
         "type": "orbit",
@@ -246,25 +264,29 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 250,
-        "radiusY": 140
+        "radiusY": 140,
+        "orbitRadiusUA": 2.5,
+        "orbitalDays": 105
       }
     ],
     "poiIds": [
       "oros_fonderie_zeta",
       "oros_siphon_01"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 12,
     "x": 640,
     "y": 320,
-    "zoom": 0.12,
+    "zoom": 0.21,
     "bitmapName": "planet_aqua",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0005
+        "value": 0.0005,
+        "rotationHours": 20
       },
       {
         "type": "orbit",
@@ -273,7 +295,9 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 300,
-        "radiusY": 180
+        "radiusY": 180,
+        "orbitRadiusUA": 3,
+        "orbitalDays": 294
       }
     ],
     "poiIds": [
@@ -282,7 +306,8 @@
       "aqua_complexe_genetique",
       "aqua_spire_boreale"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Planet"
   },
   {
     "id": 13,
@@ -305,18 +330,20 @@
       "nacre_poste_ecoute",
       "nacre_silo_chimique"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Asteroid Belt"
   },
   {
     "id": 14,
     "x": 640,
     "y": 320,
-    "zoom": 0.2,
+    "zoom": 0.21,
     "bitmapName": "planet_thaumas",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0006
+        "value": 0.0006,
+        "rotationHours": 22
       },
       {
         "type": "orbit",
@@ -325,19 +352,22 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 420,
-        "radiusY": 230
+        "radiusY": 230,
+        "orbitRadiusUA": 4.2,
+        "orbitalDays": 378
       }
     ],
     "poiIds": [
       "thaumas_station_nebuleuse_b"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 15,
     "x": 640,
     "y": 320,
-    "zoom": 0.06,
+    "zoom": 0.12,
     "bitmapName": "planet_cymo",
     "moves": [
       {
@@ -346,13 +376,16 @@
         "speed": 0.00004,
         "planetId": 14,
         "radiusX": 580,
-        "radiusY": 280
+        "radiusY": 280,
+        "orbitRadiusUA": 5.8,
+        "orbitalDays": 18
       }
     ],
     "poiIds": [
       "cymo_sarcophage"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Moon"
   },
   {
     "id": 16,
@@ -374,7 +407,8 @@
     "poiIds": [
       "arche_quai_diplomatique"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 20,
@@ -390,24 +424,27 @@
       },
       {
         "type": "rotation",
-        "value": 0.0001
+        "value": 0.0001,
+        "rotationHours": 720
       }
     ],
     "poiIds": [
       "g3_noyau_accresion"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Star"
   },
   {
     "id": 21,
     "x": 640,
     "y": 320,
-    "zoom": 0.13,
+    "zoom": 0.21,
     "bitmapName": "planet_ferrum_sub",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.001
+        "value": 0.001,
+        "rotationHours": 29
       },
       {
         "type": "orbit",
@@ -416,25 +453,29 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 290,
-        "radiusY": 145
+        "radiusY": 145,
+        "orbitRadiusUA": 2.9,
+        "orbitalDays": 287
       }
     ],
     "poiIds": [
       "ferrum_excavation_alpha_zero",
       "ferrum_dome_hauts_fourneaux"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 22,
     "x": 640,
     "y": 320,
-    "zoom": 0.2,
+    "zoom": 0.21,
     "bitmapName": "planet_necropole",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0004
+        "value": 0.0004,
+        "rotationHours": 30
       },
       {
         "type": "orbit",
@@ -443,7 +484,9 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 400,
-        "radiusY": 200
+        "radiusY": 200,
+        "orbitRadiusUA": 4,
+        "orbitalDays": 364
       }
     ],
     "poiIds": [
@@ -452,13 +495,14 @@
       "necropole_bastion_silencieux",
       "necropole_siphon_chimique"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Planet"
   },
   {
     "id": 23,
     "x": 640,
     "y": 320,
-    "zoom": 0.05,
+    "zoom": 0.12,
     "bitmapName": "planet_knull",
     "moves": [
       {
@@ -466,14 +510,17 @@
         "value": 0.2,
         "speed": 0.0025,
         "planetId": 22,
-        "radiusX": 38,
-        "radiusY": 38
+        "radiusX": 58,
+        "radiusY": 58,
+        "orbitRadiusUA": 0.58,
+        "orbitalDays": 26
       }
     ],
     "poiIds": [
       "knull_cryo_banque"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Moon"
   },
   {
     "id": 24,
@@ -496,18 +543,20 @@
       "debris_epave_lumiere_dechue",
       "debris_nid_moissonneurs"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Asteroid Belt"
   },
   {
     "id": 25,
     "x": 640,
     "y": 320,
-    "zoom": 0.24,
+    "zoom": 0.26,
     "bitmapName": "planet_xenovapor",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0005
+        "value": 0.0005,
+        "rotationHours": 13
       },
       {
         "type": "orbit",
@@ -516,13 +565,16 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 530,
-        "radiusY": 265
+        "radiusY": 265,
+        "orbitRadiusUA": 5.3,
+        "orbitalDays": 796
       }
     ],
     "poiIds": [
       "xenovapor_siphon_omega"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 26,
@@ -544,7 +596,8 @@
     "poiIds": [
       "monolithe_noyau_sync"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 30,
@@ -560,24 +613,27 @@
       },
       {
         "type": "rotation",
-        "value": 0.0003
+        "value": 0.0003,
+        "rotationHours": 720
       }
     ],
     "poiIds": [
       "arunia_sentinelle_ignis"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Star"
   },
   {
     "id": 31,
     "x": 640,
     "y": 320,
-    "zoom": 0.12,
+    "zoom": 0.16,
     "bitmapName": "planet_sani",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.001
+        "value": 0.001,
+        "rotationHours": 27
       },
       {
         "type": "orbit",
@@ -586,25 +642,29 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 270,
-        "radiusY": 135
+        "radiusY": 135,
+        "orbitRadiusUA": 2.7,
+        "orbitalDays": 108
       }
     ],
     "poiIds": [
       "sani_enclos_dracons",
       "sani_poste_lance_rouge"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 32,
     "x": 640,
     "y": 320,
-    "zoom": 0.19,
+    "zoom": 0.21,
     "bitmapName": "planet_kinbra",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0006
+        "value": 0.0006,
+        "rotationHours": 28
       },
       {
         "type": "orbit",
@@ -613,7 +673,9 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 360,
-        "radiusY": 180
+        "radiusY": 180,
+        "orbitRadiusUA": 3.6,
+        "orbitalDays": 336
       }
     ],
     "poiIds": [
@@ -621,13 +683,14 @@
       "kinbra_forges_lances",
       "kinbra_sanctuaire_traqueurs"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Planet"
   },
   {
     "id": 33,
     "x": 640,
     "y": 320,
-    "zoom": 0.05,
+    "zoom": 0.12,
     "bitmapName": "planet_ouro",
     "moves": [
       {
@@ -635,25 +698,29 @@
         "value": 0.6,
         "speed": 0.002,
         "planetId": 32,
-        "radiusX": 48,
-        "radiusY": 48
+        "radiusX": 58,
+        "radiusY": 58,
+        "orbitRadiusUA": 0.58,
+        "orbitalDays": 21
       }
     ],
     "poiIds": [
       "ouro_cercle_serments"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Moon"
   },
   {
     "id": 34,
     "x": 640,
     "y": 320,
-    "zoom": 0.15,
+    "zoom": 0.21,
     "bitmapName": "planet_kigasi",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0007
+        "value": 0.0007,
+        "rotationHours": 30
       },
       {
         "type": "orbit",
@@ -662,25 +729,29 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 450,
-        "radiusY": 225
+        "radiusY": 225,
+        "orbitRadiusUA": 4.5,
+        "orbitalDays": 399
       }
     ],
     "poiIds": [
       "kigasi_silos_fraternels",
       "kigasi_bourg_concorde"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 35,
     "x": 640,
     "y": 320,
-    "zoom": 0.18,
+    "zoom": 0.26,
     "bitmapName": "planet_sfergrad",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0005
+        "value": 0.0005,
+        "rotationHours": 17
       },
       {
         "type": "orbit",
@@ -689,7 +760,9 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 530,
-        "radiusY": 265
+        "radiusY": 265,
+        "orbitRadiusUA": 5.3,
+        "orbitalDays": 796
       }
     ],
     "poiIds": [
@@ -698,13 +771,14 @@
       "sfergrad_faille_ecailles",
       "sfergrad_donjon_casernes"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Planet"
   },
   {
     "id": 36,
     "x": 640,
     "y": 320,
-    "zoom": 0.06,
+    "zoom": 0.12,
     "bitmapName": "planet_skal",
     "moves": [
       {
@@ -712,14 +786,17 @@
         "value": 0.1,
         "speed": 0.0024,
         "planetId": 35,
-        "radiusX": 50,
-        "radiusY": 50
+        "radiusX": 58,
+        "radiusY": 58,
+        "orbitRadiusUA": 0.58,
+        "orbitalDays": 24
       }
     ],
     "poiIds": [
       "skal_bastion_peage"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Moon"
   },
   {
     "id": 37,
@@ -736,7 +813,8 @@
     "poiIds": [
       "dragons_nid_affut_kran"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Asteroid Belt"
   },
   {
     "id": 38,
@@ -758,7 +836,8 @@
     "poiIds": [
       "ecluse_droit_banniere"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 40,
@@ -774,24 +853,27 @@
       },
       {
         "type": "rotation",
-        "value": 0.0002
+        "value": 0.0002,
+        "rotationHours": 720
       }
     ],
     "poiIds": [
       "serenis_coeur_lux"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Star"
   },
   {
     "id": 41,
     "x": 640,
     "y": 320,
-    "zoom": 0.22,
+    "zoom": 0.21,
     "bitmapName": "planet_eden",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0006
+        "value": 0.0006,
+        "rotationHours": 25
       },
       {
         "type": "orbit",
@@ -800,7 +882,9 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 310,
-        "radiusY": 155
+        "radiusY": 155,
+        "orbitRadiusUA": 3.1,
+        "orbitalDays": 301
       }
     ],
     "poiIds": [
@@ -809,7 +893,8 @@
       "eden_atoll_abimes",
       "eden_salons_oubli"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Planet"
   },
   {
     "id": 42,
@@ -830,7 +915,8 @@
     "poiIds": [
       "chrysalide_hub_elyseen"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 43,
@@ -847,18 +933,20 @@
     "poiIds": [
       "remissions_penitencier_expiation"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Asteroid Belt"
   },
   {
     "id": 44,
     "x": 640,
     "y": 320,
-    "zoom": 0.2,
+    "zoom": 0.21,
     "bitmapName": "planet_galama",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0004
+        "value": 0.0004,
+        "rotationHours": 28
       },
       {
         "type": "orbit",
@@ -867,7 +955,9 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 480,
-        "radiusY": 240
+        "radiusY": 240,
+        "orbitRadiusUA": 4.8,
+        "orbitalDays": 420
       }
     ],
     "poiIds": [
@@ -876,13 +966,14 @@
       "galama_cryo_caves_silas",
       "galama_spire_boreale"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Planet"
   },
   {
     "id": 45,
     "x": 640,
     "y": 320,
-    "zoom": 0.05,
+    "zoom": 0.12,
     "bitmapName": "planet_sanctum_nox",
     "moves": [
       {
@@ -890,14 +981,17 @@
         "value": 0.7,
         "speed": 0.002,
         "planetId": 44,
-        "radiusX": 38,
-        "radiusY": 38
+        "radiusX": 58,
+        "radiusY": 58,
+        "orbitRadiusUA": 0.58,
+        "orbitalDays": 18
       }
     ],
     "poiIds": [
       "sanctumnox_sanctuaire_inities"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Moon"
   },
   {
     "id": 46,
@@ -919,7 +1013,8 @@
     "poiIds": [
       "barque_narthex_ange"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 50,
@@ -935,24 +1030,27 @@
       },
       {
         "type": "rotation",
-        "value": 0.0002
+        "value": 0.0002,
+        "rotationHours": 720
       }
     ],
     "poiIds": [
       "arakna_spore_relais"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Star"
   },
   {
     "id": 51,
     "x": 640,
     "y": 320,
-    "zoom": 0.12,
+    "zoom": 0.16,
     "bitmapName": "planet_os_brule",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.001
+        "value": 0.001,
+        "rotationHours": 23
       },
       {
         "type": "orbit",
@@ -961,20 +1059,23 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 270,
-        "radiusY": 135
+        "radiusY": 135,
+        "orbitRadiusUA": 2.7,
+        "orbitalDays": 108
       }
     ],
     "poiIds": [
       "arakna_tranchees_seches",
       "arakna_cratere_vitrif"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 52,
     "x": 640,
     "y": 320,
-    "zoom": 0.24,
+    "zoom": 0.21,
     "bitmapName": "planet_arakna_prime",
     "moves": [
       {
@@ -984,7 +1085,8 @@
       },
       {
         "type": "rotation",
-        "value": 0.0003
+        "value": 0.0003,
+        "rotationHours": 24
       },
       {
         "type": "orbit",
@@ -993,7 +1095,9 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 370,
-        "radiusY": 185
+        "radiusY": 185,
+        "orbitRadiusUA": 3.7,
+        "orbitalDays": 343
       }
     ],
     "poiIds": [
@@ -1002,7 +1106,8 @@
       "arakna_promontoire_gris",
       "arakna_plis_deglutition"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Planet"
   },
   {
     "id": 53,
@@ -1024,13 +1129,14 @@
       "arakna_aegis_wall",
       "arakna_labo_vigilance"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 54,
     "x": 640,
     "y": 320,
-    "zoom": 0.05,
+    "zoom": 0.12,
     "bitmapName": "planet_kyste_alpha",
     "moves": [
       {
@@ -1038,14 +1144,17 @@
         "value": 0.7,
         "speed": 0.002,
         "planetId": 52,
-        "radiusX": 36,
-        "radiusY": 36
+        "radiusX": 58,
+        "radiusY": 58,
+        "orbitRadiusUA": 0.58,
+        "orbitalDays": 27
       }
     ],
     "poiIds": [
       "arakna_kyste_cratere"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Moon"
   },
   {
     "id": 55,
@@ -1062,18 +1171,20 @@
     "poiIds": [
       "arakna_charnier_flottant"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Asteroid Belt"
   },
   {
     "id": 56,
     "x": 640,
     "y": 320,
-    "zoom": 0.23,
+    "zoom": 0.26,
     "bitmapName": "planet_xeno_vorax",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0006
+        "value": 0.0006,
+        "rotationHours": 14
       },
       {
         "type": "orbit",
@@ -1082,19 +1193,22 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 510,
-        "radiusY": 255
+        "radiusY": 255,
+        "orbitRadiusUA": 5.1,
+        "orbitalDays": 738
       }
     ],
     "poiIds": [
       "arakna_colonne_aspiration"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 57,
     "x": 640,
     "y": 320,
-    "zoom": 0.05,
+    "zoom": 0.12,
     "bitmapName": "planet_osteotheque",
     "moves": [
       {
@@ -1102,14 +1216,17 @@
         "value": 0.4,
         "speed": 0.0022,
         "planetId": 56,
-        "radiusX": 40,
-        "radiusY": 40
+        "radiusX": 58,
+        "radiusY": 58,
+        "orbitRadiusUA": 0.58,
+        "orbitalDays": 30
       }
     ],
     "poiIds": [
       "arakna_depotoir_calcifie"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Moon"
   },
   {
     "id": 58,
@@ -1131,7 +1248,8 @@
     "poiIds": [
       "arakna_balise_ftl"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 60,
@@ -1147,24 +1265,27 @@
       },
       {
         "type": "rotation",
-        "value": 0.0003
+        "value": 0.0003,
+        "rotationHours": 720
       }
     ],
     "poiIds": [
       "suro_balise_solaire"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Star"
   },
   {
     "id": 61,
     "x": 640,
     "y": 320,
-    "zoom": 0.13,
+    "zoom": 0.16,
     "bitmapName": "planet_suro_alpha",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0009
+        "value": 0.0009,
+        "rotationHours": 21
       },
       {
         "type": "orbit",
@@ -1173,25 +1294,29 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 270,
-        "radiusY": 135
+        "radiusY": 135,
+        "orbitRadiusUA": 2.7,
+        "orbitalDays": 108
       }
     ],
     "poiIds": [
       "suro_forges_sub_solaires",
       "suro_collecteur_solaire"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 62,
     "x": 640,
     "y": 320,
-    "zoom": 0.23,
+    "zoom": 0.22,
     "bitmapName": "planet_neotori_prime",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0005
+        "value": 0.0005,
+        "rotationHours": 24
       },
       {
         "type": "orbit",
@@ -1200,7 +1325,9 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 370,
-        "radiusY": 185
+        "radiusY": 185,
+        "orbitRadiusUA": 3.7,
+        "orbitalDays": 360
       }
     ],
     "poiIds": [
@@ -1209,7 +1336,8 @@
       "neotori_astroport_erius",
       "neotori_bas_fonds"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Planet"
   },
   {
     "id": 63,
@@ -1232,13 +1360,14 @@
       "suro1_cantine_mercenaires",
       "suro1_quai_criniere"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 64,
     "x": 640,
     "y": 320,
-    "zoom": 0.05,
+    "zoom": 0.12,
     "bitmapName": "planet_concordia",
     "moves": [
       {
@@ -1246,14 +1375,17 @@
         "value": 0.75,
         "speed": 0.0019,
         "planetId": 62,
-        "radiusX": 34,
-        "radiusY": 34
+        "radiusX": 58,
+        "radiusY": 58,
+        "orbitRadiusUA": 0.58,
+        "orbitalDays": 22
       }
     ],
     "poiIds": [
       "concordia_residences_consulaires"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Moon"
   },
   {
     "id": 65,
@@ -1271,18 +1403,20 @@
       "mytrion_balance_or",
       "mytrion_puits_federal_04"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Asteroid Belt"
   },
   {
     "id": 66,
     "x": 640,
     "y": 320,
-    "zoom": 0.24,
+    "zoom": 0.26,
     "bitmapName": "planet_gorgon",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0006
+        "value": 0.0006,
+        "rotationHours": 12
       },
       {
         "type": "orbit",
@@ -1291,19 +1425,22 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 520,
-        "radiusY": 260
+        "radiusY": 260,
+        "orbitRadiusUA": 5.2,
+        "orbitalDays": 767
       }
     ],
     "poiIds": [
       "gorgon_collecteur_cyclope"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 67,
     "x": 640,
     "y": 320,
-    "zoom": 0.05,
+    "zoom": 0.12,
     "bitmapName": "planet_gorgon_mine",
     "moves": [
       {
@@ -1311,14 +1448,17 @@
         "value": 0.4,
         "speed": 0.0022,
         "planetId": 66,
-        "radiusX": 42,
-        "radiusY": 42
+        "radiusX": 58,
+        "radiusY": 58,
+        "orbitRadiusUA": 0.58,
+        "orbitalDays": 25
       }
     ],
     "poiIds": [
       "gorgon_depot_cryo"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Moon"
   },
   {
     "id": 68,
@@ -1340,7 +1480,8 @@
     "poiIds": [
       "suro_balise_ftl"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 70,
@@ -1356,24 +1497,27 @@
       },
       {
         "type": "rotation",
-        "value": 0.002
+        "value": 0.002,
+        "rotationHours": 720
       }
     ],
     "poiIds": [
       "olk_relais_pulsar"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Star"
   },
   {
     "id": 71,
     "x": 640,
     "y": 320,
-    "zoom": 0.22,
+    "zoom": 0.21,
     "bitmapName": "planet_olkeris",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0005
+        "value": 0.0005,
+        "rotationHours": 31
       },
       {
         "type": "orbit",
@@ -1382,7 +1526,9 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 360,
-        "radiusY": 180
+        "radiusY": 180,
+        "orbitRadiusUA": 3.6,
+        "orbitalDays": 336
       }
     ],
     "poiIds": [
@@ -1391,13 +1537,14 @@
       "olkeris_lazaret_mutes",
       "olkeris_docks_sang_noir"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Planet"
   },
   {
     "id": 72,
     "x": 640,
     "y": 320,
-    "zoom": 0.05,
+    "zoom": 0.12,
     "bitmapName": "planet_thanatos",
     "moves": [
       {
@@ -1405,14 +1552,17 @@
         "value": 0.5,
         "speed": 0.0024,
         "planetId": 71,
-        "radiusX": 40,
-        "radiusY": 40
+        "radiusX": 58,
+        "radiusY": 58,
+        "orbitRadiusUA": 0.58,
+        "orbitalDays": 30
       }
     ],
     "poiIds": [
       "thanatos_balise_quarantaine"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Moon"
   },
   {
     "id": 73,
@@ -1429,7 +1579,8 @@
     "poiIds": [
       "suie_bouee_sarcophage"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Asteroid Belt"
   },
   {
     "id": 80,
@@ -1445,24 +1596,27 @@
       },
       {
         "type": "rotation",
-        "value": 0.0002
+        "value": 0.0002,
+        "rotationHours": 720
       }
     ],
     "poiIds": [
       "nebula_balise_spectre"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Star"
   },
   {
     "id": 81,
     "x": 640,
     "y": 320,
-    "zoom": 0.22,
+    "zoom": 0.21,
     "bitmapName": "planet_olympus_velvet",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0005
+        "value": 0.0005,
+        "rotationHours": 29
       },
       {
         "type": "orbit",
@@ -1471,7 +1625,9 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 350,
-        "radiusY": 175
+        "radiusY": 175,
+        "orbitRadiusUA": 3.5,
+        "orbitalDays": 329
       }
     ],
     "poiIds": [
@@ -1480,7 +1636,8 @@
       "olympus_atrium_beaux_arts",
       "olympus_residences_belvedere"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Planet"
   },
   {
     "id": 82,
@@ -1503,7 +1660,8 @@
       "etang_bourse_bunker",
       "etang_sas_taxnet"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 83,
@@ -1520,18 +1678,20 @@
     "poiIds": [
       "creances_titan_vault"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Asteroid Belt"
   },
   {
     "id": 84,
     "x": 640,
     "y": 320,
-    "zoom": 0.23,
+    "zoom": 0.26,
     "bitmapName": "planet_oikos_major",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0005
+        "value": 0.0005,
+        "rotationHours": 12
       },
       {
         "type": "orbit",
@@ -1540,19 +1700,22 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 490,
-        "radiusY": 245
+        "radiusY": 245,
+        "orbitRadiusUA": 4.9,
+        "orbitalDays": 679
       }
     ],
     "poiIds": [
       "oikos_nectar_iv"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 85,
     "x": 640,
     "y": 320,
-    "zoom": 0.05,
+    "zoom": 0.12,
     "bitmapName": "planet_silence_fiscal",
     "moves": [
       {
@@ -1560,14 +1723,17 @@
         "value": 0.5,
         "speed": 0.002,
         "planetId": 84,
-        "radiusX": 38,
-        "radiusY": 38
+        "radiusX": 58,
+        "radiusY": 58,
+        "orbitRadiusUA": 0.58,
+        "orbitalDays": 28
       }
     ],
     "poiIds": [
       "silence_tribunal_arbitrage"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Moon"
   },
   {
     "id": 86,
@@ -1589,7 +1755,8 @@
     "poiIds": [
       "cloture_sas_agrement"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 90,
@@ -1605,24 +1772,27 @@
       },
       {
         "type": "rotation",
-        "value": 0.0003
+        "value": 0.0003,
+        "rotationHours": 720
       }
     ],
     "poiIds": [
       "alpha7_relais_cuivre"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Star"
   },
   {
     "id": 91,
     "x": 640,
     "y": 320,
-    "zoom": 0.13,
+    "zoom": 0.16,
     "bitmapName": "planet_forge_braises",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0009
+        "value": 0.0009,
+        "rotationHours": 27
       },
       {
         "type": "orbit",
@@ -1631,25 +1801,29 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 280,
-        "radiusY": 140
+        "radiusY": 140,
+        "orbitRadiusUA": 2.8,
+        "orbitalDays": 110
       }
     ],
     "poiIds": [
       "forge_acieries_populaires",
       "forge_batterie_briseur"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 92,
     "x": 640,
     "y": 320,
-    "zoom": 0.22,
+    "zoom": 0.21,
     "bitmapName": "planet_libertas",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0005
+        "value": 0.0005,
+        "rotationHours": 28
       },
       {
         "type": "orbit",
@@ -1658,7 +1832,9 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 370,
-        "radiusY": 185
+        "radiusY": 185,
+        "orbitRadiusUA": 3.7,
+        "orbitalDays": 343
       }
     ],
     "poiIds": [
@@ -1667,7 +1843,8 @@
       "libertas_enclave_draks",
       "libertas_antennes_aurelia"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Planet"
   },
   {
     "id": 93,
@@ -1688,13 +1865,14 @@
     "poiIds": [
       "assemblee_hemicycle_concorde"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 94,
     "x": 640,
     "y": 320,
-    "zoom": 0.05,
+    "zoom": 0.12,
     "bitmapName": "planet_bastion_vigie",
     "moves": [
       {
@@ -1702,14 +1880,17 @@
         "value": 0.7,
         "speed": 0.002,
         "planetId": 92,
-        "radiusX": 34,
-        "radiusY": 34
+        "radiusX": 58,
+        "radiusY": 58,
+        "orbitRadiusUA": 0.58,
+        "orbitalDays": 22
       }
     ],
     "poiIds": [
       "bastion_sentinelle_7"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Moon"
   },
   {
     "id": 95,
@@ -1727,18 +1908,20 @@
       "blocus_docks_emancipation",
       "blocus_comptoir_parias"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Asteroid Belt"
   },
   {
     "id": 96,
     "x": 640,
     "y": 320,
-    "zoom": 0.23,
+    "zoom": 0.26,
     "bitmapName": "planet_ceruleen",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0005
+        "value": 0.0005,
+        "rotationHours": 12
       },
       {
         "type": "orbit",
@@ -1747,19 +1930,22 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 500,
-        "radiusY": 250
+        "radiusY": 250,
+        "orbitRadiusUA": 5,
+        "orbitalDays": 708
       }
     ],
     "poiIds": [
       "ceruleen_siphon_fraternel"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 97,
     "x": 640,
     "y": 320,
-    "zoom": 0.05,
+    "zoom": 0.12,
     "bitmapName": "planet_sanctuaire_drak",
     "moves": [
       {
@@ -1767,14 +1953,17 @@
         "value": 0.45,
         "speed": 0.0022,
         "planetId": 96,
-        "radiusX": 40,
-        "radiusY": 40
+        "radiusX": 58,
+        "radiusY": 58,
+        "orbitRadiusUA": 0.58,
+        "orbitalDays": 25
       }
     ],
     "poiIds": [
       "sanctuaire_complexe_stase"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Moon"
   },
   {
     "id": 98,
@@ -1796,7 +1985,8 @@
     "poiIds": [
       "bouee_enregistrement_alliance"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 100,
@@ -1812,24 +2002,27 @@
       },
       {
         "type": "rotation",
-        "value": 0.0004
+        "value": 0.0004,
+        "rotationHours": 720
       }
     ],
     "poiIds": [
       "grak_balise_rouille"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Star"
   },
   {
     "id": 101,
     "x": 640,
     "y": 320,
-    "zoom": 0.2,
+    "zoom": 0.21,
     "bitmapName": "planet_harass",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0008
+        "value": 0.0008,
+        "rotationHours": 25
       },
       {
         "type": "orbit",
@@ -1838,7 +2031,9 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 290,
-        "radiusY": 145
+        "radiusY": 145,
+        "orbitRadiusUA": 2.9,
+        "orbitalDays": 287
       }
     ],
     "poiIds": [
@@ -1847,13 +2042,14 @@
       "harass_spatioport_bouche_seche",
       "harass_fosses_entrainement"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Planet"
   },
   {
     "id": 102,
     "x": 640,
     "y": 320,
-    "zoom": 0.05,
+    "zoom": 0.12,
     "bitmapName": "planet_scorie",
     "moves": [
       {
@@ -1861,14 +2057,17 @@
         "value": 0.5,
         "speed": 0.0022,
         "planetId": 101,
-        "radiusX": 38,
-        "radiusY": 38
+        "radiusX": 58,
+        "radiusY": 58,
+        "orbitRadiusUA": 0.58,
+        "orbitalDays": 30
       }
     ],
     "poiIds": [
       "scorie_balise_interception"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Moon"
   },
   {
     "id": 103,
@@ -1892,18 +2091,20 @@
       "depotoir_dents_dragon",
       "depotoir_chantier_gruks"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Asteroid Belt"
   },
   {
     "id": 104,
     "x": 640,
     "y": 320,
-    "zoom": 0.22,
+    "zoom": 0.26,
     "bitmapName": "planet_vorax",
     "moves": [
       {
         "type": "rotation",
-        "value": 0.0006
+        "value": 0.0006,
+        "rotationHours": 14
       },
       {
         "type": "orbit",
@@ -1912,13 +2113,16 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 490,
-        "radiusY": 245
+        "radiusY": 245,
+        "orbitRadiusUA": 4.9,
+        "orbitalDays": 679
       }
     ],
     "poiIds": [
       "vorax_station_sangsue"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   },
   {
     "id": 105,
@@ -1940,7 +2144,8 @@
     "poiIds": [
       "rancune_nid_guet"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Orbital Station"
   },
   {
     "id": 110,
@@ -1956,7 +2161,8 @@
       },
       {
         "type": "rotation",
-        "value": 0.0005
+        "value": 0.0005,
+        "rotationHours": 720
       },
       {
         "type": "opacity",
@@ -1968,7 +2174,8 @@
     "poiIds": [
       "nexus_onde_primordiale"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Star"
   },
   {
     "id": 111,
@@ -1996,7 +2203,8 @@
       "nexus_anneau_confinement",
       "nexus_recepteur_onde"
     ],
-    "landingAllowed": true
+    "landingAllowed": true,
+    "type": "Orbital Station"
   },
   {
     "id": 112,
@@ -2014,13 +2222,14 @@
       "nexus_obelisque_resonance",
       "nexus_cimetiere_premiere_coalition"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Asteroid Belt"
   },
   {
     "id": 113,
     "x": 640,
     "y": 320,
-    "zoom": 0.12,
+    "zoom": 0.26,
     "bitmapName": "singularity_breche_vide",
     "moves": [
       {
@@ -2030,7 +2239,8 @@
       },
       {
         "type": "rotation",
-        "value": 0.02
+        "value": 0.02,
+        "rotationHours": 17
       },
       {
         "type": "orbit",
@@ -2039,12 +2249,15 @@
         "centerX": 640,
         "centerY": 320,
         "radiusX": 520,
-        "radiusY": 260
+        "radiusY": 260,
+        "orbitRadiusUA": 5.2,
+        "orbitalDays": 767
       }
     ],
     "poiIds": [
       "nexus_point_zero"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "type": "Planet"
   }
 ]
