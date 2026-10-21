@@ -48,18 +48,32 @@ La science-fiction n'est souvent que l'histoire humaine projetée parmi les éto
 
 ---
 
-### 4. Panthéon des Inspirations Pop-Culture & Science-Fiction
+#### D. Le Vertige des Civilisations Oubliées & L'Archéologie du Futur
+Le goût prononcé de SimCraft pour les citadelles désertes, les relais spatiaux silencieux et les artéfacts inexpliqués puise dans de grands trésors de la littérature d'anticipation francophone :
+- ***Niourk* (Stefan Wul, 1957)** : L'exploration fascinée de mégalopoles disparues devenues des tombeaux technologiques mythiques, où les objets du quotidien sont vénérés comme des reliques sacrées par les survivants.
+- ***La Nuit des temps* (René Barjavel, 1968)** : La découverte sous les glaces de la civilisation engloutie de Gondawa, le signal radio millénaire dans la nuit des âges, et la tragédie intemporelle de sociétés parvenues au sommet de la science avant de s'effondrer.
+Dans SimCraft, chaque secteur porte les cicatrices et les ruines de précurseurs : explorer le cosmos, c'est aussi fouiller la mémoire perdue des étoiles.
+
+---
+
+### 4. Panthéon des Inspirations Pop-Culture, Littérature & Jeux Vidéo
 
 SimCraft rend hommage aux chefs-d'œuvre qui ont façonné l'imaginaire collectif :
 
 | Œuvre de Référence | Influence & Écho dans SimCraft 4 |
 | :--- | :--- |
-| **The Expanse** *(James S.A. Corey)* | Réalisme de la vie à bord, gravité, tensions politiques réalistes entre planètes intérieures, colonies et ceintures minières. |
+| **La Nuit des temps** *(René Barjavel)* | Le mystère des civilisations technologiques oubliées sous les glaces, la mélancolie de l'histoire humaine et l'archéologie du futur. |
+| **Niourk** *(Stefan Wul)* | L'émerveillement et l'effroi face aux mégastructures désertes, l'incompréhension des artefacts anciens et l'élévation de conscience. |
+| **Mass Effect** *(BioWare)* | La carte stellaire immersive, les relais de transit subspatiaux, la vie d'équipage riche en dynamiques relationnelles et les mystères des précurseurs. |
+| **Stargate** *(R. Emmerich & B. Wright)* | Le réseau galactique de portes et de relais indexés reliant des mondes oubliés, l'exploration archéologique et l'héritage des Anciens. |
+| **Star Wars** *(George Lucas)* | Les confins de la bordure extérieure (Outer Rim), les épaves titanesques échouées sur des lunes hostiles et l'esprit d'aventure indépendant. |
+| **StarCraft** *(Blizzard Entertainment)* | L'ambiance brute et industrielle des mondes miniers "Terrans", le contraste technologique et les vestiges énigmatiques dans les secteurs isolés. |
+| **Alien** *(Ridley Scott)* | Le "space-trucking" réaliste, la vulnérabilité humaine dans les cales métalliques humides et froides, et le pragmatisme des corporations. |
+| **The Expanse** *(James S.A. Corey)* | Réalisme de la vie à bord, gravité, tensions politiques crédibles entre mondes intérieurs, colonies et ceintures minières. |
 | **2001 : L'Odyssée de l'Espace** *(A.C. Clarke & S. Kubrick)* | Le silence majestueux de l'espace, la contemplation esthétique, le mystère des monolithes et l'énigme des IA. |
 | **Dune** *(Frank Herbert)* | Dimension écologique et spirituelle, féodalité interstellaire, factions aux croyances profondément enracinées. |
 | **Foundation** *(Isaac Asimov)* | Cycles historiques, décadence et renaissance des civilisations galactiques, science encyclopédique comme rempart contre l'oubli. |
 | **Interstellar** *(Christopher Nolan)* | Rigorisme astrophysique, dilatation temporelle, la science comme hommage à l'amour et à la survie de l'espèce. |
-| **Alien & Dead Space** | Ambiance industrielle lourde, carcasses métalliques froides, corridors étroits, peur viscérale de l'inconnu dans le vide noir. |
 | **Warhammer 40,000** | L'esthétique baroque sombre, le gigantisme monumental de certaines arches spatiales et le poids du passé millénaire. |
 | **Star Control II & FTL** | La sensation grisante de naviguer de système en système, d'intercepter des signaux subcom et de gérer les systèmes de survie. |
 
