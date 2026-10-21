@@ -88,7 +88,7 @@ class Window_SpaceShipInfo extends Window_Base {
         const padX = this.getPadX();
         const faceSize = 64;
         const faceX = width - padX - faceSize;
-        const faceY = 22;
+        const faceY = 32;
         return {
             titleRect: new Rectangle(faceX - 10, faceY - 18, faceSize + 20, 18),
             faceRect: new Rectangle(faceX, faceY, faceSize, faceSize),

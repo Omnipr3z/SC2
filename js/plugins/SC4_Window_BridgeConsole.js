@@ -286,14 +286,11 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
             this.clearCommandList();
         }
         this.makeCommandList();
-        if (this.contents && typeof this.contents.clear === "function") {
-            this.contents.clear();
-        }
-        this.drawTitleBlock();
-        this.drawStatusBlock();
         if (typeof super.refresh === "function") {
             super.refresh();
         }
+        this.drawTitleBlock();
+        this.drawStatusBlock();
     }
 }
 

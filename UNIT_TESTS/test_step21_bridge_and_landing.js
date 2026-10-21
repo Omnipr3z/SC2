@@ -97,6 +97,11 @@ global.Game_System = class {
 };
 
 global.$gameSystem = new global.Game_System();
+global.$gameSelfSwitches = {
+    _data: {},
+    setValue(key, val) { this._data[key.join(",")] = val; },
+    value(key) { return !!this._data[key.join(",")]; }
+};
 
 global.Game_Player = class {
     constructor() {
@@ -427,6 +432,7 @@ assert.strictEqual($gamePlayer._mapId, 37, "Player transferred to landing Map 37
 assert.strictEqual($gamePlayer._x, 127, "Player transferred to x: 127");
 assert.strictEqual($gamePlayer._y, 58, "Player transferred to y: 58");
 assert.strictEqual($gamePlayer._fadeType, 2, "Player transfer was mute/silent under overlay");
+assert.strictEqual($gameSelfSwitches.value([37, 1, "A"]), true, "Self-Switch A activated on landing Event 1");
 console.log("✓ Landing sequence V1 executed successfully with SE, picture, transfer & ship state.");
 
 // ----------------------------------------------------------------------------

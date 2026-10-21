@@ -358,7 +358,11 @@ SC4.performLandingSequence = function(targetPoiId) {
         ship._status = "Static";
     }
 
-    // 4. Transfert silencieux du joueur
+    // 4. Déclenchement Self-Switch A sur l'événement d'atterrissage et transfert silencieux du joueur
+    const landingEventId = poi && typeof poi.landingEventId === "number" ? poi.landingEventId : 1;
+    if (typeof $gameSelfSwitches !== "undefined" && $gameSelfSwitches && typeof $gameSelfSwitches.setValue === "function") {
+        $gameSelfSwitches.setValue([mapId, landingEventId, "A"], true);
+    }
     if (typeof $gamePlayer !== "undefined" && $gamePlayer && typeof $gamePlayer.reserveTransfer === "function") {
         $gamePlayer.reserveTransfer(mapId, lx, ly, 2, 2);
     }
