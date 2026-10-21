@@ -179,11 +179,11 @@ SC4.openInventory = function(invId = 1) {
  * @example
  * SC4.setHeroPose(1, "sit");
  */
-SC4.setHeroPose = function(actorId, pose) {
+SC4.setHeroPose = function(actorId, pose, options = {}) {
     if (window.$heroHub && typeof window.$heroHub.setPose === "function") {
-        window.$heroHub.setPose(actorId, pose);
+        window.$heroHub.setPose(actorId, pose, options);
     } else if (actorId === 1 && window.$gamePlayer && typeof window.$gamePlayer.setPose === "function") {
-        window.$gamePlayer.setPose(pose);
+        window.$gamePlayer.setPose(pose, options);
     }
 };
 
@@ -198,6 +198,32 @@ SC4.clearHeroPose = function(actorId) {
         window.$heroHub.clearPose(actorId);
     } else if (actorId === 1 && window.$gamePlayer && typeof window.$gamePlayer.clearPose === "function") {
         window.$gamePlayer.clearPose();
+    }
+};
+
+/**
+ * Vérifie si la carte courante est en Zone Sécurisée (armes rengainées, tir désactivé).
+ * @returns {boolean}
+ */
+SC4.isSafeZone = function() {
+    return (typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.isSafeZone === "function") ? $gameMap.isSafeZone() : false;
+};
+
+/**
+ * Vérifie si la carte courante est en Mode Combat actif.
+ * @returns {boolean}
+ */
+SC4.isCombatMode = function() {
+    return (typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.isCombatMode === "function") ? $gameMap.isCombatMode() : false;
+};
+
+/**
+ * Force ou modifie l'état de Combat de la carte courante.
+ * @param {boolean} active 
+ */
+SC4.setCombatMode = function(active) {
+    if (typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.setCombatMode === "function") {
+        $gameMap.setCombatMode(active);
     }
 };
 
@@ -218,6 +244,155 @@ SC4.triggerQuest = function(questId) {
 SC4.completeQuest = function(questId) {
     if (window.$gameQuests && typeof window.$gameQuests.completeQuest === "function") {
         window.$gameQuests.completeQuest(questId);
+    }
+};
+
+/**
+ * Ouvre la navigation stellaire (Système solaire / Secteur).
+ */
+SC4.openNavigation = function() {
+    SC4.openSystem();
+};
+
+/**
+ * Ouvre la console de commande de la passerelle du vaisseau spatial.
+ */
+SC4.openBridgeConsole = function() {
+    if (typeof SceneManager !== "undefined" && SceneManager._scene && typeof SceneManager._scene.openBridgeConsole === "function") {
+        SceneManager._scene.openBridgeConsole();
+    } else if (typeof $gameSystem !== "undefined" && $gameSystem) {
+        $gameSystem._bridgeConsoleOpen = true;
+    }
+};
+
+/**
+ * Vérifie si l'atterrissage est autorisé pour une planète ou un POI donné.
+ * @param {string|number} planetOrPoiId 
+ * @returns {boolean}
+ */
+SC4.isLandingAuthorized = function(planetOrPoiId) {
+    if (typeof $gameSystem !== "undefined" && $gameSystem && typeof $gameSystem.isLandingAuthorized === "function") {
+        return $gameSystem.isLandingAuthorized(planetOrPoiId);
+    }
+    return false;
+};
+
+/**
+ * Définit l'autorisation d'atterrissage pour une planète ou un POI donné.
+ * @param {string|number} planetOrPoiId 
+ * @param {boolean} [authorized=true] 
+ */
+SC4.setLandingAuthorized = function(planetOrPoiId, authorized = true) {
+    if (typeof $gameSystem !== "undefined" && $gameSystem && typeof $gameSystem.setLandingAuthorized === "function") {
+        $gameSystem.setLandingAuthorized(planetOrPoiId, authorized);
+    }
+};
+
+/**
+ * Exécute la séquence scénarisée d'atterrissage V1 (SE, overlay de fondu, transfert et maj du statut vaisseau).
+ * @param {string} [targetPoiId] - ID du point d'intérêt cible (ex: 'prime_spatioport').
+ */
+SC4.performLandingSequence = function(targetPoiId) {
+    const ship = (typeof window !== "undefined" && window.$gameSpaceships) ? window.$gameSpaceships.playerShip() : null;
+    let poi = null;
+    if (typeof window !== "undefined" && window.$gamePOIs && typeof window.$gamePOIs.get === "function") {
+        if (targetPoiId) {
+            poi = window.$gamePOIs.get(targetPoiId);
+        } else if (ship && ship.orbitingPlanetId) {
+            const allPois = typeof window.$gamePOIs.getAll === "function" ? window.$gamePOIs.getAll() : [];
+            poi = allPois.find(p => p && p.planetId === ship.orbitingPlanetId && p.landingMapId > 0);
+        }
+    }
+    // Fallback par défaut sur prime_spatioport
+    if (!poi && typeof window !== "undefined" && window.$gamePOIs && typeof window.$gamePOIs.get === "function") {
+        poi = window.$gamePOIs.get("prime_spatioport");
+    }
+
+    const planetId = poi ? poi.planetId : (ship && ship.orbitingPlanetId ? ship.orbitingPlanetId : 5);
+    const mapId = poi && poi.landingMapId ? poi.landingMapId : 37;
+    const lx = poi && typeof poi.landingX === "number" ? poi.landingX : 127;
+    const ly = poi && typeof poi.landingY === "number" ? poi.landingY : 58;
+
+    // 1. Audio SE Atterrissage / Réacteurs
+    if (typeof AudioManager !== "undefined" && typeof AudioManager.playSe === "function") {
+        AudioManager.playSe({ name: "FIREWIND2", volume: 90, pitch: 90, pan: 0 });
+    }
+
+    // 2. Affichage image Landing_placeholder
+    if (typeof $gameScreen !== "undefined" && $gameScreen && typeof $gameScreen.showPicture === "function") {
+        $gameScreen.showPicture(1, "Landing_placeholder", 0, 0, 0, 100, 100, 255, 0);
+    }
+
+    // 3. Mise à jour de l'état du vaisseau spatial (Amarré / Atterri sur la planète)
+    if (ship) {
+        if (typeof ship.aboard === "function") {
+            ship.aboard(planetId, "P");
+        }
+        ship._status = "Static";
+    }
+
+    // 4. Transfert silencieux du joueur
+    if (typeof $gamePlayer !== "undefined" && $gamePlayer && typeof $gamePlayer.reserveTransfer === "function") {
+        $gamePlayer.reserveTransfer(mapId, lx, ly, 2, 2);
+    }
+
+    // 5. Fondu sortant progressif de l'image de transition
+    if (typeof $gameScreen !== "undefined" && $gameScreen && typeof $gameScreen.movePicture === "function") {
+        $gameScreen.movePicture(1, 0, 0, 0, 100, 100, 0, 0, 60);
+        setTimeout(() => {
+            if (typeof $gameScreen !== "undefined" && $gameScreen && typeof $gameScreen.erasePicture === "function") {
+                $gameScreen.erasePicture(1);
+            }
+        }, 1200);
+    }
+};
+
+/**
+ * Exécute la séquence scénarisée de décollage V1 (SE, overlay de fondu, transfert et retour en orbite).
+ */
+SC4.performTakeoffSequence = function() {
+    const ship = (typeof window !== "undefined" && window.$gameSpaceships) ? window.$gameSpaceships.playerShip() : null;
+    const previousPlanetId = (ship && typeof ship.isLanded === "function") ? ship.isLanded() : null;
+
+    // 1. Audio SE Décollage / Propulsion
+    if (typeof AudioManager !== "undefined" && typeof AudioManager.playSe === "function") {
+        AudioManager.playSe({ name: "ShipJump", volume: 90, pitch: 100, pan: 0 });
+    }
+
+    // 2. Affichage image Landing_placeholder
+    if (typeof $gameScreen !== "undefined" && $gameScreen && typeof $gameScreen.showPicture === "function") {
+        $gameScreen.showPicture(1, "Landing_placeholder", 0, 0, 0, 100, 100, 255, 0);
+    }
+
+    // 3. Quitte l'état d'atterrissage et replace le vaisseau en orbite autour de l'astre
+    if (ship) {
+        if (typeof ship.leaveHost === "function") {
+            ship.leaveHost();
+        }
+        if (previousPlanetId && typeof ship.setOrbitingPlanet === "function") {
+            ship.setOrbitingPlanet(previousPlanetId);
+        } else {
+            ship._status = "Static";
+        }
+    }
+
+    // 4. Transfert du joueur vers la passerelle / intérieur du vaisseau
+    const shipMapId = ship && ship.mapId ? ship.mapId : 31;
+    const shipX = ship && typeof ship.landingX === "number" ? ship.landingX : 10;
+    const shipY = ship && typeof ship.landingY === "number" ? ship.landingY : 10;
+
+    if (typeof $gamePlayer !== "undefined" && $gamePlayer && typeof $gamePlayer.reserveTransfer === "function") {
+        $gamePlayer.reserveTransfer(shipMapId, shipX, shipY, 2, 2);
+    }
+
+    // 5. Fondu sortant progressif de l'image
+    if (typeof $gameScreen !== "undefined" && $gameScreen && typeof $gameScreen.movePicture === "function") {
+        $gameScreen.movePicture(1, 0, 0, 0, 100, 100, 0, 0, 60);
+        setTimeout(() => {
+            if (typeof $gameScreen !== "undefined" && $gameScreen && typeof $gameScreen.erasePicture === "function") {
+                $gameScreen.erasePicture(1);
+            }
+        }, 1200);
     }
 };
 
@@ -259,12 +434,42 @@ SC4.completeQuest = function(questId) {
         PluginManager.registerCommand(target, "setHeroPose", (args) => {
             const actorId = args && args.actorId ? Number(args.actorId) : 1;
             const pose = args && args.pose ? String(args.pose) : "sit";
-            SC4.setHeroPose(actorId, pose);
+            const options = {
+                canMove: args && args.canMove !== undefined ? Boolean(args.canMove) : true,
+                allowDash: args && args.allowDash !== undefined ? Boolean(args.allowDash) : false,
+                speedMod: args && args.speedMod !== undefined ? Number(args.speedMod) : 0,
+                onAlert: args && args.onAlert !== undefined ? Boolean(args.onAlert) : true
+            };
+            SC4.setHeroPose(actorId, pose, options);
         });
 
         PluginManager.registerCommand(target, "clearHeroPose", (args) => {
             const actorId = args && args.actorId ? Number(args.actorId) : 1;
             SC4.clearHeroPose(actorId);
+        });
+
+        PluginManager.registerCommand(target, "setCombatMode", (args) => {
+            const active = args && args.active !== undefined ? Boolean(args.active) : true;
+            SC4.setCombatMode(active);
+        });
+
+        PluginManager.registerCommand(target, "openBridgeConsole", () => {
+            SC4.openBridgeConsole();
+        });
+
+        PluginManager.registerCommand(target, "performLanding", (args) => {
+            const poiId = args && args.poiId ? String(args.poiId) : undefined;
+            SC4.performLandingSequence(poiId);
+        });
+
+        PluginManager.registerCommand(target, "performTakeoff", () => {
+            SC4.performTakeoffSequence();
+        });
+
+        PluginManager.registerCommand(target, "setLandingAuthorized", (args) => {
+            const targetId = args && args.id !== undefined ? args.id : (args && args.planetId !== undefined ? args.planetId : 5);
+            const authorized = args && args.authorized !== undefined ? Boolean(args.authorized) : true;
+            SC4.setLandingAuthorized(targetId, authorized);
         });
     });
 

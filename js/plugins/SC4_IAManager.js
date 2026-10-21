@@ -620,6 +620,30 @@ class IAManager {
     }
 
     /**
+     * Compte le nombre d'ennemis actifs/hostiles (engage, search, hurted) et vivants sur la carte.
+     * Utilisé pour la bascule automatique entre Safe Zone et Mode Combat.
+     * @returns {number}
+     */
+    static countActiveHostileEnemies() {
+        if (typeof $gameMap === "undefined" || !$gameMap || typeof $gameMap.events !== "function") return 0;
+        let count = 0;
+        const events = $gameMap.events();
+        for (const ev of events) {
+            if (ev && ev._ai && typeof ev._ai.state === "function") {
+                const s = ev._ai.state();
+                const isActive = (s === AI_STATE_ENGAGE) || (s === AI_STATE_SEARCH) || (s === AI_STATE_HURTED);
+                if (isActive) {
+                    const battler = typeof ev.battler === "function" ? ev.battler() : null;
+                    if (!battler || !battler.isDead || !battler.isDead()) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    /**
      * Vérifie si le BGM doit basculer vers la musique de combat ou revenir à la musique de la map (fondu de 3s).
      */
     static checkBattleBgm() {

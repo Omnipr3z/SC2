@@ -184,11 +184,70 @@
         return this.roundY(this.yWithDirection(y, d));
     };
 
+    Game_Map.prototype.isNaturallySafe = function () {
+        if (typeof $dataMap === "undefined" || !$dataMap) return false;
+        if ($dataMap.disableDashing) return true;
+        if ($dataMap.meta && ($dataMap.meta.safe_zone || $dataMap.meta.safeMap || $dataMap.meta.safe)) return true;
+        return false;
+    };
+
+    Game_Map.prototype.isSafeZone = function () {
+        return !this.isCombatMode() && this.isNaturallySafe();
+    };
+
+    Game_Map.prototype.isCombatMode = function () {
+        return Boolean(this._combatMode);
+    };
+
+    Game_Map.prototype.setCombatMode = function (active) {
+        const prev = Boolean(this._combatMode);
+        this._combatMode = Boolean(active);
+        if (this._combatMode !== prev) {
+            if (this._combatMode) {
+                // Alerte active : réveille / annule les poses onAlert !== false sur le joueur et compagnons
+                if (typeof $gamePlayer !== "undefined" && $gamePlayer && typeof $gamePlayer.onAlertTrigger === "function") {
+                    $gamePlayer.onAlertTrigger();
+                }
+                if (typeof $gamePlayer !== "undefined" && $gamePlayer && $gamePlayer._followers && typeof $gamePlayer._followers.forEach === "function") {
+                    $gamePlayer._followers.forEach(f => {
+                        if (f && typeof f.onAlertTrigger === "function") f.onAlertTrigger();
+                    });
+                }
+            }
+        }
+    };
+
+    Game_Map.prototype.updateCombatMode = function () {
+        if (!this.isNaturallySafe()) return;
+        if (typeof IAManager !== "undefined" && typeof IAManager.countActiveHostileEnemies === "function") {
+            const activeHostiles = IAManager.countActiveHostileEnemies();
+            if (activeHostiles > 0 && !this.isCombatMode()) {
+                this.setCombatMode(true);
+            } else if (activeHostiles === 0 && this.isCombatMode()) {
+                this.setCombatMode(false);
+            }
+        }
+    };
+
+    const _Game_Map_isDashDisabled = Game_Map.prototype.isDashDisabled;
+    Game_Map.prototype.isDashDisabled = function () {
+        // En mode combat, le dash / sprint est débloqué en priorité absolue !
+        if (this.isCombatMode()) {
+            return false;
+        }
+        // Notetag restrictif explicite <no_dash>
+        if (typeof $dataMap !== "undefined" && $dataMap && $dataMap.meta && ($dataMap.meta.no_dash || $dataMap.meta.noDash)) {
+            return true;
+        }
+        return _Game_Map_isDashDisabled ? _Game_Map_isDashDisabled.call(this) : (typeof $dataMap !== "undefined" && $dataMap ? Boolean($dataMap.disableDashing) : false);
+    };
+
     const _Game_Map_update = Game_Map.prototype.update;
     Game_Map.prototype.update = function (sceneActive) {
         if (_Game_Map_update) {
             _Game_Map_update.call(this, sceneActive);
         }
+        this.updateCombatMode();
         if (typeof IAManager !== "undefined" && typeof IAManager.updateBgm === "function") {
             IAManager.updateBgm();
         }
@@ -196,6 +255,7 @@
 
     const _Game_Map_setup = Game_Map.prototype.setup;
     Game_Map.prototype.setup = function (mapId) {
+        this._combatMode = false;
         if (_Game_Map_setup) {
             _Game_Map_setup.call(this, mapId);
         }
@@ -203,6 +263,90 @@
             IAManager.resetBgmState();
         }
     };
+
+    const _Game_Map_setupParallax = Game_Map.prototype.setupParallax;
+    Game_Map.prototype.setupParallax = function () {
+        if (_Game_Map_setupParallax) {
+            _Game_Map_setupParallax.call(this);
+        }
+        this.updateSpaceshipParallax();
+    };
+
+    Game_Map.prototype.updateSpaceshipParallax = function () {
+        if (typeof $dataMap === "undefined" || !$dataMap || !$dataMap.note) return;
+        const match = $dataMap.note.match(/<spaceshipIdParalaxes:\s*(\d+)>/i);
+        if (!match) return;
+        const shipId = parseInt(match[1], 10);
+        const ship = (typeof window !== "undefined" && window.$gameSpaceships) ? window.$gameSpaceships.ship(shipId) : null;
+        if (!ship) return;
+
+        if (ship._status === "InterSystemJump" || (typeof ship.isHyperdrive === "function" && ship.isHyperdrive())) {
+            this._parallaxName = "Warp";
+            this._parallaxZero = false;
+            this._parallaxLoopX = true;
+            this._parallaxLoopY = false;
+            this._parallaxSx = 8;
+            this._parallaxSy = 0;
+        } else if (typeof ship.isLanded === "function" && ship.isLanded() !== null) {
+            const planetId = ship.isLanded();
+            this._parallaxName = `!planet_${planetId}`;
+            this._parallaxZero = true;
+            this._parallaxLoopX = false;
+            this._parallaxLoopY = false;
+            this._parallaxSx = 0;
+            this._parallaxSy = 0;
+        } else if (ship.orbitingPlanetId !== null && ship.orbitingPlanetId !== undefined) {
+            const planetId = ship.orbitingPlanetId;
+            this._parallaxName = `!planet_${planetId}`;
+            this._parallaxZero = true;
+            this._parallaxLoopX = false;
+            this._parallaxLoopY = false;
+            this._parallaxSx = 0;
+            this._parallaxSy = 0;
+        } else {
+            this._parallaxName = "StarlitSky";
+            this._parallaxZero = false;
+            this._parallaxLoopX = true;
+            this._parallaxLoopY = false;
+            this._parallaxSx = 0.5;
+            this._parallaxSy = 0;
+        }
+    };
+
+    // ========================================================================
+    // 2b. Patches pour Game_System (Autorisations d'atterrissage)
+    // ========================================================================
+    if (typeof Game_System !== "undefined") {
+        Game_System.prototype.isLandingAuthorized = function (id) {
+            if (!this._landingAuthorizations) {
+                this._landingAuthorizations = {};
+            }
+            if (this._landingAuthorizations[id] !== undefined) {
+                return Boolean(this._landingAuthorizations[id]);
+            }
+            if (typeof window !== "undefined" && window.$gamePOIs && typeof window.$gamePOIs.get === "function") {
+                const poi = window.$gamePOIs.get(id);
+                if (poi && poi.landingAuthorized !== undefined) {
+                    return Boolean(poi.landingAuthorized);
+                }
+            }
+            if (typeof window !== "undefined" && window.$gameSector && typeof window.$gameSector.currentSystem === "function") {
+                const sys = window.$gameSector.currentSystem();
+                const planet = sys ? sys.planet(id) : null;
+                if (planet && planet.landingAuthorized !== undefined) {
+                    return Boolean(planet.landingAuthorized);
+                }
+            }
+            return false;
+        };
+
+        Game_System.prototype.setLandingAuthorized = function (id, authorized = true) {
+            if (!this._landingAuthorizations) {
+                this._landingAuthorizations = {};
+            }
+            this._landingAuthorizations[id] = Boolean(authorized);
+        };
+    }
 
     // ========================================================================
     // 3. Patches pour Game_CharacterBase (Déplacement 8 dir & Moteur d'actions)
@@ -219,6 +363,41 @@
         this._actionDirection = 2;
         this._actionOnEnd = null;
         this._indicatorQueue = [];
+        this._pose = null;
+        this._poseOptions = {};
+    };
+
+    Game_CharacterBase.prototype.setPose = function (poseName, options = {}) {
+        this._pose = poseName || null;
+        this._poseOptions = options || {};
+        if (!this.isActing()) {
+            this._action = this._pose || "walk";
+        }
+    };
+
+    Game_CharacterBase.prototype.clearPose = function () {
+        this._pose = null;
+        this._poseOptions = {};
+        if (!this.isActing()) {
+            this._action = "walk";
+            if (typeof this.resetPattern === "function") {
+                this.resetPattern();
+            }
+        }
+    };
+
+    Game_CharacterBase.prototype.pose = function () {
+        return this._pose;
+    };
+
+    Game_CharacterBase.prototype.isPoseActive = function () {
+        return Boolean(this._pose);
+    };
+
+    Game_CharacterBase.prototype.onAlertTrigger = function () {
+        if (this._pose && this._poseOptions && this._poseOptions.onAlert !== false) {
+            this.clearPose();
+        }
     };
 
     Game_CharacterBase.prototype.requestIndicator = function (type) {
@@ -236,10 +415,13 @@
 
     Game_CharacterBase.prototype.action = function () {
         if (this.isActing()) {
-            return this._action || "walk";
+            return this._action || (this._pose || "walk");
         }
         if (this._actionFreezeLastFrame && this._action) {
             return this._action;
+        }
+        if (this._pose) {
+            return this._pose;
         }
         const dashing = typeof this.isDashing === "function" && this.isDashing();
         const moving = typeof this.isMoving === "function" && this.isMoving();
@@ -247,6 +429,35 @@
             return "run";
         }
         return this._action || "walk";
+    };
+
+    const _Game_CharacterBase_realMoveSpeed = Game_CharacterBase.prototype.realMoveSpeed;
+    Game_CharacterBase.prototype.realMoveSpeed = function () {
+        let speed = _Game_CharacterBase_realMoveSpeed ? _Game_CharacterBase_realMoveSpeed.call(this) : (this._moveSpeed || 4);
+        if (this._pose && this._poseOptions && typeof this._poseOptions.speedMod === "number") {
+            speed += this._poseOptions.speedMod;
+        }
+        return speed;
+    };
+
+    const _Game_CharacterBase_moveStraight = Game_CharacterBase.prototype.moveStraight;
+    Game_CharacterBase.prototype.moveStraight = function (d) {
+        if (this._pose && this._poseOptions && this._poseOptions.canMove === false) {
+            return;
+        }
+        if (_Game_CharacterBase_moveStraight) {
+            _Game_CharacterBase_moveStraight.call(this, d);
+        }
+    };
+
+    const _Game_CharacterBase_moveDiagonally = Game_CharacterBase.prototype.moveDiagonally;
+    Game_CharacterBase.prototype.moveDiagonally = function (horz, vert) {
+        if (this._pose && this._poseOptions && this._poseOptions.canMove === false) {
+            return;
+        }
+        if (_Game_CharacterBase_moveDiagonally) {
+            _Game_CharacterBase_moveDiagonally.call(this, horz, vert);
+        }
     };
 
     Game_CharacterBase.prototype.setAction = function (action) {
@@ -379,7 +590,7 @@
                     this._pattern = this._actionPattern;
                     // Conserve l'action (ex: "down") figée sur la dernière frame
                 } else {
-                    this._action = "walk";
+                    this._action = this._pose || "walk";
                     this._actionPattern = 0;
                     this._actionTimer = 0;
                     this.setDirection(this._actionDirection);
@@ -792,7 +1003,11 @@
         if (this.isAttacking() || this.isActing()) {
             return false;
         }
-        if (this._action && this._action !== "walk") {
+        if (this._pose) {
+            if (this._poseOptions && this._poseOptions.canMove === false) {
+                return false;
+            }
+        } else if (this._action && this._action !== "walk") {
             return false;
         }
         const actor = (typeof this.actor === "function" ? this.actor() : null) ||
@@ -2031,10 +2246,21 @@
     if (typeof Game_Player !== "undefined") {
         const _Game_Player_canMove = Game_Player.prototype.canMove;
         Game_Player.prototype.canMove = function () {
+            if (this._pose && this._poseOptions && this._poseOptions.canMove === false) {
+                return false;
+            }
             if (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.isOverloaded === "function" && $gameParty.isOverloaded()) {
                 return false;
             }
             return _Game_Player_canMove ? _Game_Player_canMove.call(this) : true;
+        };
+
+        const _Game_Player_isDashing = Game_Player.prototype.isDashing;
+        Game_Player.prototype.isDashing = function () {
+            if (this._pose && this._poseOptions && this._poseOptions.allowDash === false) {
+                return false;
+            }
+            return _Game_Player_isDashing ? _Game_Player_isDashing.call(this) : false;
         };
 
         const _Game_Player_moveByInput = Game_Player.prototype.moveByInput;

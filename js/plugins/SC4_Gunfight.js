@@ -762,6 +762,10 @@
          * Déclenche ou débute le rechargement de l'arme équipée.
          */
         Game_Player.prototype.startReload = function () {
+            if (typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.isSafeZone === "function" && $gameMap.isSafeZone()) {
+                DEBUGTOOL.log("🕊️ Rechargement impossible en zone sécurisée", "gunfight");
+                return;
+            }
             const actor = (typeof this.actor === "function" ? this.actor() : null) ||
                 (typeof this.hero === "function" ? this.hero() : null) ||
                 (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
@@ -885,6 +889,18 @@
                 return _Game_Player_action ? _Game_Player_action.call(this) : (this._action || "walk");
             }
 
+            // 0. Si une pose persistante est active (ex: "sit", "lay", "sneak")
+            if (this._pose) {
+                return this._pose;
+            }
+
+            // 0.5. Si la carte est en Zone Sécurisée, armes rengainées (posture pacifiée mains libres)
+            if (typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.isSafeZone === "function" && $gameMap.isSafeZone()) {
+                const isDashing = typeof this.isDashing === "function" && this.isDashing();
+                const isMoving = typeof this.isMoving === "function" && this.isMoving();
+                return (isDashing && isMoving) ? "run" : "walk";
+            }
+
             const actor = (typeof this.actor === "function" ? this.actor() : null) ||
                 (typeof this.hero === "function" ? this.hero() : null) ||
                 (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
@@ -937,6 +953,17 @@
                 if (this.isActing && this.isActing()) {
                     return _Game_Follower_action ? _Game_Follower_action.call(this) : (this._action || "walk");
                 }
+
+                if (this._pose) {
+                    return this._pose;
+                }
+
+                if (typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.isSafeZone === "function" && $gameMap.isSafeZone()) {
+                    const isDashing = typeof this.isDashing === "function" && this.isDashing();
+                    const isMoving = typeof this.isMoving === "function" && this.isMoving();
+                    return (isDashing && isMoving) ? "run" : "walk";
+                }
+
                 const actor = (typeof this.actor === "function" ? this.actor() : null) ||
                     (typeof this.hero === "function" ? this.hero() : null);
                 const stats = actor && typeof actor.gunfightStats === "function" ? actor.gunfightStats() : null;
@@ -983,6 +1010,10 @@
          */
         const _Game_Player_performAttack = Game_Player.prototype.performAttack;
         Game_Player.prototype.performAttack = function () {
+            if (typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.isSafeZone === "function" && $gameMap.isSafeZone()) {
+                DEBUGTOOL.log("🕊️ Attaque impossible en zone sécurisée (armes rengainées)", "gunfight");
+                return false;
+            }
             const actor = (typeof this.actor === "function" ? this.actor() : null) ||
                 (typeof this.hero === "function" ? this.hero() : null) ||
                 (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
@@ -1000,6 +1031,10 @@
          * Exécute le tir à distance du joueur avec balistique, cooldown et audio.
          */
         Game_Player.prototype.performGunfightShoot = function () {
+            if (typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.isSafeZone === "function" && $gameMap.isSafeZone()) {
+                DEBUGTOOL.log("🕊️ Tir impossible en zone sécurisée (armes rengainées)", "gunfight");
+                return false;
+            }
             const actor = (typeof this.actor === "function" ? this.actor() : null) ||
                 (typeof this.hero === "function" ? this.hero() : null) ||
                 (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);

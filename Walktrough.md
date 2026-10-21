@@ -390,6 +390,21 @@ L'embarquement et l'amarrage obéissent à des règles de classes strictes via `
   - *Exception Ceintures d'Astéroïdes, Épaves & Stations* : Ambiance lumineuse fixe (`[-40, -35, -20, 90]`, obscurité froide du vide lointain et néons industriels), sans bascule dynamique de lever/coucher de soleil.
   - *Application continue au transfert* : La teinte est injectée dans `$gameScreen.startTint()` dès l'atterrissage dans `Scene_SubsystemTravel`.
 
+### 8.5 Console de Passerelle (`Window_BridgeConsole`), Séquences V1 & Hublot Dynamique
+- **Console de Passerelle (`SC4_Window_BridgeConsole.js`)** :
+  - Fenêtre de commande contextuelle respectant rigoureusement le standard en 5 sections SimCraft.
+  - Commandes : Navigation Stellaire (`!isLanded`), Atterrir (`!isLanded && canLand && isLandingAuthorized`), Décoller (`isLanded`), Amarrage (WIP), Subcom (WIP), Quitter.
+  - Persistance automatique : Si le joueur ouvre la carte de navigation depuis la console et revient sur la carte de pont via `SceneManager.pop()`, la console se réouvre automatiquement (`$gameSystem._bridgeConsoleOpen`).
+- **Séquences Scénarisées V1 (`SC4_Interface.js`)** :
+  - `SC4.performLandingSequence(poiId)` : SE de propulsion/atterrissage (`FIREWIND2`), overlay de fondu `Landing_placeholder.png`, pose le vaisseau (`ship.aboard(planetId, "P")`), transfert silencieux (Map 37, x: 127, y: 58 pour `prime_spatioport`) et fondu sortant de transition.
+  - `SC4.performTakeoffSequence()` : SE de saut (`ShipJump`), overlay, retour en orbite stationnaire (`ship.leaveHost()`, `ship.setOrbitingPlanet()`), transfert silencieux à bord du vaisseau (Map 31, x: 10, y: 10).
+  - Gestion des autorisations d'accès : `SC4.isLandingAuthorized(id)` et `SC4.setLandingAuthorized(id, bool)`.
+- **Hublot / Parallaxe Dynamique sur Cartes Intérieures (`<spaceshipIdParalaxes:[id]>`)** :
+  - Notetag de carte RMMZ liant la carte à un vaisseau de flotte.
+  - En orbite stationnaire : affiche la vue de la planète ciblée (`!planet_[id]`) en zero-parallax fixe sans scroll.
+  - En saut hyperdrive / FTL (`InterSystemJump`) : active l'animation de défilement rapide `Warp` (`sx = 8`).
+  - En espace profond : active la dérive d'étoiles `StarlitSky` (`sx = 0.5`).
+
 ---
 
 ## 9. Système de Quêtes, Balises & Journal de Bord (Datapad)
@@ -484,7 +499,22 @@ DEBUGTOOL.logFormat({ actor: "Paolo", hp: 120 }, "Acteur : %[actor], PV : %[hp]"
   - **Moteur Spatial** : 6 modèles physiques et de gestion (`SC4_Game_Planet`, `SC4_Game_PlanetarySystem`, `SC4_Game_Sector`, `SC4_Game_Spaceship`, `SC4_Game_Spaceships`, `SC4_SystemMapManager`) orchestrés par `SC4_SpaceTravel`.
   - **Gestionnaire de Quêtes** : 4 modèles métiers (`SC4_Game_QuestLocation`, `SC4_Game_Quest`, `SC4_Game_Quests`, `SC4_StoryManager`) orchestrés par `SC4_QuestManager`.
   - **Calendrier & Horloge** : Séparation propre du modèle de temps (`SC4_Game_Date`) et du formateur lisible (`SC4_Game_DateFormatter`).
-- **Couverture de Tests** : 27 suites de tests unitaires validées à 100% sans aucun échec (`node UNIT_TESTS/run_all_tests.js`).
+- **Couverture de Tests** : 30 suites de tests unitaires validées à 100% sans aucun échec (`node UNIT_TESTS/run_all_tests.js`).
+
+### 11.5 Zones Sécurisées, Mode Combat Automatique & Système de Poses Persistantes
+- **Safe Zones & Détection de Combat Automatique (`SC4_rmmz_objects_Patches.js`, `SC4_IAManager.js`)** :
+  - Détection automatique d'environnement pacifique : cartes avec `disableDashing: true` ou notetag `<safe_zone>`.
+  - Mode Combat dynamique : active l'état de combat si des ennemis hostiles sont vivants et alertés (`IAManager.countActiveHostileEnemies() > 0`).
+  - Priorité absolue au Sprint : en mode combat, le dash/sprint est débloqué même sur les cartes `disableDashing`.
+  - Rengainage automatique : en zone sécurisée, les tirs, rechargements et attaques sont désactivés, les armes sont rangées.
+- **Système de Poses Persistantes (`canMove`, `allowDash`, `speedMod`, `onAlert`)** :
+  - Poses statiques (`sit`, `lay`, etc.) ou de locomotion (`sneak`, `rampe`) persistantes jusqu'à appel de `clearPose()`.
+  - Options de pose :
+    - `canMove: false` fige le déplacement tout en maintenant la pose active.
+    - `allowDash: false` interdit la course durant la pose lente.
+    - `speedMod` ajuste dynamiquement la vitesse de déplacement.
+    - `onAlert: true` annule automatiquement la pose au déclenchement d'une alerte combat pour repasser en posture de marche/combat (`walk`).
+  - API : `$gamePlayer.setPose(name, opts)`, `$heroHub.setPose(actorId, name, opts)`, `SC4.setHeroPose(...)`, `SC4.clearHeroPose(...)`.
 
 ### 11.4 Architecture Modulaire Standard des Fenêtres (`Window_*`)
 Toutes les fenêtres du projet (`SC4_Window_*.js`) adoptent une architecture stricte en 5 sections standardisées (basée sur le pattern de référence `SC4_Window_SpaceShipInfo.js`) :

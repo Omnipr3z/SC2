@@ -129,6 +129,48 @@ class Hub_Hero {
         }
         return false;
     }
+
+    /**
+     * Assigne une pose persistante (sit, lay, sneak, etc.) à un acteur ou au joueur.
+     * @param {number|{ actorId?: number, pose?: string, canMove?: boolean, allowDash?: boolean, speedMod?: number, onAlert?: boolean }} actorIdOrOptions 
+     * @param {string} [pose] 
+     * @param {object} [options] 
+     * @returns {boolean}
+     */
+    setPose(actorIdOrOptions, pose, options = {}) {
+        let actorId = 0;
+        let poseName = pose;
+        let opts = options;
+
+        if (typeof actorIdOrOptions === "object" && actorIdOrOptions !== null) {
+            actorId = actorIdOrOptions.actorId || actorIdOrOptions.id || 0;
+            poseName = actorIdOrOptions.pose || pose;
+            opts = actorIdOrOptions;
+        } else if (typeof actorIdOrOptions === "number") {
+            actorId = actorIdOrOptions;
+        }
+
+        const target = actorId > 0 ? this.findActorCharacter(actorId) : (typeof $gamePlayer !== "undefined" ? $gamePlayer : null);
+        if (target && typeof target.setPose === "function") {
+            target.setPose(poseName, opts);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Annule la pose persistante d'un acteur ou du joueur (retour à walk).
+     * @param {number} [actorId] 
+     * @returns {boolean}
+     */
+    clearPose(actorId = 0) {
+        const target = actorId > 0 ? this.findActorCharacter(actorId) : (typeof $gamePlayer !== "undefined" ? $gamePlayer : null);
+        if (target && typeof target.clearPose === "function") {
+            target.clearPose();
+            return true;
+        }
+        return false;
+    }
 }
 
 window.Hub_Hero = Hub_Hero;

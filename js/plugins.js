@@ -41,6 +41,7 @@ var $plugins =
 {"name":"SC4_Window_SpaceShipInfo","status":true,"description":"[SC4 v1.0.0] Volet d'informations télémétriques du vaisseau et flotte à bord.","parameters":{}},
 {"name":"SC4_Window_SpaceTargetInfo","status":true,"description":"[SC4 v1.0.0] Volet de télémétrie de la cible sélectionnée avec Scroll Y.","parameters":{}},
 {"name":"SC4_Window_SpaceControls","status":true,"description":"[SC4 v1.0.0] Barre de commandes d'actions spatiales et navigation multi-échelles.","parameters":{}},
+{"name":"SC4_Window_BridgeConsole","status":true,"description":"[SC4 v1.0.0] Console de commande de la passerelle du vaisseau spatial (Bridge Console).","parameters":{}},
 {"name":"SC4_Scene_SectorTravel","status":true,"description":"[SC4 v1.0.0] Scène de navigation à l'échelle du secteur / galaxie (Sauts FTL).","parameters":{}},
 {"name":"SC4_Scene_SpaceTravel","status":true,"description":"[SC4 v1.0.0] Scène de navigation à l'échelle du système solaire (orbites, vol libre).","parameters":{}},
 {"name":"SC4_Scene_SubsystemTravel","status":true,"description":"[SC4 v1.0.0] Scène de navigation à l'échelle du sous-système (POIs, mode hangar).","parameters":{}},

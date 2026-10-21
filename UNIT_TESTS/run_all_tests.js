@@ -39,7 +39,9 @@ const testFiles = [
     'test_advanced_quests.js',
     'test_atlas_galaxy.js',
     'test_step18_testing_mode_fixes.js',
-    'test_step19_astronomy_deterministic.js'
+    'test_step19_astronomy_deterministic.js',
+    'test_step20_safezone_and_poses.js',
+    'test_step21_bridge_and_landing.js'
 ];
 
 console.log("==============================================================");
