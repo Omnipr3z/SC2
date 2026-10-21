@@ -44,6 +44,12 @@ class Game_Spaceships {
         return this.spaceships().find(s => s && s.id === numId) || null;
     }
 
+    shipByMapId(mapId) {
+        if (mapId === null || mapId === undefined) return null;
+        const numId = Number(mapId);
+        return this.spaceships().find(s => s && s.mapId === numId) || null;
+    }
+
     playerShip() {
         const ships = this.spaceships();
         if (ships.length === 0) return null;

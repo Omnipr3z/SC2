@@ -182,9 +182,15 @@ class MockSpaceship {
 }
 
 const mockShip = new MockSpaceship(1);
+const mockShip2 = new MockSpaceship(2);
+mockShip2.name = "Vigilance Prime";
+mockShip2.mapId = 29;
 
 global.$gameSpaceships = {
-    ship(id) { return id === 1 ? mockShip : null; },
+    _ships: [mockShip, mockShip2],
+    ship(id) { return this._ships.find(s => s.id === Number(id)) || null; },
+    shipByMapId(mapId) { return this._ships.find(s => s.mapId === Number(mapId)) || null; },
+    spaceships() { return this._ships; },
     playerShip() { return mockShip; }
 };
 
@@ -204,6 +210,7 @@ global.$gamePOIs = {
 
 global.Game_Map = class {
     constructor() {
+        this._mapId = 1;
         this._parallaxName = "";
         this._parallaxZero = false;
         this._parallaxLoopX = false;
@@ -211,6 +218,7 @@ global.Game_Map = class {
         this._parallaxSx = 0;
         this._parallaxSy = 0;
     }
+    mapId() { return this._mapId; }
     setupParallax() {}
 };
 
@@ -282,6 +290,17 @@ assert.strictEqual(typeof consoleWin.isLanded, "boolean", "Section 1: isLanded g
 assert.strictEqual(typeof consoleWin.canLand, "boolean", "Section 1: canLand getter accessible");
 assert.strictEqual(typeof consoleWin.isLandingAuthorized, "boolean", "Section 1: isLandingAuthorized getter accessible");
 assert.strictEqual(typeof consoleWin.landingPoi, "object", "Section 1: landingPoi getter accessible");
+
+// Verification of targetShip priority hierarchy
+assert.strictEqual(consoleWin.targetShip.id, 1, "Default targetShip fallback to playerShip (ID 1)");
+global.$gameMap._mapId = 29;
+assert.strictEqual(consoleWin.targetShip.id, 2, "Priority 2: context mapId 29 maps to Vigilance Prime (ID 2)");
+consoleWin.setShipId(1);
+assert.strictEqual(consoleWin.targetShip.id, 1, "Priority 1: explicit shipId 1 overrides mapId 29");
+consoleWin.setShipId(null);
+assert.strictEqual(consoleWin.targetShip.id, 2, "Resetting explicit shipId falls back to mapId 29 (ID 2)");
+global.$gameMap._mapId = 1;
+assert.strictEqual(consoleWin.targetShip.id, 1, "Back on generic mapId falls back to playerShip (ID 1)");
 
 assert.strictEqual(typeof consoleWin.maxCols, "function", "Section 2: maxCols accessible");
 assert.strictEqual(typeof consoleWin.itemHeight, "function", "Section 2: itemHeight accessible");

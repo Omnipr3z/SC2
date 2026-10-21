@@ -485,8 +485,16 @@ Lorsqu'il est appelé depuis la console de la navette dans le hangar du vaisseau
 Toutes les transitions entre les différentes échelles de voyage spatial (`Scene_SectorTravel`, `Scene_SpaceTravel`, `Scene_SubsystemTravel`) et l'écran de titre ou la carte RPG utilisent désormais des fondus au noir harmonieux (`startFadeIn(24)` / `startFadeOut(24)`). Ce fondu élimine tout scintillement ou affichage abrupt des sprites lors des changements de scènes.
 
 ### 3.6 Console de Passerelle de Commandement (`Window_BridgeConsole`)
-La console de pont remplace les arborescences d'événements complexes par un terminal de commande contextuel intégré sur `Scene_Map` :
-* **Déclenchement** : Appel de script `SC4.openBridgeConsole()` ou interaction avec l'ordinateur de bord.
+La console de pont remplace les arborescences d'événements complexes par un terminal de commande contextuel intégré directement sur `Scene_Map` :
+* **Déclenchement événementiel** :
+  - Créer un événement sur la passerelle (déclencheur *Touche d'action* ou *Événement commun*).
+  - Insérer la commande événementielle : **Script** ➔ `SC4.openBridgeConsole([shipId]);` (ou commande de plugin `openBridgeConsole`).
+  - *Prérequis d'activation* : Le plugin `SC4_Window_BridgeConsole` doit impérativement être actif dans le gestionnaire de plugins de RPG Maker MZ (**F10**).
+* **Hiérarchie de Détection du Vaisseau Contrôlé** :
+  La console détermine automatiquement le vaisseau à piloter selon 3 niveaux de priorité :
+  1. **Priorité 1 (Explicite)** : Argument `shipId` passé à la méthode `SC4.openBridgeConsole(shipId)` (idéal pour la prise de contrôle à distance, le piratage informatique, les consoles auxiliaires ou les vaisseaux multi-cartes).
+  2. **Priorité 2 (Contextuelle par carte)** : Vaisseau dont l'attribut `mapId` dans `SPACESHIPS.json` correspond à la carte où se trouve le joueur (`$gameSpaceships.shipByMapId($gameMap.mapId())`).
+  3. **Priorité 3 (Repli)** : Vaisseau principal du joueur (`$gameSpaceships.playerShip()`).
 * **Architecture 5 Sections** : Implémentée selon le standard SimCraft (`SC4_Window_BridgeConsole.js`).
 * **Matrice des Commandes Disponibles** :
   | Commande | Icône | Condition d'Activation | Effet |

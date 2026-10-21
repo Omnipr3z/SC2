@@ -256,12 +256,14 @@ SC4.openNavigation = function() {
 
 /**
  * Ouvre la console de commande de la passerelle du vaisseau spatial.
+ * @param {number} [shipId] - ID explicite du vaisseau ciblé (optionnel, prioritaire sur le mapId de la carte)
  */
-SC4.openBridgeConsole = function() {
+SC4.openBridgeConsole = function(shipId) {
     if (typeof SceneManager !== "undefined" && SceneManager._scene && typeof SceneManager._scene.openBridgeConsole === "function") {
-        SceneManager._scene.openBridgeConsole();
+        SceneManager._scene.openBridgeConsole(shipId);
     } else if (typeof $gameSystem !== "undefined" && $gameSystem) {
         $gameSystem._bridgeConsoleOpen = true;
+        $gameSystem._bridgeConsoleShipId = (shipId !== undefined && shipId !== null) ? Number(shipId) : null;
     }
 };
 
@@ -453,8 +455,9 @@ SC4.performTakeoffSequence = function() {
             SC4.setCombatMode(active);
         });
 
-        PluginManager.registerCommand(target, "openBridgeConsole", () => {
-            SC4.openBridgeConsole();
+        PluginManager.registerCommand(target, "openBridgeConsole", (args) => {
+            const shipId = args && args.shipId ? Number(args.shipId) : undefined;
+            SC4.openBridgeConsole(shipId);
         });
 
         PluginManager.registerCommand(target, "performLanding", (args) => {

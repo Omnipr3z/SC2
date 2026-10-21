@@ -29,6 +29,7 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
         super(rect);
         this.opacity = 240;
         this._headerHeight = 70;
+        this._shipId = null;
         this.refresh();
     }
 
@@ -42,10 +43,31 @@ class Window_BridgeConsole extends _BaseWindowBridgeConsole {
     // 1. DONNÉES & GETTERS MÉTIER
     // ========================================================================
 
+    setShipId(shipId) {
+        this._shipId = (shipId !== undefined && shipId !== null) ? Number(shipId) : null;
+    }
+
+    get targetShip() {
+        if (typeof window === "undefined" || !window.$gameSpaceships) return null;
+        // Priorité 1 : ID explicite passé en argument (prise de contrôle à distance, piratage, etc.)
+        if (this._shipId !== null) {
+            const explicitShip = window.$gameSpaceships.ship(this._shipId);
+            if (explicitShip) return explicitShip;
+        }
+        // Priorité 2 : Vaisseau associé à la carte courante (mapId)
+        if (typeof window.$gameMap !== "undefined" && window.$gameMap && typeof window.$gameMap.mapId === "function") {
+            const curMapId = window.$gameMap.mapId();
+            const mapShip = typeof window.$gameSpaceships.shipByMapId === "function"
+                ? window.$gameSpaceships.shipByMapId(curMapId)
+                : window.$gameSpaceships.spaceships().find(s => s && s.mapId === curMapId);
+            if (mapShip) return mapShip;
+        }
+        // Priorité 3 : Repli sur le vaisseau principal du joueur
+        return typeof window.$gameSpaceships.playerShip === "function" ? window.$gameSpaceships.playerShip() : null;
+    }
+
     get playerShip() {
-        return (typeof window !== "undefined" && window.$gameSpaceships && typeof window.$gameSpaceships.playerShip === "function")
-            ? window.$gameSpaceships.playerShip()
-            : null;
+        return this.targetShip;
     }
 
     get isLanded() {
@@ -300,15 +322,18 @@ if (typeof Scene_Map !== "undefined") {
             _Scene_Map_start.call(this);
         }
         if (window.$gameSystem && window.$gameSystem._bridgeConsoleOpen) {
-            this.openBridgeConsole();
+            const shipId = window.$gameSystem._bridgeConsoleShipId;
+            this.openBridgeConsole(shipId);
         }
     };
 
-    Scene_Map.prototype.openBridgeConsole = function() {
+    Scene_Map.prototype.openBridgeConsole = function(shipId) {
         if (window.$gameSystem) {
             window.$gameSystem._bridgeConsoleOpen = true;
+            window.$gameSystem._bridgeConsoleShipId = (shipId !== undefined && shipId !== null) ? Number(shipId) : null;
         }
         if (this._bridgeConsoleWindow) {
+            this._bridgeConsoleWindow.setShipId(shipId);
             this._bridgeConsoleWindow.refresh();
             this._bridgeConsoleWindow.select(0);
             this._bridgeConsoleWindow.open();
@@ -319,6 +344,7 @@ if (typeof Scene_Map !== "undefined") {
     Scene_Map.prototype.closeBridgeConsole = function() {
         if (window.$gameSystem) {
             window.$gameSystem._bridgeConsoleOpen = false;
+            window.$gameSystem._bridgeConsoleShipId = null;
         }
         if (this._bridgeConsoleWindow) {
             this._bridgeConsoleWindow.close();
