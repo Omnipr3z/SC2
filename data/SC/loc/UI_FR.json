@@ -203,6 +203,7 @@
     "log_orbit_course": "Cap engagé vers l'orbite de %1.",
     "default_system_name": "Système sans nom",
     "default_ship_name": "Navire sans nom",
+    "no_allegiance": "Sans allégeance",
     "log_warp_arrival": "Le %1 a émergé du Warp dans le système %2.",
     "log_orbit_arrival": "Le %1 est entré en orbite stationnaire autour de %2.",
     "log_station_contact": "Le %1 est entré en contact avec %2.",

@@ -18,7 +18,7 @@ class Scene_SubsystemTravel extends Scene_Base {
 
     constructor() {
         super();
-        this._planet = Scene_SubsystemTravel._contextPlanet || null;
+        this._planet = Scene_SubsystemTravel._contextPlanet || (window.$gameGalaxy && typeof window.$gameGalaxy.currentPlanet === "function" ? window.$gameGalaxy.currentPlanet() : null);
         this._isHangarMode = Scene_SubsystemTravel._contextHangarMode || false;
         this._nefId = Scene_SubsystemTravel._contextNefId || 2;
         this._selectedPoi = null;
@@ -83,12 +83,18 @@ class Scene_SubsystemTravel extends Scene_Base {
     createPois() {
         this._poiSprites = [];
         this._poiQuestPins = [];
-        if (!this._planet || !Array.isArray(this._planet.pois)) return;
+        if (!this._planet) return;
 
-        const visiblePois = this._planet.pois.filter(poi => {
+        const planetPois = typeof this._planet.pois === "function"
+            ? this._planet.pois()
+            : (Array.isArray(this._planet.pois) ? this._planet.pois : []);
+        if (!Array.isArray(planetPois) || planetPois.length === 0) return;
+
+        const visiblePois = planetPois.filter(poi => {
+            if (poi && typeof poi.isLocated === "function") return poi.isLocated();
             return window.$gameSystem && typeof window.$gameSystem.isPoiLocated === "function"
                 ? window.$gameSystem.isPoiLocated(poi.id)
-                : (poi.located !== false);
+                : (poi && poi.located !== false);
         });
 
         visiblePois.forEach(poi => {

@@ -66,8 +66,8 @@
     "mapX": 0.45,
     "mapY": 0.52,
     "landingMapId": 37,
-    "landingX": 127,
-    "landingY": 58,
+    "landingX": 121,
+    "landingY": 57,
     "landingEventId": 1,
     "planetId": 5,
     "located": true

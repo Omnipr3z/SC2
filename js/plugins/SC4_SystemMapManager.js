@@ -22,15 +22,15 @@ class SystemMapManager {
     }
 
     get planets() {
-        return window.$gameSector ? window.$gameSector.currentSystem().planets() : [];
+        return $gameGalaxy.currentSystem().planets;
     }
 
     get spaceships() {
-        return window.$gameSpaceships ? window.$gameSpaceships.spaceships() : [];
+        return $gameSpaceships.spaceships();
     }
 
     get playerSpaceship() {
-        return window.$gameSpaceships ? window.$gameSpaceships.playerShip() : null;
+        return $gameSpaceships.playerShip();
     }
 
     get mapOffsetX() { return this._mapOffsetX; }
@@ -80,11 +80,11 @@ class SystemMapManager {
     }
 
     updatePlanetsPhysics() {
-        const tickPerMin = (window.$gameDate && typeof window.$gameDate.getTickPerMin === "function") 
-            ? window.$gameDate.getTickPerMin() 
+        const tickPerMin = (window.$gameDate && typeof window.$gameDate.getTickPerMin === "function")
+            ? window.$gameDate.getTickPerMin()
             : 60;
-        const progress = window.$gameDate 
-            ? (window.$gameDate.timestamp + (window.$gameDate._tick / (tickPerMin || 60))) 
+        const progress = window.$gameDate
+            ? (window.$gameDate.timestamp + (window.$gameDate._tick / (tickPerMin || 60)))
             : (Graphics.frameCount / 60);
         const totalTicks = progress * 60;
         const pi2 = Math.PI * 2;
@@ -195,10 +195,10 @@ class SystemMapManager {
     }
 
     updateSpaceships(isBackground = false) {
-        const timeFactor = (window.$gameDate && window.$gameDate.getTickPerMin() > 0) 
-            ? (60 / window.$gameDate.getTickPerMin()) 
+        const timeFactor = (window.$gameDate && window.$gameDate.getTickPerMin() > 0)
+            ? (60 / window.$gameDate.getTickPerMin())
             : 1;
-        
+
         this.spaceships.forEach(ship => {
             if (!ship) return;
 
@@ -222,10 +222,10 @@ class SystemMapManager {
                 if (ship.isOnBoard()) return;
             } else if (ship.isLanded()) {
                 const planetId = ship.isLanded();
-                const curSys = window.$gameSector ? window.$gameSector.currentSystem() : null;
+                const curSys = $gameGalaxy.currentSystem();
                 let planet = curSys ? curSys.planet(planetId) : null;
-                if (!planet && window.$gameSector) {
-                    for (const sys of window.$gameSector.systems()) {
+                if (!planet && $gameGalaxy) {
+                    for (const sys of $gameGalaxy.allPlanetarySystems) {
                         const p = sys.planet(planetId);
                         if (p) {
                             planet = p;
@@ -246,7 +246,7 @@ class SystemMapManager {
                 const finished = ship.updateInterSystemJump(timeFactor);
                 if (finished) {
                     const loc = (k, def) => typeof SC4_Localization !== "undefined" ? SC4_Localization.getText(k, def) : def;
-                    const targetSys = window.$gameSector ? window.$gameSector.system(ship.systemId) : null;
+                    const targetSys = $gameGalaxy.getSystem(ship.systemId);
                     const sysName = targetSys ? (typeof SC4_Localization !== "undefined" ? SC4_Localization.parse(targetSys.name) : targetSys.name) : loc("travel.system_default", "Système");
                     const msg = loc("travel.log_warp_arrival", "Le %1 a émergé du Warp dans le système %2.").replace("%1", ship.name).replace("%2", sysName);
                     this.log("alert", msg);

@@ -227,11 +227,12 @@ class Scene_Inventory extends _BaseSceneInventory {
             this._commandWindow.activate();
             return;
         }
-        const items = this._targetInventory.allItems();
+        // Game_Inventory expose items() / loseItem() (et non allItems() / removeItem() de Game_Party)
+        const items = this._targetInventory.items();
         for (const item of items) {
             const amount = this._targetInventory.numItems(item);
             if (amount > 0) {
-                this._targetInventory.removeItem(item, amount);
+                this._targetInventory.loseItem(item, amount);
                 if (typeof $gameParty !== "undefined" && $gameParty) {
                     $gameParty.gainItem(item, amount);
                 }
@@ -241,8 +242,24 @@ class Scene_Inventory extends _BaseSceneInventory {
             SoundManager.playShop();
         }
         this.refreshAll();
-        this._commandWindow.refresh();
+        if (this._targetInventory && this._targetInventory.isEmpty()) {
+            this.checkTargetEmptied();
+        }
         this._commandWindow.activate();
+        this.selectCommandAfterEmptied();
+    }
+
+    /**
+     * Sélectionne la commande pertinente une fois la cible vidée (par symbole, pas par index).
+     */
+    selectCommandAfterEmptied() {
+        const cmd = this._commandWindow;
+        const depositIndex = cmd.findSymbol("deposit");
+        if (this.isTargetPersistent() && depositIndex >= 0 && cmd.isCommandEnabled(depositIndex)) {
+            cmd.selectSymbol("deposit");
+        } else {
+            cmd.selectSymbol("close");
+        }
     }
 
     onCommandClose() {
@@ -402,12 +419,8 @@ class Scene_Inventory extends _BaseSceneInventory {
             this._targetWindow.deactivate();
             this._actionWindow.close();
             this._commandWindow.activate();
-            // Si le conteneur est persistant et le joueur a des objets, sélectionne "Déposer"
-            if (this.isTargetPersistent() && this._commandWindow.isCommandEnabled(1)) {
-                this._commandWindow.select(1); // Déposer
-            } else {
-                this._commandWindow.select(2); // Fermer
-            }
+            // Si le conteneur est persistant et le joueur a des objets, sélectionne "Déposer", sinon "Fermer"
+            this.selectCommandAfterEmptied();
             return;
         }
 

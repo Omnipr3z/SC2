@@ -104,11 +104,12 @@
         }
 
         /**
-         * Écrit un log de débogage conditionnel dans la console.
+         * Affiche un message dans la console avec niveau, caller et tag.
+         * @param {string} level 'log' | 'info' | 'warn' | 'error'
          * @param {*} message Message ou données à afficher
          * @param {string} [key=null] Clé de filtrage optionnelle
          */
-        static log(message, key = null) {
+        static _print(level, message, key = null) {
             if (!this._enabled) return;
 
             const normalizedKey = key ? String(key).trim().toUpperCase() : null;
@@ -119,10 +120,51 @@
             }
 
             const caller = this.getCallerLocation();
-            const prefix = caller ? `[${caller}]` : "[DEBUG]";
+            const prefix = caller ? `[${caller}]` : `[${level.toUpperCase()}]`;
             const keyTag = normalizedKey ? `[${normalizedKey}]` : "";
+            const consoleFn = (console[level] && typeof console[level] === "function") ? console[level] : console.log;
 
-            console.log(`${prefix}${keyTag} ${message}`);
+            if (typeof message === "string") {
+                consoleFn(`${prefix}${keyTag} ${message}`);
+            } else {
+                consoleFn(`${prefix}${keyTag}`, message);
+            }
+        }
+
+        /**
+         * Écrit un log de débogage conditionnel dans la console.
+         * @param {*} message Message ou données à afficher
+         * @param {string} [key=null] Clé de filtrage optionnelle
+         */
+        static log(message, key = null) {
+            this._print("log", message, key);
+        }
+
+        /**
+         * Écrit une information dans la console.
+         * @param {*} message Message ou données à afficher
+         * @param {string} [key=null] Clé de filtrage optionnelle
+         */
+        static info(message, key = null) {
+            this._print("info", message, key);
+        }
+
+        /**
+         * Écrit un avertissement dans la console.
+         * @param {*} message Message ou données à afficher
+         * @param {string} [key=null] Clé de filtrage optionnelle
+         */
+        static warn(message, key = null) {
+            this._print("warn", message, key);
+        }
+
+        /**
+         * Écrit une erreur dans la console.
+         * @param {*} message Message ou données à afficher
+         * @param {string} [key=null] Clé de filtrage optionnelle
+         */
+        static error(message, key = null) {
+            this._print("error", message, key);
         }
 
         /**
@@ -164,5 +206,7 @@
         }
     }
 
-    window.DEBUGTOOL = DEBUGTOOL;
+    if (typeof window !== "undefined") window.DEBUGTOOL = DEBUGTOOL;
+    if (typeof global !== "undefined") global.DEBUGTOOL = DEBUGTOOL;
+    if (typeof module !== "undefined" && module.exports) module.exports = { DEBUGTOOL };
 })();

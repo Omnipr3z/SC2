@@ -40,6 +40,7 @@
         constructor(parentScene, ...args) {
             super();
             this._parentScene = parentScene || null;
+            this._callerSubScene = null;
             this._active = false;
             this._closing = false;
             this._windows = [];
@@ -60,6 +61,14 @@
 
         set parentScene(scene) {
             this._parentScene = scene;
+        }
+
+        get callerSubScene() {
+            return this._callerSubScene;
+        }
+
+        set callerSubScene(subScene) {
+            this._callerSubScene = subScene;
         }
 
         isActive() {
@@ -188,11 +197,78 @@
             }
         }
 
-        close() {
+        /**
+         * Met en veille la sous-scène lorsqu'une sous-scène enfant (Inception) est ouverte par-dessus.
+         */
+        deactivate() {
+            this._active = false;
+            if (this._windows && Array.isArray(this._windows)) {
+                for (let i = 0; i < this._windows.length; i++) {
+                    const win = this._windows[i];
+                    if (win && typeof win.deactivate === "function") {
+                        win.deactivate();
+                    }
+                }
+            }
+            this.onDeactivate();
+        }
+
+        onDeactivate() {
+            // Hook de mise en veille pour les sous-classes
+        }
+
+        /**
+         * Réactive la sous-scène lorsque la sous-scène enfant est fermée.
+         */
+        reactivate() {
+            this._active = true;
+            this._closing = false;
+            if (this._windows && Array.isArray(this._windows)) {
+                for (let i = 0; i < this._windows.length; i++) {
+                    const win = this._windows[i];
+                    if (win && typeof win.activate === "function") {
+                        win.activate();
+                    }
+                }
+            }
+            this.onReactivate();
+        }
+
+        onReactivate() {
+            // Hook de réactivation pour les sous-classes
+        }
+
+        /**
+         * Hook appelé lors du retour d'une sous-scène enfant avec résultat optionnel.
+         * @param {SubScene_Base} childSubScene 
+         * @param {any} [result=null] 
+         */
+        onSubSceneResume(childSubScene, result = null) {
+            // Surchargeable par les sous-classes (ex: SubScene_RelationDialog ou Console)
+        }
+
+        /**
+         * Ouvre une sous-scène enfant au-dessus de celle-ci (Inception).
+         * @param {class} subSceneClass 
+         * @param  {...any} args 
+         * @returns {SubScene_Base}
+         */
+        openChildSubScene(subSceneClass, ...args) {
+            if (this._parentScene && typeof this._parentScene.openSubScene === "function") {
+                return this._parentScene.openSubScene(subSceneClass, ...args);
+            }
+            return null;
+        }
+
+        /**
+         * Ferme cette sous-scène en transmettant optionnellement un résultat à la sous-scène parente.
+         * @param {any} [result=null] 
+         */
+        close(result = null) {
             if (this._closing) return;
             this._closing = true;
             if (this._parentScene && typeof this._parentScene.closeSubScene === "function") {
-                this._parentScene.closeSubScene();
+                this._parentScene.closeSubScene(result);
             }
         }
     }
@@ -220,10 +296,20 @@
         };
 
         Scene_Map.prototype.openSubScene = function (subSceneClass, ...args) {
+            this._subSceneStack = this._subSceneStack || [];
+
+            // Inception : si une sous-scène est déjà active, on l'endort et on l'empile
+            let caller = null;
             if (this._currentSubScene) {
-                this.closeSubScene();
+                caller = this._currentSubScene;
+                if (typeof caller.deactivate === "function") {
+                    caller.deactivate();
+                }
+                this._subSceneStack.push(caller);
             }
+
             const subScene = new subSceneClass(this, ...args);
+            subScene.callerSubScene = caller;
             this._currentSubScene = subScene;
             this.addChild(subScene);
             subScene.create();
@@ -232,19 +318,43 @@
             return subScene;
         };
 
-        Scene_Map.prototype.closeSubScene = function () {
+        Scene_Map.prototype.closeSubScene = function (result = null) {
             if (this._currentSubScene) {
-                const subScene = this._currentSubScene;
-                subScene.stop();
-                subScene.terminate();
-                this.removeChild(subScene);
+                const closingSubScene = this._currentSubScene;
+                closingSubScene.stop();
+                closingSubScene.terminate();
+                this.removeChild(closingSubScene);
                 this._currentSubScene = null;
-                this.onSubSceneClose(subScene);
+
+                // Inception : Dépilement LIFO
+                this._subSceneStack = this._subSceneStack || [];
+                if (this._subSceneStack.length > 0) {
+                    const previousSubScene = this._subSceneStack.pop();
+                    this._currentSubScene = previousSubScene;
+                    if (typeof previousSubScene.reactivate === "function") {
+                        previousSubScene.reactivate();
+                    }
+                    if (typeof previousSubScene.onSubSceneResume === "function") {
+                        previousSubScene.onSubSceneResume(closingSubScene, result);
+                    }
+                } else {
+                    this.onSubSceneClose(closingSubScene);
+                }
+            }
+        };
+
+        Scene_Map.prototype.closeAllSubScenes = function () {
+            while (this._currentSubScene || (this._subSceneStack && this._subSceneStack.length > 0)) {
+                this.closeSubScene();
             }
         };
 
         Scene_Map.prototype.currentSubScene = function () {
             return this._currentSubScene;
+        };
+
+        Scene_Map.prototype.subSceneStackDepth = function () {
+            return (this._subSceneStack ? this._subSceneStack.length : 0) + (this._currentSubScene ? 1 : 0);
         };
 
         Scene_Map.prototype.onSubSceneOpen = function (subScene) {

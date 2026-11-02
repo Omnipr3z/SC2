@@ -1,0 +1,6 @@
+{
+  "relationship_simulation": {
+    "tick_delay": 1,
+    "batch_budget": 15
+  }
+}

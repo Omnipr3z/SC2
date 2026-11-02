@@ -100,7 +100,7 @@ class Window_SpaceTargetInfo extends Window_Base {
     mediaRect(originY) {
         return {
             poiIconRect: new Rectangle(16, 12 + originY, 32, 32),
-            bodyBoxRect: new Rectangle(16, 10 + originY, 56, 56)
+            bodyBoxRect: new Rectangle(16, originY, this.height - 32, this.height - 32)
         };
     }
 
@@ -184,8 +184,8 @@ class Window_SpaceTargetInfo extends Window_Base {
             const iconIndex = (data.icon && typeof data.icon === "number") ? data.icon : 16;
             this.drawIcon(iconIndex, rects.poiIconRect.x, rects.poiIconRect.y);
             return { textX: 64 };
-        } 
-        
+        }
+
         if (this._targetType === "planet" || this._targetType === "system") {
             const bmpName = data.bitmapName || (this._targetType === "system" ? "sun" : "planet_0");
             const bmp = ImageManager.loadBitmap("img/GUI/ship/", bmpName);
@@ -199,7 +199,7 @@ class Window_SpaceTargetInfo extends Window_Base {
                 this.contents.strokeStyle = "#8ec07c";
                 this.contents.strokeRect(rects.bodyBoxRect.x, rects.bodyBoxRect.y, rects.bodyBoxRect.width, rects.bodyBoxRect.height);
             }
-            return { textX: 84 };
+            return { textX: this.height };
         }
 
         return { textX: 16 };
@@ -211,15 +211,15 @@ class Window_SpaceTargetInfo extends Window_Base {
 
         // Titre de la cible
         this.styliseTargetTitle();
-        const targetTitle = data.name 
-            ? (typeof SC4_Localization !== "undefined" ? SC4_Localization.parse(data.name) : data.name) 
+        const targetTitle = data.name
+            ? (typeof SC4_Localization !== "undefined" ? SC4_Localization.parse(data.name) : data.name)
             : this.loc("travel.target_default", "Cible");
         this.drawText(targetTitle, rects.titleRect.x, rects.titleRect.y, rects.titleRect.width, "left");
 
         // Type de la cible
         this.styliseTargetType();
-        const typeStr = data.type || (this._targetType === "system" 
-            ? this.loc("travel.target_system_solar", "Système Solaire") 
+        const typeStr = data.type || (this._targetType === "system"
+            ? this.loc("travel.target_system_solar", "Système Solaire")
             : this.loc("travel.target_poi", "Point d'Intérêt"));
         this.drawText(`${this.loc("travel.target_type", "Type")}: ${typeStr}`, rects.typeRect.x, rects.typeRect.y, rects.typeRect.width, "left");
     }

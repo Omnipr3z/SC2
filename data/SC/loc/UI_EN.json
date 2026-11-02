@@ -203,6 +203,7 @@
     "log_orbit_course": "Course set towards orbit of %1.",
     "default_system_name": "Unnamed System",
     "default_ship_name": "Unnamed Vessel",
+    "no_allegiance": "Unaligned",
     "log_warp_arrival": "%1 has emerged from Warp in the %2 system.",
     "log_orbit_arrival": "%1 has entered stationary orbit around %2.",
     "log_station_contact": "%1 has made contact with %2.",

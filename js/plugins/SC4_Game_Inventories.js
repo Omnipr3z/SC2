@@ -254,6 +254,30 @@ class Game_Inventories {
             this._data[key] = inv;
         }
     }
+    updateEventSelfSwitchB(containerId) {
+        if (!containerId || typeof $gameMap === "undefined" || !$gameMap) return;
+        const targetId = String(containerId).trim();
+        const inv = this.inventory(targetId);
+        const isEmpty = inv ? inv.isEmpty() : true;
+
+        const events = $gameMap.events ? $gameMap.events() : [];
+        for (const ev of events) {
+            if (!ev) continue;
+            const note = (ev.event && ev.event() && ev.event().note) || "";
+            let matches = false;
+            if (note.includes(targetId)) {
+                matches = true;
+            } else if (targetId.startsWith("C_")) {
+                const cNum = targetId.slice(2);
+                if (ev.eventId && ev.eventId() === Number(cNum)) {
+                    matches = true;
+                }
+            }
+            if (matches && typeof $gameSelfSwitches !== "undefined") {
+                $gameSelfSwitches.setValue([$gameMap.mapId(), ev.eventId(), "B"], isEmpty);
+            }
+        }
+    };
 }
 
 window.Game_Inventories = Game_Inventories;

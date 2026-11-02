@@ -28,6 +28,8 @@
       "ankaros_helios"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Star"
   },
   {
@@ -55,7 +57,9 @@
       }
     ],
     "poiIds": [],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null
   },
   {
     "id": 3,
@@ -84,7 +88,9 @@
       "warp_beacon_alpha",
       "warp_derelict"
     ],
-    "landingAllowed": false
+    "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null
   },
   {
     "id": 4,
@@ -119,6 +125,8 @@
       "furia_caldera"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -155,6 +163,8 @@
       "prime_governor_spire"
     ],
     "landingAllowed": true,
+    "governorId": 51,
+    "spaceControllerId": 52,
     "type": "Planet"
   },
   {
@@ -190,6 +200,8 @@
       "wanghek_xenolith"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -213,6 +225,8 @@
       "altus_auspex"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -243,6 +257,8 @@
       "aethelgard_relais_sub"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Star"
   },
   {
@@ -274,6 +290,8 @@
       "oros_siphon_01"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -307,6 +325,8 @@
       "aqua_spire_boreale"
     ],
     "landingAllowed": true,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -331,6 +351,8 @@
       "nacre_silo_chimique"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Asteroid Belt"
   },
   {
@@ -361,6 +383,8 @@
       "thaumas_station_nebuleuse_b"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -385,6 +409,8 @@
       "cymo_sarcophage"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Moon"
   },
   {
@@ -408,6 +434,8 @@
       "arche_quai_diplomatique"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -432,6 +460,8 @@
       "g3_noyau_accresion"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Star"
   },
   {
@@ -463,6 +493,8 @@
       "ferrum_dome_hauts_fourneaux"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -496,6 +528,8 @@
       "necropole_siphon_chimique"
     ],
     "landingAllowed": true,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -520,6 +554,8 @@
       "knull_cryo_banque"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Moon"
   },
   {
@@ -544,6 +580,8 @@
       "debris_nid_moissonneurs"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Asteroid Belt"
   },
   {
@@ -574,6 +612,8 @@
       "xenovapor_siphon_omega"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -597,6 +637,8 @@
       "monolithe_noyau_sync"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -621,6 +663,8 @@
       "arunia_sentinelle_ignis"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Star"
   },
   {
@@ -652,6 +696,8 @@
       "sani_poste_lance_rouge"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -684,6 +730,8 @@
       "kinbra_sanctuaire_traqueurs"
     ],
     "landingAllowed": true,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -708,6 +756,8 @@
       "ouro_cercle_serments"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Moon"
   },
   {
@@ -739,6 +789,8 @@
       "kigasi_bourg_concorde"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -772,6 +824,8 @@
       "sfergrad_donjon_casernes"
     ],
     "landingAllowed": true,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -796,6 +850,8 @@
       "skal_bastion_peage"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Moon"
   },
   {
@@ -814,6 +870,8 @@
       "dragons_nid_affut_kran"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Asteroid Belt"
   },
   {
@@ -837,6 +895,8 @@
       "ecluse_droit_banniere"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -861,6 +921,8 @@
       "serenis_coeur_lux"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Star"
   },
   {
@@ -894,6 +956,8 @@
       "eden_salons_oubli"
     ],
     "landingAllowed": true,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -916,6 +980,8 @@
       "chrysalide_hub_elyseen"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -934,6 +1000,8 @@
       "remissions_penitencier_expiation"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Asteroid Belt"
   },
   {
@@ -967,6 +1035,8 @@
       "galama_spire_boreale"
     ],
     "landingAllowed": true,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -991,6 +1061,8 @@
       "sanctumnox_sanctuaire_inities"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Moon"
   },
   {
@@ -1014,6 +1086,8 @@
       "barque_narthex_ange"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -1038,6 +1112,8 @@
       "arakna_spore_relais"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Star"
   },
   {
@@ -1069,6 +1145,8 @@
       "arakna_cratere_vitrif"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -1107,6 +1185,8 @@
       "arakna_plis_deglutition"
     ],
     "landingAllowed": true,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -1130,6 +1210,8 @@
       "arakna_labo_vigilance"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -1154,6 +1236,8 @@
       "arakna_kyste_cratere"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Moon"
   },
   {
@@ -1172,6 +1256,8 @@
       "arakna_charnier_flottant"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Asteroid Belt"
   },
   {
@@ -1202,6 +1288,8 @@
       "arakna_colonne_aspiration"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -1226,6 +1314,8 @@
       "arakna_depotoir_calcifie"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Moon"
   },
   {
@@ -1249,6 +1339,8 @@
       "arakna_balise_ftl"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -1273,6 +1365,8 @@
       "suro_balise_solaire"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Star"
   },
   {
@@ -1304,6 +1398,8 @@
       "suro_collecteur_solaire"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -1337,6 +1433,8 @@
       "neotori_bas_fonds"
     ],
     "landingAllowed": true,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -1361,6 +1459,8 @@
       "suro1_quai_criniere"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -1385,6 +1485,8 @@
       "concordia_residences_consulaires"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Moon"
   },
   {
@@ -1404,6 +1506,8 @@
       "mytrion_puits_federal_04"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Asteroid Belt"
   },
   {
@@ -1434,6 +1538,8 @@
       "gorgon_collecteur_cyclope"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -1458,6 +1564,8 @@
       "gorgon_depot_cryo"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Moon"
   },
   {
@@ -1481,6 +1589,8 @@
       "suro_balise_ftl"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -1505,6 +1615,8 @@
       "olk_relais_pulsar"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Star"
   },
   {
@@ -1538,6 +1650,8 @@
       "olkeris_docks_sang_noir"
     ],
     "landingAllowed": true,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -1562,6 +1676,8 @@
       "thanatos_balise_quarantaine"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Moon"
   },
   {
@@ -1580,6 +1696,8 @@
       "suie_bouee_sarcophage"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Asteroid Belt"
   },
   {
@@ -1604,6 +1722,8 @@
       "nebula_balise_spectre"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Star"
   },
   {
@@ -1637,6 +1757,8 @@
       "olympus_residences_belvedere"
     ],
     "landingAllowed": true,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -1661,6 +1783,8 @@
       "etang_sas_taxnet"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -1679,6 +1803,8 @@
       "creances_titan_vault"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Asteroid Belt"
   },
   {
@@ -1709,6 +1835,8 @@
       "oikos_nectar_iv"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -1733,6 +1861,8 @@
       "silence_tribunal_arbitrage"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Moon"
   },
   {
@@ -1756,6 +1886,8 @@
       "cloture_sas_agrement"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -1780,6 +1912,8 @@
       "alpha7_relais_cuivre"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Star"
   },
   {
@@ -1811,6 +1945,8 @@
       "forge_batterie_briseur"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -1844,6 +1980,8 @@
       "libertas_antennes_aurelia"
     ],
     "landingAllowed": true,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -1866,6 +2004,8 @@
       "assemblee_hemicycle_concorde"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -1890,6 +2030,8 @@
       "bastion_sentinelle_7"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Moon"
   },
   {
@@ -1909,6 +2051,8 @@
       "blocus_comptoir_parias"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Asteroid Belt"
   },
   {
@@ -1939,6 +2083,8 @@
       "ceruleen_siphon_fraternel"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -1963,6 +2109,8 @@
       "sanctuaire_complexe_stase"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Moon"
   },
   {
@@ -1986,6 +2134,8 @@
       "bouee_enregistrement_alliance"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -2010,6 +2160,8 @@
       "grak_balise_rouille"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Star"
   },
   {
@@ -2043,6 +2195,8 @@
       "harass_fosses_entrainement"
     ],
     "landingAllowed": true,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -2067,6 +2221,8 @@
       "scorie_balise_interception"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Moon"
   },
   {
@@ -2092,6 +2248,8 @@
       "depotoir_chantier_gruks"
     ],
     "landingAllowed": true,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Asteroid Belt"
   },
   {
@@ -2122,6 +2280,8 @@
       "vorax_station_sangsue"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   },
   {
@@ -2145,6 +2305,8 @@
       "rancune_nid_guet"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -2175,6 +2337,8 @@
       "nexus_onde_primordiale"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Star"
   },
   {
@@ -2204,6 +2368,8 @@
       "nexus_recepteur_onde"
     ],
     "landingAllowed": true,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Orbital Station"
   },
   {
@@ -2223,6 +2389,8 @@
       "nexus_cimetiere_premiere_coalition"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Asteroid Belt"
   },
   {
@@ -2258,6 +2426,8 @@
       "nexus_point_zero"
     ],
     "landingAllowed": false,
+    "governorId": null,
+    "spaceControllerId": null,
     "type": "Planet"
   }
 ]

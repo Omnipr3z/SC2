@@ -42,8 +42,8 @@ class Scene_SectorTravel extends Scene_Base {
         this._starSprites = [];
         this._indicatorSprites = [];
 
-        const sector = window.$gameSector ? window.$gameSector.currentSectorData() : null;
-        if (!sector || !Array.isArray(sector.systems)) return;
+        const currentSector = $gameGalaxy.currentSector();
+        const systems = currentSector.systems;
 
         // Tracé des lignes FTL
         const offX = window.$systemMapManager ? window.$systemMapManager.mapOffsetX : 12;
@@ -51,10 +51,11 @@ class Scene_SectorTravel extends Scene_Base {
 
         const bmp = this._constellationSprite.bitmap;
         bmp.paintOpacity = 120;
-        sector.systems.forEach(sys => {
+        systems.forEach(system => {
+            const sys = system.data;
             if (Array.isArray(sys.connections)) {
                 sys.connections.forEach(connId => {
-                    const other = sector.systems.find(s => s.id === connId);
+                    const other = systems.find(s => s.id === connId);
                     if (other && sys.id < other.id) {
                         bmp.drawLine(sys.pos.x + offX, sys.pos.y + offY, other.pos.x + offX, other.pos.y + offY, "#4da6ff", 2);
                     }
@@ -64,7 +65,8 @@ class Scene_SectorTravel extends Scene_Base {
 
         // Sprites des étoiles
         const dbPlanets = window.$dataPlanets || [];
-        sector.systems.forEach(sys => {
+        systems.forEach(system => {
+            const sys = system.data;
             const star = new Sprite();
             star.anchor.x = 0.5;
             star.anchor.y = 0.5;
@@ -206,11 +208,10 @@ class Scene_SectorTravel extends Scene_Base {
         const offX = window.$systemMapManager ? window.$systemMapManager.mapOffsetX : 12;
         const offY = window.$systemMapManager ? window.$systemMapManager.mapOffsetY : 12;
 
-        const sector = window.$gameSector;
-        const currentSys = sector ? sector.system(ship.systemId) : null;
+        const currentSys = $gameGalaxy.currentSystem();
 
         if (ship.status === "InterSystemJump") {
-            const targetSys = sector ? sector.system(ship.jumpTargetSystemId) : null;
+            const targetSys = $gameGalaxy.currentSector().system(ship.jumpTargetSystemId);
             if (currentSys && targetSys) {
                 const totalDur = Math.max(1, ship.jumpDuration);
                 const t = Math.min(1.0, Math.max(0.0, ship.jumpProgress / totalDur));
@@ -365,9 +366,8 @@ class Scene_SectorTravel extends Scene_Base {
         const currentSysId = ship ? ship.systemId : 0;
         const isCurrent = this._selectedSystemId === currentSysId || this._selectedSystemId === null;
 
-        const sector = window.$gameSector ? window.$gameSector.currentSectorData() : null;
-        const currentSys = sector ? sector.systems.find(s => s && s.id === currentSysId) : null;
-        const isConnected = currentSys && Array.isArray(currentSys.connections) && currentSys.connections.includes(this._selectedSystemId);
+        const currentSys = $gameGalaxy.currentSystem();
+        const isConnected = currentSys && Array.isArray(currentSys.data.connections) && currentSys.data.connections.includes(this._selectedSystemId);
 
         const cmds = [];
         if (isCurrent) {

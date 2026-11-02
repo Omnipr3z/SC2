@@ -1,66 +1,101 @@
 //=============================================================================
-// RPG Maker MZ - SC4_Game_Planet
+// RPG Maker MZ - SC4Space_Game_Planet
 //=============================================================================
 /*:
  * @target MZ
- * @plugindesc [SC4 v1.0.0] Modèle d'astre céleste, physique orbitale et POIs.
+ * @plugindesc [SC4 v1.0.0] Modèle d'astre céleste, physique orbitale et registre des POIs.
  * @author SimCraft
+ * @base SC4Space_Game_POIs
  * 
- * @help SC4_Game_Planet.js
+ * @help SC4Space_Game_Planet.js
+ * 
+ * ============================================================================
+ * GAME_PLANET
+ * ============================================================================
+ * Modélise un corps céleste (planète, lune, station, astéroïde, etc.).
+ * Fait partie intégrante de la cascade :
+ * Galaxy -> Sectors -> Planetary Systems -> Planets -> POIs.
+ * 
+ * Triple rôle :
+ * 1. Modèle d'objet : Données physiques et orbitales (coordonnées x/y, type,
+ *    mouvements orbitaux, autorisations d'atterrissage, gouverneur et contrôleur).
+ * 2. Intégration en cascade : Instancie et référence l'ensemble des Game_POI de l'astre.
+ * 3. Hub intermédiaire : Navigation montante vers le Game_PlanetarySystem parent
+ *    et descendante vers les points d'intérêt (POIs) de la surface/orbite.
+ * ============================================================================
  */
 
-class Game_Planet {
-    constructor(data, id) {
-        this._index = id !== undefined ? id : 0;
-        this._dbId = (data && data.id !== undefined) ? data.id : id;
-        this._id = this._dbId;
-        this._type = data.type || "Planet";
-        this._name = data.name || "Inconnu";
-        this._description = data.description || "";
-        this._x = data.x || 0;
-        this._y = data.y || 0;
-        this._zoom = data.zoom || 1.0;
-        this._bitmapName = data.bitmapName || "";
-        this._moves = Array.isArray(data.moves) ? JSON.parse(JSON.stringify(data.moves)) : [];
-        this._poiIds = Array.isArray(data.poiIds) ? [...data.poiIds] : (Array.isArray(data.pois) ? data.pois.map(p => p.id) : []);
-        this._landingAllowed = Boolean(data.landingAllowed);
-        this._interactive = data.interactive !== false;
+class Game_Planet extends Game_GalacticRepoBase {
+    constructor(data = null, parentId = null) {
+        super(data, parentId);
+    }
+
+    // ========================================================================
+    // 1. INITIALISATION & CONFIGURATION
+    // ========================================================================
+
+    initMembers() {
+        super.initMembers();
+        this._hasSubObjects = true;
+        this._subObjectsClassName = "Game_POI";
+        this._subObjectsDatabaseSourceName = "$dataPois";
+        this._subObjectsIdsKey = "poiIds";
+        this._savedDataKeys = [
+            "_x",
+            "_y",
+            "_orbitAngle",
+            "_rotationAngle",
+            "_active",
+            "_landingAllowed"
+        ];
+
+        this._index = 0;
+        this._type = "Planet";
+        this._x = 0;
+        this._y = 0;
+        this._zoom = 1.0;
+        this._bitmapName = "";
+        this._moves = [];
+        this._poiIds = [];
+        this._landingAllowed = false;
+        this._interactive = true;
+        this._governorId = null;
+        this._spaceControllerId = null;
         this._orbitAngle = 0;
         this._rotationAngle = 0;
         this._active = false;
     }
 
-    get id() { return this._id; }
-    get dbId() { return this._dbId; }
+    setup(data, parentId = null) {
+        const res = super.setup(data, parentId);
+        if (!this._data) return res;
+
+        this._type = this._data.type || "Planet";
+        this._x = this._data.x || 0;
+        this._y = this._data.y || 0;
+        this._zoom = this._data.zoom || 1.0;
+        this._bitmapName = this._data.bitmapName || "";
+        this._moves = Array.isArray(this._data.moves) ? JSON.parse(JSON.stringify(this._data.moves)) : [];
+        this._poiIds = Array.isArray(this._data.poiIds)
+            ? [...this._data.poiIds]
+            : (Array.isArray(this._data.pois) ? this._data.pois.map(p => p.id) : []);
+        this._landingAllowed = Boolean(this._data.landingAllowed);
+        this._interactive = this._data.interactive !== false;
+        this._governorId = (typeof this._data.governorId === "number" && this._data.governorId > 0) ? this._data.governorId : null;
+        this._spaceControllerId = (typeof this._data.spaceControllerId === "number" && this._data.spaceControllerId > 0) ? this._data.spaceControllerId : null;
+
+        return res;
+    }
+
+    // ========================================================================
+    // 2. GETTERS & PROPRIÉTÉS PHYSIQUES
+    // ========================================================================
+
+    get dbId() { return this.id; }
     get index() { return this._index; }
+    set index(val) { this._index = val; }
     get interactive() { return this._interactive; }
-    get type() {
-        if (window.$dataPlanets) {
-            const raw = (typeof window.$dataPlanets.find === "function") 
-                ? (window.$dataPlanets.find(p => p && p.id === this._dbId) || window.$dataPlanets[this._dbId])
-                : window.$dataPlanets[this._dbId];
-            if (raw && raw.type) return raw.type;
-        }
-        return this._type;
-    }
-    get name() {
-        if (window.$dataPlanets) {
-            const raw = (typeof window.$dataPlanets.find === "function") 
-                ? (window.$dataPlanets.find(p => p && p.id === this._dbId) || window.$dataPlanets[this._dbId])
-                : window.$dataPlanets[this._dbId];
-            if (raw && raw.name) return raw.name;
-        }
-        return this._name;
-    }
-    get description() {
-        if (window.$dataPlanets) {
-            const raw = (typeof window.$dataPlanets.find === "function") 
-                ? (window.$dataPlanets.find(p => p && p.id === this._dbId) || window.$dataPlanets[this._dbId])
-                : window.$dataPlanets[this._dbId];
-            if (raw && raw.description) return raw.description;
-        }
-        return this._description;
-    }
+    get type() { return this._type; }
     get x() { return this._x; }
     set x(val) { this._x = val; }
     get y() { return this._y; }
@@ -69,29 +104,6 @@ class Game_Planet {
     get bitmapName() { return this._bitmapName; }
     get moves() { return this._moves; }
     get poiIds() { return this._poiIds; }
-    get landingAllowed() { return this._landingAllowed; }
-
-    isLandingAllowed() {
-        return Boolean(this._landingAllowed);
-    }
-
-    setLandingAllowed(val) {
-        this._landingAllowed = Boolean(val);
-    }
-
-    get pois() {
-        return this.getPois(false);
-    }
-
-    getPois(onlyLocated = false) {
-        const allPois = (window.$dataPois || []).filter(p => !!p);
-        const ids = this._poiIds || [];
-        const list = allPois.filter(p => ids.includes(p.id) || p.planetId === this._dbId);
-        if (onlyLocated && window.$gameSystem && typeof window.$gameSystem.isPoiLocated === "function") {
-            return list.filter(p => window.$gameSystem.isPoiLocated(p.id));
-        }
-        return list;
-    }
 
     get orbitAngle() { return this._orbitAngle; }
     set orbitAngle(value) {
@@ -107,10 +119,35 @@ class Game_Planet {
     activate() { this._active = true; }
     deactivate() { this._active = false; }
 
-    poi(poiId) {
-        const allPois = (window.$dataPois || []).filter(p => !!p);
-        return allPois.find(p => p && p.id === poiId) || null;
+    get landingAllowed() { return this._landingAllowed; }
+    isLandingAllowed() { return Boolean(this._landingAllowed); }
+    setLandingAllowed(val) { this._landingAllowed = Boolean(val); }
+
+    // ========================================================================
+    // 3. ACTEURS, GOUVERNANCE & FACTIONS
+    // ========================================================================
+
+    get governorId() { return this._governorId; }
+    get spaceControllerId() { return this._spaceControllerId; }
+
+    governor() {
+        if (!this._governorId || !window.$gameActors || typeof window.$gameActors.actor !== "function") return null;
+        return window.$gameActors.actor(this._governorId) || null;
     }
+
+    spaceController() {
+        if (!this._spaceControllerId || !window.$gameActors || typeof window.$gameActors.actor !== "function") return null;
+        return window.$gameActors.actor(this._spaceControllerId) || null;
+    }
+
+    governorFactionId() {
+        const gov = this.governor();
+        return (gov && typeof gov.factionId === "function") ? gov.factionId() : null;
+    }
+
+    // ========================================================================
+    // 4. ASTRONOMIE, CYCLES JOUR/NUIT & TINT
+    // ========================================================================
 
     isStation() {
         if (!this._type) return false;
@@ -215,30 +252,52 @@ class Game_Planet {
         return [r || 0, g || 0, b || 0, gray || 0];
     }
 
-    makeSavefileData() {
-        return {
-            x: this._x,
-            y: this._y,
-            orbitAngle: this._orbitAngle,
-            active: this._active
-        };
+    // ========================================================================
+    // 5. HUB VERS LES POIs (ENFANTS) & LES ANCESTRES
+    // ========================================================================
+
+    get pois() {
+        return this.getSubObjects();
     }
 
-    loadSavefileData(data) {
-        if (data) {
-            if (typeof data.x === "number") this._x = data.x;
-            if (typeof data.y === "number") this._y = data.y;
-            if (typeof data.orbitAngle === "number") this._orbitAngle = data.orbitAngle;
-            if (typeof data.active === "boolean") this._active = data.active;
-        }
+    getPois(onlyLocated = false) {
+        const all = this.pois;
+        if (!onlyLocated) return all;
+        return all.filter(p => (p && typeof p.isLocated === "function" ? p.isLocated() : true));
+    }
+
+    poi(poiId) {
+        return this.getSubObject(poiId);
+    }
+
+    getPOI(poiId) {
+        return this.getSubObject(poiId);
+    }
+
+    currentPOIId() {
+        return this.galaxy ? this.galaxy.currentPOIId() : null;
+    }
+
+    currentPOI() {
+        return this.galaxy ? this.galaxy.currentPOI() : null;
+    }
+
+    get system() {
+        return this.parent;
+    }
+
+    get sector() {
+        return this.system ? this.system.sector : null;
+    }
+
+    get galaxy() {
+        return super.galaxy;
     }
 }
 
-// ============================================================================
-// 2. GAME OBJECTS : SYSTÈMES PLANÉTAIRES & SECTEUR
-// ============================================================================
-
-window.Game_Planet = Game_Planet;
+if (typeof window !== "undefined") {
+    window.Game_Planet = Game_Planet;
+}
 if (typeof global !== "undefined") {
     global.Game_Planet = Game_Planet;
 }

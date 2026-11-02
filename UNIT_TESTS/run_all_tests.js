@@ -43,7 +43,9 @@ const testFiles = [
     'test_step20_safezone_and_poses.js',
     'test_step21_bridge_and_landing.js',
     'test_step22_subscenes.js',
-    'test_step23_phase3_features.js'
+    'test_step23_phase3_features.js',
+    'test_relationship_system.js',
+    'test_galactic_repo_refactor.js'
 ];
 
 console.log("==============================================================");

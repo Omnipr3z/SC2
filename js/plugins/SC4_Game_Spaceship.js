@@ -30,6 +30,8 @@ class Game_Spaceship {
         this._capacity = data.capacity || 100;
         this._faction = data.faction || "Neutre";
         this._factionId = (typeof data.factionId === "number") ? data.factionId : null;
+        // Propriétaire du vaisseau (distinct du capitaine : un vaisseau peut être emprunté)
+        this._ownerActorId = (typeof data.ownerActorId === "number" && data.ownerActorId > 0) ? data.ownerActorId : null;
         this._motorId = typeof data.motorId === "number" ? data.motorId : 1;
         this._fuel = typeof data.fuel === "number" ? data.fuel : 500;
         this._status = "Static"; // Static | Orbiting | MoveToOrbit | MoveToDest | InterSystemJump
@@ -172,8 +174,8 @@ class Game_Spaceship {
     }
     get shipCategory() {
         const catId = this.categoryId;
-        const dataCats = (typeof $dataShipCategories !== "undefined" && $dataShipCategories) 
-            ? $dataShipCategories 
+        const dataCats = (typeof $dataShipCategories !== "undefined" && $dataShipCategories)
+            ? $dataShipCategories
             : (typeof window !== "undefined" ? window.$dataShipCategories : null);
         if (Array.isArray(dataCats)) {
             return dataCats.find(c => c && c.id === catId) || null;
@@ -198,9 +200,32 @@ class Game_Spaceship {
     get shipClass() { return this._shipClass; }
     get captainId() { return this._captainId; }
     get captain() {
-        return (window.$gameActors && typeof $gameActors.actor === "function") 
-            ? $gameActors.actor(this._captainId) 
+        return (window.$gameActors && typeof $gameActors.actor === "function")
+            ? $gameActors.actor(this._captainId)
             : null;
+    }
+    get ownerActorId() { return this._ownerActorId; }
+    get owner() {
+        return (this._ownerActorId && window.$gameActors && typeof $gameActors.actor === "function")
+            ? $gameActors.actor(this._ownerActorId)
+            : null;
+    }
+
+    /**
+     * Attribue la propriété du vaisseau à un acteur : le factionId du vaisseau
+     * devient celui de l'acteur (null = sans allégeance).
+     * Le capitaine n'est pas modifié (il peut piloter un vaisseau d'une autre faction).
+     * @param {number} actorId 0/null pour retirer le propriétaire.
+     */
+    setActorProperty(actorId) {
+        const id = Number(actorId) || 0;
+        if (id <= 0) {
+            this._ownerActorId = null;
+            return;
+        }
+        this._ownerActorId = id;
+        const actor = (window.$gameActors && typeof $gameActors.actor === "function") ? $gameActors.actor(id) : null;
+        this._factionId = (actor && typeof actor.factionId === "function") ? actor.factionId() : null;
     }
     get bitmapName() { return this._bitmapName; }
     get sectorId() {
@@ -274,6 +299,7 @@ class Game_Spaceship {
     get capacity() { return this._capacity; }
     get factionId() {
         if (this._factionId) return this._factionId;
+        if (this._ownerActorId) return null; // propriétaire sans allégeance
         const fStr = (this._faction || "").toLowerCase();
         if (fStr.includes("fédérale") || fStr.includes("federale") || fStr.includes("astra") || fStr.includes("militarum") || fStr.includes("humaine")) return 1;
         if (fStr.includes("elion")) return 2;
@@ -289,6 +315,9 @@ class Game_Spaceship {
         if (this._factionId && window.$gameFactions) {
             const f = window.$gameFactions.faction(this._factionId);
             if (f && f.name) return f.name;
+        }
+        if (this._ownerActorId && !this._factionId) {
+            return typeof SC4_Localization !== "undefined" ? SC4_Localization.getText("travel.no_allegiance", "Sans allégeance") : "Sans allégeance";
         }
         return this._faction;
     }
@@ -314,8 +343,8 @@ class Game_Spaceship {
 
     get movingSE() {
         if (this._movingSE) {
-            return typeof this._movingSE === "string" 
-                ? { name: this._movingSE, volume: 90, pitch: 80 } 
+            return typeof this._movingSE === "string"
+                ? { name: this._movingSE, volume: 90, pitch: 80 }
                 : Object.assign({ name: "Collapse3", volume: 90, pitch: 80 }, this._movingSE);
         }
         return { name: "Collapse3", volume: 90, pitch: 80 };
@@ -323,8 +352,8 @@ class Game_Spaceship {
 
     get hyperdriveBGS() {
         if (this._hyperdriveBGS) {
-            return typeof this._hyperdriveBGS === "string" 
-                ? { name: this._hyperdriveBGS, volume: 90, pitch: 100 } 
+            return typeof this._hyperdriveBGS === "string"
+                ? { name: this._hyperdriveBGS, volume: 90, pitch: 100 }
                 : Object.assign({ name: "FIREWIND2", volume: 90, pitch: 100 }, this._hyperdriveBGS);
         }
         return { name: "FIREWIND2", volume: 90, pitch: 100 };
@@ -332,8 +361,8 @@ class Game_Spaceship {
 
     get warpjumpSE() {
         if (this._warpjumpSE) {
-            return typeof this._warpjumpSE === "string" 
-                ? { name: this._warpjumpSE, volume: 90, pitch: 100 } 
+            return typeof this._warpjumpSE === "string"
+                ? { name: this._warpjumpSE, volume: 90, pitch: 100 }
                 : Object.assign({ name: "ShipJump", volume: 90, pitch: 100 }, this._warpjumpSE);
         }
         return { name: "ShipJump", volume: 90, pitch: 100 };
@@ -341,7 +370,7 @@ class Game_Spaceship {
 
     get orbitingPlanet() {
         if (this._orbitingPlanetId === null) return null;
-        const currentSys = window.$gameSector ? window.$gameSector.currentSystem() : null;
+        const currentSys = $gameGalaxy.currentSystem();
         return currentSys ? currentSys.planet(this._orbitingPlanetId) : null;
     }
 
@@ -395,8 +424,7 @@ class Game_Spaceship {
     setOrbitingPlanet(planetId) {
         this.clearContact();
         this._orbitingPlanetId = planetId;
-        const currentSys = window.$gameSector ? window.$gameSector.currentSystem() : null;
-        const planet = currentSys ? currentSys.planet(planetId) : null;
+        const planet = $gameGalaxy.currentSystem().planet(planetId);
         if (planet && Math.hypot(this._x - planet.x, this._y - planet.y) <= 8) {
             this._x = planet.x;
             this._y = planet.y;
@@ -447,12 +475,10 @@ class Game_Spaceship {
         if (!this.isWarpAllowed()) return false;
         if (this.motor.capacity !== -1 && this._fuel < 500) return false;
 
-        const sector = window.$gameSector;
-        if (!sector) return false;
-
-        const currentSys = sector.system(this._systemId);
-        const targetSys = sector.system(targetSystemId);
-        if (!currentSys || !targetSys) return false;
+        const currentSect = $gameGalaxy.currentSector();
+        const currentSys = currentSect.currentSystem();
+        const targetSys = currentSect.system(targetSystemId);
+        if (!currentSect || !targetSys) return false;
 
         // Consommation fixe de 500 carburant au lancement du saut
         this.consumeFuel(500);
@@ -501,16 +527,15 @@ class Game_Spaceship {
         this._jumpProgress = 0;
         this._jumpDuration = 0;
 
-        const sector = window.$gameSector;
-        if (sector) {
-            sector.currentSystemId = targetSysId;
-            const targetSys = sector.system(targetSysId);
-            if (targetSys && targetSys.entryPoint) {
-                this._x = targetSys.entryPoint.x;
-                this._y = targetSys.entryPoint.y;
-                this._targetX = this._x;
-                this._targetY = this._y;
-            }
+        const actor = $gameParty.leader();
+        actor._currentSystemId = targetSysId;
+        const targetSys = $gameGalaxy.currentSystem();
+
+        if (targetSys.data.entryPoint) {
+            this._x = targetSys.data.entryPoint.x;
+            this._y = targetSys.data.entryPoint.y;
+            this._targetX = this._x;
+            this._targetY = this._y;
         }
         this._status = "Static";
     }
@@ -532,7 +557,9 @@ class Game_Spaceship {
             jumpProgress: this._jumpProgress,
             jumpDuration: this._jumpDuration,
             onBoard: this._onBoard,
-            dockingAllowed: this._dockingAllowed
+            dockingAllowed: this._dockingAllowed,
+            ownerActorId: this._ownerActorId,
+            factionId: this._factionId
         };
     }
 
@@ -554,6 +581,8 @@ class Game_Spaceship {
         if (typeof data.jumpDuration === "number") this._jumpDuration = data.jumpDuration;
         if (data.onBoard !== undefined) this._onBoard = data.onBoard;
         if (typeof data.dockingAllowed === "boolean") this._dockingAllowed = data.dockingAllowed;
+        if (data.ownerActorId !== undefined) this._ownerActorId = data.ownerActorId;
+        if (data.factionId !== undefined) this._factionId = data.factionId;
     }
 }
 

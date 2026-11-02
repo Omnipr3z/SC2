@@ -30,7 +30,7 @@
     // 1. Patches pour TouchInput
     // ========================================================================
     const _TouchInput_clear = TouchInput.clear;
-    TouchInput.clear = function() {
+    TouchInput.clear = function () {
         _TouchInput_clear.call(this);
         this._rightPressed = false;
         this._rightPressedTime = 0;
@@ -45,7 +45,7 @@
     };
 
     const _TouchInput_update = TouchInput.update;
-    TouchInput.update = function() {
+    TouchInput.update = function () {
         _TouchInput_update.call(this);
         this._rightTriggered = false;
         this._rightReleased = false;
@@ -56,7 +56,7 @@
         }
     };
 
-    TouchInput._onRightButtonDown = function(event) {
+    TouchInput._onRightButtonDown = function (event) {
         const x = Graphics.pageToCanvasX(event.pageX);
         const y = Graphics.pageToCanvasY(event.pageY);
         if (Graphics.isInsideCanvas(x, y)) {
@@ -72,7 +72,7 @@
     };
 
     const _TouchInput_onLeftButtonDown = TouchInput._onLeftButtonDown;
-    TouchInput._onLeftButtonDown = function(event) {
+    TouchInput._onLeftButtonDown = function (event) {
         if (_TouchInput_onLeftButtonDown) {
             _TouchInput_onLeftButtonDown.call(this, event);
         }
@@ -85,7 +85,7 @@
     };
 
     const _TouchInput_onMouseMove = TouchInput._onMouseMove;
-    TouchInput._onMouseMove = function(event) {
+    TouchInput._onMouseMove = function (event) {
         if (_TouchInput_onMouseMove) {
             _TouchInput_onMouseMove.call(this, event);
         }
@@ -96,7 +96,7 @@
     };
 
     const _TouchInput_onMouseUp = TouchInput._onMouseUp;
-    TouchInput._onMouseUp = function(event) {
+    TouchInput._onMouseUp = function (event) {
         if (_TouchInput_onMouseUp) {
             _TouchInput_onMouseUp.call(this, event);
         }
@@ -111,7 +111,7 @@
     };
 
     const _TouchInput_onLostFocus = TouchInput._onLostFocus;
-    TouchInput._onLostFocus = function() {
+    TouchInput._onLostFocus = function () {
         if (_TouchInput_onLostFocus) {
             _TouchInput_onLostFocus.call(this);
         }
@@ -120,53 +120,53 @@
     };
 
     // Méthodes d'assistance publiques
-    TouchInput.isRightPressed = function() {
+    TouchInput.isRightPressed = function () {
         return Boolean(this._rightPressed);
     };
 
-    TouchInput.isRightTriggered = function() {
+    TouchInput.isRightTriggered = function () {
         return Boolean(this._rightTriggered);
     };
 
-    TouchInput.isRightReleased = function() {
+    TouchInput.isRightReleased = function () {
         return Boolean(this._rightReleased);
     };
 
-    TouchInput.isLeftPressed = function() {
+    TouchInput.isLeftPressed = function () {
         return this.isPressed();
     };
 
-    TouchInput.isLeftTriggered = function() {
+    TouchInput.isLeftTriggered = function () {
         return this.isTriggered();
     };
 
     Object.defineProperty(TouchInput, "rightX", {
-        get: function() { return this._rightX || 0; },
+        get: function () { return this._rightX || 0; },
         configurable: true
     });
 
     Object.defineProperty(TouchInput, "rightY", {
-        get: function() { return this._rightY || 0; },
+        get: function () { return this._rightY || 0; },
         configurable: true
     });
 
     Object.defineProperty(TouchInput, "leftX", {
-        get: function() { return this._leftTriggerX || 0; },
+        get: function () { return this._leftTriggerX || 0; },
         configurable: true
     });
 
     Object.defineProperty(TouchInput, "leftY", {
-        get: function() { return this._leftTriggerY || 0; },
+        get: function () { return this._leftTriggerY || 0; },
         configurable: true
     });
 
     Object.defineProperty(TouchInput, "cursorX", {
-        get: function() { return this._cursorX || this._x || 0; },
+        get: function () { return this._cursorX || this._x || 0; },
         configurable: true
     });
 
     Object.defineProperty(TouchInput, "cursorY", {
-        get: function() { return this._cursorY || this._y || 0; },
+        get: function () { return this._cursorY || this._y || 0; },
         configurable: true
     });
 
@@ -178,7 +178,7 @@
         ConfigManager.autoReload = false;
 
         const _ConfigManager_makeData = ConfigManager.makeData;
-        ConfigManager.makeData = function() {
+        ConfigManager.makeData = function () {
             const config = _ConfigManager_makeData ? _ConfigManager_makeData.call(this) : {};
             config.keyboardLayout = this.keyboardLayout;
             config.autoReload = this.autoReload;
@@ -186,7 +186,7 @@
         };
 
         const _ConfigManager_applyData = ConfigManager.applyData;
-        ConfigManager.applyData = function(config) {
+        ConfigManager.applyData = function (config) {
             if (_ConfigManager_applyData) {
                 _ConfigManager_applyData.call(this, config);
             }
@@ -195,7 +195,7 @@
             this.applyKeyboardLayout();
         };
 
-        ConfigManager.applyKeyboardLayout = function() {
+        ConfigManager.applyKeyboardLayout = function () {
             if (typeof Input === "undefined" || !Input.keyMapper) return;
             const isQwerty = this.keyboardLayout === "qwerty";
 
@@ -241,7 +241,7 @@
     // Intégration dans le menu des Options (Window_Options)
     if (typeof Window_Options !== "undefined") {
         const _Window_Options_addGeneralOptions = Window_Options.prototype.addGeneralOptions;
-        Window_Options.prototype.addGeneralOptions = function() {
+        Window_Options.prototype.addGeneralOptions = function () {
             if (_Window_Options_addGeneralOptions) {
                 _Window_Options_addGeneralOptions.call(this);
             }
@@ -250,7 +250,7 @@
         };
 
         const _Window_Options_statusText = Window_Options.prototype.statusText;
-        Window_Options.prototype.statusText = function(index) {
+        Window_Options.prototype.statusText = function (index) {
             const symbol = this.commandSymbol(index);
             if (symbol === "keyboardLayout") {
                 const val = this.getConfigValue(symbol);
@@ -260,7 +260,7 @@
         };
 
         const _Window_Options_processOk = Window_Options.prototype.processOk;
-        Window_Options.prototype.processOk = function() {
+        Window_Options.prototype.processOk = function () {
             const index = this.index();
             const symbol = this.commandSymbol(index);
             if (symbol === "keyboardLayout") {
@@ -278,7 +278,7 @@
         };
 
         const _Window_Options_cursorRight = Window_Options.prototype.cursorRight;
-        Window_Options.prototype.cursorRight = function() {
+        Window_Options.prototype.cursorRight = function () {
             const index = this.index();
             const symbol = this.commandSymbol(index);
             if (symbol === "keyboardLayout") {
@@ -294,7 +294,7 @@
         };
 
         const _Window_Options_cursorLeft = Window_Options.prototype.cursorLeft;
-        Window_Options.prototype.cursorLeft = function() {
+        Window_Options.prototype.cursorLeft = function () {
             const index = this.index();
             const symbol = this.commandSymbol(index);
             if (symbol === "keyboardLayout") {
@@ -314,7 +314,7 @@
     // 3. Utilitaires Mathématiques & Interpolation (approach)
     // ========================================================================
     const _Utils = (typeof Utils !== "undefined") ? Utils : (typeof window !== "undefined" ? (window.Utils = window.Utils || {}) : {});
-    _Utils.approach = function(current, target, step) {
+    _Utils.approach = function (current, target, step) {
         if (current < target) {
             return Math.min(current + step, target);
         } else if (current > target) {
@@ -325,7 +325,7 @@
 
     if (!Number.prototype.approach) {
         Object.defineProperty(Number.prototype, "approach", {
-            value: function(target, step) {
+            value: function (target, step) {
                 return _Utils.approach(this.valueOf(), target, step);
             },
             configurable: true,
@@ -335,7 +335,7 @@
     }
 
     if (typeof Bitmap !== "undefined" && !Bitmap.prototype.drawLine) {
-        Bitmap.prototype.drawLine = function(x1, y1, x2, y2, color, lineWidth = 1) {
+        Bitmap.prototype.drawLine = function (x1, y1, x2, y2, color, lineWidth = 1) {
             const context = this.context;
             context.save();
             context.beginPath();
@@ -348,5 +348,101 @@
             this._baseTexture.update();
         };
     }
+
+    ConfigManager.locale = "FR";
+
+    const _ConfigManager_makeData = ConfigManager.makeData;
+    ConfigManager.makeData = function () {
+        const config = _ConfigManager_makeData.call(this);
+        config.locale = this.locale || "FR";
+        return config;
+    };
+
+    const _ConfigManager_applyData = ConfigManager.applyData;
+    ConfigManager.applyData = function (config) {
+        _ConfigManager_applyData.call(this, config);
+        this.locale = (config && config.locale) ? String(config.locale).toUpperCase() : "FR";
+        if (typeof $gameSystem !== "undefined" && $gameSystem) {
+            $gameSystem._locale = this.locale;
+        }
+    };
+
+    const _TextManager_basic = TextManager.basic;
+    TextManager.basic = function (basicId) {
+        const raw = _TextManager_basic.call(this, basicId);
+        return SC4_Localization.parse(raw);
+    };
+
+    const _TextManager_param = TextManager.param;
+    TextManager.param = function (paramId) {
+        const raw = _TextManager_param.call(this, paramId);
+        return SC4_Localization.parse(raw);
+    };
+
+    const _TextManager_command = TextManager.command;
+    TextManager.command = function (commandId) {
+        const raw = _TextManager_command.call(this, commandId);
+        const parsed = SC4_Localization.parse(raw);
+        if (parsed !== raw) return parsed;
+
+        // Remplacement automatique des commandes vanilla courantes par la langue active
+        const cmdKeys = {
+            0: "terms.fight",
+            1: "terms.escape",
+            2: "terms.attack",
+            3: "terms.guard",
+            4: "menu.item",
+            5: "menu.skill",
+            6: "menu.equip",
+            7: "menu.status",
+            8: "menu.formation",
+            9: "menu.save",
+            10: "menu.gameEnd",
+            11: "title.options",
+            12: "terms.weapon",
+            13: "terms.armor",
+            14: "terms.keyItem",
+            15: "terms.equip2",
+            16: "terms.optimize",
+            17: "terms.clear",
+            18: "title.newGame",
+            19: "title.continue",
+            21: "title.exit",
+            22: "terms.cancel",
+            24: "terms.buy",
+            25: "terms.sell"
+        };
+
+        const key = cmdKeys[commandId];
+        if (key) {
+            return SC4_Localization.getText(key, raw);
+        }
+        return raw;
+    };
+
+    const _TextManager_message = TextManager.message;
+    TextManager.message = function (messageId) {
+        const raw = _TextManager_message.call(this, messageId);
+        const parsed = SC4_Localization.parse(raw);
+        if (parsed !== raw) return parsed;
+
+        // Messages d'options courants
+        const msgKeys = {
+            alwaysDash: "options.alwaysDash",
+            commandRemember: "options.commandRemember",
+            touchUI: "options.touchUI",
+            bgmVolume: "options.bgmVolume",
+            bgsVolume: "options.bgsVolume",
+            meVolume: "options.meVolume",
+            seVolume: "options.seVolume"
+        };
+
+        const key = msgKeys[messageId];
+        if (key) {
+            return SC4_Localization.getText(key, raw);
+        }
+        return raw;
+    };
+
 
 })();

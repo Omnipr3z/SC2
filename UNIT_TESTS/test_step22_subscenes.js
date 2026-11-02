@@ -372,6 +372,89 @@ assert.strictEqual(mapScene.currentSubScene(), null, "Sous-scène détachée");
 assert.strictEqual(mapScene.isMenuEnabled(), true, "Menu principal réactivé");
 console.log("✓ Intégration Scene_Map et façade SC4.openBridgeConsole validées à 100%.");
 
+// ----------------------------------------------------------------------------
+// TEST 5: Architecture Inception (SubScene Stack LIFO & Child SubScenes)
+// ----------------------------------------------------------------------------
+console.log("\n--- Test 5: Architecture Inception (SubScene Stack LIFO) ---");
+
+class SubScene_ParentMock extends global.SubScene_Base {
+    initMembers() {
+        this.resumeData = null;
+        this.deactivatedCount = 0;
+        this.reactivatedCount = 0;
+    }
+    onDeactivate() {
+        this.deactivatedCount++;
+    }
+    onReactivate() {
+        this.reactivatedCount++;
+    }
+    onSubSceneResume(childSubScene, result) {
+        this.resumeData = result;
+    }
+}
+
+class SubScene_ChildMock extends global.SubScene_Base {
+    finishWithSuccess() {
+        this.close({ status: "success", points: 42 });
+    }
+}
+
+class SubScene_GrandChildMock extends global.SubScene_Base {}
+
+const testScene = new global.Scene_Map();
+
+// 1. Ouvrir la sous-scène parente (ex: Console)
+const parentSub = testScene.openSubScene(SubScene_ParentMock);
+assert.strictEqual(testScene.currentSubScene(), parentSub, "Parent est la sous-scène active");
+assert.strictEqual(testScene.subSceneStackDepth(), 1, "Profondeur de pile = 1");
+assert.strictEqual(parentSub.isActive(), true, "Parent est actif");
+
+// 2. Ouvrir la sous-scène enfant (ex: Subcom / Dialogue) via openChildSubScene
+const childSub = parentSub.openChildSubScene(SubScene_ChildMock);
+assert.strictEqual(testScene.currentSubScene(), childSub, "Enfant est devenu la sous-scène active");
+assert.strictEqual(testScene.subSceneStackDepth(), 2, "Profondeur de pile = 2");
+assert.strictEqual(childSub.callerSubScene, parentSub, "callerSubScene pointe vers le parent");
+assert.strictEqual(parentSub.isActive(), false, "Parent a été mis en veille (deactivated)");
+assert.strictEqual(parentSub.deactivatedCount, 1, "onDeactivate a été appelé sur le parent");
+
+// 3. Ouvrir un 3ème niveau (ex: Hacking / Minijeu dans Subcom)
+const grandChildSub = childSub.openChildSubScene(SubScene_GrandChildMock);
+assert.strictEqual(testScene.currentSubScene(), grandChildSub, "3ème niveau actif");
+assert.strictEqual(testScene.subSceneStackDepth(), 3, "Profondeur de pile = 3");
+assert.strictEqual(grandChildSub.callerSubScene, childSub, "Grand-enfant lié à l'enfant");
+
+// 4. Fermer le 3ème niveau -> retour au 2ème (enfant)
+grandChildSub.close();
+assert.strictEqual(testScene.currentSubScene(), childSub, "Retour à l'enfant");
+assert.strictEqual(testScene.subSceneStackDepth(), 2, "Profondeur = 2");
+assert.strictEqual(childSub.isActive(), true, "Enfant réactivé");
+
+// 5. Fermer l'enfant avec résultat -> retour au parent
+childSub.finishWithSuccess();
+assert.strictEqual(testScene.currentSubScene(), parentSub, "Retour au parent");
+assert.strictEqual(testScene.subSceneStackDepth(), 1, "Profondeur = 1");
+assert.strictEqual(parentSub.isActive(), true, "Parent réactivé");
+assert.strictEqual(parentSub.reactivatedCount, 1, "onReactivate appelé sur le parent");
+assert.deepStrictEqual(parentSub.resumeData, { status: "success", points: 42 }, "Résultat transmis au parent");
+
+// 6. Fermer le parent -> retour total à Scene_Map
+parentSub.close();
+assert.strictEqual(testScene.currentSubScene(), null, "Aucune sous-scène restante");
+assert.strictEqual(testScene.subSceneStackDepth(), 0, "Profondeur = 0");
+assert.strictEqual(testScene._subSceneInputBlocked, false, "Input de Scene_Map débloqué");
+
+// 7. Test de closeAllSubScenes (urgence / transfert de carte)
+testScene.openSubScene(SubScene_ParentMock);
+testScene.openSubScene(SubScene_ChildMock);
+testScene.openSubScene(SubScene_GrandChildMock);
+assert.strictEqual(testScene.subSceneStackDepth(), 3, "Pile à 3 niveaux avant fermeture d'urgence");
+testScene.closeAllSubScenes();
+assert.strictEqual(testScene.subSceneStackDepth(), 0, "Pile entièrement vidée par closeAllSubScenes");
+assert.strictEqual(testScene.currentSubScene(), null, "currentSubScene réinitialisé");
+
+console.log("✓ Architecture Inception (SubScene Stack LIFO & Résultat) validée à 100%.");
+
 console.log("\n==============================================================");
 console.log("  TEST STEP 22 RÉUSSI : 100% des tests validés !              ");
 console.log("==============================================================");

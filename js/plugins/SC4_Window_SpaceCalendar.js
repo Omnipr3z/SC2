@@ -21,11 +21,11 @@ class Window_SpaceCalendar extends Window_Base {
     // ========================================================================
 
     get sector() {
-        return window.$gameSector ? window.$gameSector.currentSectorData() : null;
+        return $gameGalaxy.currentSector()._data;
     }
 
     get system() {
-        return window.$gameSector ? window.$gameSector.currentSystem() : null;
+        return $gameGalaxy.currentSystem()._data;
     }
 
     get timeString() {
