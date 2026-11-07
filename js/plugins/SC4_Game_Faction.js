@@ -43,7 +43,9 @@ class Game_Faction {
         }
         return "";
     }
-
+    get bannerName() {
+        return `banner_${$dataFactions[this._id].banner}`;
+    }
     get affinity() {
         return this._affinity;
     }

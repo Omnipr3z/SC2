@@ -554,14 +554,23 @@ La clearance d'atterrissage régit l'accès aux spatioports et mondes civilisés
 * **Modification** : `SC4.setLandingAuthorized(planetOrPoiId, authorized = true)`.
 * **Valeur par défaut** : `false` pour les mondes protégés (nécessitant une clearance via quête, dialogue ou transmission radio) ou définie par `landingAuthorized` dans `PLANETS.json` / `POIS.json`.
 
-### 3.9 Hublot & Parallaxe Dynamique des Cartes de Vaisseau
-Pour donner une sensation d'immersion immédiate depuis l'intérieur du vaisseau, les cartes intérieures (passerelle, cabines) adaptent automatiquement leur décor de fond visible par les hublots :
-* **Notetag de carte RMMZ** : `<spaceshipIdParalaxes:[id]>` (ex: `<spaceshipIdParalaxes: 1>`).
-* **Gestion automatique du parallaxe** :
-  * **En orbite stationnaire** : Affiche la planète correspondante (`!planet_[id].png` depuis `img/parallaxes/`), en zero-parallax fixe (défilement figé `[0, 0]`).
-  * **En saut FTL / Hyperdrive** : Affiche l'animation de défilement rapide `Warp.png` (`sx = 8`).
-  * **En vol libre / espace profond** : Affiche le ciel étoilé `StarlitSky.png` avec dérive douce (`sx = 0.5`).
-  * **Au sol / atterri** : Conserve le panorama fixe planétaire du site d'atterrissage.
+### 3.9 Hublot & Parallaxe Dynamique des Cartes de Vaisseau [NOUVEL AJOUT]
+Pour donner une sensation d'immersion immédiate depuis l'intérieur du vaisseau, les cartes intérieures (passerelle, cabines) adaptent automatiquement leur décor de fond visible par les hublots via `SpaceParallaxesManager` :
+* **Notetag de carte RMMZ** : `<spaceship:[id]>` (ex: `<spaceship: 1>` ou `<spaceship: player>`).
+* **Orientation du vaisseau** : Déduite des valeurs `parallaxSx` et `parallaxSy` configurées dans les propriétés de la carte dans l'éditeur (cap du vaisseau).
+* **Architecture Tri-Couche (Triple Parallax)** :
+  * **Couche Basse (`this._parallax`)** :
+    * *À l'arrêt complet / orbite* : Défilement stoppé (`sx = 0, sy = 0`).
+    * *En propulsion sous-lumière* : Défilement directionnel cinétique proportionnel à la vitesse des propulseurs (`ship.speed`).
+    * *En saut FTL / Warp* : Texture `Warp.png` avec défilement rapide.
+  * **Couche Intermédiaire de Profondeur (`this._parallaxDepthLayer`)** :
+    * *Étoiles de premier plan (`Stars.png`)* : Fond transparent, défilement à coefficient `x1.6` pour créer un effet de parallaxe 3D réaliste par rapport au ciel profond.
+    * *Masqué en Warp* : Laisse place nette au tunnel hyperspatial.
+  * **Couche Haute (`this._parallaxUpperLayer`)** :
+    * *Approche & Orbite* : Affiche la planète dès qu'elle entre dans le champ de vision (boîte 178×99 px autour du navire).
+    * *Échelle x10 Hublot* : Le zoom de la planète est multiplié par 10 (`planet.zoom * 10`) pour correspondre au ratio d'agrandissement de la boîte 178×99 vers le plein écran.
+    * *Changement de repère & Trajectoire relative* : La position de la planète est projetée dans le repère local du vaisseau par calcul trigonométrique de son cap ($D_{\text{forward}} = dx \cdot \cos\theta + dy \cdot \sin\theta$, $D_{\text{right}} = -dx \cdot \sin\theta + dy \cdot \cos\theta$). Quelle que soit l'orientation de déplacement sur la carte système, l'astre en approche entre toujours par le haut du hublot et descend vers le centre en harmonie avec le défilement des étoiles, avant de s'y stabiliser en orbite.
+    * *Rotation astronomique* : Rotation axiale synchronisée sur `$gameDate`.
 
 ---
 

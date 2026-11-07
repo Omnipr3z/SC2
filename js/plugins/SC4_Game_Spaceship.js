@@ -37,6 +37,7 @@ class Game_Spaceship {
         this._status = "Static"; // Static | Orbiting | MoveToOrbit | MoveToDest | InterSystemJump
         this._driveActive = false;
         this._tmpSpeed = 0;
+        this._headingAngle = (typeof data.headingAngle === "number") ? data.headingAngle : -Math.PI / 2;
 
         // Saut inter-système
         this._jumpTargetSystemId = null;
@@ -413,12 +414,25 @@ class Game_Spaceship {
         return !!(this.motor.hyperdrive && this._fuel > 0);
     }
 
+    get headingAngle() {
+        return typeof this._headingAngle === "number" ? this._headingAngle : -Math.PI / 2;
+    }
+
+    set headingAngle(val) {
+        this._headingAngle = val;
+    }
+
     setTarget(x, y) {
         this.clearOrbit();
         this.clearContact();
         this._targetX = Math.round(x);
         this._targetY = Math.round(y);
         this._status = "MoveToDest";
+        const dx = this._targetX - this._x;
+        const dy = this._targetY - this._y;
+        if (Math.hypot(dx, dy) > 0.001) {
+            this._headingAngle = Math.atan2(dy, dx);
+        }
     }
 
     setOrbitingPlanet(planetId) {
@@ -431,6 +445,13 @@ class Game_Spaceship {
             this._status = "Orbiting";
         } else {
             this._status = "MoveToOrbit";
+            if (planet) {
+                const dx = planet.x - this._x;
+                const dy = planet.y - this._y;
+                if (Math.hypot(dx, dy) > 0.001) {
+                    this._headingAngle = Math.atan2(dy, dx);
+                }
+            }
         }
     }
 
@@ -444,6 +465,13 @@ class Game_Spaceship {
             this._status = "InContact";
         } else {
             this._status = "MoveToContact";
+            if (target) {
+                const dx = target.x - this._x;
+                const dy = target.y - this._y;
+                if (Math.hypot(dx, dy) > 0.001) {
+                    this._headingAngle = Math.atan2(dy, dx);
+                }
+            }
         }
     }
 
@@ -559,7 +587,8 @@ class Game_Spaceship {
             onBoard: this._onBoard,
             dockingAllowed: this._dockingAllowed,
             ownerActorId: this._ownerActorId,
-            factionId: this._factionId
+            factionId: this._factionId,
+            headingAngle: this._headingAngle
         };
     }
 
@@ -583,6 +612,7 @@ class Game_Spaceship {
         if (typeof data.dockingAllowed === "boolean") this._dockingAllowed = data.dockingAllowed;
         if (data.ownerActorId !== undefined) this._ownerActorId = data.ownerActorId;
         if (data.factionId !== undefined) this._factionId = data.factionId;
+        if (typeof data.headingAngle === "number") this._headingAngle = data.headingAngle;
     }
 }
 

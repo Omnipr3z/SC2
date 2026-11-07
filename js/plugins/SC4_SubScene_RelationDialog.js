@@ -60,8 +60,8 @@ class SubScene_RelationDialog extends SubScene_Base {
     dialRect() {
         const dialogW = Graphics.boxWidth;
         const dialogH = Graphics.boxHeight;
-        const startX = Math.floor((boxW - dialogW) / 2);
-        const startY = Math.floor((boxH - dialogH) / 2);
+        const startX = 0;
+        const startY = 0;
 
         return new Rectangle(startX, startY, dialogW, dialogH);
     }
@@ -102,7 +102,7 @@ class SubScene_RelationDialog extends SubScene_Base {
         this._npcFactionWindow.setFaction(npcFactionId, "Faction Cible");
         this.addWindow(this._npcFactionWindow);
     }
-    createRelationStatusWindow() {
+    createRelationStatusWindow(session) {
         const relation = session.relation;
         const sRect = this.relationStatusRect();
         const targetActor = $gameActors.actor(this._targetActorId);
@@ -111,7 +111,7 @@ class SubScene_RelationDialog extends SubScene_Base {
         this._relationStatusWindow.setRelation(relation, targetActor);
         this.addWindow(this._relationStatusWindow);
     }
-    createCommandWindowRect() {
+    createCommandWindowRect(session) {
         const cRect = this.commandWindowRect();
 
         this._commandWindow = new Window_InteractionCommand(cRect);
@@ -126,8 +126,8 @@ class SubScene_RelationDialog extends SubScene_Base {
 
         this.createPlayerFactionWindow();
         this.createNpcFactionRect();
-        this.createRelationStatusRect();
-        this.createCommandWindowRect();
+        this.createRelationStatusWindow(session, relation);
+        this.createCommandWindowRect(session);
     }
 
     onCommandChat() {
@@ -221,7 +221,7 @@ class SubScene_RelationDialog extends SubScene_Base {
         }
 
         if (typeof $gameMessage !== "undefined" && $gameMessage) {
-            $gameMessage.add(`${targetTag}\\C[6]${rawText}\\C[0]`);
+            $gameMessage.add(`${targetTag}\\C[15]${rawText}\\C[0]`);
         }
         this._waitingForMessage = true;
     }

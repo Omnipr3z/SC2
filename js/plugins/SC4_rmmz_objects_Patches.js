@@ -7,7 +7,13 @@
  * @author SimCraft
  * @help
  * ============================================================================
- * SC4_rmmz_objects_Patches.js
+ * NORME DES FICHIERS DE PATCHES :
+ * - Nom de la Classe en commentaire (ex: // GAME MAP)
+ * - Création de tous les alias nécessaires à la classe au début de sa section, suivis d'une ligne vide
+ * - Toutes les méthodes de la classe regroupées ensemble (surcharges et ajouts), sans doublons
+ * - Ordre des classes identique au fichier natif vanilla
+ * - Pas de commentaires superflus en dehors des méthodes (sauf TODO ou note en header)
+ * - Règle "Fail Fast" : pas de fallbacks silencieux masquant les bugs
  * ============================================================================
  * Regroupe tous les patches et surcharges apportés aux classes de rmmz_objects :
  * 
@@ -100,6 +106,9 @@
             this._factionId = id > 0 ? id : null;
         }
         return this._factionId;
+    }
+    Game_Actor.prototype.faction = function () {
+        return $gameFactions.faction(this.factionId())
     }
     Game_Actor.prototype.setFactionId = function (factionId) {
         const id = Number(factionId) || 0;
@@ -219,11 +228,26 @@
 
     // GAME MAP
     //=============================================================================
+    const _Game_Map_initMembers = Game_Map.prototype.initMembers;
     const _Game_Map_isDashDisabled = Game_Map.prototype.isDashDisabled;
     const _Game_Map_update = Game_Map.prototype.update;
     const _Game_Map_setup = Game_Map.prototype.setup;
     const _Game_Map_setupParallax = Game_Map.prototype.setupParallax;
 
+    Game_Map.prototype.initMembers = function () {
+        _Game_Map_initMembers.call(this);
+        this._spaceShipId = null;
+        this._shipHeadingVector = { x: 0, y: -3 };
+    }
+    Game_Map.prototype.isSpaceShip = function () {
+        return this._spaceShipId !== null;
+    }
+    Game_Map.prototype.spaceShipId = function () {
+        return this._spaceShipId;
+    }
+    Game_Map.prototype.shipHeadingVector = function () {
+        return this._shipHeadingVector;
+    }
     Game_Map.prototype.xWithDirection = function (x, d) {
         return x + (d === 6 || d === 3 || d === 9 ? 1 : d === 4 || d === 1 || d === 7 ? -1 : 0);
     }
@@ -253,7 +277,6 @@
         this._combatMode = Boolean(active);
         if (this._combatMode !== prev) {
             if (this._combatMode) {
-                // Alerte active : réveille / annule les poses onAlert !== false sur le joueur et compagnons
                 if (typeof $gamePlayer !== "undefined" && $gamePlayer && typeof $gamePlayer.onAlertTrigger === "function") {
                     $gamePlayer.onAlertTrigger();
                 }
@@ -277,11 +300,9 @@
         }
     }
     Game_Map.prototype.isDashDisabled = function () {
-        // En mode combat, le dash / sprint est débloqué en priorité absolue !
         if (this.isCombatMode()) {
             return false;
         }
-        // Notetag restrictif explicite <no_dash>
         if (typeof $dataMap !== "undefined" && $dataMap && $dataMap.meta && ($dataMap.meta.no_dash || $dataMap.meta.noDash)) {
             return true;
         }
@@ -298,6 +319,22 @@
     }
     Game_Map.prototype.setup = function (mapId) {
         this._combatMode = false;
+        this._spaceShipId = null;
+        this._shipHeadingVector = { x: 0, y: -3 };
+        if (typeof $dataMap !== "undefined" && $dataMap && $dataMap.note) {
+            const match = $dataMap.note.match(/<spaceship:\s*(\w+)>/i);
+            if (match) {
+                this._spaceShipId = match[1].toLowerCase() === "player" ? "player" : parseInt(match[1], 10);
+            }
+            const loopX = Boolean($dataMap.parallaxLoopX);
+            const loopY = Boolean($dataMap.parallaxLoopY);
+            const sx = loopX ? (Number($dataMap.parallaxSx) || 0) : 0;
+            const sy = loopY ? (Number($dataMap.parallaxSy) || 0) : 0;
+            this._shipHeadingVector = { x: sx, y: sy };
+            if (this._shipHeadingVector.x === 0 && this._shipHeadingVector.y === 0) {
+                this._shipHeadingVector.y = -3;
+            }
+        }
         if (_Game_Map_setup) {
             _Game_Map_setup.call(this, mapId);
         }
@@ -308,47 +345,6 @@
     Game_Map.prototype.setupParallax = function () {
         if (_Game_Map_setupParallax) {
             _Game_Map_setupParallax.call(this);
-        }
-        this.updateSpaceshipParallax();
-    }
-    Game_Map.prototype.updateSpaceshipParallax = function () {
-        if (typeof $dataMap === "undefined" || !$dataMap || !$dataMap.note) return;
-        const match = $dataMap.note.match(/<spaceshipIdParalaxes:\s*(\d+)>/i);
-        if (!match) return;
-        const shipId = parseInt(match[1], 10);
-        const ship = (typeof window !== "undefined" && window.$gameSpaceships) ? window.$gameSpaceships.ship(shipId) : null;
-        if (!ship) return;
-
-        if (ship._status === "InterSystemJump" || (typeof ship.isHyperdrive === "function" && ship.isHyperdrive())) {
-            this._parallaxName = "Warp";
-            this._parallaxZero = false;
-            this._parallaxLoopX = true;
-            this._parallaxLoopY = false;
-            this._parallaxSx = 8;
-            this._parallaxSy = 0;
-        } else if (typeof ship.isLanded === "function" && ship.isLanded() !== null) {
-            const planetId = ship.isLanded();
-            this._parallaxName = `!planet_${planetId}`;
-            this._parallaxZero = true;
-            this._parallaxLoopX = false;
-            this._parallaxLoopY = false;
-            this._parallaxSx = 0;
-            this._parallaxSy = 0;
-        } else if (ship.orbitingPlanetId !== null && ship.orbitingPlanetId !== undefined) {
-            const planetId = ship.orbitingPlanetId;
-            this._parallaxName = `!planet_${planetId}`;
-            this._parallaxZero = true;
-            this._parallaxLoopX = false;
-            this._parallaxLoopY = false;
-            this._parallaxSx = 0;
-            this._parallaxSy = 0;
-        } else {
-            this._parallaxName = "StarlitSky";
-            this._parallaxZero = false;
-            this._parallaxLoopX = true;
-            this._parallaxLoopY = false;
-            this._parallaxSx = 0.5;
-            this._parallaxSy = 0;
         }
     }
 
@@ -990,6 +986,7 @@
         if (actor && typeof actor.isDead === "function" && actor.isDead()) {
             return false;
         }
+        if (SceneManager._scene._currentSubScene) return false;
         return _Game_Player_canMove.call(this);
     }
     Game_Player.prototype.findNearestFollower = function () {
@@ -1921,28 +1918,27 @@
     // !!! TODO LINK TO GUI MANAGER
     Game_Interpreter.prototype.setHudVisible = function (visible) {
         if (typeof $gameSystem !== "undefined" && $gameSystem) $gameSystem.setHudVisible(visible);
-    };
+    }
     Game_Interpreter.prototype.toggleHud = function () {
         if (typeof $gameSystem !== "undefined" && $gameSystem) return $gameSystem.toggleHud();
-    };
+    }
     Game_Interpreter.prototype.showHud = function () { this.setHudVisible(true); };
     Game_Interpreter.prototype.hideHud = function () { this.setHudVisible(false); };
-
     Game_Interpreter.prototype.setPlayerHudVisible = function (visible) {
         if (typeof $gameSystem !== "undefined" && $gameSystem) $gameSystem.setPlayerHudVisible(visible);
-    };
+    }
     Game_Interpreter.prototype.togglePlayerHud = function () {
         if (typeof $gameSystem !== "undefined" && $gameSystem) return $gameSystem.togglePlayerHud();
-    };
+    }
     Game_Interpreter.prototype.showPlayerHud = function () { this.setPlayerHudVisible(true); };
     Game_Interpreter.prototype.hidePlayerHud = function () { this.setPlayerHudVisible(false); };
 
     Game_Interpreter.prototype.setWeaponHudVisible = function (visible) {
         if (typeof $gameSystem !== "undefined" && $gameSystem) $gameSystem.setWeaponHudVisible(visible);
-    };
+    }
     Game_Interpreter.prototype.toggleWeaponHud = function () {
         if (typeof $gameSystem !== "undefined" && $gameSystem) return $gameSystem.toggleWeaponHud();
-    };
+    }
     Game_Interpreter.prototype.showWeaponHud = function () { this.setWeaponHudVisible(true); };
     Game_Interpreter.prototype.hideWeaponHud = function () { this.setWeaponHudVisible(false); };
 
@@ -2088,20 +2084,6 @@
             this._landingAuthorizations = {};
         }
         this._landingAuthorizations[id] = Boolean(authorized);
-    }
-
-    // SPRITE CHARACTER
-    const _Sprite_Character_updateOther = Sprite_Character.prototype.updateOther;
-
-    Sprite_Character.prototype.updateOther = function () {
-        // Effet visuel de flash rouge lors d'une tentative de déplacement en surcharge
-        if (_Sprite_Character_updateOther) {
-            _Sprite_Character_updateOther.call(this);
-        }
-        if (this._character && this._character._overloadAlertTimer > 0) {
-            const alpha = Math.min(220, Math.floor((this._character._overloadAlertTimer / 25) * 220));
-            this.setBlendColor([255, 30, 30, alpha]);
-        }
     }
 
 })();

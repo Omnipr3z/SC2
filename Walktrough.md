@@ -1,7 +1,7 @@
 # 🛠️ SimCraft Engine V2 (SC4) — Journal de Développement & Walkthrough
 
 > **SimCraft Engine V2 (SC4)** — Architecture modulaire pour RPG Maker MZ  
-> *Dernière mise à jour : 21 Octobre 2026*  
+> *Dernière mise à jour : 7 Novembre 2026*  
 > *Auteur : Pierre André Hernandez (Omnipr3z)*
 
 ---
@@ -568,19 +568,49 @@ DEBUGTOOL.logFormat({ actor: "Paolo", hp: 120 }, "Acteur : %[actor], PV : %[hp]"
     `"[Acteur] est en surpoids et ne pourra plus se déplacer. Voulez-vous confirmer ?"`
   - Permet d'éviter de se retrouver bloqué au sol sur la carte sans possibilité de manœuvre.
 
-### 11.10 Parallaxe des Hublots en Orbite & Vue Extérieure (`Inner Map`)
-- Déclaration dans le notetag de la carte intérieure de vaisseau : `<spaceshipIdParalaxes:[id]>`.
-- Comportement dynamique selon l'état du vaisseau :
-  - En orbite stationnaire : vue de la planète (`!planet_[id]`) en zero-parallax fixe.
-  - En saut FTL / Hyperdrive : effet `Warp` avec défilement rapide `sx = 8`.
-  - En espace profond : ciel étoilé `StarlitSky` avec défilement doux `sx = 0.5`.
-  - Au sol : vue de la surface planétaire.
+### 11.10 Parallaxe Dynamique Tri-Couche des Cartes de Vaisseau (`SpaceParallaxesManager`)
+- **Déclaration sur la carte intérieure (`Inner Map`)** :
+  - Notetag générique RMMZ : `<spaceship:[id]>` (ex: `<spaceship: 1>` ou `<spaceship: player>`).
+  - Stocké dans `$gameMap._spaceShipId`, servant de référence universelle pour toutes les mécaniques du vaisseau sur la carte.
+  - Orientation initiale récupérée depuis le JSON de la map (`$gameMap.shipHeadingVector()`, par défaut `{ x: 0, y: -3 }`).
+- **Moteur d'État Centralisé (`SC4_SpaceParallaxesManager.js`)** :
+  - Interroge l'état cinétique et spatial du navire et renvoie l'état synchronisé des 3 couches : `{ lower, mid, upper }`.
+  - Évite les interrogations redondantes à chaque frame via mise à jour centralisée dans `Spriteset_Map.prototype.updateSpaceshipParallaxes()`.
+- **Architecture Tri-Couche (Triple Parallax Layer)** :
+  1. **Couche Basse (`this._parallax`)** :
+     - *À l'arrêt / orbite stationnaire* : Fond fixe (`StarlitSky`, `sx = 0, sy = 0`).
+     - *En propulsion sous-lumière* : Défilement cinétique orienté selon le cap de la carte proportionnel à la vitesse des propulseurs (`ship.speed`).
+     - *En saut FTL / Warp* : Texture `Warp.png` avec défilement rapide `sx = 8`.
+  2. **Couche Intermédiaire de Profondeur (`this._parallaxDepthLayer`)** :
+     - Étoiles rapprochées sur fond transparent (`img/parallaxes/Stars.png`, `TilingSprite`).
+     - Défilement à coefficient `x1.6` par rapport au fond pour un effet de profondeur 3D naturel.
+     - Masqué automatiquement durant les sauts Warp.
+  3. **Couche Haute (`this._parallaxUpperLayer`, `SC4_Sprite_ParallaxesUpperLayer.js`)** :
+     - Rendu des astres visibles à travers les baies vitrées de la passerelle.
+     - **Changement de repère & calcul d'angle relatif** : Projection trigonométrique du vecteur galactique $(dx, dy)$ dans le repère local du navire selon son cap $\theta = \text{atan2}(V_y, V_x)$ :
+       $$D_{\text{forward}} = dx \cdot \cos\theta + dy \cdot \sin\theta$$
+       $$D_{\text{right}} = -dx \cdot \sin\theta + dy \cdot \cos\theta$$
+     - **Champ de vision 2D (178×99 px)** : L'astre apparaît dès qu'il entre dans la boîte de détection ($|D_{\text{forward}}| \le 49.5$, $|D_{\text{right}}| \le 89$).
+     - **Projection écran fluide** : Quelle que soit la trajectoire sur la carte galactique, l'astre arrive toujours par le haut du hublot et descend vers le centre en harmonie avec le défilement des étoiles.
+     - **Échelle Hublot** : Zoom multiplié par 10 (`planet.zoom * 10`) pour correspondre au ratio d'agrandissement vers le plein écran.
+     - **Orbite stationnaire** : Centrage parfait au milieu de la baie vitrée (`centerX, centerY`).
 
 ### 11.11 Registre des Factions & Système de Relations (Nemesis)
 - **Fichier de données `data/SC/FACTIONS.json` et localisations `FACTIONS_[FR/EN].json`** :
   - 8 factions majeures avec ID 1-based, index 0 `null`, affinité (-100 à +100), balance de pouvoir et matrice relationnelle croisée.
   - Modèles métiers `Game_Faction` (`SC4_Game_Faction.js`) et registre global `$gameFactions` (`SC4_Game_Factions.js`) intégrés à `SC4_DataManager.js` pour chargement et persistance dans les sauvegardes.
   - Document maître exhaustif : [SC4_RELATIONSHIP_SYSTEM.md](file:///c:/SERVER/htdocs/SimCraft/SC4/SC4_RELATIONSHIP_SYSTEM.md).
+
+### 11.12 Standardisation des Patchs RMMZ & Gestion Propre des Plugins
+- **Norme d'ingénierie des fichiers de patchs (`SC4_rmmz_*_Patches.js`)** :
+  - Organisation stricte par classe : nom en commentaire, bloc d'alias groupé en tête, ligne vide, méthodes ordonnées sans doublons de surcharge.
+  - Respect de l'ordre natif des classes vanilla RMMZ pour faciliter la navigation et le `foldall` dans l'éditeur.
+  - Règle *Fail Fast* : suppression des vérifications défensives redondantes sur les classes natives et maintien de logs explicites d'erreur.
+  - Rapatriement de toutes les surcharges éparses dans leurs fichiers d'origine dédiés (`objects`, `sprites`, `windows`, `scenes`, `core`).
+- **Organisation en Blocs Structurés dans `js/plugins.js`** :
+  - Découpage par catégories lisibles : `DEV TOOLS`, `CORE`, `GAME OBJECTS`, `SPRITES`, `WINDOWS`, `SCENES`, `MANAGERS`, `PATCHES`.
+  - Sauvegarde miroir automatique dans `js/plugins.backup.js`.
+  - Protocole de synchronisation RMMZ via bascule du nickname de l'Acteur 1 dans `data/Actors.json` (`Wesword` / `Reload_RMMZ`).
 
 ---
 

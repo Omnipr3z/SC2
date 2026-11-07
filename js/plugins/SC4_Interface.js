@@ -291,14 +291,7 @@ SC4.openBridgeConsole = function (shipId) {
  * @param {number|null} [targetEventId=null] ID optionnel de l'événement cible pour ancrer la bulle (null pour auto-détection)
  */
 SC4.openRelationDialog = function (targetActorId = 2, targetEventId = null) {
-    if (typeof SceneManager !== "undefined" && SceneManager._scene && typeof SceneManager._scene.openSubScene === "function") {
-        const SubSceneClass = (typeof SubScene_RelationDialog !== "undefined")
-            ? SubScene_RelationDialog
-            : (typeof window !== "undefined" ? window.SubScene_RelationDialog : null);
-        if (SubSceneClass) {
-            SceneManager._scene.openSubScene(SubSceneClass, targetActorId, targetEventId);
-        }
-    }
+    $relationManager.openRelationDialog(targetActorId, targetEventId);
 };
 
 /**

@@ -419,7 +419,8 @@ if (typeof Scene_Map !== "undefined") {
         this._bridgeConsoleWindow.setHandler("subcom", this.onBridgeConsoleSubcom.bind(this));
         this._bridgeConsoleWindow.setHandler("quit", this.onBridgeConsoleQuit.bind(this));
         this._bridgeConsoleWindow.setHandler("cancel", this.onBridgeConsoleCancel.bind(this));
-        this._bridgeConsoleWindow.close();
+        this._bridgeConsoleWindow.openness = 0;
+        this._bridgeConsoleWindow.hide();
         this._bridgeConsoleWindow.deactivate();
         this.addWindow(this._bridgeConsoleWindow);
     };
@@ -447,6 +448,7 @@ if (typeof Scene_Map !== "undefined") {
             this._bridgeConsoleWindow.setMode("main");
             this._bridgeConsoleWindow.refresh();
             this._bridgeConsoleWindow.select(0);
+            this._bridgeConsoleWindow.show();
             this._bridgeConsoleWindow.open();
             this._bridgeConsoleWindow.activate();
         }

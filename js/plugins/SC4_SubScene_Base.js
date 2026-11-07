@@ -31,7 +31,7 @@
         ? Scene_Base
         : ((typeof Stage !== "undefined")
             ? Stage
-            : ((typeof PIXI !== "undefined" && PIXI.Container) ? PIXI.Container : class {}));
+            : ((typeof PIXI !== "undefined" && PIXI.Container) ? PIXI.Container : class { }));
 
     // ========================================================================
     // 1. CLASSE SUBSCENE_BASE
@@ -281,108 +281,5 @@
     if (typeof global !== "undefined") {
         global.SubScene_Base = SubScene_Base;
         global.SC4_SubScene_Base = SubScene_Base;
-    }
-
-    // ========================================================================
-    // 4. INTÉGRATION SUR SCENE_MAP
-    // ========================================================================
-    if (typeof Scene_Map !== "undefined") {
-        const _Scene_Map_update = Scene_Map.prototype.update;
-        Scene_Map.prototype.update = function () {
-            _Scene_Map_update.call(this);
-            if (this._currentSubScene && this._currentSubScene.isActive()) {
-                this._currentSubScene.update();
-            }
-        };
-
-        Scene_Map.prototype.openSubScene = function (subSceneClass, ...args) {
-            this._subSceneStack = this._subSceneStack || [];
-
-            // Inception : si une sous-scène est déjà active, on l'endort et on l'empile
-            let caller = null;
-            if (this._currentSubScene) {
-                caller = this._currentSubScene;
-                if (typeof caller.deactivate === "function") {
-                    caller.deactivate();
-                }
-                this._subSceneStack.push(caller);
-            }
-
-            const subScene = new subSceneClass(this, ...args);
-            subScene.callerSubScene = caller;
-            this._currentSubScene = subScene;
-            this.addChild(subScene);
-            subScene.create();
-            subScene.start();
-            this.onSubSceneOpen(subScene);
-            return subScene;
-        };
-
-        Scene_Map.prototype.closeSubScene = function (result = null) {
-            if (this._currentSubScene) {
-                const closingSubScene = this._currentSubScene;
-                closingSubScene.stop();
-                closingSubScene.terminate();
-                this.removeChild(closingSubScene);
-                this._currentSubScene = null;
-
-                // Inception : Dépilement LIFO
-                this._subSceneStack = this._subSceneStack || [];
-                if (this._subSceneStack.length > 0) {
-                    const previousSubScene = this._subSceneStack.pop();
-                    this._currentSubScene = previousSubScene;
-                    if (typeof previousSubScene.reactivate === "function") {
-                        previousSubScene.reactivate();
-                    }
-                    if (typeof previousSubScene.onSubSceneResume === "function") {
-                        previousSubScene.onSubSceneResume(closingSubScene, result);
-                    }
-                } else {
-                    this.onSubSceneClose(closingSubScene);
-                }
-            }
-        };
-
-        Scene_Map.prototype.closeAllSubScenes = function () {
-            while (this._currentSubScene || (this._subSceneStack && this._subSceneStack.length > 0)) {
-                this.closeSubScene();
-            }
-        };
-
-        Scene_Map.prototype.currentSubScene = function () {
-            return this._currentSubScene;
-        };
-
-        Scene_Map.prototype.subSceneStackDepth = function () {
-            return (this._subSceneStack ? this._subSceneStack.length : 0) + (this._currentSubScene ? 1 : 0);
-        };
-
-        Scene_Map.prototype.onSubSceneOpen = function (subScene) {
-            this._subSceneInputBlocked = true;
-        };
-
-        Scene_Map.prototype.onSubSceneClose = function (subScene) {
-            this._subSceneInputBlocked = false;
-        };
-
-        // Neutralise les clics tactiles/souris de déplacement sur la carte
-        const _Scene_Map_processMapTouch = Scene_Map.prototype.processMapTouch;
-        Scene_Map.prototype.processMapTouch = function () {
-            if (this._currentSubScene && this._currentSubScene.isActive()) {
-                return;
-            }
-            if (_Scene_Map_processMapTouch) {
-                _Scene_Map_processMapTouch.call(this);
-            }
-        };
-
-        // Neutralise l'ouverture du menu principal quand une sous-scène est active
-        const _Scene_Map_isMenuEnabled = Scene_Map.prototype.isMenuEnabled;
-        Scene_Map.prototype.isMenuEnabled = function () {
-            if (this._currentSubScene && this._currentSubScene.isActive()) {
-                return false;
-            }
-            return _Scene_Map_isMenuEnabled ? _Scene_Map_isMenuEnabled.call(this) : true;
-        };
     }
 })();

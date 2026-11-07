@@ -35,7 +35,8 @@ class Game_Factions {
     }
 
     faction(id) {
-        const numId = Number(id);
+        let numId = Number(id);
+        if (numId == 0) numId = 1;
         if (!this._data[numId]) {
             this._data[numId] = new Game_Faction({ id: numId });
         }

@@ -39,6 +39,23 @@ class RelationManager {
         this._tickDelay = 1;
         this._batchBudget = 15;
     }
+    get currentSubScene() {
+        return SceneManager._scene._currentSubScene;
+    }
+
+    isActiveDialog() {
+        if (!this.currentSubScene) return false;
+        return this.currentSubScene.constructor.name == "SubScene_RelationDialog";
+    }
+
+    getInterlocutorId() {
+        if (this.isActiveDialog())
+            return this.currentSubScene._targetActorId;
+    }
+
+    openRelationDialog(targetActorId = 2, targetEventId = null) {
+        SceneManager._scene.openSubScene(SubScene_RelationDialog, targetActorId, targetEventId);
+    }
 
     /**
      * Résout l'ID de faction associé à un acteur
@@ -377,17 +394,6 @@ class RelationManager {
     }
 }
 
-// Hook automatique dans Scene_Map.prototype.update pour dérouler la simulation étalée
-if (typeof Scene_Map !== "undefined") {
-    const _Scene_Map_update_RM = Scene_Map.prototype.update;
-    Scene_Map.prototype.update = function() {
-        _Scene_Map_update_RM.call(this);
-        if (typeof $relationManager !== "undefined" && $relationManager && typeof $relationManager.updateTick === "function") {
-            const time = (typeof $gameDate !== "undefined" && $gameDate) ? $gameDate.timestamp : 0;
-            $relationManager.updateTick(time);
-        }
-    };
-}
 
 if (typeof module !== "undefined") {
     module.exports = RelationManager;
