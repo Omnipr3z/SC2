@@ -23,10 +23,8 @@
     class Sprite_ParallaxesUpperLayer extends Sprite {
         constructor() {
             super();
-            if (this.anchor) {
-                this.anchor.x = 0.5;
-                this.anchor.y = 0.5;
-            }
+            this.anchor.x = 0.5;
+            this.anchor.y = 0.5;
             this.visible = false;
             this._cachedBitmapName = null;
         }
@@ -39,9 +37,7 @@
             if (!bitmapName) return;
             const cleanName = String(bitmapName).replace(/\.png$/i, "");
             this._cachedBitmapName = cleanName;
-            if (typeof ImageManager !== "undefined" && typeof ImageManager.loadBitmap === "function") {
-                this.bitmap = ImageManager.loadBitmap("img/GUI/ship/", cleanName);
-            }
+            this.bitmap = ImageManager.loadBitmap("img/GUI/ship/", cleanName);
         }
 
         /**
@@ -69,10 +65,8 @@
             this.rotation = state.rotation || 0;
 
             const zoom = state.zoom || 1.0;
-            if (this.scale) {
-                this.scale.x = zoom;
-                this.scale.y = zoom;
-            }
+            this.scale.x = zoom;
+            this.scale.y = zoom;
         }
     }
 
@@ -86,4 +80,3 @@
         global.SC4_Sprite_ParallaxesUpperLayer = Sprite_ParallaxesUpperLayer;
     }
 })();
-

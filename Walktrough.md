@@ -649,6 +649,45 @@ DEBUGTOOL.logFormat({ actor: "Paolo", hp: 120 }, "Acteur : %[actor], PV : %[hp]"
 - **Validation** :
   - Test unitaire dédié : [`UNIT_TESTS/test_subscene_manager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_subscene_manager.js) (9/9 tests validés).
 
+### 11.16 Hublot Spatial & Projection Parallaxe Haute (`SC4_SpaceParallaxesManager.js`)
+- **Échelle de Projection Cockpit & Getters Modulaires** :
+  - Facteur d'échelle de projection $K = 10$ configuré via l'accesseur statique `SpaceParallaxesManager.projectionScale`, étendant considérablement la respiration spatiale entre les astres dans la vue cockpit.
+  - Getters statiques dédiés pour chaque catégorie d'astre dans `SpaceParallaxesManager` :
+    - `planetZoomMultiplier = 30` (Planètes)
+    - `moonZoomMultiplier = 30` (Lunes)
+    - `starZoomMultiplier = 4` (Étoiles / Soleils)
+    - `stationZoomMultiplier = 2` (Stations orbitales)
+    - `vortexZoomMultiplier = 4` (Vortex Warp)
+    - `beltZoomMultiplier = 4` (Ceintures d'astéroïdes)
+  - Méthode de résolution centralisée `SpaceParallaxesManager.resolveZoomMultiplier(p)`.
+- **Bounding-Box Culling (Zéro Pop-in)** :
+  - Remplacement du culling ponctuel par un test de boîte englobante tenant compte du rayon visuel maximal de l'astre :
+    $$\text{visualRadiusPx} = \lceil 350 \times \text{pZoom} \rceil$$
+  - L'astre glisse désormais de façon continue et naturelle depuis l'extérieur de l'écran sans aucune apparition brutale.
+- **Refactorisation Modulaire Fail-Fast** :
+  - Découpage de la méthode monolithique `getParallaxesStatus` en sous-fonctions spécialisées à responsabilité unique (`computeBackgroundLayers`, `computeUpperLayer`, `getScreenParams`, `resolveShipHeading`, `computePlanetsInView`, `projectPlanet`).
+  - Suppression de tous les garde-fous défensifs redondants au profit d'un contrat Fail-Fast direct.
+  - Correction de l'horloge stellaire dans `SC4_SystemMapManager.js` : suppression du `setScrollSpeedMode(2)` forcé pour rétablir le plein contrôle des modes (Pause, 1x, 5x, 20x) et la réinitialisation 1x au retour sur `Scene_Map`.
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_space_parallaxes_manager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_space_parallaxes_manager.js) (11/11 tests validés).
+
+### 11.17 Système Anti-Oscillation de Déplacement Clic/Tactile (`SC4_rmmz_objects_Patches.js`)
+- **Mémoire Tampon 4 Pas (`_touchMoveHistory`)** :
+  - Enregistre la séquence des déplacements `{ direction, x, y }` effectués sous le contrôle de la souris/toucher (`$gameTemp.isDestinationValid()`).
+  - Borné strictement aux 4 derniers mouvements.
+  - Purge automatique à chaque nouveau clic (`Game_Temp.prototype.setDestination`), annulation (`Game_Temp.prototype.clearDestination`), ou reprise de contrôle au clavier (`Input.dir8 > 0`).
+- **Détection d'Oscillation & Minimum Local (`isTouchMoveOscillating`)** :
+  - Détecte les va-et-vient alternés en directions opposées (`[4, 6, 4, 6]`, `[7, 3, 7, 3]`, etc.).
+  - Détecte les doubles allers-retours consécutifs et les boucles de coordonnées géographiques (visite répétée de la même case).
+- **Interruption Immédiate & Orientation Face à la Cible** :
+  - Dès qu'une oscillation est constatée lors d'un clic sur une zone inaccessible (mur, falaise, meuble, obstacle diagonal) :
+    1. Annulation immédiate du déplacement : `$gameTemp.clearDestination()`.
+    2. Purge de l'historique : `this.clearTouchMoveHistory()`.
+    3. Orientation 8 axes vers la destination cliquée via `directionToPosition(destX, destY)`.
+    4. Interruption de l'appel `executeMove8Dir` : le personnage s'arrête net sans à-coup et regarde la case cible.
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_touch_anti_oscillation.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_touch_anti_oscillation.js) (5/5 tests validés).
+
 ---
 
 ## 12. Feuille de Route & Perspectives Futures

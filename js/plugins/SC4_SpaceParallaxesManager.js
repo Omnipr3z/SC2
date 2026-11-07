@@ -15,18 +15,15 @@
  * intérieurs de vaisseau en fonction de la situation cinétique et orbitale.
  *
  * 1. Couche basse (Lower Layer) :
- *    - Immobile (Static / Orbiting) : Vitesse nulle (fond figé).
- *    - En propulsion (MoveToDest / MoveToOrbit) : Défilement orienté selon le cap
- *      de la carte ($gameMap.shipHeadingVector()) proportionnel à ship.speed.
+ *    - Immobile (Static / Orbiting) : Fond d'étoiles figé.
+ *    - En propulsion (MoveToDest / MoveToOrbit) : Défilement orienté selon le cap.
  *    - En saut FTL (InterSystemJump) : Animation Warp accélérée.
  *
  * 2. Couche intermédiaire (Mid / Depth Layer) :
- *    - Étoiles rapprochées (Stars.png sur fond transparent).
- *    - Défilement cinétique à coefficient de profondeur x1.6 (masqué en Warp).
+ *    - Étoiles rapprochées avec défilement à profondeur x1.6 (masqué en Warp).
  *
  * 3. Couche haute (Upper Layer) :
- *    - Planète ciblée, orbitée ou en approche selon le champ de vision 178x99 px.
- *    - Échelle adaptée à l'écran hublot (zoom x10 par rapport à SpaceTravel) et rotation.
+ *    - Astres visibles projetés sur l'écran hublot avec Bounding-Box Culling.
  * ============================================================================
  */
 
@@ -34,28 +31,57 @@
     "use strict";
 
     class SpaceParallaxesManager {
+        // ========================================================================
+        // 1. CONFIGURATION & GETTERS D'ÉCHELLE (MODIFIABLES À LA VOLÉE)
+        // ========================================================================
+
+        /** Échelle de conversion système -> écran cockpit (x10 par défaut) */
+        static get projectionScale() { return 10; }
+
+        /** Multiplicateurs de zoom par type d'astre */
+        static get planetZoomMultiplier()  { return 30; }
+        static get moonZoomMultiplier()    { return 30; }
+        static get starZoomMultiplier()    { return 4;  }
+        static get stationZoomMultiplier() { return 2;  }
+        static get vortexZoomMultiplier()  { return 4;  }
+        static get beltZoomMultiplier()    { return 4;  }
+
+        /**
+         * Résout le multiplicateur de zoom approprié selon le type d'astre.
+         * @param {object} p - Astre ou Game_Planet
+         * @returns {number}
+         */
+        static resolveZoomMultiplier(p) {
+            if (!p) return 1;
+            const pType = String(p.type || p._type || "").toLowerCase();
+            if (pType.includes("star") || pType.includes("etoile")) return this.starZoomMultiplier;
+            if (pType.includes("station") || pType.includes("base") || (typeof p.isStation === "function" && p.isStation())) return this.stationZoomMultiplier;
+            if (pType.includes("vortex")) return this.vortexZoomMultiplier;
+            if (pType.includes("belt") || (typeof p.isBelt === "function" && p.isBelt())) return this.beltZoomMultiplier;
+            if (pType.includes("moon")) return this.moonZoomMultiplier;
+            return this.planetZoomMultiplier;
+        }
+
+        // ========================================================================
+        // 2. ORCHESTRATEUR PRINCIPAL
+        // ========================================================================
+
         /**
          * Résout l'instance du vaisseau ciblé.
          * @param {number|string|null} shipId 
          * @returns {Game_Spaceship|null}
          */
         static resolveShip(shipId) {
-            const spaceships = (typeof $gameSpaceships !== "undefined" && $gameSpaceships)
-                ? $gameSpaceships
-                : (typeof window !== "undefined" ? window.$gameSpaceships : null);
+            const spaceships = (typeof $gameSpaceships !== "undefined") ? $gameSpaceships : null;
             if (!spaceships) return null;
-
             if (shipId === "player" || shipId === null || shipId === undefined) {
-                return typeof spaceships.playerShip === "function" ? spaceships.playerShip() : null;
+                return spaceships.playerShip();
             }
-            if (typeof spaceships.ship === "function") {
-                return spaceships.ship(Number(shipId));
-            }
-            return null;
+            return spaceships.ship(Number(shipId));
         }
 
         /**
-         * Calcule et renvoie l'état instantané des parallaxes d'un vaisseau.
+         * Point d'entrée principal : calcule l'état instantané des 3 couches.
          * @param {number|string|null} shipId 
          * @returns {{ lower: object, mid: object, upper: object }|null}
          */
@@ -63,197 +89,252 @@
             const ship = this.resolveShip(shipId);
             if (!ship) return null;
 
-            // ----------------------------------------------------------------
-            // 1. ÉTAT COUCHE BASSE & COUCHE INTERMÉDIAIRE (PROFONDEUR ÉTOILES)
-            // ----------------------------------------------------------------
-            const mapHeading = (typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.shipHeadingVector === "function")
-                ? $gameMap.shipHeadingVector()
-                : { x: 0, y: -3 };
+            const { lower, mid } = this.computeBackgroundLayers(ship);
+            const upper = this.computeUpperLayer(ship);
 
-            let lower = {
-                name: "StarlitSky",
-                loopX: false,
-                loopY: false,
-                sx: 0,
-                sy: 0
-            };
+            return { lower, mid, upper };
+        }
 
-            let mid = {
-                name: "Stars",
-                loopX: false,
-                loopY: false,
-                sx: 0,
-                sy: 0,
-                visible: true
-            };
+        // ========================================================================
+        // 3. COUCHES D'ARRIÈRE-PLAN (BASSE & INTERMÉDIAIRE)
+        // ========================================================================
 
-            if (ship._status === "InterSystemJump" || (typeof ship.isHyperdrive === "function" && ship.isHyperdrive())) {
-                lower = {
-                    name: "Warp",
-                    loopX: true,
-                    loopY: false,
-                    sx: 8,
-                    sy: 0
+        /**
+         * Calcule les couches d'étoiles (fond lointain et étoiles de profondeur).
+         * @param {Game_Spaceship} ship 
+         * @returns {{ lower: object, mid: object }}
+         */
+        static computeBackgroundLayers(ship) {
+            // Cas 1 : Saut FTL / Warp
+            if (ship._status === "InterSystemJump" || (ship.isHyperdrive && ship.isHyperdrive())) {
+                return {
+                    lower: { name: "Warp", loopX: true, loopY: false, sx: 8, sy: 0 },
+                    mid: { name: "Stars", loopX: false, loopY: false, sx: 0, sy: 0, visible: false }
                 };
-                mid = {
-                    name: "Stars",
-                    loopX: false,
-                    loopY: false,
-                    sx: 0,
-                    sy: 0,
-                    visible: false
-                };
-            } else if (typeof ship.isMoving === "function" && ship.isMoving()) {
-                const speed = typeof ship.speed === "number" ? ship.speed : 0.5;
+            }
+
+            // Cas 2 : Propulsion conventionnelle sous la lumière
+            if (ship.isMoving && ship.isMoving()) {
+                const map = (typeof $gameMap !== "undefined") ? $gameMap : null;
+                const mapHeading = (map && map.shipHeadingVector)
+                    ? map.shipHeadingVector()
+                    : { x: 0, y: -3 };
+                const speed = ship.speed || 0.5;
                 const speedRatio = speed / 0.5;
                 const baseSx = mapHeading.x * speedRatio;
                 const baseSy = mapHeading.y * speedRatio;
 
-                lower = {
-                    name: "StarlitSky",
-                    loopX: (mapHeading.x !== 0),
-                    loopY: (mapHeading.y !== 0),
-                    sx: baseSx,
-                    sy: baseSy
-                };
-
-                // Couche intermédiaire (étoiles plus proches -> vitesse x1.6 pour la profondeur)
-                mid = {
-                    name: "Stars",
-                    loopX: (mapHeading.x !== 0),
-                    loopY: (mapHeading.y !== 0),
-                    sx: baseSx * 1.6,
-                    sy: baseSy * 1.6,
-                    visible: true
-                };
-            } else {
-                // Immobile, au sol ou en orbite stationnaire
-                lower = {
-                    name: "StarlitSky",
-                    loopX: false,
-                    loopY: false,
-                    sx: 0,
-                    sy: 0
-                };
-                mid = {
-                    name: "Stars",
-                    loopX: false,
-                    loopY: false,
-                    sx: 0,
-                    sy: 0,
-                    visible: true
+                return {
+                    lower: {
+                        name: "StarlitSky",
+                        loopX: (mapHeading.x !== 0),
+                        loopY: (mapHeading.y !== 0),
+                        sx: baseSx,
+                        sy: baseSy
+                    },
+                    mid: {
+                        name: "Stars",
+                        loopX: (mapHeading.x !== 0),
+                        loopY: (mapHeading.y !== 0),
+                        sx: baseSx * 1.6,
+                        sy: baseSy * 1.6,
+                        visible: true
+                    }
                 };
             }
 
-            // ----------------------------------------------------------------
-            // 2. ÉTAT COUCHE HAUTE (PLANÈTES & VAISSEAUX EN VUE)
-            // ----------------------------------------------------------------
-            let upper = {
-                visible: false,
-                planets: {},
+            // Cas 3 : Immobile, orbite stationnaire ou atterri
+            return {
+                lower: { name: "StarlitSky", loopX: false, loopY: false, sx: 0, sy: 0 },
+                mid: { name: "Stars", loopX: false, loopY: false, sx: 0, sy: 0, visible: true }
+            };
+        }
+
+        // ========================================================================
+        // 4. COUCHE HAUTE (ASTRES & VAISSEAUX)
+        // ========================================================================
+
+        /**
+         * Calcule la couche haute (astres en champ de vision).
+         * @param {Game_Spaceship} ship 
+         * @returns {object}
+         */
+        static computeUpperLayer(ship) {
+            const isWarp = ship._status === "InterSystemJump" || (ship.isHyperdrive && ship.isHyperdrive());
+            const isLanded = ship.isLanded && ship.isLanded() !== null;
+
+            if (isWarp || isLanded) {
+                return { visible: false, planets: {}, ships: {} };
+            }
+
+            const galaxy = (typeof $gameGalaxy !== "undefined") ? $gameGalaxy : null;
+            const currentSys = galaxy ? galaxy.currentSystem() : null;
+            if (!currentSys) {
+                return { visible: true, planets: {}, ships: {} };
+            }
+
+            const screen = this.getScreenParams();
+            const heading = this.resolveShipHeading(ship, currentSys);
+            const planets = this.computePlanetsInView(ship, currentSys, heading, screen);
+
+            return {
+                visible: true,
+                planets,
                 ships: {}
             };
+        }
 
-            const isWarp = (ship._status === "InterSystemJump" || (typeof ship.isHyperdrive === "function" && ship.isHyperdrive()));
-            const isLanded = (typeof ship.isLanded === "function" && ship.isLanded() !== null);
+        /**
+         * Paramètres géométriques de projection écran.
+         * @returns {object}
+         */
+        static getScreenParams() {
+            const boxW = Graphics.width || 1280;
+            const boxH = Graphics.height || 720;
+            const projScale = this.projectionScale;
+            return {
+                boxW,
+                boxH,
+                centerX: Math.floor(boxW / 2),
+                centerY: Math.floor(boxH / 2),
+                scaleX: (boxW / 178) * projScale,
+                scaleY: (boxH / 99) * projScale
+            };
+        }
 
-            if (!isWarp && !isLanded) {
-                upper.visible = true;
+        /**
+         * Détermine le cap angulaire du vaisseau (vers sa cible ou selon sa trajectoire).
+         * @param {Game_Spaceship} ship 
+         * @param {Game_PlanetarySystem} currentSys 
+         * @returns {number}
+         */
+        static resolveShipHeading(ship, currentSys) {
+            let heading = ship.headingAngle ?? ship._headingAngle ?? (-Math.PI / 2);
 
-                const galaxy = (typeof $gameGalaxy !== "undefined" && $gameGalaxy) ? $gameGalaxy : (typeof window !== "undefined" ? window.$gameGalaxy : null);
-                const currentSys = (galaxy && typeof galaxy.currentSystem === "function") ? galaxy.currentSystem() : null;
-
-                if (currentSys) {
-                    const boxW = (typeof Graphics !== "undefined" && Graphics.width) ? Graphics.width : 1280;
-                    const boxH = (typeof Graphics !== "undefined" && Graphics.height) ? Graphics.height : 720;
-                    const centerX = Math.floor(boxW / 2);
-                    const centerY = Math.floor(boxH / 2);
-                    const halfW = 89;   // 178 / 2
-                    const halfH = 49.5; // 99 / 2
-
-                    let heading = (typeof ship.headingAngle === "number")
-                        ? ship.headingAngle
-                        : ((typeof ship._headingAngle === "number") ? ship._headingAngle : -Math.PI / 2);
-
-                    if (typeof ship.isMoving === "function" && ship.isMoving()) {
-                        let destX = (typeof ship.targetX === "number") ? ship.targetX : null;
-                        let destY = (typeof ship.targetY === "number") ? ship.targetY : null;
-
-                        if (ship._status === "MoveToOrbit") {
-                            const orbitP = ship.orbitingPlanet || (typeof currentSys.planet === "function" ? currentSys.planet(ship.orbitingPlanetId) : null);
-                            if (orbitP && typeof orbitP.x === "number" && typeof orbitP.y === "number") {
-                                destX = orbitP.x;
-                                destY = orbitP.y;
-                            }
-                        } else if (ship._status === "MoveToContact" && ship.contactShip) {
-                            destX = ship.contactShip.x;
-                            destY = ship.contactShip.y;
-                        }
-
-                        if (destX !== null && destY !== null) {
-                            const vx = destX - ship.x;
-                            const vy = destY - ship.y;
-                            if (Math.hypot(vx, vy) > 0.001) {
-                                heading = Math.atan2(vy, vx);
-                                ship._headingAngle = heading;
-                            }
-                        }
-                    }
-
-                    const cosH = Math.cos(heading);
-                    const sinH = Math.sin(heading);
-
-                    const planetList = (currentSys._data && Array.isArray(currentSys._data.planetIds))
-                        ? currentSys._data.planetIds.map(id => typeof currentSys.planet === "function" ? currentSys.planet(id) : null).filter(Boolean)
-                        : (Array.isArray(currentSys.planets) ? currentSys.planets : []);
-
-                    for (const p of planetList) {
-                        if (!p || typeof p.x !== "number" || typeof p.y !== "number") continue;
-
-                        const isStation = (typeof p.isStation === "function" && p.isStation());
-                        const zoomMultiplier = isStation ? 2 : 20;
-                        const baseZoom = (typeof p.zoom === "number") ? p.zoom : 0.1;
-                        const pZoom = baseZoom * zoomMultiplier;
-
-                        if (ship._status === "Orbiting" && (ship.orbitingPlanetId === p.id || ship.orbitingPlanet === p)) {
-                            upper.planets[p.id] = {
-                                visible: true,
-                                bitmapName: p.bitmapName,
-                                screenX: centerX,
-                                screenY: centerY,
-                                rotation: p.rotationAngle || 0,
-                                zoom: pZoom
-                            };
-                            continue;
-                        }
-
-                        const dx = p.x - ship.x;
-                        const dy = p.y - ship.y;
-                        if (Math.abs(dx) > 250 || Math.abs(dy) > 250) {
-                            upper.planets[p.id] = { visible: false };
-                            continue;
-                        }
-
-                        const fwd = dx * cosH + dy * sinH;
-                        const right = -dx * sinH + dy * cosH;
-
-                        if (Math.abs(right) <= halfW && Math.abs(fwd) <= halfH) {
-                            upper.planets[p.id] = {
-                                visible: true,
-                                bitmapName: p.bitmapName,
-                                screenX: Math.round(centerX + right * (boxW / 178)),
-                                screenY: Math.round(centerY - fwd * (boxH / 99)),
-                                rotation: p.rotationAngle || 0,
-                                zoom: pZoom
-                            };
-                        } else {
-                            upper.planets[p.id] = { visible: false };
-                        }
+            if (ship.isMoving && ship.isMoving()) {
+                const dest = this.resolveShipDestination(ship, currentSys);
+                if (dest) {
+                    const vx = dest.x - ship.x;
+                    const vy = dest.y - ship.y;
+                    if (Math.hypot(vx, vy) > 0.001) {
+                        heading = Math.atan2(vy, vx);
+                        ship._headingAngle = heading;
                     }
                 }
             }
+            return heading;
+        }
 
-            return { lower, mid, upper };
+        /**
+         * Détermine la destination immédiate du vaisseau en mouvement.
+         * @param {Game_Spaceship} ship 
+         * @param {Game_PlanetarySystem} currentSys 
+         * @returns {{x: number, y: number}|null}
+         */
+        static resolveShipDestination(ship, currentSys) {
+            if (ship._status === "MoveToOrbit") {
+                const orbitP = ship.orbitingPlanet || currentSys.planet(ship.orbitingPlanetId);
+                if (orbitP && typeof orbitP.x === "number" && typeof orbitP.y === "number") {
+                    return { x: orbitP.x, y: orbitP.y };
+                }
+            } else if (ship._status === "MoveToContact" && ship.contactShip) {
+                return { x: ship.contactShip.x, y: ship.contactShip.y };
+            } else if (typeof ship.targetX === "number" && typeof ship.targetY === "number") {
+                return { x: ship.targetX, y: ship.targetY };
+            }
+            return null;
+        }
+
+        /**
+         * Calcule et projette tous les astres du système présents dans le hublot.
+         * @param {Game_Spaceship} ship 
+         * @param {Game_PlanetarySystem} currentSys 
+         * @param {number} heading 
+         * @param {object} screen 
+         * @returns {object}
+         */
+        static computePlanetsInView(ship, currentSys, heading, screen) {
+            const planets = {};
+            const cosH = Math.cos(heading);
+            const sinH = Math.sin(heading);
+
+            const planetList = (currentSys._data && Array.isArray(currentSys._data.planetIds))
+                ? currentSys._data.planetIds.map(id => currentSys.planet(id)).filter(Boolean)
+                : (Array.isArray(currentSys.planets) ? currentSys.planets : []);
+
+            for (const p of planetList) {
+                if (!p || typeof p.x !== "number" || typeof p.y !== "number") continue;
+
+                const state = this.projectPlanet(p, ship, cosH, sinH, screen);
+                if (state) {
+                    planets[p.id] = state;
+                }
+            }
+
+            return planets;
+        }
+
+        /**
+         * Projette un astre donné et applique le Bounding-Box Culling (zéro pop-in).
+         * @param {object} p - Astre
+         * @param {Game_Spaceship} ship 
+         * @param {number} cosH 
+         * @param {number} sinH 
+         * @param {object} screen 
+         * @returns {object}
+         */
+        static projectPlanet(p, ship, cosH, sinH, screen) {
+            const zoomMultiplier = this.resolveZoomMultiplier(p);
+            const baseZoom = p.zoom || 0.1;
+            const pZoom = baseZoom * zoomMultiplier;
+
+            // 1. Orbite stationnaire : centré au milieu du hublot
+            if (ship._status === "Orbiting" && (ship.orbitingPlanetId === p.id || ship.orbitingPlanet === p)) {
+                return {
+                    visible: true,
+                    bitmapName: p.bitmapName,
+                    screenX: screen.centerX,
+                    screenY: screen.centerY,
+                    rotation: p.rotationAngle || 0,
+                    zoom: pZoom
+                };
+            }
+
+            // 2. Broadphase culling rapide (> 300 unités sur la carte système)
+            const dx = p.x - ship.x;
+            const dy = p.y - ship.y;
+            if (Math.abs(dx) > 300 || Math.abs(dy) > 300) {
+                return { visible: false };
+            }
+
+            // 3. Coordonnées relatives orientées selon le cap du vaisseau
+            const fwd = dx * cosH + dy * sinH;
+            const right = -dx * sinH + dy * cosH;
+
+            const screenX = Math.round(screen.centerX + right * screen.scaleX);
+            const screenY = Math.round(screen.centerY - fwd * screen.scaleY);
+
+            // 4. Bounding Box Culling : l'astre apparaît dès que son bord touche l'écran
+            const visualRadiusPx = Math.ceil(350 * pZoom);
+            const isVisible = (
+                screenX + visualRadiusPx >= 0 &&
+                screenX - visualRadiusPx <= screen.boxW &&
+                screenY + visualRadiusPx >= 0 &&
+                screenY - visualRadiusPx <= screen.boxH
+            );
+
+            if (!isVisible) {
+                return { visible: false };
+            }
+
+            return {
+                visible: true,
+                bitmapName: p.bitmapName,
+                screenX,
+                screenY,
+                rotation: p.rotationAngle || 0,
+                zoom: pZoom
+            };
         }
     }
 
@@ -267,4 +348,3 @@
         global.SC4_SpaceParallaxesManager = SpaceParallaxesManager;
     }
 })();
-

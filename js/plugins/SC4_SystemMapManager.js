@@ -60,8 +60,6 @@ class SystemMapManager {
 
     updateTimeFlow(isBackground = false) {
         if (!window.$gameDate) return;
-        // Découplage total : vitesse constante fluide et régulière dans les scènes spatiales
-        window.$gameDate.setScrollSpeedMode(2);
         if (!isBackground) {
             window.$gameDate.passTick();
         }

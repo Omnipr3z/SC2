@@ -123,6 +123,19 @@ class SubSceneManager {
         }
         return null;
     }
+    /**
+     * Vérifie si une sous-scène est active sur la scène courante.
+     * @param {class} [subSceneClass=null] Optionnel : filtre sur une classe spécifique (ex: SubScene_Console)
+     * @returns {boolean}
+     */
+    static isActive(subSceneClass = null) {
+        const cur = this.current();
+        if (!cur || !cur.isActive()) return false;
+        if (subSceneClass) {
+            return cur instanceof subSceneClass || cur.constructor === subSceneClass;
+        }
+        return true;
+    }
 }
 
 SubSceneManager.init();

@@ -34,15 +34,11 @@
             super();
             this._currentSystemId = (systemId !== undefined) ? systemId : null;
 
-            this._planetsContainer = (typeof PIXI !== "undefined" && PIXI.Container) ? new PIXI.Container() : new ContainerBase();
-            this._shipsContainer = (typeof PIXI !== "undefined" && PIXI.Container) ? new PIXI.Container() : new ContainerBase();
+            this._planetsContainer = new PIXI.Container();
+            this._shipsContainer = new PIXI.Container();
 
-            if (this._planetsContainer && typeof this.addChild === "function") {
-                this.addChild(this._planetsContainer);
-            }
-            if (this._shipsContainer && typeof this.addChild === "function") {
-                this.addChild(this._shipsContainer);
-            }
+            this.addChild(this._planetsContainer);
+            this.addChild(this._shipsContainer);
 
             this._planets = new Map();
             this._ships = new Map();
@@ -51,63 +47,51 @@
             this.setupShips();
         }
 
+        currentSystem() {
+            const galaxy = (typeof $gameGalaxy !== "undefined") ? $gameGalaxy : null;
+            return galaxy ? galaxy.currentSystem() : null;
+        }
+
         isPlanetarySystemChanging() {
-            const galaxy = (typeof $gameGalaxy !== "undefined" && $gameGalaxy) ? $gameGalaxy : (typeof window !== "undefined" ? window.$gameGalaxy : null);
-            const sys = (galaxy && typeof galaxy.currentSystem === "function") ? galaxy.currentSystem() : null;
+            const sys = this.currentSystem();
             const currentId = sys ? sys.id : null;
             return this._currentSystemId !== currentId;
         }
 
         reloadSystem() {
-            const galaxy = (typeof $gameGalaxy !== "undefined" && $gameGalaxy) ? $gameGalaxy : (typeof window !== "undefined" ? window.$gameGalaxy : null);
-            const sys = (galaxy && typeof galaxy.currentSystem === "function") ? galaxy.currentSystem() : null;
+            const sys = this.currentSystem();
             this._currentSystemId = sys ? sys.id : null;
             this.setupPlanets();
             this.setupShips();
         }
 
         setupPlanets() {
-            if (this._planetsContainer && typeof this._planetsContainer.removeChildren === "function") {
-                this._planetsContainer.removeChildren();
-            }
+            this._planetsContainer.removeChildren();
             this._planets.clear();
 
-            const galaxy = (typeof $gameGalaxy !== "undefined" && $gameGalaxy) ? $gameGalaxy : (typeof window !== "undefined" ? window.$gameGalaxy : null);
-            const sys = (galaxy && typeof galaxy.currentSystem === "function") ? galaxy.currentSystem() : null;
+            const sys = this.currentSystem();
             if (!sys) return;
 
             const planetIds = (sys._data && Array.isArray(sys._data.planetIds))
                 ? sys._data.planetIds
                 : (Array.isArray(sys.planets) ? sys.planets.map(p => p.id) : []);
 
-            const SpriteClass = (typeof Sprite_ParallaxesUpperLayer !== "undefined")
-                ? Sprite_ParallaxesUpperLayer
-                : (typeof window !== "undefined" ? window.Sprite_ParallaxesUpperLayer : null);
-            if (!SpriteClass) return;
+            const SpriteClass = Sprite_ParallaxesUpperLayer;
 
             for (const planetId of planetIds) {
-                const planet = typeof sys.planet === "function" ? sys.planet(planetId) : null;
+                const planet = sys.planet(planetId);
                 if (!planet) continue;
 
                 const sprite = new SpriteClass();
-                if (typeof sprite.preloadBitmap === "function") {
-                    sprite.preloadBitmap(planet.bitmapName);
-                } else if (planet.bitmapName && typeof ImageManager !== "undefined" && typeof ImageManager.loadBitmap === "function") {
-                    const cleanName = String(planet.bitmapName).replace(/\.png$/i, "");
-                    sprite.bitmap = ImageManager.loadBitmap("img/GUI/ship/", cleanName);
-                }
+                sprite.preloadBitmap(planet.bitmapName);
                 sprite.visible = false;
                 this._planets.set(planetId, sprite);
-                if (this._planetsContainer && typeof this._planetsContainer.addChild === "function") {
-                    this._planetsContainer.addChild(sprite);
-                }
+                this._planetsContainer.addChild(sprite);
             }
         }
 
         setupShips() {
-            if (this._shipsContainer && typeof this._shipsContainer.removeChildren === "function") {
-                this._shipsContainer.removeChildren();
-            }
+            this._shipsContainer.removeChildren();
             this._ships.clear();
         }
 
@@ -140,7 +124,7 @@
         }
 
         updateShips(shipsData) {
-            // Traitement spécifique des vaisseaux tiers
+            // Traitement futur des vaisseaux tiers
         }
     }
 
@@ -154,4 +138,3 @@
         global.SC4_Spriteset_UpperLayers = Spriteset_UpperLayers;
     }
 })();
-

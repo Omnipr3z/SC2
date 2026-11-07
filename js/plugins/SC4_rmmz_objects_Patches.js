@@ -53,6 +53,24 @@
 (() => {
     "use strict";
 
+    // GAME TEMP (PURGE DE L'HISTORIQUE TACTILE ANTI-BOUCLE)
+    //=============================================================================
+    const _Game_Temp_setDestination = Game_Temp.prototype.setDestination;
+    Game_Temp.prototype.setDestination = function (x, y) {
+        _Game_Temp_setDestination.call(this, x, y);
+        if (typeof $gamePlayer !== "undefined" && $gamePlayer && typeof $gamePlayer.clearTouchMoveHistory === "function") {
+            $gamePlayer.clearTouchMoveHistory();
+        }
+    };
+
+    const _Game_Temp_clearDestination = Game_Temp.prototype.clearDestination;
+    Game_Temp.prototype.clearDestination = function () {
+        _Game_Temp_clearDestination.call(this);
+        if (typeof $gamePlayer !== "undefined" && $gamePlayer && typeof $gamePlayer.clearTouchMoveHistory === "function") {
+            $gamePlayer.clearTouchMoveHistory();
+        }
+    };
+
     // GAME ACTOR
     //=============================================================================
     const _Game_Actors_actor = Game_Actors.prototype.actor;
@@ -672,6 +690,22 @@
         if (dx > 0 && dy < 0) return 9;
         return 0;
     }
+    Game_CharacterBase.prototype.directionToPosition = function (targetX, targetY) {
+        /**
+         * Détermine la direction 8 axes pour faire face à une coordonnée de la carte.
+         * @param {number} targetX 
+         * @param {number} targetY 
+         * @returns {number}
+         */
+        const dx = $gameMap.deltaX(targetX, this.x);
+        const dy = $gameMap.deltaY(targetY, this.y);
+        if (dx === 0 && dy === 0) return this.direction();
+
+        const angle = Math.atan2(dy, dx);
+        const octant = Math.round((angle / (Math.PI / 4)) + 8) % 8;
+        const OCTANT_TO_DIR = [6, 3, 2, 1, 4, 7, 8, 9];
+        return OCTANT_TO_DIR[octant] || this.direction();
+    }
     Game_CharacterBase.prototype.shiftY = function () {
         if (this.isObjectCharacter()) {
             return 0;
@@ -935,7 +969,65 @@
     Game_Player.prototype.getInputDirection = function () {
         return Input.dir8;
     }
+    Game_Player.prototype.clearTouchMoveHistory = function () {
+        this._touchMoveHistory = [];
+    }
+    Game_Player.prototype.recordTouchMove = function (direction) {
+        if (!this._touchMoveHistory) {
+            this._touchMoveHistory = [];
+        }
+        this._touchMoveHistory.push({
+            direction: direction,
+            x: this.x,
+            y: this.y
+        });
+        if (this._touchMoveHistory.length > 4) {
+            this._touchMoveHistory.shift();
+        }
+    }
+    Game_Player.prototype.isTouchMoveOscillating = function () {
+        if (!this._touchMoveHistory || this._touchMoveHistory.length < 4) {
+            return false;
+        }
+        const h = this._touchMoveHistory;
+        const d0 = h[0].direction, d1 = h[1].direction;
+        const d2 = h[2].direction, d3 = h[3].direction;
+
+        // 1. Détection de pattern alterné opposé (ex: 4, 6, 4, 6 ou 7, 3, 7, 3 ou 8, 2, 8, 2)
+        const isAlternating = (d0 === d2 && d1 === d3);
+        const isOpposite = (d1 === this.reverseDir8(d0) || d3 === this.reverseDir8(d2));
+        if (isAlternating && isOpposite) return true;
+
+        // 2. Détection de double aller-retour consécutif
+        if (d1 === this.reverseDir8(d0) && d3 === this.reverseDir8(d2)) return true;
+
+        // 3. Détection de boucle de positions (oscillation entre deux coordonnées identiques)
+        if (h[0].x === h[2].x && h[0].y === h[2].y && h[1].x === h[3].x && h[1].y === h[3].y) {
+            return true;
+        }
+
+        return false;
+    }
     Game_Player.prototype.executeMove = function (direction) {
+        // Détection et interruption de boucle d'aller-retour au clic (destination inaccessible)
+        if (typeof $gameTemp !== "undefined" && $gameTemp && $gameTemp.isDestinationValid()) {
+            const destX = $gameTemp.destinationX();
+            const destY = $gameTemp.destinationY();
+            this.recordTouchMove(direction);
+
+            if (this.isTouchMoveOscillating()) {
+                $gameTemp.clearDestination();
+                this.clearTouchMoveHistory();
+                const faceDir = this.directionToPosition(destX, destY);
+                if (faceDir > 0) {
+                    this.setDirection(faceDir);
+                }
+                return;
+            }
+        } else {
+            this.clearTouchMoveHistory();
+        }
+
         // Étape 7 : Si un follower est présent sur la case cible et que le joueur ne lui fait pas encore face :
         // "cela ne doit pas effectuer le mouvement directement mais lui faire face dans un premier temps"
         const targetX = $gameMap.roundXWithDirection(this.x, direction);

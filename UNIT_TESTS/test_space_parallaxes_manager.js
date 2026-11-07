@@ -157,13 +157,15 @@ assert.strictEqual(status.upper.visible, false, "Upper container hidden during W
 console.log("✓ Warp state: switches to Warp texture with rapid scroll, upper layer hidden.");
 
 // ----------------------------------------------------------------------------
-// TEST 4: Approaching planet in field of view (178x99 px box) & Zoom *20
+// TEST 4: Approaching planet in field of view & Zoom *30 (Bounding-Box Culling)
 // ----------------------------------------------------------------------------
-console.log("\n--- Test 4: Planet in Cockpit Field of View & Zoom x20 ---");
+console.log("\n--- Test 4: Planet in Cockpit Field of View & Zoom x30 ---");
+assert.strictEqual(SpaceParallaxesManager.projectionScale, 10, "Static getter projectionScale returns 10");
+
 mockShip._status = "MoveToOrbit";
 mockShip._orbitingPlanetId = 5;
-mockShip._x = 80;
-mockShip._y = 90;
+mockShip._x = 95;
+mockShip._y = 95;
 
 global.$gameGalaxy = {
     currentSystem() {
@@ -171,7 +173,7 @@ global.$gameGalaxy = {
             id: 1,
             _data: { planetIds: [5] },
             planets: [
-                { id: 5, name: "Ankaros", bitmapName: "planet_ankaros", x: 100, y: 100, rotationAngle: 0.75, zoom: 0.12 }
+                { id: 5, name: "Ankaros", type: "Planet", bitmapName: "planet_ankaros", x: 100, y: 100, rotationAngle: 0.75, zoom: 0.12 }
             ],
             planet(id) { return id === 5 ? this.planets[0] : null; }
         };
@@ -185,26 +187,27 @@ assert.ok(p5, "Planet 5 state returned in planets dictionary");
 assert.strictEqual(p5.visible, true, "Planet 5 visible inside field of view");
 assert.strictEqual(p5.bitmapName, "planet_ankaros", "Correct planet bitmap");
 assert.strictEqual(p5.rotation, 0.75, "Rotation angle transmitted");
-assert.strictEqual(p5.zoom, 0.12 * 20, "Planet zoom magnified by 20x (0.12 * 20 = 2.4)");
+assert.strictEqual(p5.zoom, 0.12 * 30, "Planet zoom magnified by 30x (0.12 * 30 = 3.6)");
 
-const headingTest4 = Math.atan2(10, 20);
-const fwdTest4 = 20 * Math.cos(headingTest4) + 10 * Math.sin(headingTest4);
-const rightTest4 = -20 * Math.sin(headingTest4) + 10 * Math.cos(headingTest4);
-const expectedScreenX = Math.round(640 + rightTest4 * (1280 / 178));
-const expectedScreenY = Math.round(360 - fwdTest4 * (720 / 99));
+const headingTest4 = Math.atan2(5, 5);
+const fwdTest4 = 5 * Math.cos(headingTest4) + 5 * Math.sin(headingTest4);
+const rightTest4 = -5 * Math.sin(headingTest4) + 5 * Math.cos(headingTest4);
+const projScale = SpaceParallaxesManager.projectionScale;
+const expectedScreenX = Math.round(640 + rightTest4 * (1280 / 178) * projScale);
+const expectedScreenY = Math.round(360 - fwdTest4 * (720 / 99) * projScale);
 
-assert.strictEqual(p5.screenX, expectedScreenX, "ScreenX properly projected (centered on target path)");
-assert.strictEqual(p5.screenY, expectedScreenY, "ScreenY properly projected ahead (top of cockpit)");
-console.log("✓ Field of view: planet projected accurately on cockpit coordinates with zoom x20.");
+assert.strictEqual(p5.screenX, expectedScreenX, "ScreenX properly projected");
+assert.strictEqual(p5.screenY, expectedScreenY, "ScreenY properly projected ahead");
+console.log("✓ Field of view: planet projected accurately on cockpit coordinates with zoom x30.");
 
 // ----------------------------------------------------------------------------
-// TEST 5: Broad-phase culling (> 250px away)
+// TEST 5: Broad-phase culling (> 300px away)
 // ----------------------------------------------------------------------------
-console.log("\n--- Test 5: Broad-Phase Culling (> 250px) ---");
-mockShip._x = -200; // dx = 300 > 250
+console.log("\n--- Test 5: Broad-Phase Culling (> 300px) ---");
+mockShip._x = -250; // dx = 350 > 300
 status = SpaceParallaxesManager.getParallaxesStatus(1);
-assert.strictEqual(status.upper.planets[5].visible, false, "Planet hidden when outside 250px zone");
-console.log("✓ Broad-phase: distant bodies (> 250px) automatically culled without full projection.");
+assert.strictEqual(status.upper.planets[5].visible, false, "Planet hidden when outside 300px zone");
+console.log("✓ Broad-phase: distant bodies (> 300px) automatically culled without full projection.");
 
 // ----------------------------------------------------------------------------
 // TEST 6: In-orbit stationary state (perfect center)
@@ -235,8 +238,8 @@ assert.strictEqual(sprite.visible, true, "Sprite is visible");
 assert.strictEqual(sprite.x, 640, "Sprite x set to 640");
 assert.strictEqual(sprite.y, 360, "Sprite y set to 360");
 assert.strictEqual(sprite.rotation, 0.75, "Sprite rotation applied");
-assert.strictEqual(sprite.scale.x, 2.4, "Sprite scale X set to zoom (2.4)");
-assert.strictEqual(sprite.scale.y, 2.4, "Sprite scale Y set to zoom (2.4)");
+assert.ok(Math.abs(sprite.scale.x - 3.6) < 0.0001, "Sprite scale X set to zoom (3.6)");
+assert.ok(Math.abs(sprite.scale.y - 3.6) < 0.0001, "Sprite scale Y set to zoom (3.6)");
 
 sprite.updateState({ visible: false });
 assert.strictEqual(sprite.visible, false, "Sprite hidden when state.visible is false");
@@ -248,9 +251,9 @@ console.log("✓ Sprite_ParallaxesUpperLayer reacts faithfully to state changes.
 console.log("\n--- Test 8: Free Navigation Proximity Detection ---");
 mockShip._status = "MoveToDest";
 mockShip._orbitingPlanetId = null;
-mockShip._x = 1100;
-mockShip._y = 160;
-mockShip.targetX = 1100;
+mockShip._x = 1162;
+mockShip._y = 138;
+mockShip.targetX = 1162;
 mockShip.targetY = 100; // Moving North (heading = -Math.PI / 2)
 
 global.$gameGalaxy = {
@@ -259,8 +262,8 @@ global.$gameGalaxy = {
             id: 2,
             _data: { planetIds: [2, 3] },
             planets: [
-                { id: 2, name: "Planet 1", bitmapName: "planet_1", x: 1165, y: 132, zoom: 0.1, rotationAngle: 0.2 },
-                { id: 3, name: "Planet Far", bitmapName: "planet_6", x: 500, y: 500, zoom: 0.15 }
+                { id: 2, name: "Planet 1", type: "Planet", bitmapName: "planet_1", x: 1165, y: 132, zoom: 0.1, rotationAngle: 0.2 },
+                { id: 3, name: "Planet Far", type: "Planet", bitmapName: "planet_6", x: 500, y: 500, zoom: 0.15 }
             ],
             planet(id) { return this.planets.find(p => p.id === id); }
         };
@@ -269,18 +272,18 @@ global.$gameGalaxy = {
 
 status = SpaceParallaxesManager.getParallaxesStatus(1);
 assert.strictEqual(status.upper.planets[2].visible, true, "Planet 2 detected in FOV during free flight");
-assert.strictEqual(status.upper.planets[2].zoom, 0.1 * 20, "Planet zoom magnified by 20x (0.1 * 20 = 2.0)");
-assert.strictEqual(status.upper.planets[3].visible, false, "Planet 3 culled because > 250px away");
+assert.strictEqual(status.upper.planets[2].zoom, 0.1 * 30, "Planet zoom magnified by 30x (0.1 * 30 = 3.0)");
+assert.strictEqual(status.upper.planets[3].visible, false, "Planet 3 culled because > 300px away");
 console.log("✓ Free navigation: unorbited planet detected in FOV when passing close by.");
 
 // ----------------------------------------------------------------------------
-// TEST 9: Moving South (User scenario: relative angle calculation)
+// TEST 9: Moving South Towards Planet (Relative Angle Verification)
 // ----------------------------------------------------------------------------
 console.log("\n--- Test 9: Moving South Towards Planet (Relative Angle Verification) ---");
 mockShip._status = "MoveToOrbit";
 mockShip._orbitingPlanetId = 10;
 mockShip._x = 500;
-mockShip._y = 100;
+mockShip._y = 135;
 
 global.$gameGalaxy = {
     currentSystem() {
@@ -288,7 +291,7 @@ global.$gameGalaxy = {
             id: 3,
             _data: { planetIds: [10] },
             planets: [
-                { id: 10, name: "South Planet", bitmapName: "planet_south", x: 500, y: 140, zoom: 0.1, rotationAngle: 0 }
+                { id: 10, name: "South Planet", type: "Planet", bitmapName: "planet_south", x: 500, y: 140, zoom: 0.1, rotationAngle: 0 }
             ],
             planet(id) { return id === 10 ? this.planets[0] : null; }
         };
@@ -303,24 +306,35 @@ assert.strictEqual(southP.screenY < 360, true, "Planet is in TOP half of cockpit
 const initialY = southP.screenY;
 
 mockShip._x = 500;
-mockShip._y = 120;
+mockShip._y = 138;
 status = SpaceParallaxesManager.getParallaxesStatus(1);
 assert.strictEqual(status.upper.planets[10].visible, true, "Planet still visible");
 assert.strictEqual(status.upper.planets[10].screenY > initialY, true, "Planet descends towards center as ship advances");
 console.log("✓ Southward navigation: planet enters from top and descends toward center in sync with stars.");
 
 // ----------------------------------------------------------------------------
-// TEST 10: Space Station Zoom (zoom * 2 instead of zoom * 20)
+// TEST 10: Multi-Type Scale Hierarchy (Planet *30, Moon *30, Star *4, Station *2, Vortex *4, Belt *4)
 // ----------------------------------------------------------------------------
-console.log("\n--- Test 10: Space Station Zoom Multiplier (x2) ---");
+console.log("\n--- Test 10: Multi-Type Scale Hierarchy & Static Getters ---");
+assert.strictEqual(SpaceParallaxesManager.planetZoomMultiplier, 30, "Getter planetZoomMultiplier is 30");
+assert.strictEqual(SpaceParallaxesManager.moonZoomMultiplier, 30, "Getter moonZoomMultiplier is 30");
+assert.strictEqual(SpaceParallaxesManager.starZoomMultiplier, 4, "Getter starZoomMultiplier is 4");
+assert.strictEqual(SpaceParallaxesManager.stationZoomMultiplier, 2, "Getter stationZoomMultiplier is 2");
+assert.strictEqual(SpaceParallaxesManager.vortexZoomMultiplier, 4, "Getter vortexZoomMultiplier is 4");
+assert.strictEqual(SpaceParallaxesManager.beltZoomMultiplier, 4, "Getter beltZoomMultiplier is 4");
+
 global.$gameGalaxy = {
     currentSystem() {
         return {
             id: 4,
-            _data: { planetIds: [20, 21] },
+            _data: { planetIds: [20, 21, 22, 23, 24, 25] },
             planets: [
-                { id: 20, name: "Alpha Planet", bitmapName: "planet_alpha", x: 500, y: 120, zoom: 0.1, isStation() { return false; } },
-                { id: 21, name: "Starbase Prime", bitmapName: "station_prime", x: 500, y: 120, zoom: 0.1, isStation() { return true; } }
+                { id: 20, name: "Alpha Planet", type: "Planet", bitmapName: "planet_alpha", x: 500, y: 138, zoom: 0.1 },
+                { id: 21, name: "Selene Moon", type: "Moon", bitmapName: "moon_selene", x: 500, y: 138, zoom: 0.1 },
+                { id: 22, name: "Suros Star", type: "Star", bitmapName: "Suros", x: 500, y: 138, zoom: 0.5 },
+                { id: 23, name: "Starbase Prime", type: "Orbital Station", bitmapName: "station_prime", x: 500, y: 138, zoom: 0.1, isStation() { return true; } },
+                { id: 24, name: "Warp Vortex", type: "Vortex", bitmapName: "vortex_warp", x: 500, y: 138, zoom: 0.1 },
+                { id: 25, name: "Kupier Belt", type: "Asteroid Belt", bitmapName: "belt_kuiper", x: 500, y: 138, zoom: 0.1 }
             ],
             planet(id) { return this.planets.find(p => p.id === id); }
         };
@@ -328,9 +342,13 @@ global.$gameGalaxy = {
 };
 
 status = SpaceParallaxesManager.getParallaxesStatus(1);
-assert.strictEqual(status.upper.planets[20].zoom, 0.1 * 20, "Regular planet zoom is 20x (2.0)");
-assert.strictEqual(status.upper.planets[21].zoom, 0.1 * 2, "Space station zoom is 2x (0.2)");
-console.log("✓ Station scale: space station zoom is scaled to x2 while regular planet is scaled to x20.");
+assert.strictEqual(status.upper.planets[20].zoom, 0.1 * 30, "Planet zoom is 30x (3.0)");
+assert.strictEqual(status.upper.planets[21].zoom, 0.1 * 30, "Moon zoom is 30x (3.0)");
+assert.strictEqual(status.upper.planets[22].zoom, 0.5 * 4, "Star zoom is 4x (2.0)");
+assert.strictEqual(status.upper.planets[23].zoom, 0.1 * 2, "Orbital station zoom is 2x (0.2)");
+assert.strictEqual(status.upper.planets[24].zoom, 0.1 * 4, "Vortex zoom is 4x (0.4)");
+assert.strictEqual(status.upper.planets[25].zoom, 0.1 * 4, "Asteroid Belt zoom is 4x (0.4)");
+console.log("✓ Scale hierarchy: Planet (x30), Moon (x30), Star (x4), Station (x2), Vortex (x4), Belt (x4) validated.");
 
 // ----------------------------------------------------------------------------
 // TEST 11: Spriteset_UpperLayers Container Lifecycle & Indexing
@@ -338,16 +356,16 @@ console.log("✓ Station scale: space station zoom is scaled to x2 while regular
 console.log("\n--- Test 11: Spriteset_UpperLayers Lifecycle & System Reload ---");
 const upperContainer = new Spriteset_UpperLayers(4);
 assert.strictEqual(upperContainer._currentSystemId, 4, "Initialized with systemId 4");
-assert.strictEqual(upperContainer._planets.size, 2, "Two planet sprites indexed from planetIds");
+assert.strictEqual(upperContainer._planets.size, 6, "Six planet sprites indexed from planetIds");
 
 // Render status to container
 upperContainer.updateState(status.upper);
 const spr20 = upperContainer._planets.get(20);
-const spr21 = upperContainer._planets.get(21);
+const spr23 = upperContainer._planets.get(23);
 assert.strictEqual(spr20.visible, true, "Sprite 20 updated to visible");
-assert.strictEqual(spr20.scale.x, 2.0, "Sprite 20 scale set to 2.0");
-assert.strictEqual(spr21.visible, true, "Sprite 21 updated to visible");
-assert.strictEqual(spr21.scale.x, 0.2, "Sprite 21 scale set to 0.2");
+assert.strictEqual(spr20.scale.x, 3.0, "Sprite 20 scale set to 3.0");
+assert.strictEqual(spr23.visible, true, "Sprite 23 updated to visible");
+assert.strictEqual(spr23.scale.x, 0.2, "Sprite 23 scale set to 0.2");
 
 // Change planetary system
 assert.strictEqual(upperContainer.isPlanetarySystemChanging(), false, "System has not changed yet");
