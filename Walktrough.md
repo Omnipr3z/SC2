@@ -635,6 +635,19 @@ DEBUGTOOL.logFormat({ actor: "Paolo", hp: 120 }, "Acteur : %[actor], PV : %[hp]"
   - Ajout des méthodes de balises pour secteurs stellaires `hasIndicatorForSector` et `getIndicatorsForSector` dans `SC4_Game_Quests.js`.
   - Validation complète par suite de tests unitaires dédiés (`UNIT_TESTS/test_quest_galaxy_integration.js`).
 
+### 11.15 Gestionnaire de Sous-Scènes `SubSceneManager` & Persistance Inter-Scènes
+- **Orchestration Centralisée (`SC4_SubSceneManager.js`)** :
+  - Classe statique dédiée gérant le cycle de vie, la mise en veille et la restauration des sous-scènes (`SubScene_Base`) au travers des transitions de scènes natives (`SceneManager.push` / `SceneManager.pop`).
+  - Suspension explicite via `SubSceneManager.suspend(subScene, resumeData)` : mémorise la classe constructeur, les arguments d'instanciation (`resumeArgs()`) et l'état contextuel (mode d'onglet, index).
+  - Restauration automatique transparente au `start()` de `Scene_Map` via `SubSceneManager.resume(this)` avec consommation immédiate pour prévenir toute réinstanciation multiple.
+  - Purge explicite sans effet de bord (`SubSceneManager.clear()`) lors des actions terminales (quitter, atterrissage, décollage, téléportation de carte).
+- **Intégration du Pupitre de Passerelle (`SC4_SubScene_Console.js`)** :
+  - Le bouton "Navigation" suspend la console de commandement (`mode: 'main'`) avant d'ouvrir la carte spatiale (`Scene_SpaceTravel`).
+  - Lorsque le joueur quitte la carte spatiale pour revenir sur la passerelle, la console se réouvre instantanément avec le vaisseau et le mode actifs.
+  - Les commandes d'atterrissage, de décollage ou de sortie purgent explicitement le manager.
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_subscene_manager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_subscene_manager.js) (6/6 tests validés).
+
 ---
 
 ## 12. Feuille de Route & Perspectives Futures

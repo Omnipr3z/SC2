@@ -122,11 +122,24 @@
         }
 
         // ====================================================================
-        // 3. HANDLERS D'ACTIONS
+        // 3. HANDLERS D'ACTIONS & PERSISTANCE
         // ====================================================================
 
+        resumeArgs() {
+            return [this._shipId];
+        }
+
+        onResume(resumeData) {
+            if (resumeData && resumeData.mode && this._consoleWindow) {
+                this._consoleWindow.setMode(resumeData.mode);
+                this._consoleWindow.refresh();
+                this._consoleWindow.select(0);
+                this._consoleWindow.activate();
+            }
+        }
+
         onNavigation() {
-            this.close();
+            this.suspend({ mode: "main" });
             if (typeof SC4 !== "undefined" && typeof SC4.openNavigation === "function") {
                 SC4.openNavigation();
             } else if (typeof Scene_SpaceTravel !== "undefined" && typeof SceneManager !== "undefined") {
@@ -143,6 +156,9 @@
 
         onSelectPoi() {
             const poi = this._consoleWindow ? this._consoleWindow.currentExt() : null;
+            if (typeof SubSceneManager !== "undefined") {
+                SubSceneManager.clear();
+            }
             this.close();
             if (typeof SC4 !== "undefined" && typeof SC4.performLandingSequence === "function") {
                 SC4.performLandingSequence(poi ? poi.id : undefined);
@@ -157,6 +173,9 @@
         }
 
         onTakeoff() {
+            if (typeof SubSceneManager !== "undefined") {
+                SubSceneManager.clear();
+            }
             this.close();
             if (typeof SC4 !== "undefined" && typeof SC4.performTakeoffSequence === "function") {
                 SC4.performTakeoffSequence();
@@ -176,6 +195,9 @@
         }
 
         onQuit() {
+            if (typeof SubSceneManager !== "undefined") {
+                SubSceneManager.clear();
+            }
             this.close();
         }
 
@@ -184,6 +206,9 @@
                 this._consoleWindow.setMode("main");
                 this._consoleWindow.activate();
             } else {
+                if (typeof SubSceneManager !== "undefined") {
+                    SubSceneManager.clear();
+                }
                 this.close();
             }
         }

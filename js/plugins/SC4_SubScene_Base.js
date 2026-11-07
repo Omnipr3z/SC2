@@ -271,6 +271,44 @@
                 this._parentScene.closeSubScene(result);
             }
         }
+
+        // ====================================================================
+        // 4. SUSPENSION & PERSISTANCE INTER-SCÈNES (SubSceneManager)
+        // ====================================================================
+
+        /**
+         * Mémorise cette sous-scène dans SubSceneManager pour réouverture au retour.
+         * @param {any} [resumeData=null]
+         */
+        suspend(resumeData = null) {
+            if (typeof SubSceneManager !== "undefined") {
+                SubSceneManager.suspend(this, resumeData);
+            }
+        }
+
+        /**
+         * Arguments passés au constructeur lors de la réinstanciation au retour.
+         * À surcharger par les sous-classes si nécessaire.
+         * @returns {any[]}
+         */
+        resumeArgs() {
+            return [];
+        }
+
+        /**
+         * Hook appelé juste avant la suspension.
+         */
+        onSuspend() {
+            // Surchargeable par les sous-classes
+        }
+
+        /**
+         * Hook appelé lors de la restauration après réinstanciation sur la nouvelle scène.
+         * @param {any} [resumeData=null]
+         */
+        onResume(resumeData = null) {
+            // Surchargeable par les sous-classes
+        }
     }
 
     // Export global

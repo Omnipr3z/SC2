@@ -312,7 +312,10 @@ class Scene_SubsystemTravel extends Scene_Base {
                 const eventId = poi.landingEventId || 1;
                 const switchKey = [poi.landingMapId, eventId, "A"];
                 $gameSelfSwitches.setValue(switchKey, true);
-                // 4. Téléporter sur la carte indiquée
+                // 4. Téléporter sur la carte indiquée et purger la console de passerelle
+                if (typeof SubSceneManager !== "undefined") {
+                    SubSceneManager.clear();
+                }
                 $gamePlayer.reserveTransfer(poi.landingMapId, poi.landingX || 10, poi.landingY || 10, 2, 0);
                 SceneManager.goto(Scene_Map);
             } else {

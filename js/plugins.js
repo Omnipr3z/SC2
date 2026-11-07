@@ -69,6 +69,7 @@ var $plugins =
 {"name":"SC4_Window_RelationList","status":true,"description":"[SC4 v1.0.0] Liste sélectionnable des contacts et relations.","parameters":{}},
 {"name":"SC4_Window_SpaceCalendar","status":true,"description":"[SC4 v1.0.0] En-tête spatial affichant le fil d'Ariane et l'horloge stellaire Neotori.","parameters":{}},
 {"name":"======== SCENES ========","status":false,"description":"","parameters":{}},
+{"name":"SC4_SubSceneManager","status":true,"description":"[SC4 v1.0.0] Gestionnaire centralisé du cycle de vie et de la persistance des sous-scènes.","parameters":{}},
 {"name":"SC4_SubScene_Base","status":true,"description":"[SC4 v1.0.0] Infrastructure générique pour sous-scènes superposées sur Scene_Map (SubScenes).","parameters":{}},
 {"name":"SC4_SubScene_RelationDialog","status":true,"description":"[SC4 v1.0.0] Sous-scène d'interaction sociale sur Scene_Map.","parameters":{}},
 {"name":"SC4_SubScene_Console","status":true,"description":"[SC4 v1.0.0] Sous-scène orchestratrice du cockpit de passerelle (Dual-Window Command).","parameters":{}},

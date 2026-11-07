@@ -481,10 +481,18 @@
     // SCENE MAP
     //=============================================================================
     const _Scene_Map_onMapTouch = Scene_Map.prototype.onMapTouch;
+    const _Scene_Map_start = Scene_Map.prototype.start;
     const _Scene_Map_update = Scene_Map.prototype.update;
     const _Scene_Map_createDisplayObjects = Scene_Map.prototype.createDisplayObjects;
     const _Scene_Map_processMapTouch = Scene_Map.prototype.processMapTouch;
     const _Scene_Map_isMenuEnabled = Scene_Map.prototype.isMenuEnabled;
+
+    Scene_Map.prototype.start = function () {
+        _Scene_Map_start.call(this);
+        if (typeof SubSceneManager !== "undefined") {
+            SubSceneManager.resume(this);
+        }
+    };
 
     Scene_Map.prototype.isMenuCalled = function () {
         return Input.isTriggered("menu");
