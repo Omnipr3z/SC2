@@ -598,10 +598,11 @@ SC4.performTakeoffSequence = function () {
 // Namespace global pour accès rapide (console, scripts, dev)
 window.SC4 = window.SC4 || {};
 window.SC4.setHudVisible = function (visible) {
-    if (typeof $gameSystem !== "undefined" && $gameSystem) {
-        $gameSystem.setHudVisible(visible);
-    }
-};
+    if (visible)
+        $guiManger.showPlayerHud();
+    else
+        $guiManager.hidePlayerHud();
+}
 window.SC4.setHud = window.SC4.setHudVisible;
 window.SC4.showHud = function () { window.SC4.setHudVisible(true); };
 window.SC4.hideHud = function () { window.SC4.setHudVisible(false); };

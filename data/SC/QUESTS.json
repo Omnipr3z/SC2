@@ -8,18 +8,12 @@
     "locations": [
       {
         "id": "loc_prime_spaceport",
-        "sectorId": 1,
-        "systemId": 1,
-        "planetId": 5,
         "poiId": "prime_spatioport",
         "active": true,
         "completed": false
       },
       {
         "id": "loc_altus_intel",
-        "sectorId": 1,
-        "systemId": 1,
-        "planetId": 7,
         "poiId": "altus_dock",
         "active": true,
         "completed": false
@@ -50,9 +44,6 @@
     "locations": [
       {
         "id": "loc_kalyxis_base",
-        "sectorId": 1,
-        "systemId": 2,
-        "planetId": 11,
         "poiId": "kalyxis_mine_b",
         "active": true,
         "completed": false
@@ -80,9 +71,6 @@
     "locations": [
       {
         "id": "loc_prime_convoy",
-        "sectorId": 1,
-        "systemId": 1,
-        "planetId": 5,
         "poiId": "prime_spatioport",
         "active": true,
         "completed": false

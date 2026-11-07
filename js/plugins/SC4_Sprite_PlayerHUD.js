@@ -28,6 +28,11 @@ class Sprite_PlayerHUD extends Sprite_ActorHUD {
         if (!$guiManager.isPlayerHudVisible()) return false;
         return super.needRedraw();
     }
+
+    isSystemVisible() {
+        return $guiManager._isPlayerHudVisible;
+    }
+    //UPDATE
     updateHudCache() {
         const current = this.getCurrentData();
         const actor = this.actor;

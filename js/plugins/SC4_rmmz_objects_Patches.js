@@ -2070,9 +2070,8 @@
                 return Boolean(poi.landingAuthorized);
             }
         }
-        if (typeof window !== "undefined" && window.$gameSector && typeof window.$gameSector.currentSystem === "function") {
-            const sys = window.$gameSector.currentSystem();
-            const planet = sys ? sys.planet(id) : null;
+        if (typeof window !== "undefined" && window.$gameGalaxy && typeof window.$gameGalaxy.getPlanet === "function") {
+            const planet = window.$gameGalaxy.getPlanet(id);
             if (planet && planet.landingAuthorized !== undefined) {
                 return Boolean(planet.landingAuthorized);
             }

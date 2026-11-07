@@ -110,13 +110,6 @@ class Game_Sector extends Game_GalacticRepoBase {
         }
     }
 
-    /**
-     * Compatibilité ascendante avec les scènes existantes
-     */
-    currentSectorData() {
-        return this.data;
-    }
-
     // ========================================================================
     // 4. HUB VERS LES ENFANTS & LES ANCESTRES
     // ========================================================================
@@ -170,11 +163,6 @@ class Game_Sector extends Game_GalacticRepoBase {
 
 if (typeof window !== "undefined") {
     window.Game_Sector = Game_Sector;
-    // Rétrocompatibilité : $gameSector pointe sur le secteur courant de $gameGalaxy
-    Object.defineProperty(window, "$gameSector", {
-        get: () => (window.$gameGalaxy ? window.$gameGalaxy.currentSector : null),
-        configurable: true
-    });
 }
 if (typeof global !== "undefined") {
     global.Game_Sector = Game_Sector;

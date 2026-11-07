@@ -305,11 +305,6 @@ class Window_QuestDetail extends _BaseWindowQuestDetail {
         this.drawText(this.loc("quest.objectives_title", "◈ OBJECTIFS TACTIQUES & GÉOLOCALISATION"), 16, curY, this.innerWidth - 32, "left");
         curY += 24;
 
-        const sector = window.$gameSector ? window.$gameSector.currentSectorData() : null;
-        const secName = sector ? (typeof SC4_Localization !== "undefined" ? SC4_Localization.parse(sector.name) : sector.name) : this.loc("travel.sector_default", "Secteur");
-        const planets = window.$dataPlanets || [];
-        const allPois = window.$dataPois || [];
-
         q.locations.forEach(locItem => {
             const rects = this.locationItemRect(curY);
 
@@ -340,25 +335,9 @@ class Window_QuestDetail extends _BaseWindowQuestDetail {
             this.contents.textColor = "#d5c4a1";
             this.drawText(locItem.description || this.loc("quest.default_reach", "Rejoindre la zone indiquée."), rects.descRect.x, rects.descRect.y, rects.descRect.width, "left");
 
-            // Données géographiques
-            const sys = sector && sector.systems ? sector.systems.find(s => s && s.id === locItem.systemId) : null;
-            const sysName = sys ? (typeof SC4_Localization !== "undefined" ? SC4_Localization.parse(sys.name) : sys.name) : `${this.loc("travel.system_default", "Système")} ${locItem.systemId}`;
-            const pl = planets.find(p => p && (p.dbId === locItem.planetId || p.id === locItem.planetId));
-            const bodyLbl = this.loc("travel.body_default", this.loc("travel.celestial_body", "Corps"));
-            const plName = pl ? (typeof SC4_Localization !== "undefined" ? SC4_Localization.parse(pl.name) : pl.name) : (locItem.planetId !== null && locItem.planetId !== undefined ? `${bodyLbl} ${locItem.planetId}` : "");
-            const poi = allPois.find(p => p && p.id === locItem.poiId) || (pl && Array.isArray(pl.pois) ? pl.pois.find(p => p && p.id === locItem.poiId) : null);
-            const isLocated = !locItem.poiId || (window.$gameSystem && typeof window.$gameSystem.isPoiLocated === "function" ? window.$gameSystem.isPoiLocated(locItem.poiId) : true);
-
-            let poiDisplayName = "";
-            if (locItem.poiId) {
-                if (isLocated) {
-                    poiDisplayName = poi ? (typeof SC4_Localization !== "undefined" ? SC4_Localization.parse(poi.name) : poi.name) : locItem.poiId;
-                } else {
-                    poiDisplayName = this.loc("quest.unknown_poi", "??? [Site non découvert]");
-                }
-            }
-
-            const breadcrumb = `📍 ${secName} ▹ ${sysName}${plName ? " ▹ " + plName : ""}${poiDisplayName ? " ▹ " + poiDisplayName : ""}`;
+            // Fil d'Ariane géographique unifié via Game_QuestLocation / $gameGalaxy
+            const isLocated = locItem.isLocated;
+            const breadcrumb = typeof locItem.breadcrumbText === "function" ? locItem.breadcrumbText() : `📍 ${locItem.name}`;
             this.contents.textColor = isLocated ? "#83a598" : "#fe8019";
             this.drawText(breadcrumb, rects.breadcrumbRect.x, rects.breadcrumbRect.y, rects.breadcrumbRect.width, "left");
 

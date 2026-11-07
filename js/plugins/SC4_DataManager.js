@@ -110,8 +110,6 @@ class SC_DataManager {
         }
         if (typeof Game_Galaxy !== "undefined") {
             window.$gameGalaxy = new Game_Galaxy();
-        } else if (typeof Game_Sector !== "undefined") {
-            window.$gameSector = new Game_Sector();
         }
         if (typeof Game_Spaceships !== "undefined") {
             window.$gameSpaceships = new Game_Spaceships();
@@ -149,8 +147,6 @@ class SC_DataManager {
         }
         if (window.$gameGalaxy && typeof window.$gameGalaxy.makeSavefileData === "function") {
             contents.sc_galaxy = window.$gameGalaxy.makeSavefileData();
-        } else if (window.$gameSector && typeof window.$gameSector.makeSavefileData === "function") {
-            contents.sc_sector = window.$gameSector.makeSavefileData();
         }
         if (window.$gameSpaceships && typeof window.$gameSpaceships.makeSavefileData === "function") {
             contents.sc_spaceships = window.$gameSpaceships.makeSavefileData();
@@ -185,10 +181,6 @@ class SC_DataManager {
         }
         if (contents && contents.sc_galaxy && window.$gameGalaxy && typeof window.$gameGalaxy.loadSavefileData === "function") {
             window.$gameGalaxy.loadSavefileData(contents.sc_galaxy);
-        } else if (contents && contents.sc_sector && window.$gameGalaxy && typeof window.$gameGalaxy.loadSavefileData === "function") {
-            window.$gameGalaxy.loadSavefileData(contents.sc_sector);
-        } else if (contents && contents.sc_sector && window.$gameSector && typeof window.$gameSector.loadSavefileData === "function") {
-            window.$gameSector.loadSavefileData(contents.sc_sector);
         }
         if (contents && contents.sc_spaceships && window.$gameSpaceships && typeof window.$gameSpaceships.loadSavefileData === "function") {
             window.$gameSpaceships.loadSavefileData(contents.sc_spaceships);

@@ -45,6 +45,7 @@ var $plugins =
 {"name":"SC4_Sprite_PlayerHUD","status":true,"description":"","parameters":{}},
 {"name":"SC4_Sprite_InterlocutorHUD","status":true,"description":"","parameters":{}},
 {"name":"SC4_Sprite_ParallaxesUpperLayer","status":true,"description":"[SC4 v1.0.0] Sprite de couche haute de parallaxe pour l'affichage dynamique des planètes en vue hublot.","parameters":{}},
+{"name":"SC4_Spriteset_UpperLayers","status":true,"description":"[SC4 v1.0.0] Conteneur multi-couches pour les astres et vaisseaux visibles par les hublots spatiaux.","parameters":{}},
 {"name":"======= WINDOWS =======","status":false,"description":"","parameters":{}},
 {"name":"SC4_RingCommand","status":true,"description":"[SC4 v1.0.0] Menu circulaire rotatif (Ring Command) et intégration carte.","parameters":{}},
 {"name":"SC4_BubbleMessage","status":true,"description":"[SC4 v1.0.0] Fenêtre de message flottante (Bubble Message) et positionnement contextuel.","parameters":{"defaultFontFace":"mplus-1m-regular.woff","defaultFontSize":"18","defaultWindowskin":"Window_Bubble","verticalGapTop":"48","verticalGapBottom":"-32","defaultPadding":"12","defaultBackOpacity":"240","minWidth":"120","minHeight":"64","maxWidthPercent":"0.85","maxHeightPercent":"0.80","preloadFonts":"[\"mplus-1m-regular.woff\"]","enableOutline":"false","defaultOutlineWidth":"0","outlineColor":""}},

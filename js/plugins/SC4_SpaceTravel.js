@@ -3,7 +3,7 @@
 //=============================================================================
 /*:
  * @target MZ
- * @plugindesc [SC4 v1.0.0] Orchestrateur de simulation spatiale et hooks ($systemMapManager, $gameSector).
+ * @plugindesc [SC4 v1.0.0] Orchestrateur de simulation spatiale et hooks ($systemMapManager, $gameGalaxy).
  * @author SimCraft
  * @base SC4_Game_Planet
  * @base SC4_Game_PlanetarySystem
@@ -105,8 +105,7 @@ if (typeof Game_Planet === "undefined") {
         };
 
         Game_System.prototype.isLandingAllowed = function(planetId) {
-            const curSys = window.$gameSector ? window.$gameSector.currentSystem() : null;
-            const pl = curSys ? curSys.planet(planetId) : null;
+            const pl = window.$gameGalaxy ? window.$gameGalaxy.getPlanet(planetId) : null;
             return pl ? pl.isLandingAllowed() : false;
         };
 

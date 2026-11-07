@@ -241,8 +241,7 @@ class Window_SpaceShipInfo extends Window_Base {
             stTxt = this.loc("travel.docked_vessel", "Amarré à %1").replace("%1", hName);
         } else if (this.ship.isLanded && this.ship.isLanded() !== null) {
             const pId = this.ship.isLanded();
-            const curSys = window.$gameSector ? window.$gameSector.currentSystem() : null;
-            const planet = curSys ? curSys.planet(pId) : null;
+            const planet = window.$gameGalaxy ? window.$gameGalaxy.getPlanet(pId) : null;
             const pName = planet ? (typeof SC4_Localization !== "undefined" ? SC4_Localization.parse(planet.name) : planet.name) : ("#" + pId);
             stTxt = this.loc("travel.landed_planet", "Posé sur %1").replace("%1", pName);
         } else if (this.ship.status === "Orbiting" && this.ship.orbitingPlanet) {

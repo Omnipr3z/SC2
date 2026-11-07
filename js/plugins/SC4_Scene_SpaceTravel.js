@@ -86,9 +86,7 @@ class Scene_SpaceTravel extends Scene_Base {
         // Vaisseaux tiers présents dans le système
         this._npcShipSprites = [];
         const allShips = window.$gameSpaceships ? window.$gameSpaceships.spaceships() : [];
-        const currentSysId = (window.$gameGalaxy && typeof window.$gameGalaxy.currentSystemId === "function")
-            ? window.$gameGalaxy.currentSystemId()
-            : (window.$gameSector && typeof window.$gameSector.currentSystemId === "function" ? window.$gameSector.currentSystemId() : 1);
+        const currentSysId = window.$gameGalaxy ? window.$gameGalaxy.currentSystemId() : 1;
 
         allShips.forEach(s => {
             if (s === ship || s.systemId !== currentSysId) return;

@@ -154,11 +154,29 @@ global.$systemMapManager = {
 const questsData = JSON.parse(fs.readFileSync(path.join(__dirname, "../data/SC/QUESTS.json"), "utf8"));
 const sectorsData = JSON.parse(fs.readFileSync(path.join(__dirname, "../data/SC/SECTORS.json"), "utf8"));
 const planetsData = JSON.parse(fs.readFileSync(path.join(__dirname, "../data/SC/PLANETS.json"), "utf8"));
+const poisData = JSON.parse(fs.readFileSync(path.join(__dirname, "../data/SC/POIS.json"), "utf8"));
 global.$dataQuests = questsData;
+global.$dataSectors = sectorsData;
 global.$dataPlanets = planetsData;
+global.$dataPois = poisData;
 
 const vm = require("vm");
-vm.runInThisContext(fs.readFileSync(path.join(__dirname, "../js/plugins/SC4_QuestManager.js"), "utf8"));
+const pluginsDir = path.join(__dirname, "../js/plugins");
+[
+    "SC4_Game_GalacticRepoBase.js",
+    "SC4_Game_POIs.js",
+    "SC4_Game_Planet.js",
+    "SC4_Game_PlanetarySystem.js",
+    "SC4_Game_Sector.js",
+    "SC4_Game_Galaxy.js",
+    "SC4_Game_QuestLocation.js",
+    "SC4_Game_Quest.js",
+    "SC4_Game_Quests.js",
+    "SC4_StoryManager.js",
+    "SC4_QuestManager.js"
+].forEach(f => vm.runInThisContext(fs.readFileSync(path.join(pluginsDir, f), "utf8")));
+
+global.$gameGalaxy = new Game_Galaxy();
 
 let passCount = 0;
 let totalCount = 0;

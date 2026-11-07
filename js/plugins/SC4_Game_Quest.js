@@ -305,6 +305,18 @@ class Game_Quest {
         return this._locations.find(l => l.id === locId) || null;
     }
 
+    completeLocation(locId) {
+        const loc = this.location(locId);
+        if (loc) {
+            loc.complete();
+            if (this._locations.length > 0 && this._locations.every(l => l.completed)) {
+                this.complete();
+            }
+            return true;
+        }
+        return false;
+    }
+
     makeSavefileData() {
         return {
             id: this._id,

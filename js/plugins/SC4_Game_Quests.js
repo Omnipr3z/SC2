@@ -65,15 +65,41 @@ class Game_Quests {
     // --- RECHERCHE MULTI-ÉCHELLES DES BALISES (FILTRÉES PAR SUIVI ACTIF) ---
 
     /**
+     * Vérifie si un secteur stellaire contient au moins un objectif actif et suivi.
+     */
+    hasIndicatorForSector(sectorId) {
+        if (sectorId === null || sectorId === undefined) return false;
+        return this.activeQuests().some(q =>
+            q.isTracking && q.activeLocations().some(loc => loc.sectorId === sectorId)
+        );
+    }
+
+    getIndicatorsForSector(sectorId) {
+        if (sectorId === null || sectorId === undefined) return [];
+        const indicators = [];
+        this.activeQuests().forEach(q => {
+            if (!q.isTracking) return;
+            q.activeLocations().forEach(loc => {
+                if (loc.sectorId === sectorId) {
+                    indicators.push({ quest: q, location: loc });
+                }
+            });
+        });
+        return indicators;
+    }
+
+    /**
      * Vérifie si un système solaire contient au moins un objectif actif et suivi.
      */
     hasIndicatorForSystem(systemId) {
+        if (systemId === null || systemId === undefined) return false;
         return this.activeQuests().some(q =>
             q.isTracking && q.activeLocations().some(loc => loc.systemId === systemId)
         );
     }
 
     getIndicatorsForSystem(systemId) {
+        if (systemId === null || systemId === undefined) return [];
         const indicators = [];
         this.activeQuests().forEach(q => {
             if (!q.isTracking) return;
@@ -90,12 +116,14 @@ class Game_Quests {
      * Vérifie si une planète contient au moins un objectif actif et suivi.
      */
     hasIndicatorForPlanet(planetId) {
+        if (planetId === null || planetId === undefined) return false;
         return this.activeQuests().some(q =>
             q.isTracking && q.activeLocations().some(loc => loc.planetId === planetId)
         );
     }
 
     getIndicatorsForPlanet(planetId) {
+        if (planetId === null || planetId === undefined) return [];
         const indicators = [];
         this.activeQuests().forEach(q => {
             if (!q.isTracking) return;
@@ -113,11 +141,8 @@ class Game_Quests {
      */
     hasIndicatorForPoi(poiId) {
         if (!poiId) return false;
-        if (window.$gameSystem && typeof window.$gameSystem.isPoiLocated === "function") {
-            if (!window.$gameSystem.isPoiLocated(poiId)) return false;
-        }
         return this.activeQuests().some(q =>
-            q.isTracking && q.activeLocations().some(loc => loc.poiId === poiId)
+            q.isTracking && q.activeLocations().some(loc => loc.poiId === poiId && loc.isLocated)
         );
     }
 
@@ -127,12 +152,17 @@ class Game_Quests {
         this.activeQuests().forEach(q => {
             if (!q.isTracking) return;
             q.activeLocations().forEach(loc => {
-                if (loc.poiId === poiId) {
+                if (loc.poiId === poiId && loc.isLocated) {
                     indicators.push({ quest: q, location: loc });
                 }
             });
         });
         return indicators;
+    }
+
+    completeQuestLocation(questId, locId) {
+        const q = this.quest(questId);
+        return q ? q.completeLocation(locId) : false;
     }
 
     makeSavefileData() {

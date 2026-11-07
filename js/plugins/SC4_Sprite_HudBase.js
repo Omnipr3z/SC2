@@ -168,8 +168,7 @@ class Sprite_HudBase extends Sprite {
             if (!this.isSystemVisible()) this.visible = false;
             return;
         } else {
-
-            this.clearHudContents()
+            this.clearHudContents();
             this.visible = true;
         }
         this.refreshHud();

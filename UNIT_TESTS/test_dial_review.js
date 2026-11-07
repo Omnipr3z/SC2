@@ -145,12 +145,25 @@ global.$dataArmors = { 4: { id: 4, name: "Armure Flak" } };
 // Chargement des plugins
 const vm = require('vm');
 const ROOT_DIR = path.resolve(__dirname, '..');
-vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Localization.js'), 'utf8'));
-vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_SpaceTravel.js'), 'utf8'));
-vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Scene_SectorTravel.js'), 'utf8'));
-vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Scene_SpaceTravel.js'), 'utf8'));
-vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_QuestManager.js'), 'utf8'));
-vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, 'js/plugins/SC4_Window_QuestDetail.js'), 'utf8'));
+[
+    'js/plugins/SC4_Game_GalacticRepoBase.js',
+    'js/plugins/SC4_Game_POIs.js',
+    'js/plugins/SC4_Game_Planet.js',
+    'js/plugins/SC4_Game_PlanetarySystem.js',
+    'js/plugins/SC4_Game_Sector.js',
+    'js/plugins/SC4_Game_Galaxy.js',
+    'js/plugins/SC4_Game_Spaceship.js',
+    'js/plugins/SC4_Localization.js',
+    'js/plugins/SC4_SpaceTravel.js',
+    'js/plugins/SC4_Scene_SectorTravel.js',
+    'js/plugins/SC4_Scene_SpaceTravel.js',
+    'js/plugins/SC4_Game_QuestLocation.js',
+    'js/plugins/SC4_Game_Quest.js',
+    'js/plugins/SC4_Game_Quests.js',
+    'js/plugins/SC4_StoryManager.js',
+    'js/plugins/SC4_QuestManager.js',
+    'js/plugins/SC4_Window_QuestDetail.js'
+].forEach(f => vm.runInThisContext(fs.readFileSync(path.join(ROOT_DIR, f), 'utf8')));
 
 console.log("==============================================================");
 console.log("--- TEST VALIDATION REVUE DIAL_with_AI ---");
@@ -176,6 +189,13 @@ console.log("✅ 2. Valeurs et getters audio par défaut de Game_Spaceship : OK"
 
 // 3. Test Scene_SectorTravel.playSpaceShipSe() avec override saut warp
 global.$gameSpaceships = { playerShip: () => testShip };
+global.$gameGalaxy = {
+    currentSystem: () => ({ id: 1, name: "Ankaros", data: { connections: [1, 2] } }),
+    currentSystemId: () => 1,
+    currentSector: () => ({ id: 1, name: "Solaris" }),
+    currentSectorId: () => 1,
+    getPlanet: (id) => null
+};
 const sectorScene = new Scene_SectorTravel();
 sectorScene._controlsWindow = { setCommands: () => {} };
 sectorScene._selectedSystemId = 1;
@@ -273,7 +293,7 @@ travelScene._targetWindow = { setTarget: () => {} };
 travelScene._controlsWindow = { setCommands: () => {} };
 const shipForTravel = new Game_Spaceship({ id: 0, name: "Dawn Of Faith", x: 100, y: 100 });
 global.$gameSpaceships = { playerShip: () => shipForTravel, spaceships: () => [shipForTravel] };
-global.$gameSector = { currentSystem: () => testSys };
+global.$gameGalaxy = { currentSystem: () => testSys, currentSystemId: () => testSys.id, getPlanet: (id) => testSys.planet(id) };
 
 // Simulation premier clic sur Ankaros Prime (id: 5)
 travelScene.selectPlanet(pAnkaros.id, pAnkaros);

@@ -68,7 +68,13 @@
         this._parallaxDepthLayer.visible = false;
         this._baseSprite.addChild(this._parallaxDepthLayer);
 
-        this._parallaxUpperLayer = new Sprite_ParallaxesUpperLayer();
+        const currentSysId = (typeof $gameGalaxy !== "undefined" && $gameGalaxy && typeof $gameGalaxy.currentSystem === "function" && $gameGalaxy.currentSystem())
+            ? $gameGalaxy.currentSystem().id
+            : null;
+        const UpperContainerClass = (typeof Spriteset_UpperLayers !== "undefined")
+            ? Spriteset_UpperLayers
+            : (typeof window !== "undefined" && window.Spriteset_UpperLayers ? window.Spriteset_UpperLayers : Sprite_ParallaxesUpperLayer);
+        this._parallaxUpperLayer = new UpperContainerClass(currentSysId);
         this._baseSprite.addChild(this._parallaxUpperLayer);
     };
     Spriteset_Map.prototype.updateParallax = function () {

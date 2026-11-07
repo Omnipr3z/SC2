@@ -612,6 +612,29 @@ DEBUGTOOL.logFormat({ actor: "Paolo", hp: 120 }, "Acteur : %[actor], PV : %[hp]"
   - Sauvegarde miroir automatique dans `js/plugins.backup.js`.
   - Protocole de synchronisation RMMZ via bascule du nickname de l'Acteur 1 dans `data/Actors.json` (`Wesword` / `Reload_RMMZ`).
 
+### 11.13 Conteneur de Calques Stellaires `Spriteset_UpperLayers` & Multi-Planètes Parallaxes
+- **Architecture de Rendu Découplée (`SC4_Spriteset_UpperLayers.js`)** :
+  - `Spriteset_UpperLayers` dérive de `PIXI.Container` et organise séparément les couches d'astres (`_planetsContainer`) et de vaisseaux spatiaux (`_shipsContainer`).
+  - Indexation directe des astres via `Map` basée sur `$gameGalaxy.currentSystem()._data.planetIds`.
+  - Détection de saut / changement de système stellaire via `isPlanetarySystemChanging()` et réinstanciation propre (`setupPlanets`).
+  - Culling optimisé hors champ (seuil 250 px) et masquage total (`visible = false`, update bypassé) lors des sauts FTL Warp.
+  - Facteurs d'échelle normalisés : ratio $\times 20$ pour les corps célestes et planètes en parallaxe, $\times 2$ pour les stations orbitales (`isStation()`).
+
+### 11.14 Alignement Souverain sur `$gameGalaxy` & Refonte du Système de Quêtes
+- **Hiérarchie Spatiale Ascendante et Fail Fast** :
+  - Éradication intégrale des références obsolètes à `$gameSector` au profit de `$gameGalaxy` (`Galaxy -> Sectors -> Systems -> Planets -> POIs`).
+  - Suppression sans compromis de tous les shims/sparadraps de rétrocompatibilité (`Object.defineProperty(window, "$gameSector")`, `currentSectorData()`).
+  - Nettoyage des fichiers déclaratifs `QUESTS.json` : suppression des IDs ancêtres redondants (`sectorId`, `systemId`, `planetId`) lorsque la cible est un POI ou une planète.
+- **Résolution Dynamique dans `Game_QuestLocation`** :
+  - Résolution ascendante automatique des parents via les getters `poi`, `planet`, `system`, `sector`, `target`.
+  - Résolution dynamique des IDs (`poiId`, `planetId`, `systemId`, `sectorId`) pour assurer la projection multi-échelles continue des balises tactiques (`Scene_SectorTravel`, `Scene_SpaceTravel`, `Scene_SubsystemTravel`).
+  - Méthode unifiée de fil d'Ariane `breadcrumbText()` et gestion intégrée de la découverte de site (`isLocated`).
+- **Nettoyage Architectural** :
+  - `SC4_Window_QuestDetail.js` allégé et connecté directement aux getters hiérarchiques de `Game_QuestLocation`.
+  - `SC4_QuestManager.js` et `SC4_Scene_QuestBook.js` purgés de leurs chargeurs Node.js obsolètes.
+  - Ajout des méthodes de balises pour secteurs stellaires `hasIndicatorForSector` et `getIndicatorsForSector` dans `SC4_Game_Quests.js`.
+  - Validation complète par suite de tests unitaires dédiés (`UNIT_TESTS/test_quest_galaxy_integration.js`).
+
 ---
 
 ## 12. Feuille de Route & Perspectives Futures

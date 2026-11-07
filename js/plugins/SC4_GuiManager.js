@@ -3,7 +3,7 @@ class GuiManager {
         this.init();
     }
     init() {
-        this._isPlayerHudVisible = true;
+        this._isPlayerHudVisible = false;
         this._isBattleHudVisible = false;
         this._isMenuVisible = false;
     }

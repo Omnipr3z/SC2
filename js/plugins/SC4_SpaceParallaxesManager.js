@@ -146,43 +146,31 @@
             }
 
             // ----------------------------------------------------------------
-            // 2. ÉTAT COUCHE HAUTE (PLANÈTE EN VUE)
+            // 2. ÉTAT COUCHE HAUTE (PLANÈTES & VAISSEAUX EN VUE)
             // ----------------------------------------------------------------
             let upper = {
                 visible: false,
-                bitmapName: null,
-                screenX: 0,
-                screenY: 0,
-                rotation: 0,
-                zoom: 1.0
+                planets: {},
+                ships: {}
             };
 
+            const isWarp = (ship._status === "InterSystemJump" || (typeof ship.isHyperdrive === "function" && ship.isHyperdrive()));
             const isLanded = (typeof ship.isLanded === "function" && ship.isLanded() !== null);
-            if (!isLanded) {
+
+            if (!isWarp && !isLanded) {
+                upper.visible = true;
+
                 const galaxy = (typeof $gameGalaxy !== "undefined" && $gameGalaxy) ? $gameGalaxy : (typeof window !== "undefined" ? window.$gameGalaxy : null);
                 const currentSys = (galaxy && typeof galaxy.currentSystem === "function") ? galaxy.currentSystem() : null;
 
-                const boxW = (typeof Graphics !== "undefined" && Graphics.width) ? Graphics.width : 1280;
-                const boxH = (typeof Graphics !== "undefined" && Graphics.height) ? Graphics.height : 720;
-                const centerX = Math.floor(boxW / 2);
-                const centerY = Math.floor(boxH / 2);
-                const halfW = 89;   // 178 / 2
-                const halfH = 49.5; // 99 / 2
+                if (currentSys) {
+                    const boxW = (typeof Graphics !== "undefined" && Graphics.width) ? Graphics.width : 1280;
+                    const boxH = (typeof Graphics !== "undefined" && Graphics.height) ? Graphics.height : 720;
+                    const centerX = Math.floor(boxW / 2);
+                    const centerY = Math.floor(boxH / 2);
+                    const halfW = 89;   // 178 / 2
+                    const halfH = 49.5; // 99 / 2
 
-                if (ship._status === "Orbiting") {
-                    let targetPlanet = ship.orbitingPlanet || (currentSys && ship.orbitingPlanetId !== null && ship.orbitingPlanetId !== undefined ? currentSys.planet(ship.orbitingPlanetId) : null);
-                    if (targetPlanet) {
-                        const baseZoom = (typeof targetPlanet.zoom === "number") ? targetPlanet.zoom : 0.1;
-                        upper = {
-                            visible: true,
-                            bitmapName: targetPlanet.bitmapName,
-                            screenX: centerX,
-                            screenY: centerY,
-                            rotation: targetPlanet.rotationAngle || 0,
-                            zoom: baseZoom * 10
-                        };
-                    }
-                } else if (typeof ship.x === "number" && typeof ship.y === "number") {
                     let heading = (typeof ship.headingAngle === "number")
                         ? ship.headingAngle
                         : ((typeof ship._headingAngle === "number") ? ship._headingAngle : -Math.PI / 2);
@@ -192,7 +180,7 @@
                         let destY = (typeof ship.targetY === "number") ? ship.targetY : null;
 
                         if (ship._status === "MoveToOrbit") {
-                            const orbitP = ship.orbitingPlanet || (currentSys && ship.orbitingPlanetId !== null && ship.orbitingPlanetId !== undefined ? currentSys.planet(ship.orbitingPlanetId) : null);
+                            const orbitP = ship.orbitingPlanet || (typeof currentSys.planet === "function" ? currentSys.planet(ship.orbitingPlanetId) : null);
                             if (orbitP && typeof orbitP.x === "number" && typeof orbitP.y === "number") {
                                 destX = orbitP.x;
                                 destY = orbitP.y;
@@ -215,55 +203,52 @@
                     const cosH = Math.cos(heading);
                     const sinH = Math.sin(heading);
 
-                    let targetPlanet = null;
-                    let targetFwd = 0;
-                    let targetRight = 0;
+                    const planetList = (currentSys._data && Array.isArray(currentSys._data.planetIds))
+                        ? currentSys._data.planetIds.map(id => typeof currentSys.planet === "function" ? currentSys.planet(id) : null).filter(Boolean)
+                        : (Array.isArray(currentSys.planets) ? currentSys.planets : []);
 
-                    if (ship._status === "MoveToOrbit") {
-                        const orbitP = ship.orbitingPlanet || (currentSys && ship.orbitingPlanetId !== null && ship.orbitingPlanetId !== undefined ? currentSys.planet(ship.orbitingPlanetId) : null);
-                        if (orbitP && typeof orbitP.x === "number" && typeof orbitP.y === "number") {
-                            const dx = orbitP.x - ship.x;
-                            const dy = orbitP.y - ship.y;
-                            const fwd = dx * cosH + dy * sinH;
-                            const right = -dx * sinH + dy * cosH;
-                            if (Math.abs(right) <= halfW && Math.abs(fwd) <= halfH) {
-                                targetPlanet = orbitP;
-                                targetFwd = fwd;
-                                targetRight = right;
-                            }
+                    for (const p of planetList) {
+                        if (!p || typeof p.x !== "number" || typeof p.y !== "number") continue;
+
+                        const isStation = (typeof p.isStation === "function" && p.isStation());
+                        const zoomMultiplier = isStation ? 2 : 20;
+                        const baseZoom = (typeof p.zoom === "number") ? p.zoom : 0.1;
+                        const pZoom = baseZoom * zoomMultiplier;
+
+                        if (ship._status === "Orbiting" && (ship.orbitingPlanetId === p.id || ship.orbitingPlanet === p)) {
+                            upper.planets[p.id] = {
+                                visible: true,
+                                bitmapName: p.bitmapName,
+                                screenX: centerX,
+                                screenY: centerY,
+                                rotation: p.rotationAngle || 0,
+                                zoom: pZoom
+                            };
+                            continue;
                         }
-                    }
 
-                    if (!targetPlanet && currentSys && Array.isArray(currentSys.planets)) {
-                        let minDistance = Infinity;
-                        for (const p of currentSys.planets) {
-                            if (!p || typeof p.x !== "number" || typeof p.y !== "number") continue;
-                            const dx = p.x - ship.x;
-                            const dy = p.y - ship.y;
-                            const fwd = dx * cosH + dy * sinH;
-                            const right = -dx * sinH + dy * cosH;
-                            if (Math.abs(right) <= halfW && Math.abs(fwd) <= halfH) {
-                                const dist = Math.hypot(dx, dy);
-                                if (dist < minDistance) {
-                                    minDistance = dist;
-                                    targetPlanet = p;
-                                    targetFwd = fwd;
-                                    targetRight = right;
-                                }
-                            }
+                        const dx = p.x - ship.x;
+                        const dy = p.y - ship.y;
+                        if (Math.abs(dx) > 250 || Math.abs(dy) > 250) {
+                            upper.planets[p.id] = { visible: false };
+                            continue;
                         }
-                    }
 
-                    if (targetPlanet) {
-                        const baseZoom = (typeof targetPlanet.zoom === "number") ? targetPlanet.zoom : 0.1;
-                        upper = {
-                            visible: true,
-                            bitmapName: targetPlanet.bitmapName,
-                            screenX: Math.round(centerX + targetRight * (boxW / 178)),
-                            screenY: Math.round(centerY - targetFwd * (boxH / 99)),
-                            rotation: targetPlanet.rotationAngle || 0,
-                            zoom: baseZoom * 10
-                        };
+                        const fwd = dx * cosH + dy * sinH;
+                        const right = -dx * sinH + dy * cosH;
+
+                        if (Math.abs(right) <= halfW && Math.abs(fwd) <= halfH) {
+                            upper.planets[p.id] = {
+                                visible: true,
+                                bitmapName: p.bitmapName,
+                                screenX: Math.round(centerX + right * (boxW / 178)),
+                                screenY: Math.round(centerY - fwd * (boxH / 99)),
+                                rotation: p.rotationAngle || 0,
+                                zoom: pZoom
+                            };
+                        } else {
+                            upper.planets[p.id] = { visible: false };
+                        }
                     }
                 }
             }

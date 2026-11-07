@@ -32,23 +32,35 @@
         }
 
         /**
+         * Précharge et assigne la texture bitmap de l'astre.
+         * @param {string} bitmapName 
+         */
+        preloadBitmap(bitmapName) {
+            if (!bitmapName) return;
+            const cleanName = String(bitmapName).replace(/\.png$/i, "");
+            this._cachedBitmapName = cleanName;
+            if (typeof ImageManager !== "undefined" && typeof ImageManager.loadBitmap === "function") {
+                this.bitmap = ImageManager.loadBitmap("img/GUI/ship/", cleanName);
+            }
+        }
+
+        /**
          * Applique l'état calculé par le SpaceParallaxesManager.
          * @param {object} state 
          */
         updateState(state) {
-            if (!state || !state.visible || !state.bitmapName) {
+            if (!state || !state.visible) {
                 this.visible = false;
                 return;
             }
 
             this.visible = true;
 
-            // Mise à jour de la texture avec cache (anti-rechargement inutile)
-            const cleanName = String(state.bitmapName).replace(/\.png$/i, "");
-            if (this._cachedBitmapName !== cleanName) {
-                this._cachedBitmapName = cleanName;
-                if (typeof ImageManager !== "undefined" && typeof ImageManager.loadBitmap === "function") {
-                    this.bitmap = ImageManager.loadBitmap("img/GUI/ship/", cleanName);
+            // Mise à jour de la texture si spécifiée ou différente
+            if (state.bitmapName) {
+                const cleanName = String(state.bitmapName).replace(/\.png$/i, "");
+                if (this._cachedBitmapName !== cleanName) {
+                    this.preloadBitmap(cleanName);
                 }
             }
 
