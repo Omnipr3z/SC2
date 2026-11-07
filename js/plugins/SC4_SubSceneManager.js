@@ -97,6 +97,32 @@ class SubSceneManager {
         }
         return scene._currentSubScene || null;
     }
+
+    /**
+     * Ouvre une sous-scène sur la scène active courante.
+     * @param {class} subSceneClass 
+     * @param  {...any} args 
+     * @returns {SubScene_Base|null}
+     */
+    static open(subSceneClass, ...args) {
+        const scene = (typeof SceneManager !== "undefined") ? SceneManager._scene : null;
+        if (scene && typeof scene.openSubScene === "function") {
+            return scene.openSubScene(subSceneClass, ...args);
+        }
+        return null;
+    }
+
+    /**
+     * Ferme la sous-scène active courante.
+     * @param {any} [result=null] 
+     */
+    static close(result = null) {
+        const scene = (typeof SceneManager !== "undefined") ? SceneManager._scene : null;
+        if (scene && typeof scene.closeSubScene === "function") {
+            return scene.closeSubScene(result);
+        }
+        return null;
+    }
 }
 
 SubSceneManager.init();
@@ -112,3 +138,4 @@ if (typeof global !== "undefined") {
 if (typeof module !== "undefined" && module.exports) {
     module.exports = { SubSceneManager };
 }
+

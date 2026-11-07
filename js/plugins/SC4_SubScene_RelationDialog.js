@@ -249,7 +249,31 @@ class SubScene_RelationDialog extends SubScene_Base {
         }
     }
 
+    // ========================================================================
+    // PERSISTANCE & CYCLE DE VIE (SubSceneManager)
+    // ========================================================================
+
+    resumeArgs() {
+        return [this._targetActorId, this._targetEventId];
+    }
+
+    onSuspend() {
+        // La session de dialogue reste préservée pour le retour
+    }
+
+    onResume(resumeData = null) {
+        if (this._commandWindow && typeof this._commandWindow.activate === "function") {
+            this._commandWindow.activate();
+        }
+        if (this._relationStatusWindow && typeof this._relationStatusWindow.refresh === "function") {
+            this._relationStatusWindow.refresh();
+        }
+    }
+
     onCommandCancel() {
+        if (typeof SubSceneManager !== "undefined") {
+            SubSceneManager.clear();
+        }
         if (typeof $relationDialogManager !== "undefined" && $relationDialogManager) {
             $relationDialogManager.endExchange();
         }

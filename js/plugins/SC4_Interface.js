@@ -277,8 +277,10 @@ SC4.openNavigation = function () {
  * @param {number} [shipId] - ID explicite du vaisseau ciblé (optionnel, prioritaire sur le mapId de la carte)
  */
 SC4.openBridgeConsole = function (shipId) {
-    if (typeof SceneManager !== "undefined" && SceneManager._scene && typeof SceneManager._scene.openBridgeConsole === "function") {
-        SceneManager._scene.openBridgeConsole(shipId);
+    if (typeof SubSceneManager !== "undefined" && typeof SubScene_Console !== "undefined") {
+        return SubSceneManager.open(SubScene_Console, shipId);
+    } else if (typeof SceneManager !== "undefined" && SceneManager._scene && typeof SceneManager._scene.openBridgeConsole === "function") {
+        return SceneManager._scene.openBridgeConsole(shipId);
     } else if (typeof $gameSystem !== "undefined" && $gameSystem) {
         $gameSystem._bridgeConsoleOpen = true;
         $gameSystem._bridgeConsoleShipId = (shipId !== undefined && shipId !== null) ? Number(shipId) : null;
@@ -291,7 +293,13 @@ SC4.openBridgeConsole = function (shipId) {
  * @param {number|null} [targetEventId=null] ID optionnel de l'événement cible pour ancrer la bulle (null pour auto-détection)
  */
 SC4.openRelationDialog = function (targetActorId = 2, targetEventId = null) {
-    $relationManager.openRelationDialog(targetActorId, targetEventId);
+    if (typeof $relationManager !== "undefined" && $relationManager && typeof $relationManager.openRelationDialog === "function") {
+        return $relationManager.openRelationDialog(targetActorId, targetEventId);
+    }
+    if (typeof SubSceneManager !== "undefined" && typeof SubScene_RelationDialog !== "undefined") {
+        return SubSceneManager.open(SubScene_RelationDialog, targetActorId, targetEventId);
+    }
+    return null;
 };
 
 /**

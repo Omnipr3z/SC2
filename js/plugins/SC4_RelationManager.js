@@ -54,7 +54,13 @@ class RelationManager {
     }
 
     openRelationDialog(targetActorId = 2, targetEventId = null) {
-        SceneManager._scene.openSubScene(SubScene_RelationDialog, targetActorId, targetEventId);
+        if (typeof SubSceneManager !== "undefined") {
+            return SubSceneManager.open(SubScene_RelationDialog, targetActorId, targetEventId);
+        }
+        if (SceneManager._scene && typeof SceneManager._scene.openSubScene === "function") {
+            return SceneManager._scene.openSubScene(SubScene_RelationDialog, targetActorId, targetEventId);
+        }
+        return null;
     }
 
     /**

@@ -82,10 +82,42 @@ global.Window_BridgeConsole = class Window_BridgeConsole extends global.Window_B
     currentExt() { return { id: "test_poi" }; }
 };
 
+global.Window_FactionInfo = class Window_FactionInfo extends global.Window_Base {
+    setFaction(id, title) { this._factionId = id; this._title = title; }
+};
+
+global.Window_RelationStatus = class Window_RelationStatus extends global.Window_Base {
+    setRelation(rel, actor) { this._relation = rel; this._actor = actor; }
+};
+
+global.Window_InteractionCommand = class Window_InteractionCommand extends global.Window_Base {
+    setAvailableInteractions(list) { this._interactions = list; }
+};
+
+global.$gameActors = {
+    actor: (id) => ({ actorId: () => id, name: () => "Test Actor " + id })
+};
+
+global.$relationManager = {
+    getActorFactionId: (id) => 1,
+    getRelationWithPlayer: (id) => ({ trust: 50, respect: 40 }),
+    getAvailableInteractions: (id) => ["chat"],
+    openRelationDialog: (targetActorId = 2, targetEventId = null) => {
+        return SubSceneManager.open(SubScene_RelationDialog, targetActorId, targetEventId);
+    }
+};
+
+let exchangeEnded = false;
+global.$relationDialogManager = {
+    startExchange: (targetActorId) => ({ relation: { trust: 50, respect: 40 }, availableInteractions: ["chat"] }),
+    endExchange: () => { exchangeEnded = true; }
+};
+
 const baseDir = path.resolve(__dirname, "..");
 require(path.join(baseDir, "js/plugins/SC4_SubSceneManager.js"));
 require(path.join(baseDir, "js/plugins/SC4_SubScene_Base.js"));
 require(path.join(baseDir, "js/plugins/SC4_SubScene_Console.js"));
+require(path.join(baseDir, "js/plugins/SC4_SubScene_RelationDialog.js"));
 
 // Mock Scene_Map avec gestion des SubScenes
 class MockScene_Map extends global.Scene_Base {
@@ -207,6 +239,58 @@ assert.strictEqual(map4.currentSubScene(), null, "Aucune réouverture après qui
 console.log("✔ Purge explicite validée");
 testsPassed++;
 
+// TEST 7: SubSceneManager.open() & SubScene_RelationDialog
+console.log("\n[Test 7] Ouverture universelle de SubScene_RelationDialog via SubSceneManager.open()...");
+const map5 = new MockScene_Map();
+global.SceneManager._scene = map5;
+
+const relDialog = SubSceneManager.open(SubScene_RelationDialog, 2, 8);
+assert.ok(relDialog, "SubScene_RelationDialog doit être instancié");
+assert.strictEqual(relDialog.targetActorId, 2, "targetActorId doit être 2");
+assert.strictEqual(relDialog.targetEventId, 8, "targetEventId doit être 8");
+assert.strictEqual(map5.currentSubScene(), relDialog, "Doit être la sous-scène active de map5");
+console.log("✔ SubSceneManager.open() ouvre et injecte proprement SubScene_RelationDialog");
+testsPassed++;
+
+// TEST 8: Suspension & Restauration de SubScene_RelationDialog
+console.log("\n[Test 8] Suspension & Restauration de SubScene_RelationDialog...");
+assert.deepStrictEqual(relDialog.resumeArgs(), [2, 8], "resumeArgs doit retourner [2, 8]");
+
+// Suspension simulée (ex: ouverture de l'inventaire ou du codex)
+relDialog.suspend({ lastInteraction: "chat" });
+assert.strictEqual(SubSceneManager.isSuspended(), true, "SubSceneManager doit être marqué suspendu");
+
+// Simulation retour sur nouvelle instance de Scene_Map
+const map6 = new MockScene_Map();
+global.SceneManager._scene = map6;
+map6.start();
+
+const restoredDialog = map6.currentSubScene();
+assert.ok(restoredDialog, "Dialogue relationnel restauré sur map6");
+assert.ok(restoredDialog instanceof SubScene_RelationDialog, "Doit être une instance de SubScene_RelationDialog");
+assert.strictEqual(restoredDialog.targetActorId, 2, "targetActorId conservé (2)");
+assert.strictEqual(restoredDialog.targetEventId, 8, "targetEventId conservé (8)");
+assert.strictEqual(SubSceneManager.isSuspended(), false, "État suspendu consommé");
+console.log("✔ SubScene_RelationDialog restauré fidèlement avec interlocuteur et événement ancrés");
+testsPassed++;
+
+// TEST 9: Clôture du dialogue et notification à RelationDialogManager
+console.log("\n[Test 9] Clôture du dialogue (onCommandCancel)...");
+exchangeEnded = false;
+restoredDialog.onCommandCancel();
+assert.strictEqual(map6.currentSubScene(), null, "Dialogue fermé sur map6");
+assert.strictEqual(exchangeEnded, true, "endExchange() doit être appelé sur $relationDialogManager");
+assert.strictEqual(SubSceneManager.isSuspended(), false, "SubSceneManager ne doit rien avoir en suspend");
+
+// Vérification qu'une nouvelle Scene_Map ne réouvre rien
+const map7 = new MockScene_Map();
+global.SceneManager._scene = map7;
+map7.start();
+assert.strictEqual(map7.currentSubScene(), null, "Aucune réouverture intempestive après clôture");
+console.log("✔ Clôture propre et notification au service de session validées");
+testsPassed++;
+
 console.log(`\n==============================================================`);
 console.log(`   TOUS LES TESTS ONT RÉUSSI : ${testsPassed}/${testsPassed} PASSED`);
 console.log(`==============================================================\n`);
+

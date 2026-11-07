@@ -641,12 +641,13 @@ DEBUGTOOL.logFormat({ actor: "Paolo", hp: 120 }, "Acteur : %[actor], PV : %[hp]"
   - Suspension explicite via `SubSceneManager.suspend(subScene, resumeData)` : mémorise la classe constructeur, les arguments d'instanciation (`resumeArgs()`) et l'état contextuel (mode d'onglet, index).
   - Restauration automatique transparente au `start()` de `Scene_Map` via `SubSceneManager.resume(this)` avec consommation immédiate pour prévenir toute réinstanciation multiple.
   - Purge explicite sans effet de bord (`SubSceneManager.clear()`) lors des actions terminales (quitter, atterrissage, décollage, téléportation de carte).
-- **Intégration du Pupitre de Passerelle (`SC4_SubScene_Console.js`)** :
+- **Intégration du Pupitre de Passerelle (`SC4_SubScene_Console.js`) & Dialogue Social (`SC4_SubScene_RelationDialog.js`)** :
   - Le bouton "Navigation" suspend la console de commandement (`mode: 'main'`) avant d'ouvrir la carte spatiale (`Scene_SpaceTravel`).
   - Lorsque le joueur quitte la carte spatiale pour revenir sur la passerelle, la console se réouvre instantanément avec le vaisseau et le mode actifs.
-  - Les commandes d'atterrissage, de décollage ou de sortie purgent explicitement le manager.
+  - La sous-scène de dialogue social `SubScene_RelationDialog` intègre la persistance `resumeArgs()` (`[targetActorId, targetEventId]`) et la purge explicite `onCommandCancel()` avec clôture propre de session dans `RelationDialogManager`.
+  - Point d'entrée souverain `SubSceneManager.open(subSceneClass, ...args)` unifié pour les modules métiers (`RelationManager`, `SC4.openRelationDialog`, `SC4.openBridgeConsole`).
 - **Validation** :
-  - Test unitaire dédié : [`UNIT_TESTS/test_subscene_manager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_subscene_manager.js) (6/6 tests validés).
+  - Test unitaire dédié : [`UNIT_TESTS/test_subscene_manager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_subscene_manager.js) (9/9 tests validés).
 
 ---
 
