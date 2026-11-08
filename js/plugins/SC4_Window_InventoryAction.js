@@ -9,9 +9,7 @@
  * @help SC4_Window_InventoryAction.js
  */
 
-const _BaseWindowInvAct = typeof Window_Command !== "undefined" ? Window_Command : (typeof Window_Selectable !== "undefined" ? Window_Selectable : Object);
-
-class Window_InventoryAction extends _BaseWindowInvAct {
+class Window_InventoryAction extends Window_Command {
     constructor(rect) {
         super(rect);
         this._mode = "target"; // "target" ou "party"
@@ -71,9 +69,6 @@ class Window_InventoryAction extends _BaseWindowInvAct {
 }
 
 window.Window_InventoryAction = Window_InventoryAction;
-if (typeof global !== "undefined") {
-    global.Window_InventoryAction = Window_InventoryAction;
-}
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Window_InventoryAction };
+    module.exports = Window_InventoryAction;
 }

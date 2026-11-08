@@ -62,3 +62,6 @@ class Character_Hero extends Game_Character {
 }
 
 window.Character_Hero = Character_Hero;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Character_Hero;
+}

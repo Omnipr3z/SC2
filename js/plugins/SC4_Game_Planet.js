@@ -1,13 +1,13 @@
 //=============================================================================
-// RPG Maker MZ - SC4Space_Game_Planet
+// RPG Maker MZ - SC4_Game_Planet
 //=============================================================================
 /*:
  * @target MZ
  * @plugindesc [SC4 v1.0.0] Modèle d'astre céleste, physique orbitale et registre des POIs.
  * @author SimCraft
- * @base SC4Space_Game_POIs
+ * @base SC4_Game_POI
  * 
- * @help SC4Space_Game_Planet.js
+ * @help SC4_Game_Planet.js
  * 
  * ============================================================================
  * GAME_PLANET
@@ -294,13 +294,7 @@ class Game_Planet extends Game_GalacticRepoBase {
         return super.galaxy;
     }
 }
-
-if (typeof window !== "undefined") {
-    window.Game_Planet = Game_Planet;
-}
-if (typeof global !== "undefined") {
-    global.Game_Planet = Game_Planet;
-}
+window.Game_Planet = Game_Planet;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Game_Planet };
+    module.exports = Game_Planet;
 }

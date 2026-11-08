@@ -311,3 +311,6 @@ window.Sprite_FightGaugeAT = Sprite_FightGaugeAT;
 window.Sprite_FightGaugeHP = Sprite_FightGaugeHP;
 window.Sprite_FightGaugeMP = Sprite_FightGaugeMP;
 window.Spriteset_FightGauges = Spriteset_FightGauges;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = { Spriteset_FightGauges, Sprite_FightGaugeBase, Sprite_FightGaugeAT, Sprite_FightGaugeHP, Sprite_FightGaugeMP };
+}

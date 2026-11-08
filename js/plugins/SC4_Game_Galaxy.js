@@ -269,16 +269,7 @@ class Game_Galaxy extends Game_GalacticRepoBase {
     }
 }
 
-if (typeof window !== "undefined") {
-    window.Game_Galaxy = Game_Galaxy;
-    // Fournit l'instance globale par défaut si elle n'existe pas encore
-    if (!window.$gameGalaxy && typeof window.$dataSectors !== "undefined") {
-        window.$gameGalaxy = new Game_Galaxy();
-    }
-}
-if (typeof global !== "undefined") {
-    global.Game_Galaxy = Game_Galaxy;
-}
+window.Game_Galaxy = Game_Galaxy;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Game_Galaxy };
+    module.exports = Game_Galaxy;
 }

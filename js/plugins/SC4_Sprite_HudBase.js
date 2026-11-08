@@ -1,3 +1,21 @@
+//=============================================================================
+// RPG Maker MZ - SC4_Sprite_HudBase.js
+//=============================================================================
+
+/*:
+ * @target MZ
+ * @plugindesc [SC4 v1.0.0] Classe de base abstraite pour le rendu graphique des HUDs (Sprite_HudBase).
+ * @author SimCraft 4
+ *
+ * @help SC4_Sprite_HudBase.js
+ *
+ * Classe parente pour tous les éléments d'interface tête haute (HUD).
+ * Fournit les primitives graphiques universelles :
+ *  - Interpolation fluide des jauges (approach).
+ *  - Dessin des jauges (HP, MP, jauges personnalisées avec étiquettes localisées).
+ *  - Gestion des salissures de cache (dirty flags) et redessin optimisé.
+ */
+
 class Sprite_HudBase extends Sprite {
 
     constructor(data) {
@@ -211,3 +229,6 @@ class Sprite_HudBase extends Sprite {
 }
 
 window.Sprite_HudBase = Sprite_HudBase;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Sprite_HudBase;
+}

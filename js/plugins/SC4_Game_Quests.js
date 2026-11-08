@@ -184,9 +184,6 @@ class Game_Quests {
 // ============================================================================
 
 window.Game_Quests = Game_Quests;
-if (typeof global !== "undefined") {
-    global.Game_Quests = Game_Quests;
-}
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Game_Quests };
+    module.exports = Game_Quests;
 }

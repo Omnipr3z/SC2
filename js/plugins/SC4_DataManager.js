@@ -22,6 +22,7 @@ class SC_DataManager {
      * Charge les fichiers de base de données spécifiques à SimCraft.
      */
     static loadDatabase() {
+        this.loadLocalization();
         this.loadScDataFile("$dataInventories", "INVENTORIES.json");
         this.loadScDataFile("$dataTimeSystem", "TIME_SYSTEM.json");
         this.loadScDataFile("$dataShipMotors", "SHIP_MOTORS.json");
@@ -33,7 +34,17 @@ class SC_DataManager {
         this.loadScDataFile("$dataQuests_PHYSICAL", "QUESTS.json");
         this.loadScDataFile("$dataFactions_PHYSICAL", "FACTIONS.json");
         this.loadScDataFile("$dataShipCategories_PHYSICAL", "SHIP_CATEGORIES.json");
+        this.loadScDataFile("$dataTutos_PHYSICAL", "TUTOS.json");
         this.loadScDataFile("$dataSceSystem", "SCE_SYSTEM.json");
+    }
+
+    /**
+     * Charge et initialise les dictionnaires de localisation SimCraft.
+     */
+    static loadLocalization() {
+        if (typeof SC4_Localization !== "undefined" && typeof SC4_Localization.loadAll === "function") {
+            SC4_Localization.loadAll();
+        }
     }
 
     /**
@@ -117,6 +128,9 @@ class SC_DataManager {
         if (typeof Game_Quests !== "undefined") {
             window.$gameQuests = new Game_Quests();
         }
+        if (typeof QuestManager !== "undefined") {
+            window.$questManager = new QuestManager();
+        }
         if (typeof StoryManager !== "undefined") {
             window.$storyManager = new StoryManager();
         }
@@ -131,6 +145,12 @@ class SC_DataManager {
         }
         if (typeof RelationDialogManager !== "undefined") {
             window.$relationDialogManager = new RelationDialogManager();
+        }
+        if (typeof BattleAIManager !== "undefined") {
+            window.$battleAIManager = new BattleAIManager();
+        }
+        if (typeof TutoManager !== "undefined") {
+            window.$tutoManager = new TutoManager();
         }
     }
 
@@ -154,6 +174,9 @@ class SC_DataManager {
         if (window.$gameQuests && typeof window.$gameQuests.makeSavefileData === "function") {
             contents.sc_quests = window.$gameQuests.makeSavefileData();
         }
+        if (window.$questManager && typeof window.$questManager.makeSavefileData === "function") {
+            contents.sc_questManager = window.$questManager.makeSavefileData();
+        }
         if (window.$storyManager && typeof window.$storyManager.makeSavefileData === "function") {
             contents.sc_story = window.$storyManager.makeSavefileData();
         }
@@ -165,6 +188,9 @@ class SC_DataManager {
         }
         if (window.$relationManager && typeof window.$relationManager.makeSavefileData === "function") {
             contents.sc_relationManager = window.$relationManager.makeSavefileData();
+        }
+        if (window.$tutoManager && typeof window.$tutoManager.makeSavefileData === "function") {
+            contents.sc_tutos = window.$tutoManager.makeSavefileData();
         }
     }
 
@@ -188,6 +214,9 @@ class SC_DataManager {
         if (contents && contents.sc_quests && window.$gameQuests && typeof window.$gameQuests.loadSavefileData === "function") {
             window.$gameQuests.loadSavefileData(contents.sc_quests);
         }
+        if (contents && contents.sc_questManager && window.$questManager && typeof window.$questManager.loadSavefileData === "function") {
+            window.$questManager.loadSavefileData(contents.sc_questManager);
+        }
         if (contents && contents.sc_story && window.$storyManager && typeof window.$storyManager.loadSavefileData === "function") {
             window.$storyManager.loadSavefileData(contents.sc_story);
         }
@@ -200,6 +229,9 @@ class SC_DataManager {
         if (contents && contents.sc_relationManager && window.$relationManager && typeof window.$relationManager.loadSavefileData === "function") {
             window.$relationManager.loadSavefileData(contents.sc_relationManager);
         }
+        if (contents && contents.sc_tutos && window.$tutoManager && typeof window.$tutoManager.loadSavefileData === "function") {
+            window.$tutoManager.loadSavefileData(contents.sc_tutos);
+        }
     }
 }
 
@@ -209,40 +241,38 @@ class SC_DataManager {
 (() => {
     "use strict";
 
-    if (typeof DataManager !== "undefined") {
-        const _DataManager_loadDatabase = DataManager.loadDatabase;
-        DataManager.loadDatabase = function () {
-            _DataManager_loadDatabase.call(this);
-            SC_DataManager.loadDatabase();
-        };
 
-        const _DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
-        DataManager.isDatabaseLoaded = function () {
-            if (!_DataManager_isDatabaseLoaded.call(this)) {
-                return false;
-            }
-            return SC_DataManager.isDatabaseLoaded();
-        };
+    const _DataManager_loadDatabase = DataManager.loadDatabase;
+    DataManager.loadDatabase = function () {
+        _DataManager_loadDatabase.call(this);
+        SC_DataManager.loadDatabase();
+    };
+    const _DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
+    DataManager.isDatabaseLoaded = function () {
+        if (!_DataManager_isDatabaseLoaded.call(this)) {
+            return false;
+        }
+        return SC_DataManager.isDatabaseLoaded();
+    };
 
-        const _DataManager_createGameObjects = DataManager.createGameObjects;
-        DataManager.createGameObjects = function () {
-            _DataManager_createGameObjects.call(this);
-            SC_DataManager.createGameObjects();
-        };
+    const _DataManager_createGameObjects = DataManager.createGameObjects;
+    DataManager.createGameObjects = function () {
+        _DataManager_createGameObjects.call(this);
+        SC_DataManager.createGameObjects();
+    };
 
-        const _DataManager_makeSaveContents = DataManager.makeSaveContents;
-        DataManager.makeSaveContents = function () {
-            const contents = _DataManager_makeSaveContents.call(this);
-            SC_DataManager.makeSaveContents(contents);
-            return contents;
-        };
+    const _DataManager_makeSaveContents = DataManager.makeSaveContents;
+    DataManager.makeSaveContents = function () {
+        const contents = _DataManager_makeSaveContents.call(this);
+        SC_DataManager.makeSaveContents(contents);
+        return contents;
+    };
 
-        const _DataManager_extractSaveContents = DataManager.extractSaveContents;
-        DataManager.extractSaveContents = function (contents) {
-            _DataManager_extractSaveContents.call(this, contents);
-            SC_DataManager.extractSaveContents(contents);
-        };
-    }
+    const _DataManager_extractSaveContents = DataManager.extractSaveContents;
+    DataManager.extractSaveContents = function (contents) {
+        _DataManager_extractSaveContents.call(this, contents);
+        SC_DataManager.extractSaveContents(contents);
+    };
     DataManager.itemRawWeight = function (item) {
         if (!item) return 0;
         if (item.note) {
@@ -279,11 +309,7 @@ class SC_DataManager {
         return false;
     };
 
-    const _DataManager_loadDatabase = DataManager.loadDatabase;
-    DataManager.loadDatabase = function () {
-        _DataManager_loadDatabase.call(this);
-        SC4_Localization.loadAll();
-    };
+
 
     const _DataManager_onLoad = DataManager.onLoad;
     DataManager.onLoad = function (object) {
@@ -296,11 +322,8 @@ class SC_DataManager {
             }
         }
     };
-
-    if (typeof window !== "undefined") {
-        window.SC_DataManager = SC_DataManager;
-    }
-    if (typeof module !== "undefined") {
+    window.SC_DataManager = SC_DataManager;
+    if (typeof module !== "undefined" && module.exports) {
         module.exports = SC_DataManager;
     }
 })();

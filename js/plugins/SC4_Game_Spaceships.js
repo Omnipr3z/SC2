@@ -79,14 +79,7 @@ class Game_Spaceships {
         }
     }
 }
-if (typeof window !== "undefined") {
-    window.Game_Spaceships = Game_Spaceships;
-}
-
 window.Game_Spaceships = Game_Spaceships;
-if (typeof global !== "undefined") {
-    global.Game_Spaceships = Game_Spaceships;
-}
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Game_Spaceships };
+    module.exports = Game_Spaceships;
 }

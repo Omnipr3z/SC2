@@ -12,43 +12,7 @@
  * @help SC4_Scene_Inventory.js
  */
 
-// Fallback loader pour l'environnement Node.js
-if (typeof Window_InventoryCommand === "undefined") {
-    try {
-        const _getMod = (name) => {
-            if (typeof require === "function") return require(name);
-            if (typeof process !== "undefined" && process.mainModule && process.mainModule.require) return process.mainModule.require(name);
-            return null;
-        };
-        const _fs = _getMod('fs');
-        const _path = _getMod('path');
-        const _vm = _getMod('vm');
-        if (_fs && _path && _vm) {
-            let pluginsDir = _path.resolve('js/plugins');
-            if (!_fs.existsSync(pluginsDir) && typeof __dirname !== 'undefined') {
-                const candidate = _path.resolve(__dirname, '../js/plugins');
-                if (_fs.existsSync(candidate)) pluginsDir = candidate;
-            }
-            if (!_fs.existsSync(pluginsDir) && typeof process !== 'undefined') {
-                const candidate2 = _path.resolve(process.cwd(), 'js/plugins');
-                if (_fs.existsSync(candidate2)) pluginsDir = candidate2;
-            }
-            const files = [
-                'SC4_Window_InventoryCommand.js',
-                'SC4_Window_InventoryList.js',
-                'SC4_Window_InventoryAction.js'
-            ];
-            for (const f of files) {
-                const p = _path.join(pluginsDir, f);
-                if (_fs.existsSync(p)) _vm.runInThisContext(_fs.readFileSync(p, 'utf8'));
-            }
-        }
-    } catch (e) {}
-}
-
-const _BaseSceneInventory = typeof Scene_MenuBase !== "undefined" ? Scene_MenuBase : (typeof Scene_Base !== "undefined" ? Scene_Base : Object);
-
-class Scene_Inventory extends _BaseSceneInventory {
+class Scene_Inventory extends Scene_MenuBase {
     static prepare(inventoryId, options = {}) {
         this._preparedId = String(inventoryId).trim();
         this._preparedOptions = options;
@@ -560,9 +524,6 @@ class Scene_Inventory extends _BaseSceneInventory {
 }
 
 window.Scene_Inventory = Scene_Inventory;
-if (typeof global !== "undefined") {
-    global.Scene_Inventory = Scene_Inventory;
-}
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Scene_Inventory };
+    module.exports = Scene_Inventory;
 }

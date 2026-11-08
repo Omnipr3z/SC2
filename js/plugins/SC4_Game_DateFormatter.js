@@ -60,6 +60,7 @@ class Game_DateFormatter {
     }
 }
 
+window.Game_DateFormatter = Game_DateFormatter;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Game_DateFormatter };
+    module.exports = Game_DateFormatter;
 }

@@ -617,9 +617,6 @@ class Game_Spaceship {
 }
 
 window.Game_Spaceship = Game_Spaceship;
-if (typeof global !== "undefined") {
-    global.Game_Spaceship = Game_Spaceship;
-}
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Game_Spaceship };
+    module.exports = Game_Spaceship;
 }

@@ -11,6 +11,14 @@ console.log("==============================================================");
 
 // 1. Mocks de l'environnement RMMZ / SC4
 global.window = global;
+global.DataManager = {
+    loadDatabase: () => {},
+    isDatabaseLoaded: () => true,
+    createGameObjects: () => {},
+    makeSaveContents: () => ({}),
+    extractSaveContents: () => {},
+    onLoad: () => {}
+};
 global.$dataActors = [
     null,
     { id: 1, name: "Capitaine Harlock", meta: {} },

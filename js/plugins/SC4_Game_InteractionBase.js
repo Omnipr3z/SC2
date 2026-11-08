@@ -74,6 +74,7 @@ class Game_InteractionBase {
     }
 }
 
-if (typeof module !== "undefined") {
+window.Game_InteractionBase = Game_InteractionBase;
+if (typeof module !== "undefined" && module.exports) {
     module.exports = Game_InteractionBase;
 }

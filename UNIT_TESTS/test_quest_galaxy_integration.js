@@ -87,7 +87,7 @@ global.$dataQuests = mergeLoc(questsPhysical, questsFR);
 
 // Charger les classes spatiales
 require(path.join(baseDir, "js/plugins/SC4_Game_GalacticRepoBase.js"));
-require(path.join(baseDir, "js/plugins/SC4_Game_POIs.js"));
+require(path.join(baseDir, "js/plugins/SC4_Game_POI.js"));
 require(path.join(baseDir, "js/plugins/SC4_Game_Planet.js"));
 require(path.join(baseDir, "js/plugins/SC4_Game_PlanetarySystem.js"));
 require(path.join(baseDir, "js/plugins/SC4_Game_Sector.js"));

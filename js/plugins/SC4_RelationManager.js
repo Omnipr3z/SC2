@@ -401,6 +401,7 @@ class RelationManager {
 }
 
 
-if (typeof module !== "undefined") {
+window.RelationManager = RelationManager;
+if (typeof module !== "undefined" && module.exports) {
     module.exports = RelationManager;
 }

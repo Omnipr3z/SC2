@@ -54,8 +54,51 @@
 
     // SPRITESET MAP
     //=============================================================================
+    const _Spriteset_Map_initialize = Spriteset_Map.prototype.initialize;
+    const _Spriteset_Map_update = Spriteset_Map.prototype.update;
     const _Spriteset_Map_createParallax = Spriteset_Map.prototype.createParallax;
     const _Spriteset_Map_updateParallax = Spriteset_Map.prototype.updateParallax;
+
+    Spriteset_Map.prototype.initialize = function () {
+        this._projectileSprites = [];
+        _Spriteset_Map_initialize.call(this);
+    };
+    Spriteset_Map.prototype.update = function () {
+        if (window.$tutoManager && window.$tutoManager.isBusy()) {
+            return;
+        }
+        _Spriteset_Map_update.call(this);
+        this.updateProjectiles();
+    };
+    Spriteset_Map.prototype.updateProjectiles = function () {
+        this._projectileSprites = this._projectileSprites || [];
+        const activeProjectiles = (window.$fightManager && window.$fightManager.projectiles) ? window.$fightManager.projectiles() : [];
+
+        // 1. Instanciation des sprites pour les nouveaux projectiles
+        for (const proj of activeProjectiles) {
+            if (!proj._hasSprite) {
+                proj._hasSprite = true;
+                const sprite = new Sprite_Projectile(proj);
+                this._projectileSprites.push(sprite);
+                if (this._tilemap && typeof this._tilemap.addChild === "function") {
+                    this._tilemap.addChild(sprite);
+                } else if (typeof this.addChild === "function") {
+                    this.addChild(sprite);
+                }
+            }
+        }
+
+        // 2. Nettoyage des sprites des projectiles terminés
+        for (let i = this._projectileSprites.length - 1; i >= 0; i--) {
+            const s = this._projectileSprites[i];
+            if (!s._projectile || !s._projectile.isAlive) {
+                if (s.parent && typeof s.parent.removeChild === "function") {
+                    s.parent.removeChild(s);
+                }
+                this._projectileSprites.splice(i, 1);
+            }
+        }
+    };
 
     Spriteset_Map.prototype.createParallax = function () {
         _Spriteset_Map_createParallax.call(this);

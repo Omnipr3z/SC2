@@ -176,9 +176,6 @@ class Window_SpaceEventLog extends Window_Base {
 }
 
 window.Window_SpaceEventLog = Window_SpaceEventLog;
-if (typeof global !== 'undefined') {
-    global.Window_SpaceEventLog = Window_SpaceEventLog;
-}
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { Window_SpaceEventLog };
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Window_SpaceEventLog;
 }

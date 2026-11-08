@@ -103,16 +103,7 @@ class Game_Factions {
 }
 
 // Initialisation globale
-if (typeof window !== "undefined") {
-    window.Game_Factions = Game_Factions;
-    window.SC4_Game_Factions = Game_Factions;
-    window.$gameFactions = new Game_Factions();
-}
-if (typeof global !== "undefined") {
-    global.Game_Factions = Game_Factions;
-    global.SC4_Game_Factions = Game_Factions;
-    global.$gameFactions = new Game_Factions();
-}
+window.Game_Factions = Game_Factions;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Game_Factions };
+    module.exports = Game_Factions;
 }

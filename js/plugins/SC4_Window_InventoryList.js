@@ -9,9 +9,7 @@
  * @help SC4_Window_InventoryList.js
  */
 
-const _BaseWindowInvList = typeof Window_Selectable !== "undefined" ? Window_Selectable : (typeof Window_Base !== "undefined" ? Window_Base : Object);
-
-class Window_InventoryList extends _BaseWindowInvList {
+class Window_InventoryList extends Window_Selectable {
     /**
      * @param {Rectangle} rect 
      * @param {string} title 
@@ -227,9 +225,6 @@ class Window_InventoryList extends _BaseWindowInvList {
 // ============================================================================
 
 window.Window_InventoryList = Window_InventoryList;
-if (typeof global !== "undefined") {
-    global.Window_InventoryList = Window_InventoryList;
-}
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Window_InventoryList };
+    module.exports = Window_InventoryList;
 }

@@ -152,12 +152,8 @@ class Game_PlanetarySystem extends Game_GalacticRepoBase {
     }
 }
 
-if (typeof window !== "undefined") {
-    window.Game_PlanetarySystem = Game_PlanetarySystem;
-}
-if (typeof global !== "undefined") {
-    global.Game_PlanetarySystem = Game_PlanetarySystem;
-}
+window.Game_PlanetarySystem = Game_PlanetarySystem;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Game_PlanetarySystem };
+    module.exports = Game_PlanetarySystem;
 }
+

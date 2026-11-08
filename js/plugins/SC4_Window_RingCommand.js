@@ -553,3 +553,8 @@ Scene_Map.prototype.isTouchOnPlayer = function() {
     // Empreinte standard 48x48 centrée au pied
     return (tx >= px - 24 && tx <= px + 24 && ty >= py - 48 && ty <= py);
 };
+
+window.Window_RingCommand = Window_RingCommand;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Window_RingCommand;
+}

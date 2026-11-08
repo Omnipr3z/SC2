@@ -140,15 +140,8 @@ class SubSceneManager {
 
 SubSceneManager.init();
 
-if (typeof window !== "undefined") {
-    window.SubSceneManager = SubSceneManager;
-    window.SC4_SubSceneManager = SubSceneManager;
-}
-if (typeof global !== "undefined") {
-    global.SubSceneManager = SubSceneManager;
-    global.SC4_SubSceneManager = SubSceneManager;
-}
+window.SubSceneManager = SubSceneManager;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { SubSceneManager };
+    module.exports = SubSceneManager;
 }
 

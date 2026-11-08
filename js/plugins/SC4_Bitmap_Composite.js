@@ -431,3 +431,6 @@ class Bitmap_Composite {
 }
 
 window.Bitmap_Composite = Bitmap_Composite;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Bitmap_Composite;
+}

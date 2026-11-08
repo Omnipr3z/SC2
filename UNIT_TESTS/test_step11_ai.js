@@ -140,6 +140,11 @@ global.Input = { _pressed: {}, dir8: 0, dir4: 0, isPressed: () => false, isTrigg
 global.TouchInput = { clear() {}, isTriggered: () => false, isPressed: () => false, isRightPressed: () => false, x: 0, y: 0 };
 global.Utils = { isOptionValid() { return false; }, canPlayOgg() { return true; } };
 
+global.PluginManager = {
+    registerCommand() {},
+    parameters() { return {}; }
+};
+
 let gameOverTriggered = false;
 global.Scene_Gameover = class Scene_Gameover {};
 global.SceneManager = {
@@ -203,6 +208,7 @@ loadPlugin('js/plugins/SC4_Game_Hero.js');
 loadPlugin('js/plugins/SC4_Character_Hero.js');
 loadPlugin('js/plugins/SC4_Sprite_Hero.js');
 loadPlugin('js/plugins/SC4_FightManager.js');
+loadPlugin('js/plugins/SC4_BattleAIManager.js');
 loadPlugin('js/plugins/SC4_IAManager.js');
 loadPlugin('js/plugins/SC4_IA_Melee.js');
 loadPlugin('js/plugins/SC4_IA_Range.js');

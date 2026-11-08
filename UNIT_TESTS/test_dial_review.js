@@ -147,14 +147,13 @@ const vm = require('vm');
 const ROOT_DIR = path.resolve(__dirname, '..');
 [
     'js/plugins/SC4_Game_GalacticRepoBase.js',
-    'js/plugins/SC4_Game_POIs.js',
+    'js/plugins/SC4_Game_POI.js',
     'js/plugins/SC4_Game_Planet.js',
     'js/plugins/SC4_Game_PlanetarySystem.js',
     'js/plugins/SC4_Game_Sector.js',
     'js/plugins/SC4_Game_Galaxy.js',
     'js/plugins/SC4_Game_Spaceship.js',
     'js/plugins/SC4_Localization.js',
-    'js/plugins/SC4_SpaceTravel.js',
     'js/plugins/SC4_Scene_SectorTravel.js',
     'js/plugins/SC4_Scene_SpaceTravel.js',
     'js/plugins/SC4_Game_QuestLocation.js',

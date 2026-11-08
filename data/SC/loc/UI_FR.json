@@ -10,6 +10,7 @@
   },
   "options": {
     "language": "Langue",
+    "contextualHelp": "Aide contextuelle",
     "lang_fr": "Français",
     "lang_en": "English",
     "alwaysDash": "Toujours courir",

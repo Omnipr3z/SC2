@@ -185,9 +185,6 @@ class Game_QuestLocation {
 }
 
 window.Game_QuestLocation = Game_QuestLocation;
-if (typeof global !== "undefined") {
-    global.Game_QuestLocation = Game_QuestLocation;
-}
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Game_QuestLocation };
+    module.exports = Game_QuestLocation;
 }

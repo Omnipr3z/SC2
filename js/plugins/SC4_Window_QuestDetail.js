@@ -9,9 +9,7 @@
  * @help SC4_Window_QuestDetail.js
  */
 
-const _BaseWindowQuestDetail = typeof Window_Scrollable !== "undefined" ? Window_Scrollable : (typeof Window_Base !== "undefined" ? Window_Base : Object);
-
-class Window_QuestDetail extends _BaseWindowQuestDetail {
+class Window_QuestDetail extends Window_Scrollable {
     constructor(rect) {
         super(rect);
         this._quest = null;
@@ -462,9 +460,6 @@ class Window_QuestDetail extends _BaseWindowQuestDetail {
 }
 
 window.Window_QuestDetail = Window_QuestDetail;
-if (typeof global !== "undefined") {
-    global.Window_QuestDetail = Window_QuestDetail;
-}
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Window_QuestDetail };
+    module.exports = Window_QuestDetail;
 }

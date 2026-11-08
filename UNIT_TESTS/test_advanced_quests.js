@@ -164,7 +164,7 @@ const vm = require("vm");
 const pluginsDir = path.join(__dirname, "../js/plugins");
 [
     "SC4_Game_GalacticRepoBase.js",
-    "SC4_Game_POIs.js",
+    "SC4_Game_POI.js",
     "SC4_Game_Planet.js",
     "SC4_Game_PlanetarySystem.js",
     "SC4_Game_Sector.js",

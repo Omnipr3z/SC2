@@ -52,9 +52,11 @@
  * 7. Window_TitleCommand :
  *    - Personnalisation visuelle (transparence, police) et commandes SimCraft 4.
  * 
- * 8. Fenêtres personnalisées :
- *    - Window_ItemWeight : affichage de la jauge de charge d'inventaire.
- *    - Window_ItemAction : menu contextuel d'objet (utiliser, jeter 1, jeter tout).
+ * 8. Window_Message :
+ *    - Désactivation du dessin natif des visages (gérés par les HUDs dédiés).
+ * 
+ * 9. Window_ChoiceList :
+ *    - updatePlacement : alignement contextuel avec Window_BubbleMsg en mode bulle.
  * ============================================================================
  */
 
@@ -226,6 +228,7 @@ const titleFontFamily = resolveFontFace(titleFontFaceParam);
         this.addCommand(SC4_Localization.getText("options.language", "Langue"), "locale");
         this.addCommand("Clavier", "keyboardLayout");
         this.addCommand("Recharge auto", "autoReload");
+        this.addCommand(SC4_Localization.getText("options.contextualHelp", "Aide contextuelle"), "contextualHelp");
     };
     Window_Options.prototype.statusText = function (index) {
         const symbol = this.commandSymbol(index);
@@ -325,59 +328,26 @@ const titleFontFamily = resolveFontFace(titleFontFaceParam);
         this.addCommand(t("title.exit", "Quitter"), "exit", true);
     };
 
-    // WINDOW ITEM WEIGHT
+    // WINDOW MESSAGE
     //=============================================================================
-    class Window_ItemWeight extends Window_Base {
-        constructor(rect) {
-            super(rect);
-            this.refresh();
-        }
-        refresh() {
-            this.contents.clear();
-            const curWeight = $gameParty.totalWeight();
-            const maxWeight = $gameParty.maxWeight();
-            const isOverloaded = curWeight > maxWeight;
-            const label = LocalisationManager.getText("inventory.weight", "Poids");
-            const maxStr = (maxWeight === Infinity || isNaN(maxWeight)) ? "∞" : maxWeight;
-            const text = `${label}: ${curWeight}/${maxStr}`;
-            if (isOverloaded) {
-                this.changeTextColor("#ff4d4d");
-            } else {
-                this.changeTextColor(ColorManager.systemColor());
-            }
-            this.drawText(text, 0, 0, this.innerWidth, "center");
-            this.resetTextColor();
-        }
-    }
-    window.Window_ItemWeight = Window_ItemWeight;
+    Window_Message.prototype.checkToSeeIfFaceExists = function () {
+        return false;
+    };
+    Window_Message.prototype.drawMessageFace = function () {
+        // Désactivé : Les visages ne sont pas dessinés dans les messages mais gérés par les HUDs dédiés
+    };
 
-    // WINDOW ITEM ACTION
+    // WINDOW CHOICELIST
     //=============================================================================
-    class Window_ItemAction extends Window_Command {
-        constructor(rect) {
-            super(rect);
-            this.openness = 0;
-            this.deactivate();
-            this._item = null;
+    const _Window_ChoiceList_updatePlacement = Window_ChoiceList.prototype.updatePlacement;
+
+    Window_ChoiceList.prototype.updatePlacement = function () {
+        _Window_ChoiceList_updatePlacement.call(this);
+        if (this._messageWindow && this._messageWindow._isBubbleMode) {
+            const boxW = Graphics.boxWidth || 1280;
+            const idealX = this._messageWindow.x + Math.floor((this._messageWindow.width - this.width) / 2);
+            this.x = Math.max(8, Math.min(boxW - this.width - 8, idealX));
         }
-        setup(item) {
-            this._item = item;
-            this.refresh();
-            this.select(0);
-            this.open();
-            this.activate();
-        }
-        makeCommandList() {
-            const item = this._item;
-            const getTxt = (key, fallback) => LocalisationManager.getText(key, fallback);
-            if (item && $gameParty.canUse(item)) {
-                this.addCommand(getTxt("inventory.use", "Utiliser"), "use", true);
-            }
-            this.addCommand(getTxt("inventory.drop_one", "Jeter 1"), "drop_one", true);
-            this.addCommand(getTxt("inventory.drop_all", "Jeter Tout"), "drop_all", true);
-            this.addCommand(getTxt("inventory.cancel", "Annuler"), "cancel", true);
-        }
-    }
-    window.Window_ItemAction = Window_ItemAction;
+    };
 
 })();

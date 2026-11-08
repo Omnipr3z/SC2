@@ -1,3 +1,20 @@
+//=============================================================================
+// RPG Maker MZ - SC4_Sprite_ActorHUD.js
+//=============================================================================
+
+/*:
+ * @target MZ
+ * @plugindesc [SC4 v1.0.0] Classe intermédiaire de HUD dédiée aux acteurs et héros (Sprite_ActorHUD).
+ * @author SimCraft 4
+ *
+ * @help SC4_Sprite_ActorHUD.js
+ *
+ * Hérite de Sprite_HudBase. Spécialisée pour l'affichage des informations d'un acteur :
+ *  - Intégration du portrait dynamique (Faceset vanilla ou Paperdoll composite Hero).
+ *  - Cadre oratoire / prise de parole (_isSpeaking).
+ *  - Gestion de l'orientation gauche/droite (_dir: "left" | "right").
+ */
+
 class Sprite_ActorHUD extends Sprite_HudBase {
     constructor(data) {
         super(data);
@@ -162,3 +179,6 @@ class Sprite_ActorHUD extends Sprite_HudBase {
 }
 
 window.Sprite_ActorHUD = Sprite_ActorHUD;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Sprite_ActorHUD;
+}

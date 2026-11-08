@@ -651,6 +651,7 @@ window.SC4.toggleWeaponHud = function () {
     return false;
 };
 
+window.SC4 = SC4;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { SC4 };
+    module.exports = SC4;
 }

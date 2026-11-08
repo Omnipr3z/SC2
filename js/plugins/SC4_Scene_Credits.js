@@ -9,12 +9,7 @@
  * @help SC4_Scene_Credits.js
  */
 
-(() => {
-    "use strict";
-
-    const Scene_BaseClass = (typeof Scene_Base !== "undefined") ? Scene_Base : class { };
-
-    class Scene_Credits extends Scene_BaseClass {
+class Scene_Credits extends Scene_Base {
         create() {
             super.create();
             this._scrollTimer = 0;
@@ -103,4 +98,6 @@
     }
 
     window.Scene_Credits = Scene_Credits;
-})();
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = Scene_Credits;
+    }

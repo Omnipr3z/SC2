@@ -36,9 +36,7 @@
     "use strict";
 
     const pluginName = "DEBUGTOOL";
-    const rawParams = (typeof PluginManager !== "undefined" && PluginManager.parameters)
-        ? PluginManager.parameters(pluginName)
-        : {};
+    const rawParams = PluginManager.parameters(pluginName) || {};
 
     class DEBUGTOOL {
         static _enabled = rawParams["enabled"] !== undefined ? rawParams["enabled"] === "true" || rawParams["enabled"] === true : true;
@@ -90,7 +88,7 @@
                     const line = lines[i];
                     if (!line) continue;
                     if (line.includes("DEBUGTOOL.js") || line.includes("getCallerLocation")) continue;
-                    
+
                     // Match pattern "at ... (path/filename.js:line:col)" ou "at path/filename.js:line:col"
                     const match = line.match(/([a-zA-Z0-9_\-\.]+\.js):(\d+)(?::\d+)?\)?$/);
                     if (match) {
@@ -206,7 +204,8 @@
         }
     }
 
-    if (typeof window !== "undefined") window.DEBUGTOOL = DEBUGTOOL;
-    if (typeof global !== "undefined") global.DEBUGTOOL = DEBUGTOOL;
-    if (typeof module !== "undefined" && module.exports) module.exports = { DEBUGTOOL };
+    window.DEBUGTOOL = DEBUGTOOL;
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = DEBUGTOOL;
+    }
 })();

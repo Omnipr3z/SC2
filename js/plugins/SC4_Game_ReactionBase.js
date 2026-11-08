@@ -114,6 +114,7 @@ class Game_ReactionBase {
     }
 }
 
-if (typeof module !== "undefined") {
+window.Game_ReactionBase = Game_ReactionBase;
+if (typeof module !== "undefined" && module.exports) {
     module.exports = Game_ReactionBase;
 }

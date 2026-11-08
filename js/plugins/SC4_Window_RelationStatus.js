@@ -10,19 +10,7 @@
  * @help SC4_Window_RelationStatus.js
  */
 
-const _ParentWindowRelation = (typeof Window_Base !== "undefined")
-    ? Window_Base
-    : class {
-        constructor(rect) {
-            this.x = rect ? rect.x : 0;
-            this.y = rect ? rect.y : 0;
-            this.width = rect ? rect.width : 0;
-            this.height = rect ? rect.height : 0;
-            this.contents = { clear: () => {}, drawText: () => {}, fillRect: () => {} };
-        }
-    };
-
-class Window_RelationStatus extends _ParentWindowRelation {
+class Window_RelationStatus extends Window_Base {
     constructor(rect) {
         super(rect);
         this._relation = null;
@@ -129,9 +117,7 @@ class Window_RelationStatus extends _ParentWindowRelation {
     }
 }
 
-if (typeof window !== "undefined") {
-    window.Window_RelationStatus = Window_RelationStatus;
-}
-if (typeof module !== "undefined") {
+window.Window_RelationStatus = Window_RelationStatus;
+if (typeof module !== "undefined" && module.exports) {
     module.exports = Window_RelationStatus;
 }

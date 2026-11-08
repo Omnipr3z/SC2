@@ -9,9 +9,7 @@
  * @help SC4_Window_SpaceControls.js
  */
 
-const _BaseWindowControls = typeof Window_HorzCommand !== "undefined" ? Window_HorzCommand : (typeof Window_Command !== "undefined" ? Window_Command : (typeof Window_Base !== "undefined" ? Window_Base : Object));
-
-class Window_SpaceControls extends _BaseWindowControls {
+class Window_SpaceControls extends Window_HorzCommand {
     constructor(rect) {
         super(rect);
         this.opacity = 0;
@@ -47,9 +45,6 @@ class Window_SpaceControls extends _BaseWindowControls {
 }
 
 window.Window_SpaceControls = Window_SpaceControls;
-if (typeof global !== 'undefined') {
-    global.Window_SpaceControls = Window_SpaceControls;
-}
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { Window_SpaceControls };
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Window_SpaceControls;
 }

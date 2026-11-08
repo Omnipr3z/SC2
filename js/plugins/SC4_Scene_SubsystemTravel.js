@@ -384,9 +384,6 @@ class Scene_SubsystemTravel extends Scene_Base {
 }
 
 window.Scene_SubsystemTravel = Scene_SubsystemTravel;
-if (typeof global !== 'undefined') {
-    global.Scene_SubsystemTravel = Scene_SubsystemTravel;
-}
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { Scene_SubsystemTravel };
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Scene_SubsystemTravel;
 }

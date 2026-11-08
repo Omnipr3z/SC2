@@ -51,7 +51,9 @@
          * Instanciation de l'IA (IAManager / IA_Melee / IA_Range) selon les notetags actifs.
          */
         Game_Event.prototype.extractAiNotetags = function() {
-            if (typeof IAManager !== "undefined" && typeof IAManager.create === "function") {
+            if (window.$battleAIManager && typeof window.$battleAIManager.registerEnemy === "function") {
+                this._ai = window.$battleAIManager.registerEnemy(this);
+            } else if (typeof IAManager !== "undefined" && typeof IAManager.create === "function") {
                 this._ai = IAManager.create(this);
             }
         };

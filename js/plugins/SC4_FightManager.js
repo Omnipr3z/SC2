@@ -28,6 +28,74 @@ class FightManager {
         this._actorEvents = [];
         this._resultsHistory = [];
         this._lastResult = null;
+        this._projectiles = [];
+    }
+
+    spawnProjectile(options) {
+        this._projectiles = this._projectiles || [];
+        const proj = new Game_Projectile(options);
+        this._projectiles.push(proj);
+        return proj;
+    }
+
+    projectiles() {
+        this._projectiles = this._projectiles || [];
+        return this._projectiles;
+    }
+
+    updateProjectiles() {
+        if (!this._projectiles || this._projectiles.length === 0) return;
+        for (let i = this._projectiles.length - 1; i >= 0; i--) {
+            const proj = this._projectiles[i];
+            proj.update();
+            if (!proj.isAlive) {
+                this._projectiles.splice(i, 1);
+            }
+        }
+    }
+
+    clearProjectiles() {
+        this._projectiles = [];
+    }
+
+    /**
+     * Recherche un événement ennemi hostile sur ou à proximité de la case (x, y).
+     * @param {number} tileX 
+     * @param {number} tileY 
+     * @param {number} [realX] 
+     * @param {number} [realY] 
+     * @returns {Game_Event|null}
+     */
+    findHostileTargetAt(tileX, tileY, realX = null, realY = null) {
+        if (typeof $gameMap === "undefined" || !$gameMap) return null;
+
+        const isValidTarget = (ev) => {
+            if (!ev || ev._erased) return false;
+            const hostile = typeof ev.isHostile === "function" ? ev.isHostile() : false;
+            if (!hostile) return false;
+            const b = typeof ev.battler === "function" ? ev.battler() : null;
+            return b ? !b.isDead() : true;
+        };
+
+        // 1. Vérification directe sur la tuile exacte
+        const onTile = $gameMap.eventsXy(tileX, tileY).find(isValidTarget);
+        if (onTile) return onTile;
+
+        // 2. Si des coordonnées réelles continues sont fournies, détection de hitbox (rayon 0.6)
+        if (realX !== null && realY !== null) {
+            const events = (typeof this.actorEvents === "function") ? this.actorEvents() : $gameMap.events();
+            for (const ev of events) {
+                if (!isValidTarget(ev)) continue;
+                const evX = ev._realX !== undefined ? ev._realX : ev.x;
+                const evY = ev._realY !== undefined ? ev._realY : ev.y;
+                const dist = Math.hypot(evX - realX, evY - realY);
+                if (dist < 0.6) {
+                    return ev;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -143,7 +211,7 @@ class FightManager {
      * @param {Game_Event} targetEvent 
      * @returns {boolean}
      */
-    executeAttack(attackerChar, targetEvent) {
+    executeAttack(attackerChar, targetEvent, overrideSkillId = null) {
         const attackerActor = (typeof attackerChar.actor === "function" ? attackerChar.actor() : null) ||
             (typeof attackerChar.hero === "function" ? attackerChar.hero() : null) ||
             (typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null);
@@ -159,7 +227,7 @@ class FightManager {
         const targetActorId = (typeof targetEvent.actorId === "function" ? targetEvent.actorId() : targetEvent._actorId) || 0;
         console.log(`Event ${evId} actor ${targetActorId} hurted`);
 
-        const skillId = typeof attackerActor.attackSkillId === "function" ? attackerActor.attackSkillId() : 1;
+        const skillId = overrideSkillId || (typeof attackerActor.attackSkillId === "function" ? attackerActor.attackSkillId() : 1);
         const skill = (typeof $dataSkills !== "undefined" && $dataSkills) ? $dataSkills[skillId] : null;
 
         // 1. L'event fait face au player avec direction fixe
@@ -219,7 +287,9 @@ class FightManager {
         // 4. Réaction visuelle et physique de l'événement
         if (!isDead) {
             this.applyKnockback(attackerChar, targetEvent);
-            if (targetEvent._ai && typeof targetEvent._ai.onHurt === "function") {
+            if (window.$battleAIManager && typeof window.$battleAIManager.onEnemyHurt === "function") {
+                window.$battleAIManager.onEnemyHurt(targetEvent, attackerChar);
+            } else if (targetEvent._ai && typeof targetEvent._ai.onHurt === "function") {
                 targetEvent._ai.onHurt();
             }
             if (typeof targetEvent.playAction === "function") {
@@ -257,13 +327,16 @@ class FightManager {
                 }
             }
 
-            // SE de mort personnalisé
-            if (targetEvent._ai && typeof targetEvent._ai.playCustomSe === "function") {
-                targetEvent._ai.playCustomSe("death");
-            }
-
-            if (typeof IAManager !== "undefined" && typeof IAManager.checkBattleBgm === "function") {
-                IAManager.checkBattleBgm();
+            // Notification de mort personnalisée et mise à jour du combat
+            if (window.$battleAIManager && typeof window.$battleAIManager.onEnemyDeath === "function") {
+                window.$battleAIManager.onEnemyDeath(targetEvent, attackerChar);
+            } else {
+                if (targetEvent._ai && typeof targetEvent._ai.playCustomSe === "function") {
+                    targetEvent._ai.playCustomSe("death");
+                }
+                if (typeof IAManager !== "undefined" && typeof IAManager.checkBattleBgm === "function") {
+                    IAManager.checkBattleBgm();
+                }
             }
             const deathDirection = (typeof targetEvent.direction === "function") ? targetEvent.direction() : 2;
             targetEvent._deathDirection = deathDirection;
@@ -561,3 +634,6 @@ class FightManager {
 
 window.FightManager = FightManager;
 window.$fightManager = new FightManager();
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = FightManager;
+}

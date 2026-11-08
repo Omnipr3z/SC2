@@ -130,6 +130,7 @@ class RelationDialogManager {
     }
 }
 
-if (typeof module !== "undefined") {
+window.RelationDialogManager = RelationDialogManager;
+if (typeof module !== "undefined" && module.exports) {
     module.exports = RelationDialogManager;
 }

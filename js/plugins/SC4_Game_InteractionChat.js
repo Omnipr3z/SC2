@@ -14,15 +14,7 @@
  * et les modificateurs d'états psychologiques RMMZ.
  */
 
-const _InteractionBaseClass = (typeof Game_InteractionBase !== "undefined")
-    ? Game_InteractionBase
-    : (typeof require !== "undefined" ? require("./SC4_Game_InteractionBase") : Object);
-
-const _ReactionChatClass = (typeof Game_ReactionChat !== "undefined")
-    ? Game_ReactionChat
-    : (typeof require !== "undefined" ? require("./SC4_Game_ReactionChat") : null);
-
-class Game_InteractionChat extends _InteractionBaseClass {
+class Game_InteractionChat extends Game_InteractionBase {
     constructor(actorId1 = 0, actorId2 = 0) {
         super("chat", "Discuter", actorId1, actorId2, 3600);
     }
@@ -35,7 +27,7 @@ class Game_InteractionChat extends _InteractionBaseClass {
      * @returns {Game_ReactionChat}
      */
     calculateResult(relation, actor1, actor2) {
-        const ReactionClass = (typeof Game_ReactionChat !== "undefined") ? Game_ReactionChat : _ReactionChatClass;
+        const ReactionClass = Game_ReactionChat;
         if (!relation) {
             return ReactionClass.createNeutral(this._actorId2);
         }
@@ -99,6 +91,7 @@ class Game_InteractionChat extends _InteractionBaseClass {
     }
 }
 
-if (typeof module !== "undefined") {
+window.Game_InteractionChat = Game_InteractionChat;
+if (typeof module !== "undefined" && module.exports) {
     module.exports = Game_InteractionChat;
 }

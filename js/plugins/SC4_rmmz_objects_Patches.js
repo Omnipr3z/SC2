@@ -77,6 +77,58 @@
     const _Game_Actor_name = Game_Actor.prototype.name;
     const _Game_Actor_nickname = Game_Actor.prototype.nickname;
     const _Game_Actor_profile = Game_Actor.prototype.profile;
+    const _Game_Actor_setup = Game_Actor.prototype.setup;
+
+    Game_Actor.prototype.setup = function (actorId) {
+        _Game_Actor_setup.call(this, actorId);
+        this._weaponAmmo = this._weaponAmmo || {};
+    };
+    Game_Actor.prototype.gunfightWeapon = function () {
+        const weapons = (typeof this.weapons === "function") ? this.weapons() : [];
+        return weapons[0] || null;
+    };
+    Game_Actor.prototype.gunfightStats = function () {
+        const weapon = this.gunfightWeapon();
+        return GunfightManager.parseWeaponStats(weapon);
+    };
+    Game_Actor.prototype.getLoadedAmmo = function (weapon = null) {
+        const wp = weapon || this.gunfightWeapon();
+        if (!wp) return -1;
+        const stats = GunfightManager.parseWeaponStats(wp);
+        if (!stats.reload) return -1;
+
+        this._weaponAmmo = this._weaponAmmo || {};
+        if (this._weaponAmmo[wp.id] === undefined) {
+            this._weaponAmmo[wp.id] = stats.ammoCap;
+        }
+        return this._weaponAmmo[wp.id];
+    };
+    Game_Actor.prototype.setLoadedAmmo = function (weapon, count) {
+        const wp = weapon || this.gunfightWeapon();
+        if (!wp) return;
+        const stats = GunfightManager.parseWeaponStats(wp);
+        this._weaponAmmo = this._weaponAmmo || {};
+        this._weaponAmmo[wp.id] = Math.max(0, Math.min(stats.ammoCap, count));
+    };
+    Game_Actor.prototype.consumeLoadedAmmo = function (weapon, count = 1) {
+        const current = this.getLoadedAmmo(weapon);
+        if (current > 0) {
+            this.setLoadedAmmo(weapon, current - count);
+        }
+    };
+    Game_Actor.prototype.getReserveAmmo = function (weapon = null) {
+        const wp = weapon || this.gunfightWeapon();
+        if (!wp) return 0;
+        const stats = GunfightManager.parseWeaponStats(wp);
+        if (!stats.reload) return 999;
+        if (!stats.ammoId || stats.ammoId <= 0) return 999;
+
+        if (typeof $gameParty !== "undefined" && $gameParty && typeof $dataItems !== "undefined") {
+            const item = $dataItems[stats.ammoId];
+            return item ? $gameParty.numItems(item) : 0;
+        }
+        return 0;
+    };
 
     Game_Actor.prototype.attackSkillId = function () {
         const actorData = this.actor ? this.actor() : null;
@@ -287,6 +339,35 @@
     Game_Map.prototype.isSafeZone = function () {
         return !this.isCombatMode() && this.isNaturallySafe();
     }
+    Game_Map.prototype.isWater = function (x, y) {
+        if (!this.isValid(x, y)) return false;
+
+        // 1. Passage bateau ou navire natif RMMZ
+        if (typeof this.isBoatPassable === "function" && this.isBoatPassable(x, y)) return true;
+        if (typeof this.isShipPassable === "function" && this.isShipPassable(x, y)) return true;
+
+        // 2. Drapeaux 0x0200 (bateau) et 0x0400 (navire)
+        if (typeof this.checkPassage === "function") {
+            if (this.checkPassage(x, y, 0x0200) || this.checkPassage(x, y, 0x0400)) {
+                return true;
+            }
+        }
+
+        // 3. Détection des tuiles d'eau A1 via Tilemap
+        if (typeof Tilemap !== "undefined" && typeof this.layeredTiles === "function") {
+            const tiles = this.layeredTiles(x, y);
+            for (const tileId of tiles) {
+                if (typeof Tilemap.isWaterTile === "function" && Tilemap.isWaterTile(tileId)) {
+                    return true;
+                }
+                if (typeof Tilemap.isWaterfallTile === "function" && Tilemap.isWaterfallTile(tileId)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
     Game_Map.prototype.isCombatMode = function () {
         return Boolean(this._combatMode);
     }
@@ -327,12 +408,19 @@
         return _Game_Map_isDashDisabled ? _Game_Map_isDashDisabled.call(this) : (typeof $dataMap !== "undefined" && $dataMap ? Boolean($dataMap.disableDashing) : false);
     }
     Game_Map.prototype.update = function (sceneActive) {
+        if (window.$tutoManager && window.$tutoManager.isBusy()) {
+            return;
+        }
         if (_Game_Map_update) {
             _Game_Map_update.call(this, sceneActive);
         }
-        this.updateCombatMode();
-        if (typeof IAManager !== "undefined" && typeof IAManager.updateBgm === "function") {
-            IAManager.updateBgm();
+        if (window.$battleAIManager && typeof window.$battleAIManager.update === "function") {
+            window.$battleAIManager.update();
+        } else {
+            this.updateCombatMode();
+            if (typeof IAManager !== "undefined" && typeof IAManager.updateBgm === "function") {
+                IAManager.updateBgm();
+            }
         }
     }
     Game_Map.prototype.setup = function (mapId) {
@@ -356,7 +444,9 @@
         if (_Game_Map_setup) {
             _Game_Map_setup.call(this, mapId);
         }
-        if (typeof IAManager !== "undefined" && typeof IAManager.resetBgmState === "function") {
+        if (window.$battleAIManager && typeof window.$battleAIManager.onMapLoaded === "function") {
+            window.$battleAIManager.onMapLoaded(mapId);
+        } else if (typeof IAManager !== "undefined" && typeof IAManager.resetBgmState === "function") {
             IAManager.resetBgmState();
         }
     }
@@ -939,13 +1029,29 @@
 
     //GAME PLAYER
     //=============================================================================
+    const _Game_Player_initMembers = Game_Player.prototype.initMembers;
     const _Game_Player_distancePerFrame = Game_Player.prototype.distancePerFrame;
     const _Game_Player_canMove = Game_Player.prototype.canMove;
     const _Game_Player_triggerButtonAction = Game_Player.prototype.triggerButtonAction;
     const _Game_Player_isDashing = Game_Player.prototype.isDashing;
+    const _Game_Player_hasStepAnime = Game_Player.prototype.hasStepAnime;
     const _Game_Player_action = Game_Player.prototype.action;
     const _Game_Player_update = Game_Player.prototype.update;
+    const _Game_Player_updateScroll = Game_Player.prototype.updateScroll;
     const _Game_Player_moveByInput = Game_Player.prototype.moveByInput;
+
+    Game_Player.prototype.initMembers = function () {
+        if (_Game_Player_initMembers) {
+            _Game_Player_initMembers.call(this);
+        }
+        this._shootCooldown = 0;
+        this._isReloading = false;
+        this._reloadTimer = 0;
+        this._reloadMode = "";
+    };
+    Game_Player.prototype.actor = function () {
+        return (typeof $gameParty !== "undefined" && $gameParty) ? $gameParty.leader() : null;
+    };
 
     Game_Player.prototype.canAct = function () {
         if (typeof this.isBurstShooting === "function" && this.isBurstShooting() && this._shootCooldown <= 0) {
@@ -1304,28 +1410,163 @@
         // Mode visée (clic droit maintenu) & orientation vers le curseur
         return Boolean(TouchInput && TouchInput.isRightPressed && TouchInput.isRightPressed());
     }
-    Game_Player.prototype.isDashing = function () {
+    Game_Player.prototype.isReloading = function () {
+        return Boolean(this._isReloading);
+    }
+    Game_Player.prototype.startReload = function () {
+        if ($gameMap.isSafeZone()) {
+            DEBUGTOOL.log("🕊️ Rechargement impossible en zone sécurisée", "gunfight");
+            return;
+        }
+        const actor = this.actor ? this.actor() : $gameParty.leader();
+        if (!actor) return;
+        const weapon = actor.gunfightWeapon();
+        const stats = actor.gunfightStats();
 
+        if (!stats.reload) {
+            DEBUGTOOL.log(`ℹ️ L'arme "${stats.name}" n'utilise pas de système de recharge.`, "gunfight");
+            return;
+        }
+
+        const loaded = actor.getLoadedAmmo(weapon);
+        if (loaded >= stats.ammoCap) {
+            DEBUGTOOL.log(`ℹ️ Chargeur déjà plein (${loaded}/${stats.ammoCap})`, "gunfight");
+            return;
+        }
+
+        const reserve = actor.getReserveAmmo(weapon);
+        if (stats.ammoId > 0 && reserve <= 0) {
+            DEBUGTOOL.log(`❌ Recharge impossible : aucune munition en réserve dans l'inventaire (item ID ${stats.ammoId})`, "gunfight");
+            GunfightManager.playSe(stats.emptySe);
+            return;
+        }
+
+        DEBUGTOOL.log(`🔄 Début de la recharge - Mode: ${stats.reloadMode}, Actuel: ${loaded}/${stats.ammoCap}, Réserve: ${reserve}`, "gunfight");
+        this._isReloading = true;
+        this._reloadTimer = 0;
+        this._reloadMode = stats.reloadMode;
+    }
+    Game_Player.prototype.interruptReload = function () {
+        if (this._isReloading) {
+            DEBUGTOOL.log("⚠️ Rechargement interrompu !", "gunfight");
+            this._isReloading = false;
+            this._reloadTimer = 0;
+        }
+    }
+    Game_Player.prototype.updateReload = function () {
+        if (!this._isReloading) return;
+        const actor = this.actor ? this.actor() : $gameParty.leader();
+        if (!actor) {
+            this._isReloading = false;
+            return;
+        }
+        const weapon = actor.gunfightWeapon();
+        const stats = actor.gunfightStats();
+
+        if (this._reloadMode === "1by1") {
+            const rHeld = Input.isPressed("reload");
+            if (rHeld) {
+                this._reloadTimer++;
+                if (this._reloadTimer >= stats.rechargeTime) {
+                    if (stats.ammoId > 0 && typeof $gameParty !== "undefined") {
+                        $gameParty.loseItem($dataItems[stats.ammoId], 1);
+                    }
+                    const cur = actor.getLoadedAmmo(weapon);
+                    const next = cur + 1;
+                    actor.setLoadedAmmo(weapon, next);
+                    GunfightManager.playSe(stats.reloadSe);
+                    this._reloadTimer = 0;
+                    DEBUGTOOL.log(`➕ 1 balle chargée (${next}/${stats.ammoCap}), réserve restante: ${actor.getReserveAmmo(weapon)}`, "gunfight");
+
+                    if (next >= stats.ammoCap || actor.getReserveAmmo(weapon) <= 0) {
+                        DEBUGTOOL.log(`✅ Recharge 1by1 terminée (Chargeur plein ou réserve épuisée)`, "gunfight");
+                        this._isReloading = false;
+                    }
+                }
+            } else {
+                DEBUGTOOL.log(`⏹️ Touche R relâchée : arrêt de la recharge 1by1. Chargeur conservé à ${actor.getLoadedAmmo(weapon)}/${stats.ammoCap}`, "gunfight");
+                this._isReloading = false;
+                this._reloadTimer = 0;
+            }
+        } else {
+            this._reloadTimer++;
+            if (this._reloadTimer >= stats.rechargeTime) {
+                if (stats.ammoId > 0 && typeof $gameParty !== "undefined") {
+                    $gameParty.loseItem($dataItems[stats.ammoId], 1);
+                }
+                actor.setLoadedAmmo(weapon, stats.ammoCap);
+                GunfightManager.playSe(stats.reloadSe);
+                DEBUGTOOL.log(`✅ Chargeur plein complet rechargé (${stats.ammoCap}/${stats.ammoCap})`, "gunfight");
+                this._isReloading = false;
+                this._reloadTimer = 0;
+            }
+        }
+    }
+    Game_Player.prototype.isDashing = function () {
         if (this._pose && this._poseOptions && this._poseOptions.allowDash === false) {
             return false;
         }
-        // Étape 13.5 : Lorsque le clic droit est enfoncé, interdire la course (dash),
-        // même lors des déplacements avec les touches de mouvement (ZQSD/WASD)
+        if (this.isReloading()) return false;
         if (this.isAiming && this.isAiming()) {
             return false;
         }
         return _Game_Player_isDashing ? _Game_Player_isDashing.call(this) : false;
     }
+    Game_Player.prototype.hasStepAnime = function () {
+        if (this.isReloading()) return true;
+        return _Game_Player_hasStepAnime ? _Game_Player_hasStepAnime.call(this) : (this._stepAnime || false);
+    }
     Game_Player.prototype.action = function () {
-        // Étape 13.5 : Lorsque le clic droit est enfoncé (sans être en train d'attaquer),
-        // l'animation du personnage est 'guard' ([race]_[sex]_guard.png) au lieu de 'walk'
         if (this.isActing()) {
             return _Game_Player_action ? _Game_Player_action.call(this) : (this._action || "walk");
         }
+        if (this._pose) {
+            return this._pose;
+        }
+        if ($gameMap.isSafeZone()) {
+            const isDashing = this.isDashing();
+            const isMoving = this.isMoving();
+            return (isDashing && isMoving) ? "run" : "walk";
+        }
+
+        const actor = this.actor ? this.actor() : $gameParty.leader();
+        const stats = actor ? actor.gunfightStats() : null;
+
+        if (this.isReloading()) {
+            const actionName = (stats && (stats.reloadAction || stats.specialAnim)) ? (stats.reloadAction || stats.specialAnim) : "";
+            if (this.isMoving()) {
+                return actionName ? `walkreload_${actionName}` : "walkreload";
+            }
+            return actionName ? `reload_${actionName}` : "reload";
+        }
+
+        if (this.isBurstShooting && this.isBurstShooting()) {
+            if (this._lastShootAction) {
+                return this._lastShootAction;
+            }
+            if (stats && stats.specialAnim) {
+                return `shot_${stats.specialAnim}`;
+            }
+            return "shot";
+        }
+
         if (this.isAiming && this.isAiming()) {
+            if (stats && stats.specialAnim) {
+                return `guard_${stats.specialAnim}`;
+            }
             return "guard";
         }
-        return _Game_Player_action ? _Game_Player_action.call(this) : "walk";
+
+        if (stats && stats.specialAnim) {
+            const isDashing = this.isDashing();
+            const isMoving = this.isMoving();
+            if (isDashing && isMoving) {
+                return `run_${stats.specialAnim}`;
+            }
+            return `walk_${stats.specialAnim}`;
+        }
+
+        return _Game_Player_action ? _Game_Player_action.call(this) : (this.isDashing() ? "run" : "walk");
     }
     Game_Player.prototype.aimDirection = function () {
         if (!TouchInput) return this.direction();
@@ -1359,12 +1600,18 @@
         }
     }
     Game_Player.prototype.performAttack = function () {
-        /**
-         * Déclenche l'attaque du joueur :
-         * 1. Arrête immédiatement tout déplacement en cours.
-         * 2. Oriente le joueur vers la position visée au clic.
-         * 3. Délègue à playAction({ action: "atk", direction: dir }).
-         */
+        if ($gameMap.isSafeZone()) {
+            DEBUGTOOL.log("🕊️ Attaque impossible en zone sécurisée (armes rengainées)", "gunfight");
+            return false;
+        }
+        const actor = this.actor ? this.actor() : $gameParty.leader();
+        const stats = actor ? actor.gunfightStats() : null;
+
+        if (stats && stats.isRanged) {
+            DEBUGTOOL.log(`🎯 performAttack (coup par coup) délégué au tir à distance : "${stats.name}"`, "gunfight");
+            return this.performGunfightShoot();
+        }
+
         if (!this.canAttack()) {
             console.warn("[Combat] ⚠️ performAttack : canAttack() est faux !");
             return false;
@@ -1380,7 +1627,213 @@
         const dir = this.isAiming() ? this.aimDirection() : this.direction();
         return this.playAction({ action: "atk", direction: dir });
     }
+    Game_Player.prototype.performGunfightShoot = function () {
+        if ($gameMap.isSafeZone()) {
+            DEBUGTOOL.log("🕊️ Tir impossible en zone sécurisée (armes rengainées)", "gunfight");
+            return false;
+        }
+        const actor = this.actor ? this.actor() : $gameParty.leader();
+        if (!actor) {
+            DEBUGTOOL.log("⚠️ Aucun acteur actif trouvé pour effectuer le tir", "gunfight");
+            return false;
+        }
+        const weapon = actor.gunfightWeapon();
+        const stats = actor.gunfightStats();
+
+        if (!stats.isRanged) {
+            return this.performAttack();
+        }
+
+        // Vérifications d'interdiction
+        if (this._shootCooldown > 0) {
+            DEBUGTOOL.log(`⏳ Tir en cooldown (${this._shootCooldown} frames restantes)`, "gunfight");
+            return false;
+        }
+        if (this.isReloading()) {
+            DEBUGTOOL.log("⚠️ Tir impossible : rechargement en cours", "gunfight");
+            return false;
+        }
+        if (stats.heavy && this.isMoving()) {
+            DEBUGTOOL.log("⚠️ Tir impossible : arme lourde en mouvement", "gunfight");
+            return false;
+        }
+
+        // Arrêt immédiat de la destination
+        if (typeof $gameTemp !== "undefined" && $gameTemp.clearDestination) {
+            $gameTemp.clearDestination();
+        }
+
+        // Vérification des munitions
+        if (stats.reload) {
+            const loaded = actor.getLoadedAmmo(weapon);
+            if (loaded <= 0) {
+                if (typeof $gameTemp !== "undefined" && $gameTemp.clearDestination) {
+                    $gameTemp.clearDestination();
+                }
+                this._lastShootAction = null;
+                DEBUGTOOL.log(`⚠️ Tir à sec ! Chargeur vide (0/${stats.ammoCap})`, "gunfight");
+                GunfightManager.playSe(stats.outOfAmmo);
+                if (typeof ConfigManager !== "undefined" && ConfigManager.autoReload) {
+                    DEBUGTOOL.log("💡 Option B (Recharge auto) : déclenchement automatique", "gunfight");
+                    this.startReload();
+                }
+                return false;
+            }
+            actor.consumeLoadedAmmo(weapon, 1);
+            DEBUGTOOL.log(`💥 Pan ! Balle consommée. Reste ${actor.getLoadedAmmo(weapon)}/${stats.ammoCap}`, "gunfight");
+        } else {
+            DEBUGTOOL.log(`💥 Pan ! Tir sans munition requise (${stats.name})`, "gunfight");
+        }
+
+        // Réinitialisation du délai entre chaque tir
+        this._shootCooldown = stats.rateOfFire;
+
+        // Bruitage de détonation
+        GunfightManager.playSe(stats.shootSe);
+
+        // Orientation vers la cible
+        const aimDir = this.aimDirection ? this.aimDirection() : this.direction();
+        this.setDirection(aimDir);
+
+        // Déclenchement de l'action d'animation d'attaque
+        this.playAction({
+            skillId: stats.skillId,
+            direction: aimDir,
+            skipMelee: true
+        });
+        this._lastShootAction = this._action;
+
+        if (typeof this.adjustCenterScroll === "function") {
+            this.adjustCenterScroll();
+        }
+
+        // Création et projection de la balle / projectile
+        if (window.$fightManager && typeof window.$fightManager.spawnProjectile === "function") {
+            window.$fightManager.spawnProjectile({
+                attacker: this,
+                x: this.x,
+                y: this.y,
+                realX: this._realX !== undefined ? this._realX : this.x,
+                realY: this._realY !== undefined ? this._realY : this.y,
+                direction: aimDir,
+                range: stats.range,
+                speed: stats.projectileSpeed,
+                image: stats.projectileImg,
+                skillId: stats.skillId
+            });
+            DEBUGTOOL.log(`🚀 Projectile propulsé en direction ${aimDir} (vitesse: ${stats.projectileSpeed}px/f, portée: ${stats.range} cases)`, "gunfight");
+        }
+
+        return true;
+    }
+    Game_Player.prototype.isBurstShooting = function () {
+        if (!this.isAiming || !this.isAiming()) return false;
+        if (!TouchInput || !TouchInput.isPressed || !TouchInput.isPressed()) return false;
+        const actor = this.actor ? this.actor() : $gameParty.leader();
+        if (!actor) return false;
+        const stats = actor.gunfightStats ? actor.gunfightStats() : null;
+        if (!stats || !stats.isRanged || !stats.burst) return false;
+        if (this.isReloading && this.isReloading()) return false;
+        if (stats.reload) {
+            const weapon = actor.gunfightWeapon ? actor.gunfightWeapon() : null;
+            const loaded = actor.getLoadedAmmo ? actor.getLoadedAmmo(weapon) : 0;
+            if (loaded <= 0) return false;
+        }
+        return true;
+    }
+    Game_Player.prototype.adjustCenterScroll = function () {
+        if (typeof $gameMap === "undefined" || !$gameMap) return;
+        if (typeof $gameMap.isScrolling === "function" && $gameMap.isScrolling()) return;
+
+        const cx = this.centerX();
+        const cy = this.centerY();
+        const curX = this.scrolledX();
+        const curY = this.scrolledY();
+
+        const diffX = curX - cx;
+        const diffY = curY - cy;
+
+        if (Math.abs(diffX) > 0.005) {
+            if (diffX > 0) {
+                const maxDisplayX = $gameMap.isLoopHorizontal() ? Infinity : Math.max(0, $gameMap.width() - $gameMap.screenTileX());
+                const canScroll = $gameMap.isLoopHorizontal() ? diffX : Math.max(0, maxDisplayX - $gameMap._displayX);
+                const scrollAmt = Math.min(diffX, canScroll);
+                if (scrollAmt > 0.001) {
+                    const step = (this.isMoving && this.isMoving()) ? scrollAmt : Math.min(scrollAmt, Math.max(0.08, scrollAmt * 0.35));
+                    $gameMap.scrollRight(step);
+                }
+            } else {
+                const canScroll = $gameMap.isLoopHorizontal() ? -diffX : Math.max(0, $gameMap._displayX);
+                const scrollAmt = Math.min(-diffX, canScroll);
+                if (scrollAmt > 0.001) {
+                    const step = (this.isMoving && this.isMoving()) ? scrollAmt : Math.min(scrollAmt, Math.max(0.08, scrollAmt * 0.35));
+                    $gameMap.scrollLeft(step);
+                }
+            }
+        }
+
+        if (Math.abs(diffY) > 0.005) {
+            if (diffY > 0) {
+                const maxDisplayY = $gameMap.isLoopVertical() ? Infinity : Math.max(0, $gameMap.height() - $gameMap.screenTileY());
+                const canScroll = $gameMap.isLoopVertical() ? diffY : Math.max(0, maxDisplayY - $gameMap._displayY);
+                const scrollAmt = Math.min(diffY, canScroll);
+                if (scrollAmt > 0.001) {
+                    const step = (this.isMoving && this.isMoving()) ? scrollAmt : Math.min(scrollAmt, Math.max(0.08, scrollAmt * 0.35));
+                    $gameMap.scrollDown(step);
+                }
+            } else {
+                const canScroll = $gameMap.isLoopVertical() ? -diffY : Math.max(0, $gameMap._displayY);
+                const scrollAmt = Math.min(-diffY, canScroll);
+                if (scrollAmt > 0.001) {
+                    const step = (this.isMoving && this.isMoving()) ? scrollAmt : Math.min(scrollAmt, Math.max(0.08, scrollAmt * 0.35));
+                    $gameMap.scrollUp(step);
+                }
+            }
+        }
+    }
+    Game_Player.prototype.updateScroll = function (lastScrolledX, lastScrolledY) {
+        if (_Game_Player_updateScroll) {
+            _Game_Player_updateScroll.call(this, lastScrolledX, lastScrolledY);
+        }
+        this.adjustCenterScroll();
+    }
     Game_Player.prototype.update = function (sceneActive) {
+        if (this._shootCooldown > 0) {
+            this._shootCooldown--;
+        }
+
+        if (sceneActive) {
+            if (Input.isTriggered && Input.isTriggered("reload")) {
+                if (!this.isReloading()) {
+                    this.startReload();
+                }
+            }
+            if (this.isReloading()) {
+                this.updateReload();
+            }
+            if (this.isAiming && this.isAiming() && (this.canAttack() || (this.isBurstShooting && this.isBurstShooting()))) {
+                const actor = this.actor ? this.actor() : $gameParty.leader();
+                const stats = actor ? actor.gunfightStats() : null;
+
+                if (stats && stats.isRanged && stats.burst) {
+                    if (TouchInput && TouchInput.isPressed && TouchInput.isPressed() && this._shootCooldown <= 0) {
+                        this.performGunfightShoot();
+                    }
+                }
+            }
+            if (this._lastShootAction && !this.isActing()) {
+                if (!this.isBurstShooting || !this.isBurstShooting()) {
+                    this._action = "walk";
+                    this._lastShootAction = null;
+                    this._actionPattern = 0;
+                    this._actionTimer = 0;
+                    if (typeof this.resetPattern === "function") {
+                        this.resetPattern();
+                    }
+                }
+            }
+        }
+
         if (_Game_Player_update) {
             _Game_Player_update.call(this, sceneActive);
         }
@@ -1402,6 +1855,7 @@
         if (this._overloadAlertCooldown > 0) {
             this._overloadAlertCooldown--;
         }
+        this.adjustCenterScroll();
     }
     Game_Player.prototype.isAimActionTriggered = function () {
         return this.isAiming() && Boolean(TouchInput && TouchInput.isTriggered && TouchInput.isTriggered());
@@ -1412,6 +1866,18 @@
         }
     }
     Game_Player.prototype.moveByInput = function () {
+        const actor = this.actor ? this.actor() : $gameParty.leader();
+        const stats = actor ? actor.gunfightStats() : null;
+
+        if (stats) {
+            if (stats.snipe && this.isAiming && this.isAiming()) {
+                return;
+            }
+            if (this.isReloading() && !stats.reloadMove) {
+                return;
+            }
+        }
+
         if (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.isOverloaded === "function" && $gameParty.isOverloaded()) {
             if (this.isMoving()) return;
             const dir = (typeof this.getInputDirection === "function") ? this.getInputDirection() : 0;
@@ -1436,9 +1902,35 @@
 
     // GAME FOLLOWER
     // ========================================================================
+    const _Game_Follower_action = Game_Follower.prototype.action;
     const _Game_Follower_moveDiagonally = Game_Follower.prototype.moveDiagonally;
     const _Game_Follower_distancePerFrame = Game_Follower.prototype.distancePerFrame;
     const _Game_Follower_refresh = Game_Follower.prototype.refresh;
+
+    Game_Follower.prototype.action = function () {
+        if (this.isActing && this.isActing()) {
+            return _Game_Follower_action ? _Game_Follower_action.call(this) : (this._action || "walk");
+        }
+        if (this._pose) {
+            return this._pose;
+        }
+        if ($gameMap.isSafeZone()) {
+            const isDashing = this.isDashing();
+            const isMoving = this.isMoving();
+            return (isDashing && isMoving) ? "run" : "walk";
+        }
+        const actor = this.actor ? this.actor() : (this.hero ? this.hero() : null);
+        const stats = actor && typeof actor.gunfightStats === "function" ? actor.gunfightStats() : null;
+        if (stats && stats.specialAnim) {
+            const isDashing = this.isDashing();
+            const isMoving = this.isMoving();
+            if (isDashing && isMoving) {
+                return `run_${stats.specialAnim}`;
+            }
+            return `walk_${stats.specialAnim}`;
+        }
+        return _Game_Follower_action ? _Game_Follower_action.call(this) : (this.isDashing() ? "run" : "walk");
+    }
 
 
     Game_Follower.prototype.hero = function () {
@@ -1900,6 +2392,9 @@
         }
     }
     Game_Event.prototype.update = function () {
+        if (window.$tutoManager && window.$tutoManager.isBusy()) {
+            return;
+        }
         if (_Game_Event_update) {
             _Game_Event_update.call(this);
         }
@@ -1911,6 +2406,13 @@
     // GAME INTERPRETER
     // ========================================================================
     const _Game_Interpreter_updateWaitMode = Game_Interpreter.prototype.updateWaitMode;
+    const _Game_Interpreter_command101 = Game_Interpreter.prototype.command101;
+
+    Game_Interpreter.prototype.command101 = function (params) {
+        $gameMessage._speakerEventId = this._eventId;
+        $gameMessage._speakerIsPlayer = (this._eventId === 0);
+        return _Game_Interpreter_command101.call(this, params);
+    };
 
     Game_Interpreter.prototype.playAction = function (options = {}) {
         /**
@@ -2149,6 +2651,32 @@
         this.setHudVisible(newState);
         return newState;
     }
+    Game_System.prototype.isBubbleMessageMode = function () {
+        return Boolean(this._bubbleMessageMode);
+    }
+    Game_System.prototype.setBubbleMessageMode = function (enabled) {
+        this._bubbleMessageMode = Boolean(enabled);
+    }
+    Game_System.prototype.getBubbleConfig = function () {
+        this._bubbleConfig = this._bubbleConfig || {};
+        return this._bubbleConfig;
+    }
+    Game_System.prototype.setBubbleConfig = function (cfg) {
+        this._bubbleConfig = Object.assign(this.getBubbleConfig(), cfg || {});
+        if (cfg && cfg.enabled !== false) {
+            this._bubbleMessageMode = true;
+        }
+        if (cfg && cfg.fontFace && typeof Window_BubbleMsg !== "undefined") {
+            Window_BubbleMsg.resolveFontFace(cfg.fontFace);
+        }
+        if (cfg && cfg.windowskin) {
+            const skinName = cfg.windowskin.replace(/\.png$/i, "");
+            ImageManager.loadSystem(skinName);
+        }
+        if (cfg && cfg.target !== undefined) {
+            this.bubbleTarget = cfg.target;
+        }
+    }
     Game_System.prototype.isLandingAuthorized = function (id) {
         if (!this._landingAuthorizations) {
             this._landingAuthorizations = {};
@@ -2175,7 +2703,48 @@
             this._landingAuthorizations = {};
         }
         this._landingAuthorizations[id] = Boolean(authorized);
-    }
+    };
+
+    Game_System.prototype.isPoiLocated = function(poiId) {
+        if (!poiId) return true;
+        this._poiLocatedState = this._poiLocatedState || {};
+        if (this._poiLocatedState[poiId] !== undefined) {
+            return Boolean(this._poiLocatedState[poiId]);
+        }
+        const allPois = window.$dataPois || [];
+        const p = allPois.find(item => item && item.id === poiId);
+        if (p && p.located !== undefined) {
+            return Boolean(p.located);
+        }
+        return true;
+    };
+
+    Game_System.prototype.setPoiLocated = function(poiId, status = true) {
+        if (!poiId) return;
+        this._poiLocatedState = this._poiLocatedState || {};
+        this._poiLocatedState[poiId] = Boolean(status);
+        if (window.$questManager && typeof window.$questManager.update === "function") {
+            window.$questManager.update();
+        }
+    };
+
+    Game_System.prototype.isLandingAllowed = function(planetId) {
+        const pl = window.$gameGalaxy ? window.$gameGalaxy.getPlanet(planetId) : null;
+        return pl ? pl.isLandingAllowed() : false;
+    };
+
+    Game_System.prototype.addSpaceTravelLog = function(style, text) {
+        this._spaceTravelLogHistory = this._spaceTravelLogHistory || [];
+        this._spaceTravelLogHistory.push({ style: style || "info", text });
+        if (this._spaceTravelLogHistory.length > 50) {
+            this._spaceTravelLogHistory.shift();
+        }
+    };
+
+    Game_System.prototype.getSpaceTravelLogs = function() {
+        this._spaceTravelLogHistory = this._spaceTravelLogHistory || [];
+        return this._spaceTravelLogHistory;
+    };
 
 })();
 

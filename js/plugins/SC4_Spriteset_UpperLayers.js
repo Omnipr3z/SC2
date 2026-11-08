@@ -17,19 +17,7 @@
  * ============================================================================
  */
 
-(function () {
-    "use strict";
-
-    const ContainerBase = (typeof PIXI !== "undefined" && PIXI.Container) ? PIXI.Container : class {
-        constructor() {
-            this.children = [];
-            this.visible = true;
-        }
-        addChild(c) { this.children.push(c); return c; }
-        removeChildren() { this.children = []; }
-    };
-
-    class Spriteset_UpperLayers extends ContainerBase {
+class Spriteset_UpperLayers extends PIXI.Container {
         constructor(systemId) {
             super();
             this._currentSystemId = (systemId !== undefined) ? systemId : null;
@@ -129,12 +117,7 @@
     }
 
     // Export global
-    if (typeof window !== "undefined") {
-        window.Spriteset_UpperLayers = Spriteset_UpperLayers;
-        window.SC4_Spriteset_UpperLayers = Spriteset_UpperLayers;
+    window.Spriteset_UpperLayers = Spriteset_UpperLayers;
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = Spriteset_UpperLayers;
     }
-    if (typeof global !== "undefined") {
-        global.Spriteset_UpperLayers = Spriteset_UpperLayers;
-        global.SC4_Spriteset_UpperLayers = Spriteset_UpperLayers;
-    }
-})();

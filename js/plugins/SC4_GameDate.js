@@ -110,9 +110,9 @@ class Game_Date {
     }
 
     onTimeChanged() {
-        // Notification d'avancement temporel (extensible pour quêtes, météo, etc.)
-        if (window.$storyManager && typeof window.$storyManager.update === "function") {
-            window.$storyManager.update();
+        // Notification d'avancement temporel pour le gestionnaire de quêtes
+        if (window.$questManager && typeof window.$questManager.update === "function") {
+            window.$questManager.update();
         }
     }
 
@@ -238,23 +238,9 @@ class Game_DateFormatter {
     }
 }
 
-// ============================================================================
-// Hooks RMMZ pour le déroulement continu du temps
-// ============================================================================
-(() => {
-    "use strict";
+window.Game_Date = Game_Date;
+window.Game_DateFormatter = Game_DateFormatter;
 
-    const pluginName = "SC4_GameDate";
-    const parameters = PluginManager.parameters(pluginName);
-    const enableMapTicks = parameters["enableMapTicks"] !== "false";
-
-    // Écoulement du temps sur Scene_Map
-    const _Scene_Map_update = Scene_Map.prototype.update;
-    Scene_Map.prototype.update = function() {
-        _Scene_Map_update.call(this);
-        if (enableMapTicks && window.$gameDate) {
-            window.$gameDate.passTick();
-        }
-    };
-
-})();
+window.SC4 = window.SC4 || {};
+const _gameDateParams = PluginManager.parameters("SC4_GameDate");
+SC4._enableMapTicks = _gameDateParams["enableMapTicks"] !== "false";

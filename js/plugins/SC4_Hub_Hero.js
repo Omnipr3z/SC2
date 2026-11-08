@@ -175,3 +175,6 @@ class Hub_Hero {
 
 window.Hub_Hero = Hub_Hero;
 window.$heroHub = new Hub_Hero();
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Hub_Hero;
+}

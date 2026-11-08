@@ -89,14 +89,7 @@ class Game_Faction {
     }
 }
 
-if (typeof window !== "undefined") {
-    window.Game_Faction = Game_Faction;
-    window.SC4_Game_Faction = Game_Faction;
-}
-if (typeof global !== "undefined") {
-    global.Game_Faction = Game_Faction;
-    global.SC4_Game_Faction = Game_Faction;
-}
+window.Game_Faction = Game_Faction;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Game_Faction };
+    module.exports = Game_Faction;
 }

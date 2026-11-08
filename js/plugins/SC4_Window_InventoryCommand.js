@@ -9,9 +9,7 @@
  * @help SC4_Window_InventoryCommand.js
  */
 
-const _BaseWindowInvCmd = typeof Window_HorzCommand !== "undefined" ? Window_HorzCommand : (typeof Window_Command !== "undefined" ? Window_Command : (typeof Window_Base !== "undefined" ? Window_Base : Object));
-
-class Window_InventoryCommand extends _BaseWindowInvCmd {
+class Window_InventoryCommand extends Window_HorzCommand {
     constructor(rect) {
         super(rect);
         this._targetInventory = null;
@@ -81,12 +79,7 @@ class Window_InventoryCommand extends _BaseWindowInvCmd {
     }
 }
 
-if (typeof window !== "undefined") {
-    window.Window_InventoryCommand = Window_InventoryCommand;
-}
-if (typeof global !== "undefined") {
-    global.Window_InventoryCommand = Window_InventoryCommand;
-}
+window.Window_InventoryCommand = Window_InventoryCommand;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Window_InventoryCommand };
+    module.exports = Window_InventoryCommand;
 }

@@ -17,10 +17,7 @@
  * ============================================================================
  */
 
-(function () {
-    "use strict";
-
-    class Sprite_ParallaxesUpperLayer extends Sprite {
+class Sprite_ParallaxesUpperLayer extends Sprite {
         constructor() {
             super();
             this.anchor.x = 0.5;
@@ -71,12 +68,7 @@
     }
 
     // Export global
-    if (typeof window !== "undefined") {
-        window.Sprite_ParallaxesUpperLayer = Sprite_ParallaxesUpperLayer;
-        window.SC4_Sprite_ParallaxesUpperLayer = Sprite_ParallaxesUpperLayer;
+    window.Sprite_ParallaxesUpperLayer = Sprite_ParallaxesUpperLayer;
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = Sprite_ParallaxesUpperLayer;
     }
-    if (typeof global !== "undefined") {
-        global.Sprite_ParallaxesUpperLayer = Sprite_ParallaxesUpperLayer;
-        global.SC4_Sprite_ParallaxesUpperLayer = Sprite_ParallaxesUpperLayer;
-    }
-})();

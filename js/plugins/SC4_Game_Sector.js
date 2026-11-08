@@ -161,12 +161,7 @@ class Game_Sector extends Game_GalacticRepoBase {
     }
 }
 
-if (typeof window !== "undefined") {
-    window.Game_Sector = Game_Sector;
-}
-if (typeof global !== "undefined") {
-    global.Game_Sector = Game_Sector;
-}
+window.Game_Sector = Game_Sector;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Game_Sector };
+    module.exports = Game_Sector;
 }

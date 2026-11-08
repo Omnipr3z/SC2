@@ -16,23 +16,7 @@
  *   SceneManager.push(Scene_MenuRelations);
  */
 
-(function () {
-    "use strict";
-
-    const BaseScene = (typeof Scene_MenuBase !== "undefined")
-        ? Scene_MenuBase
-        : class {
-            constructor() { this._windowLayer = null; }
-            create() {}
-            start() {}
-            update() {}
-            stop() {}
-            terminate() {}
-            addWindow(w) {}
-            popScene() {}
-        };
-
-    class Scene_MenuRelations extends BaseScene {
+class Scene_MenuRelations extends Scene_MenuBase {
         create() {
             super.create();
             this.createHelpWindow();
@@ -117,10 +101,7 @@
         }
     }
 
-    if (typeof window !== "undefined") {
-        window.Scene_MenuRelations = Scene_MenuRelations;
-    }
-    if (typeof module !== "undefined") {
+    window.Scene_MenuRelations = Scene_MenuRelations;
+    if (typeof module !== "undefined" && module.exports) {
         module.exports = Scene_MenuRelations;
     }
-})();

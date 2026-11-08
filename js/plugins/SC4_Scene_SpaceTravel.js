@@ -611,9 +611,6 @@ class Scene_SpaceTravel extends Scene_Base {
 }
 
 window.Scene_SpaceTravel = Scene_SpaceTravel;
-if (typeof global !== 'undefined') {
-    global.Scene_SpaceTravel = Scene_SpaceTravel;
-}
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { Scene_SpaceTravel };
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Scene_SpaceTravel;
 }

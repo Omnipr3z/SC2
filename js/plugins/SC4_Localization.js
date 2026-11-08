@@ -52,6 +52,9 @@ class SC4_Localization {
                 if (!p.isAbsolute(fullPath)) {
                     fullPath = p.resolve(fullPath);
                 }
+                if (!fs.existsSync(fullPath) && fs.existsSync(p.join(process.cwd(), "SC4", filePath))) {
+                    fullPath = p.join(process.cwd(), "SC4", filePath);
+                }
                 if (fs.existsSync(fullPath)) {
                     return JSON.parse(fs.readFileSync(fullPath, "utf8"));
                 }
@@ -159,7 +162,8 @@ class SC4_Localization {
             pois: this.readJsonSync(`data/SC/loc/POIS_${upper}.json`),
             quests: this.readJsonSync(`data/SC/loc/QUESTS_${upper}.json`),
             factions: this.readJsonSync(`data/SC/loc/FACTIONS_${upper}.json`),
-            shipCategories: this.readJsonSync(`data/SC/loc/SHIP_CATEGORIES_${upper}.json`)
+            shipCategories: this.readJsonSync(`data/SC/loc/SHIP_CATEGORIES_${upper}.json`),
+            tutos: this.readJsonSync(`data/SC/loc/TUTOS_${upper}.json`)
         };
     }
 
@@ -303,6 +307,21 @@ class SC4_Localization {
             });
             return res;
         }
+
+        if (type === "tutos") {
+            const rawPhys = window.$dataTutos_PHYSICAL || window.$dataTutos || [];
+            const locTutos = loc.tutos || {};
+            const res = [null];
+            rawPhys.forEach(t => {
+                if (!t || typeof t !== "object") return;
+                const txt = (locTutos[t.key] !== undefined) ? locTutos[t.key] : (t.txt || "");
+                res.push({
+                    ...t,
+                    txt: txt
+                });
+            });
+            return res;
+        }
         return [];
     }
 
@@ -348,6 +367,12 @@ class SC4_Localization {
             window.$dataShipCategories_EN = this.buildLocalizedData("shipCategories", "EN");
             window.$dataShipCategories = targetLocale === "EN" ? window.$dataShipCategories_EN : window.$dataShipCategories_FR;
         }
+
+        if (window.$dataTutos_PHYSICAL || window.$dataTutos) {
+            window.$dataTutos_FR = this.buildLocalizedData("tutos", "FR");
+            window.$dataTutos_EN = this.buildLocalizedData("tutos", "EN");
+            window.$dataTutos = targetLocale === "EN" ? window.$dataTutos_EN : window.$dataTutos_FR;
+        }
     }
 
     /**
@@ -363,6 +388,9 @@ class SC4_Localization {
      * @returns {boolean}
      */
     static isLoaded() {
+        if (!this._dictionaries["FR"] || !this._dictionaries["EN"]) {
+            this.loadAll();
+        }
         return Boolean(this._dictionaries["FR"] && this._dictionaries["EN"]);
     }
 
@@ -516,10 +544,6 @@ window.SC4_Localization = SC4_Localization;
 window.SC4 = window.SC4 || {};
 window.SC4.Localization = SC4_Localization;
 
-// ============================================================================
-// 1. Initialisation et chargement des données
-// ============================================================================
-(() => {
-    "use strict";
-    SC4_Localization.loadAll();
-})();
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = SC4_Localization;
+}

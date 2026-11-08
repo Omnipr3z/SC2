@@ -12,9 +12,7 @@
  * Conforme au standard d'architecture 5 sections SimCraft.
  */
 
-const _BaseWindowBridgeConsole = typeof Window_Command !== "undefined" ? Window_Command : (typeof Window_Base !== "undefined" ? Window_Base : Object);
-
-class Window_BridgeConsole extends _BaseWindowBridgeConsole {
+class Window_BridgeConsole extends Window_Command {
     /**
      * @param {Rectangle} [rect]
      */
@@ -556,13 +554,7 @@ if (typeof Game_Player !== "undefined") {
     };
 }
 
-// Export universel
-if (typeof window !== "undefined") {
-    window.Window_BridgeConsole = Window_BridgeConsole;
-}
-if (typeof global !== "undefined") {
-    global.Window_BridgeConsole = Window_BridgeConsole;
-}
+window.Window_BridgeConsole = Window_BridgeConsole;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Window_BridgeConsole };
+    module.exports = Window_BridgeConsole;
 }

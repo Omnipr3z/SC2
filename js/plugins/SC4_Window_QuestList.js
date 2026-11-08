@@ -9,9 +9,7 @@
  * @help SC4_Window_QuestList.js
  */
 
-const _BaseWindowQuestList = typeof Window_Selectable !== "undefined" ? Window_Selectable : (typeof Window_Base !== "undefined" ? Window_Base : Object);
-
-class Window_QuestList extends _BaseWindowQuestList {
+class Window_QuestList extends Window_Selectable {
     constructor(rect) {
         super(rect);
         this._filter = "active";
@@ -241,9 +239,6 @@ class Window_QuestList extends _BaseWindowQuestList {
 }
 
 window.Window_QuestList = Window_QuestList;
-if (typeof global !== "undefined") {
-    global.Window_QuestList = Window_QuestList;
-}
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Window_QuestList };
+    module.exports = Window_QuestList;
 }

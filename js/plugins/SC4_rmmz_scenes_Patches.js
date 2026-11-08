@@ -83,6 +83,19 @@
 (() => {
     "use strict";
 
+    // SCENE BOOT
+    //=============================================================================
+    const _Scene_Boot_loadCustomFonts = Scene_Boot.prototype.loadCustomFonts;
+
+    Scene_Boot.prototype.loadCustomFonts = function () {
+        if (_Scene_Boot_loadCustomFonts) {
+            _Scene_Boot_loadCustomFonts.call(this);
+        }
+        if (typeof Window_BubbleMsg !== "undefined" && Window_BubbleMsg.preloadConfiguredFonts) {
+            Window_BubbleMsg.preloadConfiguredFonts();
+        }
+    };
+
     // SCENE TITLE
     //=============================================================================
     const _Scene_Title_initialize = Scene_Title.prototype.initialize;
@@ -478,14 +491,28 @@
         SceneManager.exit();
     };
 
+    // SCENE MESSAGE
+    //=============================================================================
+    const _Scene_Message_createMessageWindow = Scene_Message.prototype.createMessageWindow;
+
+    Scene_Message.prototype.createMessageWindow = function () {
+        const rect = this.messageWindowRect();
+        this._messageWindow = new Window_BubbleMsg(rect);
+        this.addWindow(this._messageWindow);
+    };
+
     // SCENE MAP
     //=============================================================================
     const _Scene_Map_onMapTouch = Scene_Map.prototype.onMapTouch;
     const _Scene_Map_start = Scene_Map.prototype.start;
     const _Scene_Map_update = Scene_Map.prototype.update;
+    const _Scene_Map_updateMain = Scene_Map.prototype.updateMain;
     const _Scene_Map_createDisplayObjects = Scene_Map.prototype.createDisplayObjects;
+    const _Scene_Map_createAllWindows = Scene_Map.prototype.createAllWindows;
     const _Scene_Map_processMapTouch = Scene_Map.prototype.processMapTouch;
     const _Scene_Map_isMenuEnabled = Scene_Map.prototype.isMenuEnabled;
+    const _Scene_Map_isPlayerActive = Scene_Map.prototype.isPlayerActive;
+    const _Scene_Map_terminate = Scene_Map.prototype.terminate;
 
     Scene_Map.prototype.start = function () {
         _Scene_Map_start.call(this);
@@ -508,44 +535,83 @@
     };
     Scene_Map.prototype.update = function () {
         _Scene_Map_update.call(this);
-        const time = $gameDate.timestamp;
 
-        if ($gamePlayer) {
-            if (typeof $gamePlayer.adjustCenterScroll === "function") {
-                $gamePlayer.adjustCenterScroll();
+        const isTutoBusy = Boolean(window.$tutoManager && window.$tutoManager.isBusy());
+
+        if (!isTutoBusy) {
+            if (window.$gameDate && (!window.SC4 || window.SC4._enableMapTicks !== false)) {
+                window.$gameDate.passTick();
             }
-            if (typeof $gamePlayer.isAiming === "function" && $gamePlayer.isAiming()) {
-                if ($gameTemp && typeof $gameTemp.isDestinationValid === "function" && $gameTemp.isDestinationValid()) {
-                    $gameTemp.clearDestination();
+            if (window.$systemMapManager) {
+                window.$systemMapManager.update(true);
+            }
+            const time = $gameDate.timestamp;
+
+            if ($gamePlayer) {
+                if (typeof $gamePlayer.adjustCenterScroll === "function") {
+                    $gamePlayer.adjustCenterScroll();
+                }
+                if (typeof $gamePlayer.isAiming === "function" && $gamePlayer.isAiming()) {
+                    if ($gameTemp && typeof $gameTemp.isDestinationValid === "function" && $gameTemp.isDestinationValid()) {
+                        $gameTemp.clearDestination();
+                    }
+                }
+                if (this._currentSubScene && this._currentSubScene.isActive()) {
+                    this._currentSubScene.update();
+                }
+                $relationManager.updateTick(time);
+            }
+
+            const isActive = this.isActive();
+            const isSceneChanging = SceneManager.isSceneChanging();
+            if (isActive && !isSceneChanging && Input.isTriggered("inventory")) {
+                if (!$gameMap.isEventRunning() && $gameParty.leader()) {
+                    const targetId = "A_" + $gameParty.leader().actorId();
+                    SoundManager.playOk();
+                    if (typeof $inventories !== "undefined" && $inventories) {
+                        $inventories.open(targetId);
+                    } else {
+                        Scene_Inventory.prepare(targetId);
+                        SceneManager.push(Scene_Inventory);
+                    }
                 }
             }
-            if (this._currentSubScene && this._currentSubScene.isActive()) {
-                this._currentSubScene.update();
+            if (isActive && !isSceneChanging && Input.isTriggered("toggleHud")) {
+                $gameSystem.toggleHud();
             }
-            $relationManager.updateTick(time);
+            if (window.$fightManager && typeof window.$fightManager.updateProjectiles === "function") {
+                window.$fightManager.updateProjectiles();
+            }
         }
+    };
+    Scene_Map.prototype.updateMain = function () {
+        if (window.$tutoManager && window.$tutoManager.isBusy()) {
+            return;
+        }
+        _Scene_Map_updateMain.call(this);
+    };
+    Scene_Map.prototype.createAllWindows = function () {
+        _Scene_Map_createAllWindows.call(this);
+        this.createTutoWindow();
+    };
+    Scene_Map.prototype.createTutoWindow = function () {
+        if (typeof Window_Tuto !== "undefined" && !this._tutoWindow) {
+            if (typeof Sprite_TutoArrow !== "undefined" && !this._tutoArrowSprite) {
+                this._tutoArrowSprite = new Sprite_TutoArrow();
+                this.addChild(this._tutoArrowSprite);
+            }
+            this._tutoWindow = new Window_Tuto(this._tutoArrowSprite);
+            this.addWindow(this._tutoWindow);
 
-        const isActive = this.isActive();
-        const isSceneChanging = SceneManager.isSceneChanging();
-        if (isActive && !isSceneChanging && Input.isTriggered("inventory")) {
-            if (!$gameMap.isEventRunning() && $gameParty.leader()) {
-                const targetId = "A_" + $gameParty.leader().actorId();
-                SoundManager.playOk();
-                if (typeof $inventories !== "undefined" && $inventories) {
-                    $inventories.open(targetId);
-                } else {
-                    Scene_Inventory.prepare(targetId);
-                    SceneManager.push(Scene_Inventory);
-                }
+            if (window.$tutoManager && window.$tutoManager.currentTuto()) {
+                this._tutoWindow.openTuto(window.$tutoManager.currentTuto());
             }
-        }
-        if (isActive && !isSceneChanging && Input.isTriggered("toggleHud")) {
-            $gameSystem.toggleHud();
         }
     };
     Scene_Map.prototype.createDisplayObjects = function () {
         _Scene_Map_createDisplayObjects.call(this);
         this.createPlayerHud();
+        this.createWeaponHud();
     };
     Scene_Map.prototype.createPlayerHud = function () {
         if (typeof Sprite_PlayerHUD !== "undefined") {
@@ -554,6 +620,18 @@
         }
         this._interlocutorHud = new Sprite_InterlocutorHUD();
         this.addChild(this._interlocutorHud);
+    };
+    Scene_Map.prototype.createWeaponHud = function () {
+        if (!this._weaponHud && typeof Sprite_WeaponHUD !== "undefined") {
+            this._weaponHud = new Sprite_WeaponHUD();
+            this.addChild(this._weaponHud);
+        }
+    };
+    Scene_Map.prototype.terminate = function () {
+        if (window.$fightManager && typeof window.$fightManager.clearProjectiles === "function") {
+            window.$fightManager.clearProjectiles();
+        }
+        _Scene_Map_terminate.call(this);
     };
     Scene_Map.prototype.openSubScene = function (subSceneClass, ...args) {
         this._subSceneStack = this._subSceneStack || [];
@@ -623,10 +701,19 @@
         _Scene_Map_processMapTouch.call(this);
     };
     Scene_Map.prototype.isMenuEnabled = function () {
+        if (window.$tutoManager && window.$tutoManager.isBusy()) {
+            return false;
+        }
         if (this._currentSubScene && this._currentSubScene.isActive()) {
             return false;
         }
         return _Scene_Map_isMenuEnabled.call(this);
+    };
+    Scene_Map.prototype.isPlayerActive = function () {
+        if (window.$tutoManager && window.$tutoManager.isBusy()) {
+            return false;
+        }
+        return _Scene_Map_isPlayerActive.call(this);
     };
 
     // SCENE MENU
@@ -736,27 +823,5 @@
         _Scene_Item_useItem.call(this);
         if (this._weightWindow) this._weightWindow.refresh();
     };
-
-    // PLUGIN COMMANDS
-    //=============================================================================
-    PluginManager.registerCommand("SC4_rmmz_scenes_Patches", "SetHudVisibility", args => {
-        const target = (args.target || "all").toLowerCase();
-        const action = (args.visible || "toggle").toLowerCase();
-        let visible = true;
-        if (action === "false" || action === "hide" || action === "off") visible = false;
-        if (action === "true" || action === "show" || action === "on") visible = true;
-        const isToggle = (action === "toggle");
-
-        if (target === "player" || target === "actor") {
-            if (isToggle) $gameSystem.togglePlayerHud();
-            else $gameSystem.setPlayerHudVisible(visible);
-        } else if (target === "weapon" || target === "gun") {
-            if (isToggle) $gameSystem.toggleWeaponHud();
-            else $gameSystem.setWeaponHudVisible(visible);
-        } else {
-            if (isToggle) $gameSystem.toggleHud();
-            else $gameSystem.setHudVisible(visible);
-        }
-    });
 
 })();

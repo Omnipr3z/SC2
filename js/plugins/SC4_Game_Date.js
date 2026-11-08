@@ -110,9 +110,9 @@ class Game_Date {
     }
 
     onTimeChanged() {
-        // Notification pour StoryManager ou refresh de fenêtres
-        if (window.$storyManager && typeof window.$storyManager.update === "function") {
-            window.$storyManager.update();
+        // Notification pour QuestManager ou refresh de fenêtres
+        if (window.$questManager && typeof window.$questManager.update === "function") {
+            window.$questManager.update();
         }
     }
 
@@ -188,34 +188,13 @@ class Game_Date {
     }
 }
 
-// ============================================================================
-// Hooks RMMZ pour le déroulement continu du temps
-// ============================================================================
-(() => {
-    "use strict";
-
-    const pluginName = "SC4_Game_Date";
-    const parameters = typeof PluginManager !== "undefined" ? PluginManager.parameters(pluginName) : {};
-    const enableMapTicks = parameters["enableMapTicks"] !== "false";
-
-    // Écoulement du temps sur Scene_Map
-    if (typeof Scene_Map !== "undefined") {
-        const _Scene_Map_update = Scene_Map.prototype.update;
-        Scene_Map.prototype.update = function() {
-            _Scene_Map_update.call(this);
-            if (enableMapTicks && window.$gameDate) {
-                window.$gameDate.passTick();
-            }
-        };
-    }
-})();
-
-if (typeof window !== "undefined") {
-    window.Game_Date = Game_Date;
-}
-if (typeof global !== "undefined") {
-    global.Game_Date = Game_Date;
-}
+window.Game_Date = Game_Date;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Game_Date };
+    module.exports = Game_Date;
+}
+
+window.SC4 = window.SC4 || {};
+const _gameDateParams = typeof PluginManager !== "undefined" ? PluginManager.parameters("SC4_Game_Date") : {};
+if (_gameDateParams["enableMapTicks"] !== undefined) {
+    SC4._enableMapTicks = _gameDateParams["enableMapTicks"] !== "false";
 }

@@ -308,9 +308,6 @@ class Window_SpaceTargetInfo extends Window_Base {
 }
 
 window.Window_SpaceTargetInfo = Window_SpaceTargetInfo;
-if (typeof global !== 'undefined') {
-    global.Window_SpaceTargetInfo = Window_SpaceTargetInfo;
-}
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { Window_SpaceTargetInfo };
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Window_SpaceTargetInfo;
 }

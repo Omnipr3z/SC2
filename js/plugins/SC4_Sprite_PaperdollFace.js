@@ -207,3 +207,6 @@ class Sprite_PaperdollFace extends Sprite {
 }
 
 window.Sprite_PaperdollFace = Sprite_PaperdollFace;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Sprite_PaperdollFace;
+}

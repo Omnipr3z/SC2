@@ -241,3 +241,6 @@ class Sprite_Hero extends Sprite_Character {
 }
 
 window.Sprite_Hero = Sprite_Hero;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Sprite_Hero;
+}

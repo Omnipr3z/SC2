@@ -39,6 +39,11 @@
 (() => {
     "use strict";
 
+    window.SC4 = window.SC4 || {};
+    if (window.SC4.nefVariableId === undefined) {
+        window.SC4.nefVariableId = 41;
+    }
+
     // UTILS
     //=============================================================================
     Utils.approach = function (current, target, step) {
@@ -194,11 +199,23 @@
         configurable: true
     });
 
+    // TILEMAP
+    //=============================================================================
+    const _Tilemap_update = Tilemap.prototype.update;
+
+    Tilemap.prototype.update = function () {
+        if (window.$tutoManager && window.$tutoManager.isBusy()) {
+            return;
+        }
+        _Tilemap_update.call(this);
+    };
+
     // CONFIG MANAGER
     //=============================================================================
     ConfigManager.keyboardLayout = "azerty";
     ConfigManager.autoReload = false;
     ConfigManager.locale = "FR";
+    ConfigManager.contextualHelp = true;
 
     const _ConfigManager_makeData = ConfigManager.makeData;
     const _ConfigManager_applyData = ConfigManager.applyData;
@@ -208,6 +225,7 @@
         config.keyboardLayout = this.keyboardLayout;
         config.autoReload = this.autoReload;
         config.locale = this.locale || "FR";
+        config.contextualHelp = this.contextualHelp;
         return config;
     };
     ConfigManager.applyData = function (config) {
@@ -215,6 +233,7 @@
         this.keyboardLayout = (config && config.keyboardLayout) ? config.keyboardLayout : "azerty";
         this.autoReload = Boolean(config && config.autoReload);
         this.locale = (config && config.locale) ? String(config.locale).toUpperCase() : "FR";
+        this.contextualHelp = (config && config.contextualHelp !== undefined) ? Boolean(config.contextualHelp) : true;
         if (typeof $gameSystem !== "undefined" && $gameSystem) {
             $gameSystem._locale = this.locale;
         }
@@ -334,5 +353,33 @@
         }
         return raw;
     };
+
+    // PLUGIN COMMANDS
+    //=============================================================================
+    PluginManager.registerCommand("SC4_rmmz_scenes_Patches", "SetHudVisibility", args => {
+        const target = (args.target || "all").toLowerCase();
+        const action = (args.visible || "toggle").toLowerCase();
+        let visible = true;
+        if (action === "false" || action === "hide" || action === "off") visible = false;
+        if (action === "true" || action === "show" || action === "on") visible = true;
+        const isToggle = (action === "toggle");
+
+        if (target === "player" || target === "actor") {
+            if (isToggle) $gameSystem.togglePlayerHud();
+            else $gameSystem.setPlayerHudVisible(visible);
+        } else if (target === "weapon" || target === "gun") {
+            if (isToggle) $gameSystem.toggleWeaponHud();
+            else $gameSystem.setWeaponHudVisible(visible);
+        } else {
+            if (isToggle) $gameSystem.toggleHud();
+            else $gameSystem.setHudVisible(visible);
+        }
+    });
+    PluginManager.registerCommand("SC4_QuestManager", "openQuestBook", () => {
+        if (window.SC4 && typeof window.SC4.openQuestBook === "function") {
+            window.SC4.openQuestBook();
+        }
+    });
+
 
 })();

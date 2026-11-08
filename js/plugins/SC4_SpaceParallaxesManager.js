@@ -27,10 +27,7 @@
  * ============================================================================
  */
 
-(function () {
-    "use strict";
-
-    class SpaceParallaxesManager {
+class SpaceParallaxesManager {
         // ========================================================================
         // 1. CONFIGURATION & GETTERS D'ÉCHELLE (MODIFIABLES À LA VOLÉE)
         // ========================================================================
@@ -339,12 +336,7 @@
     }
 
     // Export global
-    if (typeof window !== "undefined") {
-        window.SpaceParallaxesManager = SpaceParallaxesManager;
-        window.SC4_SpaceParallaxesManager = SpaceParallaxesManager;
+    window.SpaceParallaxesManager = SpaceParallaxesManager;
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = SpaceParallaxesManager;
     }
-    if (typeof global !== "undefined") {
-        global.SpaceParallaxesManager = SpaceParallaxesManager;
-        global.SC4_SpaceParallaxesManager = SpaceParallaxesManager;
-    }
-})();

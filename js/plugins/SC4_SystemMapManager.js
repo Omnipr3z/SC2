@@ -331,9 +331,6 @@ class SystemMapManager {
 window.$systemMapManager = new SystemMapManager();
 
 window.SystemMapManager = SystemMapManager;
-if (typeof global !== "undefined") {
-    global.SystemMapManager = SystemMapManager;
-}
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { SystemMapManager };
+    module.exports = SystemMapManager;
 }

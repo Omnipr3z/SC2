@@ -10,19 +10,7 @@
  * @help SC4_Window_FactionStatus.js
  */
 
-const _ParentFactionStatus = (typeof Window_Base !== "undefined")
-    ? Window_Base
-    : class {
-        constructor(rect) {
-            this.x = rect ? rect.x : 0;
-            this.y = rect ? rect.y : 0;
-            this.width = rect ? rect.width : 0;
-            this.height = rect ? rect.height : 0;
-            this.contents = { clear: () => {}, drawText: () => {}, fillRect: () => {} };
-        }
-    };
-
-class Window_FactionStatus extends _ParentFactionStatus {
+class Window_FactionStatus extends Window_Base {
     constructor(rect) {
         super(rect);
         this.refresh();
@@ -64,9 +52,7 @@ class Window_FactionStatus extends _ParentFactionStatus {
     }
 }
 
-if (typeof window !== "undefined") {
-    window.Window_FactionStatus = Window_FactionStatus;
-}
-if (typeof module !== "undefined") {
+window.Window_FactionStatus = Window_FactionStatus;
+if (typeof module !== "undefined" && module.exports) {
     module.exports = Window_FactionStatus;
 }

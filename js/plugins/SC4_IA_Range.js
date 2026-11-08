@@ -58,3 +58,6 @@ class IA_Range extends IAManager {
 }
 
 window.IA_Range = IA_Range;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = IA_Range;
+}

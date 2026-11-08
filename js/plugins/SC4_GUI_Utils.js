@@ -106,17 +106,11 @@ class SC4_GUI_Utils {
 }
 
 // Export universel
-if (typeof window !== "undefined") {
-    window.SC4_GUI_Utils = SC4_GUI_Utils;
-    window.GUI_Utils = SC4_GUI_Utils;
-    if (window.SC4) {
-        window.SC4.GUI = SC4_GUI_Utils;
-    }
-}
-if (typeof global !== "undefined") {
-    global.SC4_GUI_Utils = SC4_GUI_Utils;
-    global.GUI_Utils = SC4_GUI_Utils;
+window.SC4_GUI_Utils = SC4_GUI_Utils;
+window.GUI_Utils = SC4_GUI_Utils;
+if (window.SC4) {
+    window.SC4.GUI = SC4_GUI_Utils;
 }
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { SC4_GUI_Utils, GUI_Utils: SC4_GUI_Utils };
+    module.exports = SC4_GUI_Utils;
 }

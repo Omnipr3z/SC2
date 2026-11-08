@@ -1,3 +1,21 @@
+//=============================================================================
+// RPG Maker MZ - SC4_Sprite_PlayerHUD.js
+//=============================================================================
+
+/*:
+ * @target MZ
+ * @plugindesc [SC4 v1.0.0] HUD du joueur sur la carte (Sprite_PlayerHUD).
+ * @author SimCraft 4
+ *
+ * @help SC4_Sprite_PlayerHUD.js
+ *
+ * Hérite de Sprite_ActorHUD. Affiche les constantes vitales du leader du groupe ($gameParty.leader()) :
+ *  - Positionné en haut à gauche de l'écran.
+ *  - Jauges de vitalité (PV, PM) avec interpolation fluide.
+ *  - Portrait dynamique du héros avec rétro-éclairage lors de la parole.
+ *  - Visibilité contrôlée par $guiManager.
+ */
+
 class Sprite_PlayerHUD extends Sprite_ActorHUD {
     constructor(data) {
 
@@ -120,3 +138,6 @@ class Sprite_PlayerHUD extends Sprite_ActorHUD {
 }
 
 window.Sprite_PlayerHUD = Sprite_PlayerHUD;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Sprite_PlayerHUD;
+}

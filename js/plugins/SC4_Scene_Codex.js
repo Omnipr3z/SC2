@@ -38,9 +38,15 @@ class Scene_Codex extends Scene_MenuBase {
             this.addCommand("Cogitateurs & Stations", "cogitator");
             this.addCommand("Arsenal & Équipements", "arsenal");
             this.addCommand("Accomplissements", "achievements");
+            this.addCommand("Guides & Didacticiels", "tutos");
         };
         this._categoryWindow.setHandler("cancel", this.popScene.bind(this));
         this._categoryWindow.setHandler("ok", () => {
+            const sym = this._categoryWindow ? this._categoryWindow.currentSymbol() : "";
+            if (sym === "tutos" && typeof Scene_TutoBook !== "undefined") {
+                SceneManager.push(Scene_TutoBook);
+                return;
+            }
             if (this._categoryWindow) this._categoryWindow.activate();
         });
         this.addWindow(this._categoryWindow);
@@ -117,6 +123,14 @@ class Scene_Codex extends Scene_MenuBase {
                     "• Équipe Tactique : Recruter un premier compagnon."
                 ];
                 break;
+            case "tutos":
+                title = "GUIDES ET DIDACTICIELS";
+                description = [
+                    "Consultez l'ensemble des modules didactiques et procédures",
+                    "opérationnelles rencontrées durant vos expéditions stellaires.",
+                    "Appuyez sur Entrée ou validez pour ouvrir le carnet complet."
+                ];
+                break;
         }
 
         this._detailWindow.drawText(title, 20, 20, w - 40, "left");
@@ -130,3 +144,6 @@ class Scene_Codex extends Scene_MenuBase {
 }
 
 window.Scene_Codex = Scene_Codex;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Scene_Codex;
+}

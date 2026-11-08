@@ -446,9 +446,6 @@ class Scene_SectorTravel extends Scene_Base {
 }
 
 window.Scene_SectorTravel = Scene_SectorTravel;
-if (typeof global !== 'undefined') {
-    global.Scene_SectorTravel = Scene_SectorTravel;
-}
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { Scene_SectorTravel };
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Scene_SectorTravel;
 }

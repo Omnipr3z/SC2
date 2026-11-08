@@ -267,3 +267,6 @@ class Game_Hero extends Game_Actor {
 }
 
 window.Game_Hero = Game_Hero;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Game_Hero;
+}

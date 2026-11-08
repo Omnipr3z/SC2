@@ -9,12 +9,7 @@
  * @help SC4_Scene_FreeGameStart.js
  */
 
-(() => {
-    "use strict";
-
-    const Scene_MenuBaseClass = (typeof Scene_MenuBase !== "undefined") ? Scene_MenuBase : Scene_Base;
-
-    class Scene_FreeGameStart extends Scene_MenuBaseClass {
+class Scene_FreeGameStart extends Scene_MenuBase {
         create() {
             super.create();
             this.createBackgroundLayer();
@@ -66,4 +61,6 @@
     }
 
     window.Scene_FreeGameStart = Scene_FreeGameStart;
-})();
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = Scene_FreeGameStart;
+    }

@@ -485,3 +485,6 @@ class Game_Inventory {
 }
 
 window.Game_Inventory = Game_Inventory;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Game_Inventory;
+}

@@ -10,25 +10,7 @@
  * @help SC4_Window_InteractionCommand.js
  */
 
-const _ParentInteractionCommand = (typeof Window_Command !== "undefined")
-    ? Window_Command
-    : class {
-        constructor(rect) {
-            this.x = rect ? rect.x : 0;
-            this.y = rect ? rect.y : 0;
-            this.width = rect ? rect.width : 0;
-            this.height = rect ? rect.height : 0;
-            this._list = [];
-        }
-        addCommand(name, symbol, enabled = true, ext = null) {
-            this._list.push({ name, symbol, enabled, ext });
-        }
-        refresh() { }
-        select() { }
-        activate() { }
-    };
-
-class Window_InteractionCommand extends _ParentInteractionCommand {
+class Window_InteractionCommand extends Window_Command {
     constructor(rect) {
         super(rect);
         this._availableInteractions = [];
@@ -75,9 +57,7 @@ class Window_InteractionCommand extends _ParentInteractionCommand {
     }
 }
 
-if (typeof window !== "undefined") {
-    window.Window_InteractionCommand = Window_InteractionCommand;
-}
-if (typeof module !== "undefined") {
+window.Window_InteractionCommand = Window_InteractionCommand;
+if (typeof module !== "undefined" && module.exports) {
     module.exports = Window_InteractionCommand;
 }

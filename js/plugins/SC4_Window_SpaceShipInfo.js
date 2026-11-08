@@ -338,9 +338,6 @@ class Window_SpaceShipInfo extends Window_Base {
 }
 
 window.Window_SpaceShipInfo = Window_SpaceShipInfo;
-if (typeof global !== 'undefined') {
-    global.Window_SpaceShipInfo = Window_SpaceShipInfo;
-}
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { Window_SpaceShipInfo };
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Window_SpaceShipInfo;
 }

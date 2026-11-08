@@ -391,3 +391,6 @@ class Sprite_PlayerHUD extends Sprite {
 }
 
 window.Sprite_PlayerHUD = Sprite_PlayerHUD;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Sprite_PlayerHUD;
+}

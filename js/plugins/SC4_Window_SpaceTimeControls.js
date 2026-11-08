@@ -10,11 +10,7 @@
  * @help SC4_Window_SpaceTimeControls.js
  */
 
-const _BaseWindowTimeCtrl = (typeof Window_HorzCommand !== "undefined")
-    ? Window_HorzCommand
-    : ((typeof Window_Command !== "undefined") ? Window_Command : (typeof Window_Base !== "undefined" ? Window_Base : Object));
-
-class Window_SpaceTimeControls extends _BaseWindowTimeCtrl {
+class Window_SpaceTimeControls extends Window_HorzCommand {
     constructor(rect) {
         if (!rect && typeof Rectangle !== "undefined" && typeof Graphics !== "undefined") {
             const w = 320;
@@ -83,14 +79,7 @@ class Window_SpaceTimeControls extends _BaseWindowTimeCtrl {
     }
 }
 
-if (typeof window !== "undefined") {
-    window.Window_SpaceTimeControls = Window_SpaceTimeControls;
-    window.SC4_Window_SpaceTimeControls = Window_SpaceTimeControls;
-}
-if (typeof global !== "undefined") {
-    global.Window_SpaceTimeControls = Window_SpaceTimeControls;
-    global.SC4_Window_SpaceTimeControls = Window_SpaceTimeControls;
-}
+window.Window_SpaceTimeControls = Window_SpaceTimeControls;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Window_SpaceTimeControls };
+    module.exports = Window_SpaceTimeControls;
 }

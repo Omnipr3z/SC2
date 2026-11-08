@@ -9,9 +9,7 @@
  * @help SC4_Window_QuestFilter.js
  */
 
-const _BaseWindowQuestFilter = typeof Window_HorzCommand !== "undefined" ? Window_HorzCommand : (typeof Window_Command !== "undefined" ? Window_Command : (typeof Window_Base !== "undefined" ? Window_Base : Object));
-
-class Window_QuestFilter extends _BaseWindowQuestFilter {
+class Window_QuestFilter extends Window_HorzCommand {
     constructor(rect) {
         super(rect);
     }
@@ -62,9 +60,6 @@ class Window_QuestFilter extends _BaseWindowQuestFilter {
 }
 
 window.Window_QuestFilter = Window_QuestFilter;
-if (typeof global !== "undefined") {
-    global.Window_QuestFilter = Window_QuestFilter;
-}
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Window_QuestFilter };
+    module.exports = Window_QuestFilter;
 }

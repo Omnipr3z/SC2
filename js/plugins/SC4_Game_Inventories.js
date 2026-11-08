@@ -281,4 +281,6 @@ class Game_Inventories {
 }
 
 window.Game_Inventories = Game_Inventories;
-window.$inventories = new Game_Inventories();
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Game_Inventories;
+}

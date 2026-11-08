@@ -99,9 +99,6 @@ class Window_QuestBookHeader extends Window_Base {
 }
 
 window.Window_QuestBookHeader = Window_QuestBookHeader;
-if (typeof global !== "undefined") {
-    global.Window_QuestBookHeader = Window_QuestBookHeader;
-}
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Window_QuestBookHeader };
+    module.exports = Window_QuestBookHeader;
 }

@@ -391,4 +391,7 @@ class Sprite_InterlocHUD extends Sprite {
     }
 }
 
-window.Sprite_PlayerHUD = Sprite_PlayerHUD;
+window.Sprite_InterlocHUD = Sprite_InterlocHUD;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Sprite_InterlocHUD;
+}

@@ -268,8 +268,8 @@ class Game_Quest {
         }
 
         // 3. Objets délivrés au container de stock
-        const container = (window.$inventories && typeof $inventories.inventory === "function") 
-            ? $inventories.inventory(stockId) 
+        const container = (window.$inventories && typeof $inventories.inventory === "function")
+            ? $inventories.inventory(stockId)
             : null;
 
         if (Array.isArray(r.items)) {
@@ -382,9 +382,6 @@ class Game_Quest {
 // ============================================================================
 
 window.Game_Quest = Game_Quest;
-if (typeof global !== "undefined") {
-    global.Game_Quest = Game_Quest;
-}
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Game_Quest };
+    module.exports = Game_Quest;
 }

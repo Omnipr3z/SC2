@@ -4,6 +4,7 @@ class GuiManager {
     }
     init() {
         this._isPlayerHudVisible = false;
+        this._isWeaponHudVisible = false;
         this._isBattleHudVisible = false;
         this._isMenuVisible = false;
     }
@@ -19,6 +20,30 @@ class GuiManager {
     }
     isPlayerHudVisible() {
         return this._isPlayerHudVisible;
+    }
+    //WEAPON HUD
+    showWeaponHud() {
+        this._isWeaponHudVisible = true;
+    }
+    hideWeaponHud() {
+        this._isWeaponHudVisible = false;
+    }
+    toggleWeaponHud() {
+        this._isWeaponHudVisible = !this._isWeaponHudVisible;
+    }
+    isWeaponHudVisible() {
+        return Boolean(this._isWeaponHudVisible);
+    }
+    //GLOBAL CONTROLS
+    hideAllHuds() {
+        this.hidePlayerHud();
+        this.hideWeaponHud();
+        this.hideBattleHud();
+    }
+    showAllHuds() {
+        this.showPlayerHud();
+        this.showWeaponHud();
+        this.showBattleHud();
     }
     //BATTLE HUD
     showBattleHud() {
@@ -48,4 +73,8 @@ class GuiManager {
     }
 }
 
+window.GuiManager = GuiManager;
 window.$guiManager = new GuiManager();
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = GuiManager;
+}

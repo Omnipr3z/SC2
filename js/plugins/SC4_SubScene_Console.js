@@ -22,17 +22,10 @@
  * ============================================================================
  */
 
-(function () {
-    "use strict";
-
-    const BaseClass = (typeof SubScene_Base !== "undefined")
-        ? SubScene_Base
-        : (typeof window !== "undefined" && window.SubScene_Base ? window.SubScene_Base : class {});
-
-    // ========================================================================
-    // 1. CLASSE SUBSCENE_CONSOLE
-    // ========================================================================
-    class SubScene_Console extends BaseClass {
+// ========================================================================
+// 1. CLASSE SUBSCENE_CONSOLE
+// ========================================================================
+class SubScene_Console extends SubScene_Base {
         initMembers(shipId) {
             this._shipId = (shipId !== undefined && shipId !== null) ? Number(shipId) : null;
             this._shipInfoWindow = null;
@@ -245,4 +238,8 @@
             return this.openSubScene(SubScene_Console, shipId);
         };
     }
-})();
+
+    window.SubScene_Console = SubScene_Console;
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = SubScene_Console;
+    }

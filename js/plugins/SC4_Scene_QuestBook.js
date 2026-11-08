@@ -13,9 +13,7 @@
  * @help SC4_Scene_QuestBook.js
  */
 
-const _BaseSceneQuestBook = typeof Scene_MenuBase !== "undefined" ? Scene_MenuBase : (typeof Scene_Base !== "undefined" ? Scene_Base : Object);
-
-class Scene_QuestBook extends _BaseSceneQuestBook {
+class Scene_QuestBook extends Scene_MenuBase {
     create() {
         super.create();
         //this.createBackground();
@@ -99,9 +97,6 @@ class Scene_QuestBook extends _BaseSceneQuestBook {
 }
 
 window.Scene_QuestBook = Scene_QuestBook;
-if (typeof global !== "undefined") {
-    global.Scene_QuestBook = Scene_QuestBook;
-}
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Scene_QuestBook };
+    module.exports = Scene_QuestBook;
 }

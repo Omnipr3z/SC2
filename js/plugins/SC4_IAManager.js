@@ -28,6 +28,10 @@ const AI_STATE_RETURN = "return";
 const AI_STATE_HURTED = "hurted";
 
 class IAManager {
+    static _isBattleBgm = false;
+    static _savedMapBgm = null;
+    static _bgmFadeOutTimer = 0;
+
     /**
      * @param {Game_Event} event - L'événement contrôlé par cette instance d'IA
      */
@@ -184,8 +188,10 @@ class IAManager {
             this.playCustomSe("forget", { name: "Blind", volume: 90, pitch: 100, pan: 0 });
         }
 
-        // Vérification automatique de la musique de combat
-        if (typeof IAManager !== "undefined" && typeof IAManager.checkBattleBgm === "function") {
+        // Notification réactive au gestionnaire centralisé BattleAIManager
+        if (window.$battleAIManager && typeof window.$battleAIManager.onEnemyStateChange === "function") {
+            window.$battleAIManager.onEnemyStateChange(this, oldState, state);
+        } else if (typeof IAManager !== "undefined" && typeof IAManager.checkBattleBgm === "function") {
             IAManager.checkBattleBgm();
         }
 
@@ -297,6 +303,13 @@ class IAManager {
      */
     update() {
         if (!this._event) return;
+
+        // Protection anti-double-tick par frame
+        const currentFrame = (typeof Graphics !== "undefined" && Graphics && Graphics.frameCount !== undefined) ? Graphics.frameCount : null;
+        if (currentFrame !== null && this._lastUpdateFrame === currentFrame) {
+            return;
+        }
+        this._lastUpdateFrame = currentFrame;
 
         // 1. Si l'ennemi est KO, l'IA s'arrête
         const battler = typeof this._event.battler === "function" ? this._event.battler() : null;
@@ -588,12 +601,16 @@ class IAManager {
     }
 
     // ========================================================================
-    // GESTION DU BGM DE COMBAT ET FONDU
+    // GESTION DU BGM DE COMBAT ET FONDU (DÉLÉGUÉ À BATTLEAIMANAGER)
     // ========================================================================
     static resetBgmState() {
-        IAManager._isBattleBgm = false;
-        IAManager._savedMapBgm = null;
-        IAManager._bgmFadeOutTimer = 0;
+        if (window.$battleAIManager && typeof window.$battleAIManager.resetBgmState === "function") {
+            window.$battleAIManager.resetBgmState();
+        } else {
+            IAManager._isBattleBgm = false;
+            IAManager._savedMapBgm = null;
+            IAManager._bgmFadeOutTimer = 0;
+        }
     }
 
     /**
@@ -601,6 +618,9 @@ class IAManager {
      * @returns {number}
      */
     static countEngagedEnemies() {
+        if (window.$battleAIManager && typeof window.$battleAIManager.engagedCount === "function") {
+            return window.$battleAIManager.engagedCount();
+        }
         if (typeof $gameMap === "undefined" || !$gameMap || typeof $gameMap.events !== "function") return 0;
         let count = 0;
         const events = $gameMap.events();
@@ -625,6 +645,9 @@ class IAManager {
      * @returns {number}
      */
     static countActiveHostileEnemies() {
+        if (window.$battleAIManager && typeof window.$battleAIManager.hostileCount === "function") {
+            return window.$battleAIManager.hostileCount();
+        }
         if (typeof $gameMap === "undefined" || !$gameMap || typeof $gameMap.events !== "function") return 0;
         let count = 0;
         const events = $gameMap.events();
@@ -647,11 +670,19 @@ class IAManager {
      * Vérifie si le BGM doit basculer vers la musique de combat ou revenir à la musique de la map (fondu de 3s).
      */
     static checkBattleBgm() {
+        if (window.$battleAIManager) {
+            if (window.$battleAIManager.hasEngagedEnemies()) {
+                window.$battleAIManager.triggerBattleBgm();
+            } else {
+                window.$battleAIManager.startBattleBgmFadeOut();
+            }
+            return;
+        }
+
         const engagedCount = IAManager.countEngagedEnemies();
 
         if (engagedCount > 0) {
-            // Au moins un ennemi est engagé contre le joueur
-            IAManager._bgmFadeOutTimer = 0; // Annule le retour fondu en cours si l'ennemi se ré-engage
+            IAManager._bgmFadeOutTimer = 0;
 
             if (!IAManager._isBattleBgm) {
                 if (typeof AudioManager !== "undefined") {
@@ -673,14 +704,13 @@ class IAManager {
                 }
             }
         } else {
-            // Le dernier ennemi engagé quitte le mode engage (ex: search, neutral, ou vaincu)
             if (IAManager._isBattleBgm) {
                 IAManager._isBattleBgm = false;
                 if (typeof AudioManager !== "undefined") {
                     if (typeof AudioManager.fadeOutBgm === "function") {
-                        AudioManager.fadeOutBgm(3); // Fondu de 3s sur la musique de combat
+                        AudioManager.fadeOutBgm(3);
                     }
-                    IAManager._bgmFadeOutTimer = 180; // 3 secondes (180 frames à 60 FPS) avant reprise de la map
+                    IAManager._bgmFadeOutTimer = 180;
                 }
             }
         }
@@ -690,6 +720,11 @@ class IAManager {
      * Mise à jour frame par frame du fondu de BGM.
      */
     static updateBgm() {
+        if (window.$battleAIManager && typeof window.$battleAIManager.updateBgm === "function") {
+            window.$battleAIManager.updateBgm();
+            return;
+        }
+
         if (IAManager._bgmFadeOutTimer > 0) {
             IAManager._bgmFadeOutTimer--;
             if (IAManager._bgmFadeOutTimer === 0) {
@@ -713,13 +748,12 @@ class IAManager {
     }
 }
 
-IAManager._isBattleBgm = false;
-IAManager._savedMapBgm = null;
-IAManager._bgmFadeOutTimer = 0;
-
 // Enregistrement global
 window.IAManager = IAManager;
 window.AI_STATE_NEUTRAL = AI_STATE_NEUTRAL;
 window.AI_STATE_ENGAGE = AI_STATE_ENGAGE;
 window.AI_STATE_SEARCH = AI_STATE_SEARCH;
 window.AI_STATE_RETURN = AI_STATE_RETURN;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = IAManager;
+}

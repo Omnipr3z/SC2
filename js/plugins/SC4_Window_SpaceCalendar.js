@@ -109,9 +109,6 @@ class Window_SpaceCalendar extends Window_Base {
 }
 
 window.Window_SpaceCalendar = Window_SpaceCalendar;
-if (typeof global !== 'undefined') {
-    global.Window_SpaceCalendar = Window_SpaceCalendar;
-}
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { Window_SpaceCalendar };
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Window_SpaceCalendar;
 }

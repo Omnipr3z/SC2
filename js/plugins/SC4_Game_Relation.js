@@ -277,6 +277,7 @@ class Game_Relation {
     }
 }
 
-if (typeof module !== "undefined") {
+window.Game_Relation = Game_Relation;
+if (typeof module !== "undefined" && module.exports) {
     module.exports = Game_Relation;
 }

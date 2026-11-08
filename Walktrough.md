@@ -1,7 +1,7 @@
 # 🛠️ SimCraft Engine V2 (SC4) — Journal de Développement & Walkthrough
 
 > **SimCraft Engine V2 (SC4)** — Architecture modulaire pour RPG Maker MZ  
-> *Dernière mise à jour : 7 Novembre 2026*  
+> *Dernière mise à jour : 8 Novembre 2026*  
 > *Auteur : Pierre André Hernandez (Omnipr3z)*
 
 ---
@@ -126,6 +126,15 @@ Déclarées sur les armes et armures de la base de données :
 - Indexation continue des acteurs et ennemis sur la carte courante (`actorEvents()`).
 - Détection des cibles au contact direct (`findHostileTargetInFront()`).
 - Résolution par `Game_Action` native : knockback d'une case, posture `hurt`, posture `down` puis activation automatique du self-switch `C`.
+
+### 3.1 bis Orchestrateur Tactique d'IA de Combat (`BattleAIManager` / `$battleAIManager`)
+- Singleton global `window.$battleAIManager` instancié par `SC_DataManager.createGameObjects()`.
+- **Registre unifié & Cycle de vie** : `_enemies` (`Map<number, IAManager>`) synchronisé au chargement de carte (`onMapLoaded`) et dynamique au spawn/mort.
+- **Suivi réactif O(1) du niveau de menace** : `engagedCount()`, `hostileCount()`, `isCombatActive()`. Fin des boucles de scan d'événements à 60 FPS.
+- **Bascule automatique Safe Zone / Mode Combat** : synchronise instantanément `$gameMap.setCombatMode(true/false)`.
+- **Tactique Collective & Alerte de Meute (Pack Alert)** : `alertNearbyAllies(sourceEvent, target, radius = 6)`. Dès qu'un ennemi engage ou appelle à l'aide, tous ses alliés proches neutres ou en recherche rejoignent l'assaut (socle Nemesis).
+- **Spatial Culling & Optimisation CPU** : espacement des calculs de perception pour les ennemis neutres hors écran (> 25 cases) et protection anti-double-tick (`_lastUpdateFrame`).
+- **Orchestration Audio & Fondus Doux** : déclenchement du BGM de combat dès le 1er engagé, mémorisation du BGM de carte, et fondu de sortie de 3s (180 frames) avec reprise en fondu d'entrée dès la fin de l'engagement.
 
 ### 3.2 Notetags des Événements & Ennemis
 - Événement : `<actor: ID>`, `<role: hostile>`, `<enemy: ENEMY_ID>`.
@@ -687,6 +696,71 @@ DEBUGTOOL.logFormat({ actor: "Paolo", hp: 120 }, "Acteur : %[actor], PV : %[hp]"
     4. Interruption de l'appel `executeMove8Dir` : le personnage s'arrête net sans à-coup et regarde la case cible.
 - **Validation** :
   - Test unitaire dédié : [`UNIT_TESTS/test_touch_anti_oscillation.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_touch_anti_oscillation.js) (5/5 tests validés).
+
+### 11.18 Architecture Narrative & Moteur de Quêtes : Découplage `QuestManager` & `StoryManager` (Nexus)
+- **Découplage Structurel** :
+  - **`QuestManager` (`$questManager` dans `SC4_QuestManager.js`)** : Contrôleur opérationnel du cycle de vie unitaire des quêtes (activation manuelle `start()`, avancée d'étape `advanceStep()`, clôture `complete()`, échec `fail()`, et attribution automatique des récompenses en or, expérience et objets).
+    - Gestion des déclencheurs temporels (`triggerTimestamp`) et de découverte géographique de POI (`triggerPoiLocated`) évalués automatiquement sans faux positifs.
+    - Échéances calendaires impératives (`deadlineTimestamp`) entraînant l'échec automatique de la mission si dépassée.
+    - Persistance intégrale dans la sauvegarde (`contents.sc_questManager` via `SC_DataManager`).
+  - **`StoryManager` (`$storyManager` dans `SC4_StoryManager.js`)** : Moteur macro-scénaristique orchestrant l'arbre d'embranchements non-linéaire articulé autour des **5 Nœuds Narratifs Majeurs** convergeant vers la bataille décisive du **Nexus**.
+    - Gestion de la dualité d'alignement (`order` vs `liberty`), métriques d'influence politique et résolution des 5 Nœuds :
+      1. *Nœud 1 : Conférence Diplomatique de Neotori* (première rupture et découverte du Nexus).
+      2. *Nœud 2 : Réveil des Atrons & Crise de reZero* (choix éthique de préservation du bug ou transfert de conscience).
+      3. *Nœud 3 : Hybridation Atron-Élion & Trahison Fédérale*.
+      4. *Nœud 4 : Chute d'Ankaros & Mobilisation Générale*.
+      5. *Nœud 5 : Assaut du Nexus*.
+    - Déverrouillage automatique du Nexus après résolution des 5 nœuds, calcul de la faction dominante et bascule vers la phase 4X galactique post-main-quest (`resolveNexus()`).
+    - État d'allégeance du compagnon reZero (`reZero.bugPreserved`).
+    - Persistance intégrale dans la sauvegarde (`contents.sc_story` via `SC_DataManager`).
+- **Bible Scénaristique (`STORY_LINES.md`)** :
+  - Document maître récapitulant la situation initiale (réveil du PJ dans son petit vaisseau escorteur en mission de livraison d'un colis diplomatique sur Ankaros), le découpage des nœuds, les twists et la boucle de jeu post-campagne (ajouté au `.gitignore`).
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_quest_story_manager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_quest_story_manager.js) (13/13 tests validés).
+
+### 11.19 Refonte Modulaire du HUD d'Arme (`Sprite_WeaponHUD.js` & `Sprite_HudBase`)
+- **Héritage `Sprite_HudBase`** :
+  - Refactorisation complète de `Sprite_WeaponHUD` par dérivation de `Sprite_HudBase`, standardisant les méthodes graphiques, la gestion du dirty flag (`forceDirty()`) et l'interpolation.
+- **Organisation en 4 Piliers Méthodologiques** :
+  1. *Getters & États Métier* : `weapon()`, `ammoCount()`, `maxAmmo()`, `reserveCount()`, `isReloading()`.
+  2. *Positionnement & Découpage Rectangulaire* : Ancrage bas-droit (marge de 20px), `baseRect`, `bulletGaugeRect`, `reservePacksRect`, `secondaryWeaponRect`, `tacticalBeltRect` (pré-câblage pour les jauges graphiques modulaires de balles style Recovery).
+  3. *Styles & Réactivité Graphique* : `styleBackground()` (bordure d'alerte rouge clignotante quand le chargeur est vide), `styleAmmo()` (couleur dynamique selon le pourcentage de munitions restantes), `styleReserve()`.
+  4. *Blocs de Dessin Séparés (Draw Blocks)* : `drawHud()`, `drawBackground()`, `drawWeaponIcon()`, `drawWeaponName()`, `drawAmmoCounter()`, `drawReserveCounter()`.
+- **Intégration `GuiManager` & Raccourci Clavier** :
+  - Masquage initial au démarrage (`_isWeaponHudVisible = false`) pour un level design immersif sans saturation visuelle.
+  - Pilotage via `$guiManager.showWeaponHud()`, `hideWeaponHud()`, `toggleWeaponHud()`, `hideAllHuds()`, `showAllHuds()`.
+  - Touche `H` (Keycode 72, action `toggleHud` dans `ConfigManager.applyKeyboardLayout`) pour masquer/afficher simultanément le PlayerHUD et le WeaponHUD.
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_weapon_hud.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_weapon_hud.js) (10/10 tests validés).
+
+### 11.20 Moteur de Didacticiel Contextuel & Gel Intégral de Carte (`TutoManager`, `Window_Tuto`, `Scene_TutoBook`)
+- **Option & Persistance Globale** :
+  - `ConfigManager.contextualHelp = true` par défaut, persisté dans `global.rmmzsave`.
+  - Option "Aide contextuelle" ON/OFF ajoutée dans le menu des options (`Window_Options`) avec traductions complètes FR/EN.
+- **Orchestrateur `TutoManager` (`$tutoManager` dans `SC4_TutoManager.js`)** :
+  - Singleton gérant la file d'attente séquentielle `_queue` et le registre d'historique `_seenTutos` persisté dans la sauvegarde (`contents.sc_tutos`).
+  - Déclencheur souverain `$tutoManager.show(tutoId, data)` ou `showTuto(tutoId, data)`.
+  - Support de recherche polymorphe (ID numérique, clé textuelle ou objet direct), vérification d'activation optionnelle et prévention des doublons.
+  - Paramètres optionnels `coord` ({ xMap, yMap } ou { x, y }), `arrow` ({ xMap, yMap, x, y, angle }), `imgName`, `force`.
+- **Gel Intégral de Carte & Préservation du Moteur UI** :
+  - *Maintien de la boucle UI* : `Scene_Map.prototype.update` poursuit l'appel natif `_Scene_Map_update.call(this)` afin que les fenêtres, le tactile, les entrées clavier et les sprites d'interface continuent de s'exécuter à 60 FPS sans aucun blocage.
+  - *Freeze des Autotiles Animés* : Interception de `Tilemap.prototype.update` pour stopper l'incrémentation de `this.animationCount++` (les surfaces d'eau, écrans et néons animés sont instantanément figés).
+  - *Freeze du Spriteset* : Interception de `Spriteset_Map.prototype.update` neutralisant les sprites de personnages, parallaxes, météo, ombres et projectiles.
+  - *Freeze des Événements & de l'IA* : Interception de `Game_Event.prototype.update` suspendant net les routes autonomes, animations de pas stationnaires (*step anime*), orientations et l'IA de combat (`$battleAIManager`).
+  - *Freeze de la Logique de Carte* : Interception de `Game_Map.prototype.update` et `Scene_Map.prototype.updateMain`.
+  - *Suspension du Joueur et du Menu* : `Scene_Map.prototype.isPlayerActive` et `isMenuEnabled` renvoient `false` tant que `$tutoManager.isBusy()`.
+  - *Suspension du Temps Stellaire* : Pause de `$gameDate.passTick()`, `$systemMapManager.update()`, `$relationManager.updateTick()`, `$fightManager.updateProjectiles()`.
+- **Rendu Graphique Dynamique & Auto-Proportionné (`Window_Tuto` & `Sprite_TutoArrow`)** :
+  - `Window_Tuto` utilise le Windowskin 9-slice `WindowTuto.png` (192×192) et le jingle doux `Neon.ogg`.
+  - *Enveloppement automatique (Word Wrap)* : Méthode `computeWrappedLines` découpant les paragraphes et phrases longues aux espaces, mesurant la largeur réelle hors codes d'échappement invisibles et prévenant tout débordement en X.
+  - *Dimensionnement auto-proportionné* : Calcul dynamique de la largeur (400-600px) et de la hauteur en fonction du nombre de lignes enveloppées, du titre, de l'illustration éventuelle et de la touche de validation, éliminant tout débordement en Y.
+  - Chargement asynchrone des illustrations via écouteur `addLoadListener` pour recalculer les dimensions et rafraîchir la fenêtre dès la réception du PNG.
+  - Clignotement subtil de l'invite `[ Entrée / Clic ]` et fermeture universelle sur Entrée, Espace, Échap ou Clic/Toucher.
+  - `Sprite_TutoArrow` ancré à la pointe `(0.5, 1.0)`, orientable et oscillant en respiration le long de son axe vers les coordonnées cibles.
+- **Scène d'Historique & Intégration Codex (`Scene_TutoBook`)** :
+  - `Scene_TutoBook` (`Window_TutoList`, `Window_TutoDetail`) accessible via script ou directement depuis l'entrée "Guides & Didacticiels" du Codex (`Scene_Codex`).
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_tuto_system.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_tuto_system.js) (14/14 tests validés).
 
 ---
 

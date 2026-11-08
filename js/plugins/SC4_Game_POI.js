@@ -1,13 +1,13 @@
 //=============================================================================
-// RPG Maker MZ - SC4Space_Game_POIs
+// RPG Maker MZ - SC4_Game_POI
 //=============================================================================
 /*:
  * @target MZ
  * @plugindesc [SC4 v1.0.0] Modèle de Point d'Intérêt (POI) et gestion d'atterrissage.
  * @author SimCraft
- * @base SC4Space_Game_GalacticRepoBase
+ * @base SC4_Game_GalacticRepoBase
  * 
- * @help SC4Space_Game_POIs.js
+ * @help SC4_Game_POI.js
  * 
  * ============================================================================
  * GAME_POI
@@ -106,13 +106,13 @@ class Game_POI extends Game_GalacticRepoBase {
     }
 
     /**
-     * Modifie l'état de découverte du POI et notifie StoryManager.
+     * Modifie l'état de découverte du POI et notifie QuestManager.
      * @param {boolean} [status=true]
      */
     setLocated(status = true) {
         this._located = Boolean(status);
-        if (typeof window !== "undefined" && window.$storyManager && typeof window.$storyManager.update === "function") {
-            window.$storyManager.update();
+        if (typeof window !== "undefined" && window.$questManager && typeof window.$questManager.update === "function") {
+            window.$questManager.update();
         }
     }
 
@@ -156,17 +156,7 @@ class Game_POI extends Game_GalacticRepoBase {
     }
 }
 
-// Alias Game_POIs pointant sur Game_POI pour conformité de nommage et rétrocompatibilité
-const Game_POIs = Game_POI;
-
-if (typeof window !== "undefined") {
-    window.Game_POI = Game_POI;
-    window.Game_POIs = Game_POIs;
-}
-if (typeof global !== "undefined") {
-    global.Game_POI = Game_POI;
-    global.Game_POIs = Game_POIs;
-}
+window.Game_POI = Game_POI;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = { Game_POI, Game_POIs };
+    module.exports = Game_POI;
 }

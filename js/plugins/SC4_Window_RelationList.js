@@ -10,25 +10,7 @@
  * @help SC4_Window_RelationList.js
  */
 
-const _ParentRelationList = (typeof Window_Selectable !== "undefined")
-    ? Window_Selectable
-    : class {
-        constructor(rect) {
-            this.x = rect ? rect.x : 0;
-            this.y = rect ? rect.y : 0;
-            this.width = rect ? rect.width : 0;
-            this.height = rect ? rect.height : 0;
-            this._index = -1;
-            this._data = [];
-        }
-        select(i) { this._index = i; }
-        index() { return this._index; }
-        refresh() {}
-        activate() {}
-        itemRect(i) { return new Rectangle(0, i * 36, this.width, 36); }
-    };
-
-class Window_RelationList extends _ParentRelationList {
+class Window_RelationList extends Window_Selectable {
     constructor(rect) {
         super(rect);
         this._data = [];
@@ -79,9 +61,7 @@ class Window_RelationList extends _ParentRelationList {
     }
 }
 
-if (typeof window !== "undefined") {
-    window.Window_RelationList = Window_RelationList;
-}
-if (typeof module !== "undefined") {
+window.Window_RelationList = Window_RelationList;
+if (typeof module !== "undefined" && module.exports) {
     module.exports = Window_RelationList;
 }

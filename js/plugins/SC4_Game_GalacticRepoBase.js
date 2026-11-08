@@ -199,8 +199,8 @@ class Game_GalacticRepoBase {
             return typeof gal.getSystem === "function" ? gal.getSystem(this._parentId) : null;
         }
         // Si this est un POI : parent est sa Planète
-        if (this.constructor.name === "Game_POI" || this.constructor.name === "Game_POIs") {
-            return typeof gal.getPlanet === "function" ? gal.getPlanet(this._parentId) : null;
+        if (this.constructor.name === "Game_POI") {
+            return gal.getPlanet ? gal.getPlanet(this._parentId) : null;
         }
         return null;
     }
@@ -411,6 +411,7 @@ class Game_GalacticRepoBase {
     }
 }
 
-if (typeof window !== "undefined") window.Game_GalacticRepoBase = Game_GalacticRepoBase;
-if (typeof global !== "undefined") global.Game_GalacticRepoBase = Game_GalacticRepoBase;
-if (typeof module !== "undefined" && module.exports) module.exports = { Game_GalacticRepoBase };
+window.Game_GalacticRepoBase = Game_GalacticRepoBase;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Game_GalacticRepoBase;
+}

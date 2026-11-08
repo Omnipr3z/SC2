@@ -264,3 +264,6 @@ Sprite_CharacterIndicator.DEFINITIONS = {
 };
 
 window.Sprite_CharacterIndicator = Sprite_CharacterIndicator;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = Sprite_CharacterIndicator;
+}

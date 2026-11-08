@@ -96,3 +96,6 @@ class IA_Melee extends IAManager {
 }
 
 window.IA_Melee = IA_Melee;
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = IA_Melee;
+}

@@ -13,11 +13,7 @@
  * et prises de contact ordinaires (Amicaux, Neutres, Froids, Hostiles).
  */
 
-const _ReactionBaseClass = (typeof Game_ReactionBase !== "undefined")
-    ? Game_ReactionBase
-    : (typeof require !== "undefined" ? require("./SC4_Game_ReactionBase") : Object);
-
-class Game_ReactionChat extends _ReactionBaseClass {
+class Game_ReactionChat extends Game_ReactionBase {
     constructor(params = {}) {
         params.interactionType = "chat";
         super(params);
@@ -113,6 +109,7 @@ class Game_ReactionChat extends _ReactionBaseClass {
     }
 }
 
-if (typeof module !== "undefined") {
+window.Game_ReactionChat = Game_ReactionChat;
+if (typeof module !== "undefined" && module.exports) {
     module.exports = Game_ReactionChat;
 }
