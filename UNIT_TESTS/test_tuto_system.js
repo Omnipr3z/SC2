@@ -139,6 +139,7 @@ ctx.Sprite.prototype.initialize = function (bitmap) {
     this.rotation = 0;
     this.opacity = 255;
     this.visible = true;
+    this.scale = { x: 1, y: 1 };
     this.anchor = {
         x: 0,
         y: 0,
@@ -213,6 +214,12 @@ ctx.$dataTutos = [
     { id: 2, key: "tuto_1", name: "Inventaire", img: "key.png", txt: "Accédez à votre inventaire." },
     { id: 3, key: "tuto_sector", name: "Secteur", img: null, txt: "Carte de secteur." }
 ];
+
+// Load SC4_Sprite_NeonArrowBase.js & SC4_Sprite_TutoArrow.js
+const baseArrowCode = fs.readFileSync(path.join(__dirname, "../js/plugins/SC4_Sprite_NeonArrowBase.js"), "utf8");
+vm.runInNewContext(baseArrowCode, ctx);
+const tutoArrowCode = fs.readFileSync(path.join(__dirname, "../js/plugins/SC4_Sprite_TutoArrow.js"), "utf8");
+vm.runInNewContext(tutoArrowCode, ctx);
 
 // Load SC4_TutoManager.js
 const tutoManagerCode = fs.readFileSync(path.join(__dirname, "../js/plugins/SC4_TutoManager.js"), "utf8");

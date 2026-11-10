@@ -289,7 +289,9 @@ global.window = global;
 // ----------------------------------------------------------------------------
 // 2. CHARGEMENT DES CLASSES TESTÉES
 // ----------------------------------------------------------------------------
+const baseArrowPath = path.join(__dirname, "../js/plugins/SC4_Sprite_NeonArrowBase.js");
 const arrowPath = path.join(__dirname, "../js/plugins/SC4_Sprite_InventoryArrow.js");
+const tutoArrowPath = path.join(__dirname, "../js/plugins/SC4_Sprite_TutoArrow.js");
 const headerPath = path.join(__dirname, "../js/plugins/SC4_Window_InventoryHeader.js");
 const actionPath = path.join(__dirname, "../js/plugins/SC4_Window_InventoryAction.js");
 const commandPath = path.join(__dirname, "../js/plugins/SC4_Window_InventoryCommand.js");
@@ -297,7 +299,9 @@ const listPath = path.join(__dirname, "../js/plugins/SC4_Window_InventoryList.js
 const comparePath = path.join(__dirname, "../js/plugins/SC4_Window_InventoryCompare.js");
 const scenePath = path.join(__dirname, "../js/plugins/SC4_Scene_Inventory.js");
 
+eval(fs.readFileSync(baseArrowPath, "utf8"));
 eval(fs.readFileSync(arrowPath, "utf8"));
+eval(fs.readFileSync(tutoArrowPath, "utf8"));
 eval(fs.readFileSync(headerPath, "utf8"));
 eval(fs.readFileSync(actionPath, "utf8"));
 eval(fs.readFileSync(commandPath, "utf8"));

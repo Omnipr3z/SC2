@@ -3,212 +3,30 @@
 //=============================================================================
 /*:
  * @target MZ
- * @plugindesc [SC4 v1.0.0] Fenêtre d'affichage des tutoriels contextuels (Window_Tuto) et flèche indicatrice (Sprite_TutoArrow).
+ * @plugindesc [SC4 v1.0.0] Fenêtre d'affichage des tutoriels contextuels (Window_Tuto).
  * @author SimCraft
+ * @base SC4_Sprite_TutoArrow
  * @help
  * ============================================================================
  * SC4_Window_Tuto.js
  * ============================================================================
- * Composants graphiques du moteur de didacticiel contextuel :
+ * Composant graphique d'affichage des didacticiels contextuels :
  * 
- * 1. Sprite_TutoArrow :
- *    - Affiche une flèche oscillante pointant vers une cible (coordonnées carte ou écran).
- *    - Rendu vectoriel cyberpunk néon vert (#00ff88) sur Bitmap Canvas (30x56) avec halo lumineux (shadowBlur: 8).
- *    - Ancrée à la pointe (0.5, 1.0).
- *    - Rotation selon angle fourni et oscillation flottante sinusoïdale.
- * 
- * 2. Window_Tuto :
+ * Window_Tuto :
  *    - Fenêtre 9-slice utilisant le windowskin img/system/WindowTuto.png (192x192).
  *    - Son d'apparition : Neon.ogg.
  *    - Enveloppement dynamique automatique des lignes (Word Wrap) évitant tout débordement.
  *    - Dimensionnement dynamique auto-proportionné au contenu texte, titre et illustration.
  *    - Positionnement contextuel (centré par défaut ou près de la coordonnée cible).
  *    - Fermeture par Entrée, Espace, Échap ou Clic tactile.
+ *    - Accompagnée de Sprite_TutoArrow (SC4_Sprite_TutoArrow.js).
  * ============================================================================
  */
 
 (() => {
     "use strict";
 
-    //=============================================================================
-    // Sprite_TutoArrow
-    //=============================================================================
-    function Sprite_TutoArrow() {
-        this.initialize(...arguments);
-    }
-
-    Sprite_TutoArrow.prototype = Object.create(Sprite.prototype);
-    Sprite_TutoArrow.prototype.constructor = Sprite_TutoArrow;
-
-    Sprite_TutoArrow.prototype.initialize = function () {
-        if (Sprite.prototype.initialize) {
-            Sprite.prototype.initialize.call(this);
-        }
-        this._arrowWidth = 30;
-        this._arrowHeight = 56;
-        this.createBitmap();
-        this.anchor.set(0.5, 1.0); // Ancrage à la pointe de la flèche
-        this.visible = false;
-        this.z = 250;
-        this._targetData = null;
-        this._baseAngle = 0;
-        this._tick = 0;
-    };
-
-    Sprite_TutoArrow.prototype.createBitmap = function () {
-        const BmpClass = (typeof Bitmap !== "undefined") ? Bitmap : (window.Bitmap || null);
-        if (BmpClass) {
-            this.bitmap = new BmpClass(this._arrowWidth, this._arrowHeight);
-            this.redraw();
-        }
-    };
-
-    Sprite_TutoArrow.prototype.redraw = function () {
-        const bmp = this.bitmap;
-        if (!bmp) return;
-        if (typeof bmp.clear === "function") {
-            bmp.clear();
-        }
-
-        const ctx = bmp.context;
-        if (!ctx) return;
-
-        const w = this._arrowWidth;
-        const h = this._arrowHeight;
-        const cx = w / 2;
-
-        ctx.save();
-        ctx.fillStyle = "rgba(0, 255, 136, 0.8)";
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 2;
-        ctx.shadowColor = "#00ff88";
-        ctx.shadowBlur = 8;
-
-        ctx.beginPath();
-        // Flèche cyberpunk pointant vers le bas (ancrage 0.5, 1.0 au niveau de la pointe)
-        ctx.moveTo(cx - 5, 2);      // Haut gauche queue
-        ctx.lineTo(cx + 5, 2);      // Haut droit queue
-        ctx.lineTo(cx + 5, h - 18); // Retour corps droit
-        ctx.lineTo(w - 4, h - 18);  // Aile droite
-        ctx.lineTo(cx, h - 2);      // Pointe basse
-        ctx.lineTo(4, h - 18);      // Aile gauche
-        ctx.lineTo(cx - 5, h - 18); // Retour corps gauche
-        ctx.closePath();
-
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-
-        if (bmp._baseTexture && typeof bmp._baseTexture.update === "function") {
-            bmp._baseTexture.update();
-        }
-    };
-
-    /**
-     * Configure la cible de la flèche.
-     * @param {object|null} arrowData { xMap, yMap, x, y, angle }
-     */
-    Sprite_TutoArrow.prototype.setup = function (arrowData) {
-        if (!arrowData) {
-            this.visible = false;
-            this._targetData = null;
-            return;
-        }
-        this._targetData = arrowData;
-        this._baseAngle = Number(arrowData.angle) || 0;
-        this._tick = 0;
-        this.visible = true;
-        this.updatePosition();
-    };
-
-    Sprite_TutoArrow.prototype.update = function () {
-        if (Sprite.prototype.update) {
-            Sprite.prototype.update.call(this);
-        }
-        if (!this.visible || !this._targetData) return;
-        this._tick++;
-        this.updatePosition();
-    };
-
-    /**
-     * Calcule la position à l'écran et applique l'oscillation.
-     * Si la cible est une coordonnée carte (xMap, yMap) située hors de l'écran,
-     * la flèche se positionne sur la bordure de l'écran (marge de 8px) et s'oriente
-     * vers la case cible pour guider le joueur.
-     */
-    Sprite_TutoArrow.prototype.updatePosition = function () {
-        if (!this._targetData) return;
-
-        let targetX = 0;
-        let targetY = 0;
-        let isMapCoord = false;
-
-        if (this._targetData.xMap !== undefined && this._targetData.yMap !== undefined) {
-            isMapCoord = true;
-            const tileW = (window.$gameMap && typeof window.$gameMap.tileWidth === "function") ? window.$gameMap.tileWidth() : 48;
-            const tileH = (window.$gameMap && typeof window.$gameMap.tileHeight === "function") ? window.$gameMap.tileHeight() : 48;
-            if (window.$gameMap && typeof window.$gameMap.adjustX === "function") {
-                targetX = Math.round(window.$gameMap.adjustX(this._targetData.xMap) * tileW + tileW / 2);
-                targetY = Math.round(window.$gameMap.adjustY(this._targetData.yMap) * tileH + tileH / 2);
-            } else {
-                targetX = this._targetData.xMap * tileW + tileW / 2;
-                targetY = this._targetData.yMap * tileH + tileH / 2;
-            }
-        } else if (this._targetData.x !== undefined && this._targetData.y !== undefined) {
-            targetX = Number(this._targetData.x) || 0;
-            targetY = Number(this._targetData.y) || 0;
-        } else {
-            return;
-        }
-
-        const boxW = (typeof Graphics !== "undefined" && Graphics.boxWidth) ? Graphics.boxWidth : 1280;
-        const boxH = (typeof Graphics !== "undefined" && Graphics.boxHeight) ? Graphics.boxHeight : 720;
-        const margin = 8;
-        const minX = margin;
-        const maxX = boxW - margin;
-        const minY = margin;
-        const maxY = boxH - margin;
-
-        const isOffScreen = isMapCoord && (targetX < minX || targetX > maxX || targetY < minY || targetY > maxY);
-
-        if (isOffScreen) {
-            const cx = boxW / 2;
-            const cy = boxH / 2;
-            const dx = targetX - cx;
-            const dy = targetY - cy;
-
-            let scaleX = Infinity;
-            let scaleY = Infinity;
-
-            if (dx > 0) scaleX = (maxX - cx) / dx;
-            else if (dx < 0) scaleX = (minX - cx) / dx;
-
-            if (dy > 0) scaleY = (maxY - cy) / dy;
-            else if (dy < 0) scaleY = (minY - cy) / dy;
-
-            const scale = Math.min(scaleX, scaleY);
-            const edgeX = cx + dx * scale;
-            const edgeY = cy + dy * scale;
-
-            // Angle pointant vers la cible (correction -PI/2 car le sprite arrow.png pointe nativement vers le bas)
-            const dirAngle = Math.atan2(dy, dx);
-            const rad = dirAngle - Math.PI / 2;
-
-            // Oscillation le long de la direction de la flèche
-            const bounceOffset = -Math.abs(Math.sin(this._tick * 0.1) * 8);
-            this.x = edgeX + Math.sin(rad) * bounceOffset;
-            this.y = edgeY - Math.cos(rad) * bounceOffset;
-            this.rotation = rad;
-        } else {
-            const rad = (this._baseAngle * Math.PI) / 180;
-            // Oscillation le long de l'axe de la flèche (recul puis poussée vers la pointe)
-            const bounceOffset = -Math.abs(Math.sin(this._tick * 0.1) * 8);
-
-            this.x = targetX + Math.sin(rad) * bounceOffset;
-            this.y = targetY - Math.cos(rad) * bounceOffset;
-            this.rotation = rad;
-        }
-    };
+    // Sprite_TutoArrow est désormais modulaire et défini dans SC4_Sprite_TutoArrow.js
 
     //=============================================================================
     // Window_TutoName (Fenêtre de titre contextuelle enfant)
