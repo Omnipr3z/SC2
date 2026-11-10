@@ -37,6 +37,16 @@ const ctx = {
         this.fillRect = () => { };
         this.clear = () => { };
         this.blt = () => { };
+        this.context = {
+            save: () => { },
+            restore: () => { },
+            beginPath: () => { },
+            closePath: () => { },
+            moveTo: () => { },
+            lineTo: () => { },
+            fill: () => { },
+            stroke: () => { }
+        };
     },
     Sprite: function () {
         this.initialize(...arguments);
@@ -428,6 +438,13 @@ it("Initializes Sprite_TutoArrow with correct anchor and oscillation", () => {
     assert.strictEqual(arrow.anchor.x, 0.5);
     assert.strictEqual(arrow.anchor.y, 1.0);
     assert.strictEqual(arrow.visible, false);
+    assert.strictEqual(arrow._arrowWidth, 30);
+    assert.strictEqual(arrow._arrowHeight, 56);
+    assert.ok(arrow.bitmap, "Arrow must have a generated Canvas Bitmap");
+    assert.strictEqual(arrow.bitmap.width, 30);
+    assert.strictEqual(arrow.bitmap.height, 56);
+    assert.strictEqual(arrow.bitmap.context.fillStyle, "rgba(0, 255, 136, 0.8)", "Neon green cyberpunk fillStyle");
+    assert.strictEqual(arrow.bitmap.context.shadowColor, "#00ff88", "Neon green glow");
 
     arrow.setup({ xMap: 5, yMap: 10, angle: 90 });
     assert.strictEqual(arrow.visible, true);

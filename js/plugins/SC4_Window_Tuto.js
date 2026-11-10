@@ -13,7 +13,8 @@
  * 
  * 1. Sprite_TutoArrow :
  *    - Affiche une flèche oscillante pointant vers une cible (coordonnées carte ou écran).
- *    - Image : img/GUI/tuto/arrow.png (48x48), ancrée à la pointe (0.5, 1.0).
+ *    - Rendu vectoriel cyberpunk néon vert (#00ff88) sur Bitmap Canvas (30x56) avec halo lumineux (shadowBlur: 8).
+ *    - Ancrée à la pointe (0.5, 1.0).
  *    - Rotation selon angle fourni et oscillation flottante sinusoïdale.
  * 
  * 2. Window_Tuto :
@@ -43,13 +44,64 @@
         if (Sprite.prototype.initialize) {
             Sprite.prototype.initialize.call(this);
         }
-        this.bitmap = ImageManager.loadBitmap("img/GUI/tuto/", "arrow");
+        this._arrowWidth = 30;
+        this._arrowHeight = 56;
+        this.createBitmap();
         this.anchor.set(0.5, 1.0); // Ancrage à la pointe de la flèche
         this.visible = false;
         this.z = 250;
         this._targetData = null;
         this._baseAngle = 0;
         this._tick = 0;
+    };
+
+    Sprite_TutoArrow.prototype.createBitmap = function () {
+        const BmpClass = (typeof Bitmap !== "undefined") ? Bitmap : (window.Bitmap || null);
+        if (BmpClass) {
+            this.bitmap = new BmpClass(this._arrowWidth, this._arrowHeight);
+            this.redraw();
+        }
+    };
+
+    Sprite_TutoArrow.prototype.redraw = function () {
+        const bmp = this.bitmap;
+        if (!bmp) return;
+        if (typeof bmp.clear === "function") {
+            bmp.clear();
+        }
+
+        const ctx = bmp.context;
+        if (!ctx) return;
+
+        const w = this._arrowWidth;
+        const h = this._arrowHeight;
+        const cx = w / 2;
+
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 255, 136, 0.8)";
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.shadowColor = "#00ff88";
+        ctx.shadowBlur = 8;
+
+        ctx.beginPath();
+        // Flèche cyberpunk pointant vers le bas (ancrage 0.5, 1.0 au niveau de la pointe)
+        ctx.moveTo(cx - 5, 2);      // Haut gauche queue
+        ctx.lineTo(cx + 5, 2);      // Haut droit queue
+        ctx.lineTo(cx + 5, h - 18); // Retour corps droit
+        ctx.lineTo(w - 4, h - 18);  // Aile droite
+        ctx.lineTo(cx, h - 2);      // Pointe basse
+        ctx.lineTo(4, h - 18);      // Aile gauche
+        ctx.lineTo(cx - 5, h - 18); // Retour corps gauche
+        ctx.closePath();
+
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        if (bmp._baseTexture && typeof bmp._baseTexture.update === "function") {
+            bmp._baseTexture.update();
+        }
     };
 
     /**
