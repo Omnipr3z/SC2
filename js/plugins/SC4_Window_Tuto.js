@@ -68,6 +68,10 @@
         }
     };
 
+    Window_TutoName.prototype.setTutoWindow = function (tutoWindow) {
+        this._tutoWindow = tutoWindow;
+    };
+
     /**
      * Configure et prépare le titre et son icône.
      * @param {string} title Nom du tutoriel.
@@ -90,9 +94,17 @@
     Window_TutoName.prototype.updatePlacement = function () {
         this.width = this.windowWidth();
         this.height = this.windowHeight();
-        // Superposé en haut à gauche de la fenêtre parente, débordant de 8px en Y
-        this.x = 0;
-        this.y = -this.height + 8;
+        if (this._tutoWindow && this.parent && this.parent !== this._tutoWindow) {
+            this.x = this._tutoWindow.x;
+            this.y = this._tutoWindow.y - this.height + 8;
+        } else if (this._tutoWindow && !this.parent && this._tutoWindow.x > 0) {
+            this.x = this._tutoWindow.x;
+            this.y = this._tutoWindow.y - this.height + 8;
+        } else {
+            // Superposé en haut à gauche de la fenêtre parente, débordant de 8px en Y
+            this.x = 0;
+            this.y = -this.height + 8;
+        }
     };
 
     Window_TutoName.prototype.windowWidth = function () {
@@ -486,7 +498,7 @@
 
     Window_Tuto.prototype.createNameWindow = function () {
         this._nameWindow = new Window_TutoName();
-        this.addChild(this._nameWindow);
+        this._nameWindow.setTutoWindow(this);
     };
 
     Window_Tuto.prototype.createPromptSprite = function () {
@@ -866,6 +878,9 @@
 
         this.move(winX, winY, winW, winH);
         this.createContents();
+        if (this._nameWindow) {
+            this._nameWindow.updatePlacement();
+        }
 
         if (this._promptSprite) {
             this._promptSprite.x = winW - this.padding - 6;
@@ -929,10 +944,19 @@
             return;
         }
 
-        // Synchronise la fenêtre de titre enfant
+        // Synchronise la fenêtre de titre (rendue au-dessus de tout dans WindowLayer)
         if (this._nameWindow) {
+            if (this.parent && !this._nameWindow.parent) {
+                this.parent.addChild(this._nameWindow);
+            }
+            if (this._nameWindow.parent && this._nameWindow.parent !== this) {
+                this._nameWindow.x = this.x;
+                this._nameWindow.y = this.y - this._nameWindow.height + 8;
+            }
             this._nameWindow.openness = this.openness;
-            this._nameWindow.update();
+            if (!this._nameWindow.parent || this._nameWindow.parent === this) {
+                this._nameWindow.update();
+            }
         }
 
         // Pulsation subtile de l'invite de touche

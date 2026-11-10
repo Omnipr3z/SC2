@@ -565,10 +565,10 @@ it("Wraps long lines properly and proportions window dimensions to content", () 
     });
     assert.strictEqual(win.width, 600, "Window width should respect custom width parameter");
 
-    // Child name window placement and structure
-    assert.ok(win._nameWindow, "Window_Tuto must have a _nameWindow child");
-    assert.strictEqual(win._nameWindow.x, 0, "Name window X must align to 0");
-    assert.strictEqual(win._nameWindow.y, -win._nameWindow.height + 8, "Name window Y must overlap parent by 8px");
+    // Name window placement and structure (aligned to parent in WindowLayer)
+    assert.ok(win._nameWindow, "Window_Tuto must have a _nameWindow companion");
+    assert.strictEqual(win._nameWindow.x, win.x, "Name window X must align to Window_Tuto X");
+    assert.strictEqual(win._nameWindow.y, win.y - win._nameWindow.height + 8, "Name window Y must overlap parent by 8px");
     assert.ok(win._nameWindow.width > 0, "Name window width must adapt to icon + text");
 });
 

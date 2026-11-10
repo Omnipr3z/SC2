@@ -367,6 +367,9 @@ class Scene_Inventory extends Scene_MenuBase {
             }
             this._tutoWindow = new Window_Tuto(this._tutoArrowSprite);
             this.addWindow(this._tutoWindow);
+            if (this._tutoWindow._nameWindow) {
+                this.addWindow(this._tutoWindow._nameWindow);
+            }
             if (this._tutoWindow._confirmWindow) {
                 this.addWindow(this._tutoWindow._confirmWindow);
             }
