@@ -221,10 +221,10 @@
         if (this._pointerSprite) {
             this._pointerSprite.visible = Boolean(this._isPassable);
             if (this._pointerSprite.visible) {
-                this._floatTimer = (this._floatTimer || 0) + 0.12;
+                this._floatTimer = (this._floatTimer || 0) + 0.18;
                 const osc = Math.sin(this._floatTimer); // -1 (haut) à +1 (bas)
-                // La pointe oscille doucement entre -12px et -2px au-dessus du centre de la case
-                const hoverY = -7 + osc * 5;
+                // La pointe oscille plus amplement et vivement entre -18px et -2px au-dessus du centre de la case
+                const hoverY = -10 + osc * 8;
                 this._pointerSprite.x = 0;
                 this._pointerSprite.y = hoverY;
 
