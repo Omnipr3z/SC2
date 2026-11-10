@@ -146,7 +146,9 @@ class Game_ScActorInventory {
         const equips = (a && typeof a.equips === "function") ? a.equips() : [];
         for (const eq of equips) {
             if (!eq) continue;
-            if (typeof DataManager !== "undefined" && typeof DataManager.itemRawWeight === "function") {
+            if (typeof DataManager !== "undefined" && typeof DataManager.itemWeightBonus === "function") {
+                bonus += DataManager.itemWeightBonus(eq);
+            } else if (typeof DataManager !== "undefined" && typeof DataManager.itemRawWeight === "function") {
                 const raw = DataManager.itemRawWeight(eq);
                 if (raw < 0) {
                     bonus += Math.abs(raw);
@@ -154,6 +156,26 @@ class Game_ScActorInventory {
             }
         }
         return bonus;
+    }
+
+    /**
+     * Calcule le poids résiduel total des équipements portés par l'acteur.
+     * @returns {number}
+     */
+    wornResidualWeight() {
+        const a = this.actor();
+        if (a && a.equipment && typeof a.equipment.wornResidualWeight === "function") {
+            return a.equipment.wornResidualWeight();
+        }
+        let total = 0;
+        const equips = (a && typeof a.equips === "function") ? a.equips() : [];
+        for (const eq of equips) {
+            if (!eq) continue;
+            if (typeof DataManager !== "undefined" && typeof DataManager.itemWornWeight === "function") {
+                total += DataManager.itemWornWeight(eq);
+            }
+        }
+        return total;
     }
 
     /**

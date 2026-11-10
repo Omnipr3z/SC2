@@ -130,26 +130,72 @@ class Window_InventoryCompare extends Window_Base {
             }
         }
 
-        // 3. Différence de masse / charge
-        const curItemWeight = (this._currentItem && typeof DataManager !== "undefined" && typeof DataManager.itemWeight === "function")
-            ? DataManager.itemWeight(this._currentItem) : 0;
-        const newItemWeight = (typeof DataManager !== "undefined" && typeof DataManager.itemWeight === "function")
-            ? DataManager.itemWeight(this._item) : 1;
-        const weightDiff = newItemWeight - curItemWeight;
+        // 3. Différence de masse (Stock vs Porté) & Capacité de portage
+        const curStock = this._currentItem
+            ? ((typeof DataManager.itemStockWeight === "function") ? DataManager.itemStockWeight(this._currentItem) : DataManager.itemWeight(this._currentItem))
+            : 0;
+        const newStock = (typeof DataManager.itemStockWeight === "function")
+            ? DataManager.itemStockWeight(this._item)
+            : DataManager.itemWeight(this._item);
+
+        const curWorn = this._currentItem
+            ? ((typeof DataManager.itemWornWeight === "function") ? DataManager.itemWornWeight(this._currentItem) : 0)
+            : 0;
+        const newWorn = (typeof DataManager.itemWornWeight === "function")
+            ? DataManager.itemWornWeight(this._item)
+            : 0;
+
+        const curBonus = this._currentItem
+            ? ((typeof DataManager.itemWeightBonus === "function") ? DataManager.itemWeightBonus(this._currentItem) : 0)
+            : 0;
+        const newBonus = (typeof DataManager.itemWeightBonus === "function")
+            ? DataManager.itemWeightBonus(this._item)
+            : 0;
 
         const footerY = h - 22;
         this.contents.fontSize = 12;
-        this.changeTextColor("rgba(180, 220, 255, 0.8)");
-        this.drawText("Masse équipement :", 0, footerY, 130, "left");
 
-        this.changeTextColor("#ffffff");
-        this.drawText(`${curItemWeight} → ${newItemWeight} UM`, 132, footerY, 110, "left");
+        if (newBonus > 0 || curBonus > 0) {
+            // Équipement augmentant la capacité de port (sac, harnais, exosquelette)
+            this.changeTextColor("rgba(180, 220, 255, 0.8)");
+            this.drawText("Capacité port :", 0, footerY, 95, "left");
 
-        if (weightDiff !== 0) {
-            const wColor = weightDiff < 0 ? "#22c55e" : "#f59e0b";
-            const wSign = weightDiff > 0 ? `+${weightDiff}` : `${weightDiff}`;
-            this.changeTextColor(wColor);
-            this.drawText(`(${wSign} UM)`, 246, footerY, w - 248, "left");
+            this.changeTextColor("#ffffff");
+            this.drawText(`${curBonus > 0 ? "+" + curBonus : "0"} →`, 96, footerY, 40, "left");
+
+            this.changeTextColor("#22c55e");
+            this.drawText(`+${newBonus} UM`, 138, footerY, 60, "left");
+
+            // Indication du poids en stock
+            this.changeTextColor("rgba(200, 200, 200, 0.7)");
+            this.drawText(`(Stock: ${newStock} UM)`, 202, footerY, w - 204, "left");
+        } else if (newWorn > 0 || curWorn > 0) {
+            // Équipement avec poids résiduel corporel
+            this.changeTextColor("rgba(180, 220, 255, 0.8)");
+            this.drawText("Poids résiduel :", 0, footerY, 95, "left");
+
+            this.changeTextColor("#ffffff");
+            this.drawText(`${curWorn} → ${newWorn} UM`, 96, footerY, 80, "left");
+
+            const wornDiff = newWorn - curWorn;
+            if (wornDiff !== 0) {
+                const wColor = wornDiff < 0 ? "#22c55e" : "#f59e0b";
+                const wSign = wornDiff > 0 ? `+${wornDiff}` : `${wornDiff}`;
+                this.changeTextColor(wColor);
+                this.drawText(`(${wSign} UM)`, 180, footerY, 60, "left");
+            }
+            this.changeTextColor("rgba(200, 200, 200, 0.7)");
+            this.drawText(`(Stock: ${newStock} UM)`, 244, footerY, w - 246, "left");
+        } else {
+            // Équipement standard dont le poids de stock est annulé une fois porté
+            this.changeTextColor("rgba(180, 220, 255, 0.8)");
+            this.drawText("Poids en stock :", 0, footerY, 95, "left");
+
+            this.changeTextColor("#ffffff");
+            this.drawText(`${curStock} → ${newStock} UM`, 96, footerY, 85, "left");
+
+            this.changeTextColor("#22c55e");
+            this.drawText(`(0 UM porté)`, 185, footerY, w - 187, "left");
         }
         this.resetTextColor();
     }

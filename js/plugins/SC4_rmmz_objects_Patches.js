@@ -2964,17 +2964,43 @@
         }
         return Math.max(10, max);
     }
-    Game_Party.prototype.totalWeight = function () {
+    Game_Party.prototype.stockWeight = function () {
         let total = 0;
         const items = (typeof this.allItems === "function") ? this.allItems() : [];
         for (const item of items) {
             if (item) {
                 const qty = (typeof this.numItems === "function") ? this.numItems(item) : 0;
-                total += DataManager.itemWeight(item) * qty;
+                const w = (typeof DataManager.itemStockWeight === "function")
+                    ? DataManager.itemStockWeight(item)
+                    : DataManager.itemWeight(item);
+                total += w * qty;
             }
         }
         return Math.round(total * 100) / 100;
-    }
+    };
+
+    Game_Party.prototype.wornWeight = function () {
+        let total = 0;
+        const members = (typeof this.members === "function") ? this.members() : [];
+        for (const actor of members) {
+            if (actor) {
+                if (actor.inventory && typeof actor.inventory.wornResidualWeight === "function") {
+                    total += actor.inventory.wornResidualWeight();
+                } else if (actor.equipment && typeof actor.equipment.wornResidualWeight === "function") {
+                    total += actor.equipment.wornResidualWeight();
+                } else if (typeof actor.equips === "function" && typeof DataManager.itemWornWeight === "function") {
+                    for (const eq of actor.equips()) {
+                        if (eq) total += DataManager.itemWornWeight(eq);
+                    }
+                }
+            }
+        }
+        return Math.round(total * 100) / 100;
+    };
+
+    Game_Party.prototype.totalWeight = function () {
+        return Math.round((this.stockWeight() + this.wornWeight()) * 100) / 100;
+    };
     Game_Party.prototype.isOverloaded = function () {
         return this.totalWeight() > this.maxWeight();
     }

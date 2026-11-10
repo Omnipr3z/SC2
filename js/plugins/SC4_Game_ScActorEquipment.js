@@ -277,7 +277,7 @@ class Game_ScActorEquipment {
 
     /**
      * Calcule le bonus de capacité de port conféré par l'équipement.
-     * (Poids négatif dans le notetag ou balise <weightCapacityBonus: X>).
+     * (Poids négatif dans le notetag ou balise <weightCapacityBonus: X> / <weightBonus: X>).
      * @returns {number}
      */
     equipmentWeightBonus() {
@@ -285,24 +285,32 @@ class Game_ScActorEquipment {
         const equips = this.equips();
         for (const eq of equips) {
             if (!eq) continue;
-
-            // 1. Poids négatif (ex: sac à dos allégeant la charge)
-            if (typeof DataManager !== "undefined" && typeof DataManager.itemRawWeight === "function") {
+            if (typeof DataManager !== "undefined" && typeof DataManager.itemWeightBonus === "function") {
+                bonus += DataManager.itemWeightBonus(eq);
+            } else if (typeof DataManager !== "undefined" && typeof DataManager.itemRawWeight === "function") {
                 const raw = DataManager.itemRawWeight(eq);
                 if (raw < 0) {
                     bonus += Math.abs(raw);
                 }
             }
-
-            // 2. Notetag explicite <weightCapacityBonus: X>
-            if (eq.note) {
-                const match = eq.note.match(/<weightCapacityBonus:\s*(\d+)>/i);
-                if (match) {
-                    bonus += parseInt(match[1], 10);
-                }
-            }
         }
         return bonus;
+    }
+
+    /**
+     * Calcule le poids résiduel total des pièces portées par l'acteur sur son corps.
+     * @returns {number}
+     */
+    wornResidualWeight() {
+        let total = 0;
+        const equips = this.equips();
+        for (const eq of equips) {
+            if (!eq) continue;
+            if (typeof DataManager !== "undefined" && typeof DataManager.itemWornWeight === "function") {
+                total += DataManager.itemWornWeight(eq);
+            }
+        }
+        return total;
     }
     /**
      * Sérialisation whitelistée (déléguée depuis Game_ScActor).

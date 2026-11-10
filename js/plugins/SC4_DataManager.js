@@ -296,9 +296,68 @@ class SC_DataManager {
         return 1;
     };
 
+    /**
+     * Poids de l'objet lorsqu'il est stocké dans un inventaire ou un conteneur (non équipé).
+     * Les objets à charge négative (<weight: -X>) conservent un poids physique en stock (1 UM par défaut ou <stockWeight: Y>).
+     */
+    DataManager.itemStockWeight = function (item) {
+        if (!item) return 0;
+        if (item.note) {
+            const matchStock = item.note.match(/<stockWeight:\s*(\d+(?:\.\d+)?)>/i);
+            if (matchStock) {
+                return parseFloat(matchStock[1]);
+            }
+            const matchWeight = item.note.match(/<(?:height|weight):\s*(-?\d+(?:\.\d+)?)>/i);
+            if (matchWeight) {
+                const val = parseFloat(matchWeight[1]);
+                if (val >= 0) return val;
+                return 1; // Une charge négative s'applique uniquement une fois équipée : poids de matière en stock
+            }
+        }
+        return 1;
+    };
+
     DataManager.itemWeight = function (item) {
-        const raw = DataManager.itemRawWeight(item);
-        return Math.max(0, raw);
+        return DataManager.itemStockWeight(item);
+    };
+
+    /**
+     * Poids résiduel de l'équipement lorsqu'il est porté sur le corps de l'acteur.
+     * Par défaut = 0 UM (le poids du sac est annulé quand la pièce est portée).
+     */
+    DataManager.itemWornWeight = function (item) {
+        if (!item) return 0;
+        if (item.note) {
+            const matchWorn = item.note.match(/<(?:wornWeight|equippedWeight):\s*(\d+(?:\.\d+)?)>/i);
+            if (matchWorn) {
+                return parseFloat(matchWorn[1]);
+            }
+        }
+        return 0;
+    };
+
+    /**
+     * Bonus de capacité de charge (ou allègement) conféré uniquement lorsque l'équipement est porté.
+     * Lit <weightCapacityBonus: Z>, <weightBonus: Z> ou une charge négative <weight: -Z>.
+     */
+    DataManager.itemWeightBonus = function (item) {
+        if (!item) return 0;
+        let bonus = 0;
+        if (item.note) {
+            const matchBonus = item.note.match(/<(?:weightCapacityBonus|weightBonus):\s*(\d+(?:\.\d+)?)>/i);
+            if (matchBonus) {
+                bonus += parseFloat(matchBonus[1]);
+            } else {
+                const matchWeight = item.note.match(/<(?:height|weight):\s*(-?\d+(?:\.\d+)?)>/i);
+                if (matchWeight) {
+                    const val = parseFloat(matchWeight[1]);
+                    if (val < 0) {
+                        bonus += Math.abs(val);
+                    }
+                }
+            }
+        }
+        return bonus;
     };
 
     DataManager.isAmmo = function (item) {

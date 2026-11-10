@@ -283,6 +283,14 @@ class Window_InventoryList extends Window_Selectable {
 
         // Détection de surcharge prédictive si l'objet est dans le conteneur
         let weightNotice = `\\c[4]${weight} UM\\c[0]`;
+        const bonus = (typeof DataManager !== "undefined" && typeof DataManager.itemWeightBonus === "function") ? DataManager.itemWeightBonus(item) : 0;
+        const worn = (typeof DataManager !== "undefined" && typeof DataManager.itemWornWeight === "function") ? DataManager.itemWornWeight(item) : 0;
+        if (bonus > 0) {
+            weightNotice += ` \\c[3](+${bonus} UM Capacité)\\c[0]`;
+        } else if (worn > 0) {
+            weightNotice += ` \\c[6](${worn} UM porté)\\c[0]`;
+        }
+
         if (!this._isParty && typeof $gameParty !== "undefined" && $gameParty) {
             const curW = (typeof $gameParty.totalWeight === "function") ? $gameParty.totalWeight() : 0;
             const maxW = (typeof $gameParty.maxWeight === "function") ? $gameParty.maxWeight() : 48;
