@@ -142,7 +142,7 @@ class Game_Planet extends Game_GalacticRepoBase {
 
     governorFactionId() {
         const gov = this.governor();
-        return (gov && typeof gov.factionId === "function") ? gov.factionId() : null;
+        return (gov && gov.social) ? gov.social.factionId() : null;
     }
 
     // ========================================================================

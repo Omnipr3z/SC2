@@ -216,6 +216,7 @@
     ConfigManager.autoReload = false;
     ConfigManager.locale = "FR";
     ConfigManager.contextualHelp = true;
+    ConfigManager.fullscreen = false; // Par défaut le jeu se lance en fenêtré
 
     const _ConfigManager_makeData = ConfigManager.makeData;
     const _ConfigManager_applyData = ConfigManager.applyData;
@@ -226,6 +227,7 @@
         config.autoReload = this.autoReload;
         config.locale = this.locale || "FR";
         config.contextualHelp = this.contextualHelp;
+        config.fullscreen = Boolean(this.fullscreen);
         return config;
     };
     ConfigManager.applyData = function (config) {
@@ -234,10 +236,27 @@
         this.autoReload = Boolean(config && config.autoReload);
         this.locale = (config && config.locale) ? String(config.locale).toUpperCase() : "FR";
         this.contextualHelp = (config && config.contextualHelp !== undefined) ? Boolean(config.contextualHelp) : true;
+        this.fullscreen = Boolean(config && config.fullscreen);
         if (typeof $gameSystem !== "undefined" && $gameSystem) {
             $gameSystem._locale = this.locale;
         }
         this.applyKeyboardLayout();
+    };
+    ConfigManager.applyFullscreen = function () {
+        if (typeof Graphics === "undefined" || typeof Graphics._isFullScreen !== "function") return;
+        const isFull = Graphics._isFullScreen();
+        if (this.fullscreen && !isFull) {
+            try {
+                Graphics._requestFullScreen();
+            } catch (e) {
+                // Peut être bloqué en navigateur si pas d'interaction utilisateur directe
+            }
+        } else if (!this.fullscreen && isFull) {
+            try {
+                Graphics._cancelFullScreen();
+            } catch (e) {
+            }
+        }
     };
     ConfigManager.applyKeyboardLayout = function () {
         if (!Input.keyMapper) return;
@@ -278,6 +297,25 @@
         }
     };
     ConfigManager.applyKeyboardLayout();
+
+    // SYNCHRONISATION PLEIN ÉCRAN (F4)
+    //=============================================================================
+    if (typeof Graphics !== "undefined" && Graphics._switchFullScreen) {
+        const _Graphics_switchFullScreen = Graphics._switchFullScreen;
+        Graphics._switchFullScreen = function () {
+            _Graphics_switchFullScreen.call(this);
+            if (typeof ConfigManager !== "undefined") {
+                setTimeout(() => {
+                    if (typeof Graphics._isFullScreen === "function") {
+                        ConfigManager.fullscreen = Boolean(Graphics._isFullScreen());
+                        if (typeof ConfigManager.save === "function") {
+                            ConfigManager.save();
+                        }
+                    }
+                }, 100);
+            }
+        };
+    }
 
     // TEXT MANAGER
     //=============================================================================

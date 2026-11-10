@@ -21,7 +21,13 @@
  *    - characterPatternY : repli sur les directions cardinales pour les diagonales.
  *    - updateOther : effet visuel de surcharge (flash rouge).
  * 
- * 2. Spriteset_Map :
+ * 2. Sprite_Destination :
+ *    - Refonte complète de l'indicateur de destination par clic/tactile.
+ *    - Composant bi-calque :
+ *      * Ellipse douce au sol (perspective 3/4 plongeante) animée en pulsation/fondu additif.
+ *      * Flèche supérieure oscillante (destPointer.png) pointant vers le sol, visible uniquement sur cases passables.
+ * 
+ * 3. Spriteset_Map :
  *    - createParallax / updateParallax : triple calque parallaxe dynamique en vaisseau (fond, profondeur Stars, planète).
  *    - createCharacterSprite : instancie Sprite_Hero pour les héros et sprites composites.
  *    - createCharacters : création des sprites avec followers().reverseData().
@@ -52,23 +58,247 @@
         }
     };
 
+    // SPRITE DESTINATION
+    //=============================================================================
+    const _Sprite_Destination_initialize = Sprite_Destination.prototype.initialize;
+    const _Sprite_Destination_destroy = Sprite_Destination.prototype.destroy;
+
+    Sprite_Destination.prototype.initialize = function () {
+        if (Sprite.prototype.initialize) {
+            Sprite.prototype.initialize.call(this);
+        }
+        this._frameCount = 0;
+        this._floatTimer = 0;
+        this._lastDestX = -1;
+        this._lastDestY = -1;
+        this._isPassable = true;
+
+        this.createGroundSprite();
+        this.createPointerSprite();
+    };
+
+    Sprite_Destination.prototype.createBitmap = function () {
+        // Redéfini : la gestion graphique est assurée par createGroundSprite et createPointerSprite
+    };
+
+    Sprite_Destination.prototype.createGroundSprite = function () {
+        const tw = (window.$gameMap && typeof window.$gameMap.tileWidth === "function") ? window.$gameMap.tileWidth() : 48;
+        const th = (window.$gameMap && typeof window.$gameMap.tileHeight === "function") ? window.$gameMap.tileHeight() : 48;
+
+        // Bitmap dimensionné pour l'ellipse de 72px (avec 12px de débordement autour de la case 48px)
+        const bmpW = Math.max(96, tw * 2);
+        const bmpH = Math.max(96, th * 2);
+        this._groundBitmap = new Bitmap(bmpW, bmpH);
+
+        const ctx = this._groundBitmap.context;
+        if (ctx) {
+            const cx = bmpW / 2;
+            const cy = bmpH / 2;
+            // Rayon maximal de 36px (diamètre 72px = 48 + 12*2) et perspective 3/4 plongeante (~ratio 1.85:1)
+            const maxRx = 36;
+            const maxRy = 19.5;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.scale(1, maxRy / maxRx);
+
+            // Dégradé radial doux s'atténuant vers l'extérieur
+            const grad = ctx.createRadialGradient(0, 0, 4, 0, 0, maxRx);
+            grad.addColorStop(0, "rgba(255, 255, 255, 0.40)");
+            grad.addColorStop(0.45, "rgba(255, 255, 255, 0.22)");
+            grad.addColorStop(0.85, "rgba(255, 255, 255, 0.60)");
+            grad.addColorStop(1.0, "rgba(255, 255, 255, 0.0)");
+
+            ctx.beginPath();
+            ctx.arc(0, 0, maxRx, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Anneau extérieur lumineux s'atténuant vers le bord
+            ctx.beginPath();
+            ctx.arc(0, 0, maxRx - 1.5, 0, Math.PI * 2);
+            ctx.lineWidth = 2.0;
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.70)";
+            ctx.stroke();
+
+            // Anneau intérieur discret
+            ctx.beginPath();
+            ctx.arc(0, 0, maxRx * 0.55, 0, Math.PI * 2);
+            ctx.lineWidth = 1.0;
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.30)";
+            ctx.stroke();
+
+            ctx.restore();
+
+            if (this._groundBitmap._baseTexture && typeof this._groundBitmap._baseTexture.update === "function") {
+                this._groundBitmap._baseTexture.update();
+            }
+        }
+
+        this._groundSprite = new Sprite(this._groundBitmap);
+        this._groundSprite.anchor.x = 0.5;
+        this._groundSprite.anchor.y = 0.5;
+        this._groundSprite.blendMode = 1; // Additif pour halo lumineux
+        this.addChild(this._groundSprite);
+    };
+
+    Sprite_Destination.prototype.createPointerSprite = function () {
+        this._pointerSprite = new Sprite();
+        this._pointerSprite.bitmap = ImageManager.loadBitmap("img/GUI/cursors/", "destPointer");
+        this._pointerSprite.anchor.x = 0.5;
+        this._pointerSprite.anchor.y = 1.0; // Pointe de la flèche dirigée vers le sol
+        this._pointerSprite.blendMode = 0;
+        this.addChild(this._pointerSprite);
+    };
+
+    Sprite_Destination.prototype.isDestinationPassable = function (x, y) {
+        if (!window.$gameMap || typeof window.$gameMap.isValid !== "function" || !window.$gameMap.isValid(x, y)) {
+            return false;
+        }
+        // 1. Collision avec personnages / événements physiques bloquants
+        if (window.$gamePlayer && typeof window.$gamePlayer.isCollidedWithCharacters === "function") {
+            if (window.$gamePlayer.isCollidedWithCharacters(x, y)) {
+                return false;
+            }
+        }
+        // 2. Praticabilité cartographique de la case
+        if (typeof window.$gameMap.isPassable === "function") {
+            const canPassAny = [2, 4, 6, 8].some(d => window.$gameMap.isPassable(x, y, d));
+            if (!canPassAny) return false;
+        }
+        return true;
+    };
+
+    Sprite_Destination.prototype.update = function () {
+        if (Sprite.prototype.update) {
+            Sprite.prototype.update.call(this);
+        }
+
+        if (window.$gameTemp && typeof window.$gameTemp.isDestinationValid === "function" && window.$gameTemp.isDestinationValid()) {
+            this.updatePosition();
+            this.updateAnimation();
+            this.visible = true;
+        } else {
+            this._frameCount = 0;
+            this._floatTimer = 0;
+            this._lastDestX = -1;
+            this._lastDestY = -1;
+            this.visible = false;
+        }
+    };
+
+    Sprite_Destination.prototype.updatePosition = function () {
+        const tileWidth = (window.$gameMap && typeof window.$gameMap.tileWidth === "function") ? window.$gameMap.tileWidth() : 48;
+        const tileHeight = (window.$gameMap && typeof window.$gameMap.tileHeight === "function") ? window.$gameMap.tileHeight() : 48;
+        const x = window.$gameTemp.destinationX();
+        const y = window.$gameTemp.destinationY();
+
+        this.x = (window.$gameMap.adjustX(x) + 0.5) * tileWidth;
+        this.y = (window.$gameMap.adjustY(y) + 0.5) * tileHeight;
+
+        // Mise à jour du test de praticabilité si la case a changé
+        if (x !== this._lastDestX || y !== this._lastDestY) {
+            this._lastDestX = x;
+            this._lastDestY = y;
+            this._isPassable = this.isDestinationPassable(x, y);
+        }
+    };
+
+    Sprite_Destination.prototype.updateAnimation = function () {
+        // 1. Animation du cercle au sol : pulsation s'étendant de 48px à 72px tout en baissant d'opacité
+        this._frameCount++;
+        this._frameCount %= 25;
+        const progress = this._frameCount / 25;
+        if (this._groundSprite) {
+            this._groundSprite.opacity = Math.round((1 - progress) * 220);
+            // Échelle de 0.67 (taille 48px de la tuile) à 1.0 (72px, soit 12px de débordement autour)
+            const currentScale = 0.67 + progress * 0.33;
+            this._groundSprite.scale.x = currentScale;
+            this._groundSprite.scale.y = currentScale;
+        }
+
+        // 2. Animation de la flèche : oscillation sinusoïdale avec opacité couplée (45% haut à 65% bas)
+        if (this._pointerSprite) {
+            this._pointerSprite.visible = Boolean(this._isPassable);
+            if (this._pointerSprite.visible) {
+                this._floatTimer = (this._floatTimer || 0) + 0.12;
+                const osc = Math.sin(this._floatTimer); // -1 (haut) à +1 (bas)
+                // La pointe oscille doucement entre -12px et -2px au-dessus du centre de la case
+                const hoverY = -7 + osc * 5;
+                this._pointerSprite.x = 0;
+                this._pointerSprite.y = hoverY;
+
+                // Opacité modulée en fonction de la hauteur : plus elle monte, moins elle est opaque
+                // max 65% (166) en bas (osc = +1), min 45% (115) en haut (osc = -1)
+                const t = (osc + 1) / 2; // 0 en haut, 1 en bas
+                const minOp = Math.round(255 * 0.45); // 115
+                const maxOp = Math.round(255 * 0.65); // 166
+                this._pointerSprite.opacity = Math.round(minOp + t * (maxOp - minOp));
+            }
+        }
+    };
+
+    Sprite_Destination.prototype.destroy = function (options) {
+        if (this._groundBitmap && typeof this._groundBitmap.destroy === "function") {
+            this._groundBitmap.destroy();
+        }
+        if (Sprite.prototype.destroy) {
+            Sprite.prototype.destroy.call(this, options);
+        }
+    };
+
     // SPRITESET MAP
     //=============================================================================
     const _Spriteset_Map_initialize = Spriteset_Map.prototype.initialize;
     const _Spriteset_Map_update = Spriteset_Map.prototype.update;
     const _Spriteset_Map_createParallax = Spriteset_Map.prototype.createParallax;
     const _Spriteset_Map_updateParallax = Spriteset_Map.prototype.updateParallax;
+    const _Spriteset_Map_createDestination = Spriteset_Map.prototype.createDestination;
 
     Spriteset_Map.prototype.initialize = function () {
         this._projectileSprites = [];
         _Spriteset_Map_initialize.call(this);
     };
+
+    // Substitution des ombres carrées natives de RMMZ
+    Spriteset_Map.prototype.createShadow = function () {
+        this._shadowSprite = new Sprite();
+        this._shadowSprite.visible = false;
+    };
+
+    // Injection du conteneur d'overlays juste avant l'indicateur de destination
+    Spriteset_Map.prototype.createDestination = function () {
+        this.createOverlays();
+        if (_Spriteset_Map_createDestination) {
+            _Spriteset_Map_createDestination.call(this);
+        }
+    };
+
+    Spriteset_Map.prototype.createOverlays = function () {
+        if (typeof Spriteset_Overlays !== "undefined") {
+            this._overlaysManager = new Spriteset_Overlays();
+            if (this._tilemap && typeof this._tilemap.addChild === "function") {
+                this._overlaysManager.attachToTilemap(this._tilemap);
+            } else if (this._baseSprite && typeof this._baseSprite.addChild === "function") {
+                this._baseSprite.addChild(this._overlaysManager);
+            } else if (typeof this.addChild === "function") {
+                this.addChild(this._overlaysManager);
+            }
+            this._overlaysContainer = this._overlaysManager;
+        }
+    };
+
     Spriteset_Map.prototype.update = function () {
         if (window.$tutoManager && window.$tutoManager.isBusy()) {
             return;
         }
         _Spriteset_Map_update.call(this);
         this.updateProjectiles();
+        if (this._overlaysManager) {
+            this._overlaysManager.update();
+        } else if (this._overlaysContainer) {
+            this._overlaysContainer.update();
+        }
     };
     Spriteset_Map.prototype.updateProjectiles = function () {
         this._projectileSprites = this._projectileSprites || [];

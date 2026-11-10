@@ -192,6 +192,12 @@ class SC_DataManager {
         if (window.$tutoManager && typeof window.$tutoManager.makeSavefileData === "function") {
             contents.sc_tutos = window.$tutoManager.makeSavefileData();
         }
+        if (window.$mapOverlaysManager && typeof window.$mapOverlaysManager.makeSavefileData === "function") {
+            contents.sc_mapOverlays = window.$mapOverlaysManager.makeSavefileData();
+        }
+        if (window.$gameActors && typeof window.$gameActors.makeSavefileData === "function") {
+            contents.sc_actors = window.$gameActors.makeSavefileData();
+        }
     }
 
     /**
@@ -199,6 +205,9 @@ class SC_DataManager {
      * @param {object} contents 
      */
     static extractSaveContents(contents) {
+        if (contents && contents.sc_actors && window.$gameActors && typeof window.$gameActors.loadSavefileData === "function") {
+            window.$gameActors.loadSavefileData(contents.sc_actors);
+        }
         if (contents && contents.sc_inventories && window.$inventories && typeof window.$inventories.loadSavefileData === "function") {
             window.$inventories.loadSavefileData(contents.sc_inventories);
         }
@@ -231,6 +240,9 @@ class SC_DataManager {
         }
         if (contents && contents.sc_tutos && window.$tutoManager && typeof window.$tutoManager.loadSavefileData === "function") {
             window.$tutoManager.loadSavefileData(contents.sc_tutos);
+        }
+        if (contents && contents.sc_mapOverlays && window.$mapOverlaysManager && typeof window.$mapOverlaysManager.loadSavefileData === "function") {
+            window.$mapOverlaysManager.loadSavefileData(contents.sc_mapOverlays);
         }
     }
 }
@@ -307,6 +319,60 @@ class SC_DataManager {
             }
         }
         return false;
+    };
+
+    /**
+     * Résout la clé et le libellé de catégorie SC4 d'un objet (notetag <sc_type: ...> ou repli).
+     * @param {object} item 
+     * @returns {{ key: string, label: string }}
+     */
+    DataManager.itemScTypeInfo = function (item) {
+        if (!item) return { key: "misc", label: "Divers" };
+
+        // 1. Notetag explicite <sc_type: ...>
+        if (item.note) {
+            const match = item.note.match(/<sc_type:\s*([^>]+)>/i);
+            if (match) {
+                const raw = match[1].trim().toLowerCase();
+                if (raw === "consumable" || raw === "consommable") return { key: "consumable", label: "Consommable" };
+                if (raw === "ingredient" || raw === "ingrédient" || raw === "material" || raw === "matériau") return { key: "material", label: "Ingrédient / Matériau" };
+                if (raw === "equipment" || raw === "équipement" || raw === "equipement" || raw === "armor" || raw === "armure") return { key: "equipment", label: "Équipement" };
+                if (raw === "weapon" || raw === "arme" || raw === "ammo" || raw === "munition") return { key: "weapon_ammo", label: "Arme & Munitions" };
+                if (raw === "quest" || raw === "quete" || raw === "quête" || raw === "key" || raw === "clé") return { key: "quest", label: "Objet Clé" };
+                if (raw === "datapad" || raw === "archive" || raw === "livre" || raw === "book") return { key: "datapad", label: "Datapad / Archive" };
+                if (raw === "medical" || raw === "médical") return { key: "medical", label: "Biomédical" };
+                if (raw === "tool" || raw === "outil") return { key: "tool", label: "Outil" };
+                if (raw === "misc" || raw === "divers") return { key: "misc", label: "Divers" };
+                return { key: raw, label: match[1].trim() };
+            }
+        }
+
+        // 2. Détection pour armes et armures
+        if (typeof DataManager.isWeapon === "function" && DataManager.isWeapon(item)) {
+            return { key: "weapon_ammo", label: "Arme & Munitions" };
+        }
+        if (typeof DataManager.isArmor === "function" && DataManager.isArmor(item)) {
+            return { key: "equipment", label: "Équipement" };
+        }
+
+        // 3. Détection des munitions
+        if (typeof DataManager.isAmmo === "function" && DataManager.isAmmo(item)) {
+            return { key: "weapon_ammo", label: "Arme & Munitions" };
+        }
+
+        // 4. Détection native des types RMMZ
+        if (item.itypeId === 2) {
+            return { key: "quest", label: "Objet Clé" };
+        }
+        if (item.itypeId === 3 || item.itypeId === 4) {
+            return { key: "datapad", label: "Datapad / Archive" };
+        }
+        if (item.consumable === true && item.itypeId === 1) {
+            return { key: "consumable", label: "Consommable" };
+        }
+
+        // 5. Par défaut : "Divers" pour tout objet non typé
+        return { key: "misc", label: "Divers" };
     };
 
 

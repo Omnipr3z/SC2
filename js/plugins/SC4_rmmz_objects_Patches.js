@@ -73,122 +73,19 @@
 
     // GAME ACTOR
     //=============================================================================
+    // GAME ACTORS & ACTOR (Initialisation souveraine Game_ScActor)
+    //=============================================================================
     const _Game_Actors_actor = Game_Actors.prototype.actor;
     const _Game_Actor_name = Game_Actor.prototype.name;
     const _Game_Actor_nickname = Game_Actor.prototype.nickname;
     const _Game_Actor_profile = Game_Actor.prototype.profile;
-    const _Game_Actor_setup = Game_Actor.prototype.setup;
 
-    Game_Actor.prototype.setup = function (actorId) {
-        _Game_Actor_setup.call(this, actorId);
-        this._weaponAmmo = this._weaponAmmo || {};
-    };
-    Game_Actor.prototype.gunfightWeapon = function () {
-        const weapons = (typeof this.weapons === "function") ? this.weapons() : [];
-        return weapons[0] || null;
-    };
-    Game_Actor.prototype.gunfightStats = function () {
-        const weapon = this.gunfightWeapon();
-        return GunfightManager.parseWeaponStats(weapon);
-    };
-    Game_Actor.prototype.getLoadedAmmo = function (weapon = null) {
-        const wp = weapon || this.gunfightWeapon();
-        if (!wp) return -1;
-        const stats = GunfightManager.parseWeaponStats(wp);
-        if (!stats.reload) return -1;
-
-        this._weaponAmmo = this._weaponAmmo || {};
-        if (this._weaponAmmo[wp.id] === undefined) {
-            this._weaponAmmo[wp.id] = stats.ammoCap;
-        }
-        return this._weaponAmmo[wp.id];
-    };
-    Game_Actor.prototype.setLoadedAmmo = function (weapon, count) {
-        const wp = weapon || this.gunfightWeapon();
-        if (!wp) return;
-        const stats = GunfightManager.parseWeaponStats(wp);
-        this._weaponAmmo = this._weaponAmmo || {};
-        this._weaponAmmo[wp.id] = Math.max(0, Math.min(stats.ammoCap, count));
-    };
-    Game_Actor.prototype.consumeLoadedAmmo = function (weapon, count = 1) {
-        const current = this.getLoadedAmmo(weapon);
-        if (current > 0) {
-            this.setLoadedAmmo(weapon, current - count);
-        }
-    };
-    Game_Actor.prototype.getReserveAmmo = function (weapon = null) {
-        const wp = weapon || this.gunfightWeapon();
-        if (!wp) return 0;
-        const stats = GunfightManager.parseWeaponStats(wp);
-        if (!stats.reload) return 999;
-        if (!stats.ammoId || stats.ammoId <= 0) return 999;
-
-        if (typeof $gameParty !== "undefined" && $gameParty && typeof $dataItems !== "undefined") {
-            const item = $dataItems[stats.ammoId];
-            return item ? $gameParty.numItems(item) : 0;
-        }
-        return 0;
-    };
-
-    Game_Actor.prototype.attackSkillId = function () {
-        const actorData = this.actor ? this.actor() : null;
-        if (actorData && actorData.note) {
-            const match = actorData.note.match(/<attackId:\s*(\d+)>/i);
-            if (match) {
-                return Number(match[1]);
-            }
-        }
-        return 1;
-    }
-    Game_Actor.prototype.hasNoWeapons = function () {
-        const w = typeof this.weapons === "function" ? this.weapons() : [];
-        return w.filter(Boolean).length === 0;
-    }
-    Game_Actor.prototype.getFaceEquipLayers = function () {
-        const layers = [];
-        const equips = (typeof this.equips === "function") ? this.equips() : [];
-        for (const item of equips) {
-            if (!item || !item.note) continue;
-            const regex = /<face:\s*([^,>]+)(?:,\s*(\d+))?(?:,\s*(true|false))?\s*>/gi;
-            let match;
-            while ((match = regex.exec(item.note)) !== null) {
-                const filename = match[1].trim();
-                const zindex = match[2] ? parseInt(match[2], 10) : 10;
-                const unisex = match[3] ? (match[3].toLowerCase() === "true") : false;
-                layers.push({ filename, zindex, unisex });
-            }
-        }
-        return layers;
-    }
-    Game_Actor.prototype.factionId = function () {
-        // ========================================================================
-        // Allégeance de faction des acteurs (<factionId: X>)
-        // 0 ou absent = sans allégeance (null). Valeur runtime modifiable
-        // (défection, recrutement) et persistée avec Game_Actor dans la sauvegarde.
-        // ========================================================================
-        if (this._factionId === undefined) {
-            const actorData = this.actor ? this.actor() : null;
-            let id = 0;
-            if (actorData && actorData.note) {
-                const match = actorData.note.match(/<factionId:\s*(\d+)\s*>/i);
-                if (match) id = Number(match[1]);
-            }
-            this._factionId = id > 0 ? id : null;
-        }
-        return this._factionId;
-    }
-    Game_Actor.prototype.faction = function () {
-        return $gameFactions.faction(this.factionId())
-    }
-    Game_Actor.prototype.setFactionId = function (factionId) {
-        const id = Number(factionId) || 0;
-        this._factionId = id > 0 ? id : null;
-    }
     Game_Actors.prototype.actor = function (actorId) {
         if ($dataActors && $dataActors[actorId]) {
             if (!this._data[actorId]) {
-                const actorData = $dataActors[actorId];
-                if (actorData.note && /<hero>/i.test(actorData.note)) {
+                if (typeof Game_ScActor !== "undefined") {
+                    this._data[actorId] = new Game_ScActor(actorId);
+                } else if (typeof Game_Hero !== "undefined") {
                     this._data[actorId] = new Game_Hero(actorId);
                 } else {
                     this._data[actorId] = new Game_Actor(actorId);
@@ -197,38 +94,41 @@
             return this._data[actorId];
         }
         return null;
-    }
-    Game_Actor.prototype.equipmentWeightCapacityBonus = function () {
-        let bonus = 0;
-        const equips = (typeof this.equips === "function") ? this.equips() : [];
-        for (const eq of equips) {
-            if (eq) {
-                const raw = DataManager.itemRawWeight(eq);
-                if (raw < 0) {
-                    bonus += Math.abs(raw);
+    };
+
+    Game_Actors.prototype.makeSavefileData = function () {
+        const result = {};
+        for (let i = 1; i < this._data.length; i++) {
+            const actor = this._data[i];
+            if (actor && typeof actor.makeSavefileData === "function") {
+                result[i] = actor.makeSavefileData();
+            }
+        }
+        return result;
+    };
+
+    Game_Actors.prototype.loadSavefileData = function (data) {
+        if (!data || typeof data !== "object") return;
+        for (const [idStr, actorData] of Object.entries(data)) {
+            const id = parseInt(idStr, 10);
+            if (id > 0) {
+                const actor = this.actor(id);
+                if (actor && typeof actor.loadSavefileData === "function") {
+                    actor.loadSavefileData(actorData);
                 }
             }
         }
-        return bonus;
-    }
-    Game_Actor.prototype.weightCapacity = function () {
-        const baseAtk = (typeof this.atk === "number") ? this.atk : 10;
-        const baseCap = Math.max(10, Math.round(baseAtk * 2.5));
-        return baseCap + this.equipmentWeightCapacityBonus();
-    }
-    Game_Actor.prototype.exhaustion = function () {
-        if (!this._exhaution) this._exhaustion = 0;
-        return this._exhaustion;
-    }
+    };
+
     Game_Actor.prototype.name = function () {
         return SC4_Localization.parse(_Game_Actor_name.call(this));
-    }
+    };
     Game_Actor.prototype.nickname = function () {
         return SC4_Localization.parse(_Game_Actor_nickname.call(this));
-    }
+    };
     Game_Actor.prototype.profile = function () {
         return SC4_Localization.parse(_Game_Actor_profile.call(this));
-    }
+    };
 
     // BATTLER BASE
     //=============================================================================
@@ -427,6 +327,7 @@
         this._combatMode = false;
         this._spaceShipId = null;
         this._shipHeadingVector = { x: 0, y: -3 };
+        this._overlays = [];
         if (typeof $dataMap !== "undefined" && $dataMap && $dataMap.note) {
             const match = $dataMap.note.match(/<spaceship:\s*(\w+)>/i);
             if (match) {
@@ -440,6 +341,9 @@
             if (this._shipHeadingVector.x === 0 && this._shipHeadingVector.y === 0) {
                 this._shipHeadingVector.y = -3;
             }
+
+            // Parsing des notetags d'overlays cartographiques (<overlay:...>)
+            this.setupMapOverlays($dataMap.note);
         }
         if (_Game_Map_setup) {
             _Game_Map_setup.call(this, mapId);
@@ -449,7 +353,48 @@
         } else if (typeof IAManager !== "undefined" && typeof IAManager.resetBgmState === "function") {
             IAManager.resetBgmState();
         }
-    }
+    };
+
+    /**
+     * Analyse les notetags <overlay:...> de la carte et peuple this._overlays.
+     * Syntaxe : <overlay: id, imgName, type, zIndex, xMap, yMap, opacity, persistant, blendMode, hue, regionTrigger, flickerType, fadeDuration>
+     * @param {string} note 
+     */
+    Game_Map.prototype.setupMapOverlays = function (note) {
+        this._overlays = [];
+        if (!note) return;
+        const regex = /<overlay:\s*([^>]+)>/gi;
+        let match;
+        while ((match = regex.exec(note)) !== null) {
+            const raw = match[1].trim();
+            const parts = raw.split(",").map(p => p.trim());
+            if (parts.length >= 2) {
+                const type = parts[2] || "static";
+                const isShadow = type.toLowerCase().includes("shadow");
+                const defaultZ = isShadow ? 2 : 4;
+                const overlayData = {
+                    id: parts[0],
+                    imgName: parts[1],
+                    type: type,
+                    zIndex: (parts[3] !== undefined && parts[3] !== "") ? Number(parts[3]) : defaultZ,
+                    xMap: (parts[4] !== undefined && parts[4] !== "") ? Number(parts[4]) : 0,
+                    yMap: (parts[5] !== undefined && parts[5] !== "") ? Number(parts[5]) : 0,
+                    opacity: (parts[6] !== undefined && parts[6] !== "") ? Number(parts[6]) : 255,
+                    persistant: (parts[7] !== undefined) ? (parts[7].toLowerCase() === "true" || parts[7] === "1") : false,
+                    blendMode: (parts[8] !== undefined && parts[8] !== "") ? Number(parts[8]) : 0,
+                    hue: (parts[9] !== undefined && parts[9] !== "") ? Number(parts[9]) : 0,
+                    regionTrigger: (parts[10] !== undefined && parts[10] !== "") ? Number(parts[10]) : 0,
+                    flickerType: (parts[11] !== undefined && parts[11] !== "") ? parts[11] : null,
+                    fadeDuration: (parts[12] !== undefined && parts[12] !== "") ? Number(parts[12]) : null
+                };
+                this._overlays.push(overlayData);
+            }
+        }
+    };
+
+    Game_Map.prototype.overlays = function () {
+        return this._overlays || [];
+    };
     Game_Map.prototype.setupParallax = function () {
         if (_Game_Map_setupParallax) {
             _Game_Map_setupParallax.call(this);
@@ -479,6 +424,13 @@
         this._indicatorQueue = [];
         this._pose = null;
         this._poseOptions = {};
+        this._actionQueue = [];
+        this._currentQueueItem = null;
+        this._isRotating = false;
+        this._rotatePath = [];
+        this._rotateTimer = 0;
+        this._rotateStepDelay = 3;
+        this._rotateOnEnd = null;
     }
     Game_CharacterBase.prototype.setPose = function (poseName, options = {}) {
         this._pose = poseName || null;
@@ -561,7 +513,7 @@
         this._action = action;
     }
     Game_CharacterBase.prototype.isActing = function () {
-        return Boolean(this._isActing);
+        return Boolean(this._isActing || this._isRotating || (this._actionQueue && this._actionQueue.length > 0));
     }
     Game_CharacterBase.prototype.isAttacking = function () {
         return this.isActing() && this._action === "atk";
@@ -573,6 +525,9 @@
         return this.actionPattern();
     }
     Game_CharacterBase.prototype.canAct = function () {
+        if (this._queueBypassCanAct) {
+            return true;
+        }
         return !this.isActing();
     }
     Game_CharacterBase.prototype.canAttack = function () {
@@ -645,10 +600,394 @@
 
         return true;
     }
+
+    /**
+     * Résout une direction sous forme de chiffre RMMZ (1..9).
+     * @param {number|string} dir
+     * @returns {number}
+     */
+    Game_CharacterBase.prototype.resolveDirectionNumber = function (dir) {
+        let numDir = Number(dir);
+        if (isNaN(numDir) || numDir === 0) {
+            const s = String(dir || "").toLowerCase();
+            if (s === "down" || s === "bas") numDir = 2;
+            else if (s === "left" || s === "gauche") numDir = 4;
+            else if (s === "right" || s === "droite") numDir = 6;
+            else if (s === "up" || s === "haut") numDir = 8;
+            else if (s === "downleft" || s === "basgauche") numDir = 1;
+            else if (s === "downright" || s === "basdroite") numDir = 3;
+            else if (s === "upleft" || s === "hautgauche") numDir = 7;
+            else if (s === "upright" || s === "hautdroite") numDir = 9;
+            else numDir = this.direction() || 2;
+        }
+        return numDir;
+    };
+
+    /**
+     * Calcule le delta de déplacement (dx, dy) pour une direction donnée.
+     * @param {number} dir
+     * @returns {{ dx: number, dy: number }}
+     */
+    Game_CharacterBase.prototype.directionToDelta = function (dir) {
+        const num = Number(dir);
+        let dx = 0;
+        let dy = 0;
+        if (num === 1) { dx = -1; dy = 1; }
+        else if (num === 2) { dx = 0; dy = 1; }
+        else if (num === 3) { dx = 1; dy = 1; }
+        else if (num === 4) { dx = -1; dy = 0; }
+        else if (num === 6) { dx = 1; dy = 0; }
+        else if (num === 7) { dx = -1; dy = -1; }
+        else if (num === 8) { dx = 0; dy = -1; }
+        else if (num === 9) { dx = 1; dy = -1; }
+        return { dx, dy };
+    };
+
+    /**
+     * Calcule la trajectoire angulaire la plus courte entre deux directions 8-dir.
+     * En cas d'opposé parfait (180°), privilégie le passage par le bas (2) ou la droite (6).
+     * @param {number} fromDir
+     * @param {number} toDir
+     * @returns {{ steps: number, path: number[] }}
+     */
+    Game_CharacterBase.prototype.getShortestTurnPath = function (fromDir, toDir) {
+        const DIRS = [8, 9, 6, 3, 2, 1, 4, 7];
+        let fromIdx = DIRS.indexOf(Number(fromDir));
+        let toIdx = DIRS.indexOf(Number(toDir));
+        if (fromIdx === -1) fromIdx = 4;
+        if (toIdx === -1) toIdx = fromIdx;
+        if (fromIdx === toIdx) return { steps: 0, path: [] };
+
+        const distCW = (toIdx - fromIdx + 8) % 8;
+        const distCCW = (fromIdx - toIdx + 8) % 8;
+
+        let sign = 1;
+        if (distCW < distCCW) {
+            sign = 1;
+        } else if (distCCW < distCW) {
+            sign = -1;
+        } else {
+            // Règle de départage à 180° : privilégier le passage par le bas (2) ou la droite (6)
+            let hasFavoredCW = false;
+            for (let i = 1; i < distCW; i++) {
+                const d = DIRS[(fromIdx + i) % 8];
+                if (d === 2 || d === 6) hasFavoredCW = true;
+            }
+            sign = hasFavoredCW ? 1 : -1;
+        }
+
+        const numSteps = (sign === 1) ? distCW : distCCW;
+        const path = [];
+        for (let step = 1; step <= numSteps; step++) {
+            const nextIdx = (fromIdx + sign * step + 8 * 10) % 8;
+            path.push(DIRS[nextIdx]);
+        }
+        return { steps: numSteps, path };
+    };
+
+    /**
+     * Déclenche une rotation progressive 8 directions vers l'angle cible.
+     * @param {number|string} targetDirection
+     * @param {object|number} [options={}] - Options ou durée en frames par cran de 45° (stepDelay)
+     * @returns {boolean}
+     */
+    Game_CharacterBase.prototype.playRotate = function (targetDirection, options = {}) {
+        const opts = (typeof options === "number") ? { stepDelay: options } : (options || {});
+        const numDir = this.resolveDirectionNumber(targetDirection);
+        const curDir = this.direction() || 2;
+        const turn = this.getShortestTurnPath(curDir, numDir);
+
+        if (turn.steps === 0 || !turn.path || turn.path.length === 0) {
+            this.setDirection(numDir);
+            this._actionDirection = numDir;
+            if (typeof opts.onEnd === "function") {
+                opts.onEnd.call(this);
+            }
+            return true;
+        }
+
+        this._isRotating = true;
+        this._rotatePath = turn.path;
+        this._rotateTimer = 0;
+        this._rotateStepDelay = Number(opts.stepDelay) || 3;
+        this._rotateOnEnd = typeof opts.onEnd === "function" ? opts.onEnd : null;
+        this._actionDirection = curDir;
+        return true;
+    };
+
+    /**
+     * Met à jour la rotation progressive à chaque frame.
+     */
+    Game_CharacterBase.prototype.updateRotate = function () {
+        this._rotateTimer++;
+        if (this._rotateTimer >= this._rotateStepDelay) {
+            this._rotateTimer = 0;
+            if (this._rotatePath && this._rotatePath.length > 0) {
+                const nextDir = this._rotatePath.shift();
+                this.setDirection(nextDir);
+                this._actionDirection = nextDir;
+            }
+            if (!this._rotatePath || this._rotatePath.length === 0) {
+                this._isRotating = false;
+                if (this._rotateOnEnd) {
+                    const cb = this._rotateOnEnd;
+                    this._rotateOnEnd = null;
+                    cb.call(this);
+                }
+            }
+        }
+    };
+
+    /**
+     * File d'attente d'actions (_actionQueue).
+     */
+    Game_CharacterBase.prototype.queueAction = function (item) {
+        this.queueActions([item]);
+    };
+
+    Game_CharacterBase.prototype.queueActions = function (items) {
+        if (!this._actionQueue) {
+            this._actionQueue = [];
+        }
+        if (Array.isArray(items)) {
+            for (const it of items) {
+                if (it) this._actionQueue.push(it);
+            }
+        }
+        if (!this._isActing && !this._isRotating && !this._currentQueueItem) {
+            this.processNextAction();
+        }
+    };
+
+    Game_CharacterBase.prototype.actionQueue = function () {
+        return this._actionQueue || [];
+    };
+
+    Game_CharacterBase.prototype.currentQueueItem = function () {
+        return this._currentQueueItem;
+    };
+
+    Game_CharacterBase.prototype.stopActionRepeat = function () {
+        if (this._currentQueueItem) {
+            this._currentQueueItem.repeat = 0;
+        }
+    };
+
+    Game_CharacterBase.prototype.clearActionQueue = function () {
+        this._actionQueue = [];
+        this._currentQueueItem = null;
+        this._isRotating = false;
+        this._rotatePath = [];
+        this._isActing = false;
+        this._action = this._pose || "walk";
+        if (typeof this.resetPattern === "function") {
+            this.resetPattern();
+        }
+    };
+
+    Game_CharacterBase.prototype.processNextAction = function () {
+        if (!this._actionQueue) {
+            this._actionQueue = [];
+        }
+
+        // Vérification de répétition sur l'élément en cours
+        if (this._currentQueueItem && this._currentQueueItem.repeat !== undefined) {
+            const r = this._currentQueueItem.repeat;
+            if (r === true || r < 0 || r === Infinity) {
+                this.executeQueueItem(this._currentQueueItem);
+                return;
+            } else if (typeof r === "number" && r > 0) {
+                this._currentQueueItem.repeat--;
+                this.executeQueueItem(this._currentQueueItem);
+                return;
+            }
+        }
+
+        this._currentQueueItem = null;
+
+        if (this._actionQueue.length === 0) {
+            this._isActing = false;
+            this._isRotating = false;
+            this._action = this._pose || "walk";
+            if (typeof this.resetPattern === "function") {
+                this.resetPattern();
+            }
+            return;
+        }
+
+        const item = this._actionQueue.shift();
+        this._currentQueueItem = item;
+        this.executeQueueItem(item);
+    };
+
+    Game_CharacterBase.prototype.executeQueueItem = function (item) {
+        if (!item) {
+            this.processNextAction();
+            return;
+        }
+
+        const type = item.type || "action";
+
+        if (type === "rotate") {
+            const targetDir = item.targetDir || item.direction;
+            const delay = item.stepDelay || item.delay || 3;
+            this.playRotate(targetDir, {
+                stepDelay: delay,
+                onEnd: () => this.processNextAction()
+            });
+        } else if (type === "translate") {
+            const dx = Number(item.dx) || 0;
+            const dy = Number(item.dy) || 0;
+            this._x += dx;
+            this._y += dy;
+            this._realX = this._x;
+            this._realY = this._y;
+            if (typeof this.refreshBushDepth === "function") {
+                this.refreshBushDepth();
+            }
+            if (this._followers && typeof this._followers.synchronize === "function") {
+                this._followers.synchronize(this._x, this._y, this.direction());
+            }
+            if (item.direction) {
+                this.setDirection(item.direction);
+                this._actionDirection = item.direction;
+            }
+            this.processNextAction();
+        } else if (type === "wait") {
+            const duration = Number(item.duration) || Number(item.frames) || 1;
+            this._isActing = true;
+            this._actionTimer = 0;
+            this._actionMaxFrames = 1;
+            this._actionFrameDuration = duration;
+            this._actionOnEnd = () => this.processNextAction();
+        } else if (type === "setPose") {
+            this.setPose(item.pose, item.options);
+            this.processNextAction();
+        } else if (type === "clearPose") {
+            this.clearPose();
+            this.processNextAction();
+        } else if (type === "call") {
+            if (typeof item.fn === "function") {
+                item.fn.call(this);
+            }
+            this.processNextAction();
+        } else {
+            // type === "action"
+            const opts = (typeof item === "string") ? { action: item } : { ...item };
+            const userOnEnd = opts.onEnd;
+            opts.onEnd = () => {
+                if (typeof userOnEnd === "function") {
+                    userOnEnd.call(this);
+                }
+                this.processNextAction();
+            };
+            this._queueBypassCanAct = true;
+            this.playAction(opts);
+            this._queueBypassCanAct = false;
+        }
+    };
+
+    /**
+     * Exécute une transition d'action en deux étapes avec déplacement physique d'une case.
+     * Idéal pour les animations transitives (se lever d'un lit, sortir d'un cockpit, franchir un rebord).
+     * @param {string|object} dataAction1 - Première action (sur la case de départ)
+     * @param {string|object} dataAction2 - Deuxième action (sur la case d'arrivée)
+     * @param {number|string} direction - Direction de translation (2:Bas, 4:Gauche, 6:Droite, 8:Haut)
+     * @param {object} [options={}] - Options complémentaires (onEnd, deltaX, deltaY, smoothRotate, rotateDelay, etc.)
+     * @returns {boolean}
+     */
+    Game_CharacterBase.prototype.playTranslateAction = function (dataAction1, dataAction2, direction, options = {}) {
+        let opts = options;
+        let act1 = dataAction1;
+        let act2 = dataAction2;
+        let dir = direction;
+
+        // Support d'un objet de configuration unique
+        if (dataAction1 && typeof dataAction1 === "object" && !dataAction2) {
+            opts = dataAction1;
+            act1 = opts.action1 || opts.act1;
+            act2 = opts.action2 || opts.act2;
+            dir = (opts.direction !== undefined) ? opts.direction : opts.dir;
+        }
+
+        const actorId = opts.actorId || (opts.id ? Number(opts.id) : 0);
+        if (actorId > 0 && typeof window.$heroHub !== "undefined" && window.$heroHub) {
+            const target = window.$heroHub.findActorCharacter(actorId);
+            if (target && target !== this) {
+                return target.playTranslateAction(act1, act2, dir, { ...opts, actorId: 0 });
+            } else if (!target) {
+                return false;
+            }
+        }
+
+        if (!this.canAct()) return false;
+
+        const numDir = this.resolveDirectionNumber(dir);
+        const defD = this.directionToDelta(numDir);
+        const dx = (opts.deltaX !== undefined) ? Number(opts.deltaX) : defD.dx;
+        const dy = (opts.deltaY !== undefined) ? Number(opts.deltaY) : defD.dy;
+
+        const action1Obj = (typeof act1 === "string") ? { action: act1 } : { ...act1 };
+        action1Obj.direction = action1Obj.direction || numDir;
+
+        const action2Obj = (typeof act2 === "string") ? { action: act2 } : { ...act2 };
+        action2Obj.direction = action2Obj.direction || numDir;
+        if (opts.freezeLastFrame !== undefined && action2Obj.freezeLastFrame === undefined) {
+            action2Obj.freezeLastFrame = opts.freezeLastFrame;
+        }
+
+        const userOnEnd = typeof opts.onEnd === "function" ? opts.onEnd : null;
+        const smoothRotate = opts.smoothRotate !== undefined ? Boolean(opts.smoothRotate) : true;
+        const rotateDelay = Number(opts.rotateDelay) || 3;
+
+        const steps = [];
+
+        // 1. Rotation progressive préliminaire vers la direction cible (si pas déjà orienté)
+        if (smoothRotate && this.direction() !== numDir) {
+            steps.push({ type: "rotate", targetDir: numDir, stepDelay: rotateDelay });
+        } else if (!smoothRotate && this.direction() !== numDir) {
+            this.setDirection(numDir);
+            this._actionDirection = numDir;
+        }
+
+        // 2. Action 1 (sur la case de départ)
+        steps.push({ type: "action", ...action1Obj });
+
+        // 3. Translation physique d'une case
+        steps.push({ type: "translate", dx, dy, direction: numDir });
+
+        // 4. Action 2 (sur la case d'arrivée)
+        steps.push({ type: "action", ...action2Obj });
+
+        // 5. Gestion de la pose finale / nettoyage de la pose initiale (ex: lit)
+        const shouldClearPose = (opts.clearPose !== undefined) ? Boolean(opts.clearPose) : Boolean(this.isPoseActive && this.isPoseActive());
+        if (opts.finalPose !== undefined) {
+            if (opts.finalPose === null || opts.finalPose === "walk") {
+                steps.push({ type: "clearPose" });
+            } else {
+                steps.push({ type: "setPose", pose: opts.finalPose, options: opts.poseOptions || {} });
+            }
+        } else if (shouldClearPose) {
+            steps.push({ type: "clearPose" });
+        }
+
+        // 6. Callback utilisateur éventuel
+        if (userOnEnd) {
+            steps.push({ type: "call", fn: userOnEnd });
+        }
+
+        this.queueActions(steps);
+        return true;
+    };
+
     Game_CharacterBase.prototype.updateAction = function () {
         /**
-     * Progression temporelle de l'animation d'action (frame par frame).
-     */
+         * Progression temporelle de l'animation d'action ou de rotation (frame par frame).
+         */
+        if (this._isRotating) {
+            this.updateRotate();
+            return;
+        }
         if (this._isActing) {
             this._actionTimer++;
             const currentPattern = Math.floor(this._actionTimer / this._actionFrameDuration);
@@ -681,7 +1020,7 @@
                 }
             }
         }
-    }
+    };
     Game_CharacterBase.prototype.resetPattern = function () {
         if (this._action && this._action !== "walk") {
             return;
@@ -1419,22 +1758,23 @@
             return;
         }
         const actor = this.actor ? this.actor() : $gameParty.leader();
-        if (!actor) return;
-        const weapon = actor.gunfightWeapon();
-        const stats = actor.gunfightStats();
+        if (!actor || !actor.combat) return;
+        const combat = actor.combat;
+        const weapon = combat.gunfightWeapon();
+        const stats = combat.gunfightStats();
 
         if (!stats.reload) {
             DEBUGTOOL.log(`ℹ️ L'arme "${stats.name}" n'utilise pas de système de recharge.`, "gunfight");
             return;
         }
 
-        const loaded = actor.getLoadedAmmo(weapon);
+        const loaded = combat.getLoadedAmmo(weapon);
         if (loaded >= stats.ammoCap) {
             DEBUGTOOL.log(`ℹ️ Chargeur déjà plein (${loaded}/${stats.ammoCap})`, "gunfight");
             return;
         }
 
-        const reserve = actor.getReserveAmmo(weapon);
+        const reserve = combat.getReserveAmmo(weapon);
         if (stats.ammoId > 0 && reserve <= 0) {
             DEBUGTOOL.log(`❌ Recharge impossible : aucune munition en réserve dans l'inventaire (item ID ${stats.ammoId})`, "gunfight");
             GunfightManager.playSe(stats.emptySe);
@@ -1456,12 +1796,13 @@
     Game_Player.prototype.updateReload = function () {
         if (!this._isReloading) return;
         const actor = this.actor ? this.actor() : $gameParty.leader();
-        if (!actor) {
+        if (!actor || !actor.combat) {
             this._isReloading = false;
             return;
         }
-        const weapon = actor.gunfightWeapon();
-        const stats = actor.gunfightStats();
+        const combat = actor.combat;
+        const weapon = combat.gunfightWeapon();
+        const stats = combat.gunfightStats();
 
         if (this._reloadMode === "1by1") {
             const rHeld = Input.isPressed("reload");
@@ -1471,20 +1812,20 @@
                     if (stats.ammoId > 0 && typeof $gameParty !== "undefined") {
                         $gameParty.loseItem($dataItems[stats.ammoId], 1);
                     }
-                    const cur = actor.getLoadedAmmo(weapon);
+                    const cur = combat.getLoadedAmmo(weapon);
                     const next = cur + 1;
-                    actor.setLoadedAmmo(weapon, next);
+                    combat.setLoadedAmmo(weapon, next);
                     GunfightManager.playSe(stats.reloadSe);
                     this._reloadTimer = 0;
-                    DEBUGTOOL.log(`➕ 1 balle chargée (${next}/${stats.ammoCap}), réserve restante: ${actor.getReserveAmmo(weapon)}`, "gunfight");
+                    DEBUGTOOL.log(`➕ 1 balle chargée (${next}/${stats.ammoCap}), réserve restante: ${combat.getReserveAmmo(weapon)}`, "gunfight");
 
-                    if (next >= stats.ammoCap || actor.getReserveAmmo(weapon) <= 0) {
+                    if (next >= stats.ammoCap || combat.getReserveAmmo(weapon) <= 0) {
                         DEBUGTOOL.log(`✅ Recharge 1by1 terminée (Chargeur plein ou réserve épuisée)`, "gunfight");
                         this._isReloading = false;
                     }
                 }
             } else {
-                DEBUGTOOL.log(`⏹️ Touche R relâchée : arrêt de la recharge 1by1. Chargeur conservé à ${actor.getLoadedAmmo(weapon)}/${stats.ammoCap}`, "gunfight");
+                DEBUGTOOL.log(`⏹️ Touche R relâchée : arrêt de la recharge 1by1. Chargeur conservé à ${combat.getLoadedAmmo(weapon)}/${stats.ammoCap}`, "gunfight");
                 this._isReloading = false;
                 this._reloadTimer = 0;
             }
@@ -1494,7 +1835,7 @@
                 if (stats.ammoId > 0 && typeof $gameParty !== "undefined") {
                     $gameParty.loseItem($dataItems[stats.ammoId], 1);
                 }
-                actor.setLoadedAmmo(weapon, stats.ammoCap);
+                combat.setLoadedAmmo(weapon, stats.ammoCap);
                 GunfightManager.playSe(stats.reloadSe);
                 DEBUGTOOL.log(`✅ Chargeur plein complet rechargé (${stats.ammoCap}/${stats.ammoCap})`, "gunfight");
                 this._isReloading = false;
@@ -1530,7 +1871,7 @@
         }
 
         const actor = this.actor ? this.actor() : $gameParty.leader();
-        const stats = actor ? actor.gunfightStats() : null;
+        const stats = (actor && actor.combat) ? actor.combat.gunfightStats() : null;
 
         if (this.isReloading()) {
             const actionName = (stats && (stats.reloadAction || stats.specialAnim)) ? (stats.reloadAction || stats.specialAnim) : "";
@@ -1605,7 +1946,7 @@
             return false;
         }
         const actor = this.actor ? this.actor() : $gameParty.leader();
-        const stats = actor ? actor.gunfightStats() : null;
+        const stats = (actor && actor.combat) ? actor.combat.gunfightStats() : null;
 
         if (stats && stats.isRanged) {
             DEBUGTOOL.log(`🎯 performAttack (coup par coup) délégué au tir à distance : "${stats.name}"`, "gunfight");
@@ -1633,12 +1974,13 @@
             return false;
         }
         const actor = this.actor ? this.actor() : $gameParty.leader();
-        if (!actor) {
-            DEBUGTOOL.log("⚠️ Aucun acteur actif trouvé pour effectuer le tir", "gunfight");
+        if (!actor || !actor.combat) {
+            DEBUGTOOL.log("⚠️ Aucun acteur ou composant combat actif trouvé pour effectuer le tir", "gunfight");
             return false;
         }
-        const weapon = actor.gunfightWeapon();
-        const stats = actor.gunfightStats();
+        const combat = actor.combat;
+        const weapon = combat.gunfightWeapon();
+        const stats = combat.gunfightStats();
 
         if (!stats.isRanged) {
             return this.performAttack();
@@ -1665,7 +2007,7 @@
 
         // Vérification des munitions
         if (stats.reload) {
-            const loaded = actor.getLoadedAmmo(weapon);
+            const loaded = combat.getLoadedAmmo(weapon);
             if (loaded <= 0) {
                 if (typeof $gameTemp !== "undefined" && $gameTemp.clearDestination) {
                     $gameTemp.clearDestination();
@@ -1679,8 +2021,8 @@
                 }
                 return false;
             }
-            actor.consumeLoadedAmmo(weapon, 1);
-            DEBUGTOOL.log(`💥 Pan ! Balle consommée. Reste ${actor.getLoadedAmmo(weapon)}/${stats.ammoCap}`, "gunfight");
+            combat.consumeLoadedAmmo(weapon, 1);
+            DEBUGTOOL.log(`💥 Pan ! Balle consommée. Reste ${combat.getLoadedAmmo(weapon)}/${stats.ammoCap}`, "gunfight");
         } else {
             DEBUGTOOL.log(`💥 Pan ! Tir sans munition requise (${stats.name})`, "gunfight");
         }
@@ -1730,13 +2072,14 @@
         if (!this.isAiming || !this.isAiming()) return false;
         if (!TouchInput || !TouchInput.isPressed || !TouchInput.isPressed()) return false;
         const actor = this.actor ? this.actor() : $gameParty.leader();
-        if (!actor) return false;
-        const stats = actor.gunfightStats ? actor.gunfightStats() : null;
+        if (!actor || !actor.combat) return false;
+        const combat = actor.combat;
+        const stats = combat.gunfightStats();
         if (!stats || !stats.isRanged || !stats.burst) return false;
         if (this.isReloading && this.isReloading()) return false;
         if (stats.reload) {
-            const weapon = actor.gunfightWeapon ? actor.gunfightWeapon() : null;
-            const loaded = actor.getLoadedAmmo ? actor.getLoadedAmmo(weapon) : 0;
+            const weapon = combat.gunfightWeapon();
+            const loaded = combat.getLoadedAmmo(weapon);
             if (loaded <= 0) return false;
         }
         return true;
@@ -1813,7 +2156,7 @@
             }
             if (this.isAiming && this.isAiming() && (this.canAttack() || (this.isBurstShooting && this.isBurstShooting()))) {
                 const actor = this.actor ? this.actor() : $gameParty.leader();
-                const stats = actor ? actor.gunfightStats() : null;
+                const stats = (actor && actor.combat) ? actor.combat.gunfightStats() : null;
 
                 if (stats && stats.isRanged && stats.burst) {
                     if (TouchInput && TouchInput.isPressed && TouchInput.isPressed() && this._shootCooldown <= 0) {
@@ -1867,7 +2210,7 @@
     }
     Game_Player.prototype.moveByInput = function () {
         const actor = this.actor ? this.actor() : $gameParty.leader();
-        const stats = actor ? actor.gunfightStats() : null;
+        const stats = (actor && actor.combat) ? actor.combat.gunfightStats() : null;
 
         if (stats) {
             if (stats.snipe && this.isAiming && this.isAiming()) {
@@ -1920,7 +2263,7 @@
             return (isDashing && isMoving) ? "run" : "walk";
         }
         const actor = this.actor ? this.actor() : (this.hero ? this.hero() : null);
-        const stats = actor && typeof actor.gunfightStats === "function" ? actor.gunfightStats() : null;
+        const stats = (actor && actor.combat) ? actor.combat.gunfightStats() : null;
         if (stats && stats.specialAnim) {
             const isDashing = this.isDashing();
             const isMoving = this.isMoving();
@@ -1982,10 +2325,10 @@
             _Game_Follower_refresh.call(this);
         }
         const hero = this.hero();
-        if (hero) {
-            hero.getCompositeEntry("walk");
-            hero.getCompositeEntry("run");
-            hero.getCompositeEntry("atk");
+        if (hero && hero.character) {
+            hero.character.getCompositeEntry("walk");
+            hero.character.getCompositeEntry("run");
+            hero.character.getCompositeEntry("atk");
         }
     }
 
@@ -2241,12 +2584,12 @@
             if (actor) {
                 this.setImage(actor.characterName(), actor.characterIndex());
                 const hero = this.hero();
-                if (hero) {
-                    hero.getCompositeEntry("walk");
-                    hero.getCompositeEntry("run");
-                    hero.getCompositeEntry("atk");
-                    hero.getCompositeEntry("hurt");
-                    hero.getCompositeEntry("down");
+                if (hero && hero.character) {
+                    hero.character.getCompositeEntry("walk");
+                    hero.character.getCompositeEntry("run");
+                    hero.character.getCompositeEntry("atk");
+                    hero.character.getCompositeEntry("hurt");
+                    hero.character.getCompositeEntry("down");
                 }
             }
         }
@@ -2444,6 +2787,44 @@
         }
         return false;
     }
+    Game_Interpreter.prototype.playTranslateAction = function (dataAction1, dataAction2, direction, options = {}) {
+        /**
+         * Raccourci pour déclencher une action de translation depuis un appel de script d'événement :
+         * this.playTranslateAction("standup_bed", "standup_floor", 6);
+         * ou
+         * this.playTranslateAction("standup_bed", "standup_floor", 6, { isPlayer: true });
+         * @param {string|object} dataAction1
+         * @param {string|object} dataAction2
+         * @param {number|string} direction
+         * @param {object} [options={}]
+         * @returns {boolean}
+         */
+        let opts = options;
+        let act1 = dataAction1;
+        let act2 = dataAction2;
+        let dir = direction;
+
+        if (dataAction1 && typeof dataAction1 === "object" && !dataAction2) {
+            opts = dataAction1;
+            act1 = opts.action1 || opts.act1;
+            act2 = opts.action2 || opts.act2;
+            dir = (opts.direction !== undefined) ? opts.direction : opts.dir;
+        }
+
+        const actorId = opts.actorId || (opts.id ? Number(opts.id) : 0);
+        if (actorId > 0 && typeof window.$heroHub !== "undefined" && window.$heroHub) {
+            const target = window.$heroHub.findActorCharacter(actorId);
+            if (target && typeof target.playTranslateAction === "function") {
+                return target.playTranslateAction(act1, act2, dir, { ...opts, actorId: 0 });
+            }
+        }
+
+        const char = (opts.target === "player" || opts.isPlayer) ? (window.$gamePlayer || this.character(0)) : (this.character(0) || window.$gamePlayer);
+        if (char && typeof char.playTranslateAction === "function") {
+            return char.playTranslateAction(act1, act2, dir, opts);
+        }
+        return false;
+    }
     Game_Interpreter.prototype.joinPlayerParty = function (eventId = 0) {
         /**
          * Raccourci pour appeler joinPlayerParty() depuis un appel de script d'événement :
@@ -2536,6 +2917,23 @@
     Game_Interpreter.prototype.showWeaponHud = function () { this.setWeaponHudVisible(true); };
     Game_Interpreter.prototype.hideWeaponHud = function () { this.setWeaponHudVisible(false); };
 
+    Game_Interpreter.prototype.showTuto = function (tutoId, data = {}) {
+        if (typeof data === "string") {
+            data = { position: data };
+        }
+        if (window.$tutoManager && typeof window.$tutoManager.showTuto === "function") {
+            return window.$tutoManager.showTuto(tutoId, data);
+        }
+        return false;
+    };
+
+    Game_Interpreter.prototype.showTutos = function (list) {
+        if (window.$tutoManager && typeof window.$tutoManager.showTutos === "function") {
+            return window.$tutoManager.showTutos(list);
+        }
+        return 0;
+    };
+
     // GAME PARTY
     // ========================================================================
     const _Game_Party_addActor = Game_Party.prototype.addActor;
@@ -2560,8 +2958,8 @@
         let max = 0;
         const members = (typeof this.members === "function") ? this.members() : [];
         for (const actor of members) {
-            if (actor && typeof actor.weightCapacity === "function") {
-                max += actor.weightCapacity();
+            if (actor && actor.inventory) {
+                max += actor.inventory.weightCapacity();
             }
         }
         return Math.max(10, max);
@@ -2744,6 +3142,31 @@
     Game_System.prototype.getSpaceTravelLogs = function() {
         this._spaceTravelLogHistory = this._spaceTravelLogHistory || [];
         return this._spaceTravelLogHistory;
+    };
+
+    Game_System.prototype.isRingMenuEnabled = function () {
+        // Menu circulaire désactivé pour le moment sur demande utilisateur
+        return false;
+    };
+
+    Game_System.prototype.setRingMenuEnabled = function (enabled) {
+        this._ringMenuEnabled = Boolean(enabled);
+    };
+
+    Game_System.prototype.getRingCommandConfig = function () {
+        this._ringCommandConfig = this._ringCommandConfig || {};
+        return this._ringCommandConfig;
+    };
+
+    Game_System.prototype.setRingCommandConfig = function (cfg) {
+        this._ringCommandConfig = Object.assign(this.getRingCommandConfig(), cfg || {});
+        if (cfg && cfg.fontFace && typeof Window_RingCommand !== "undefined" && typeof Window_RingCommand.resolveFontFace === "function") {
+            Window_RingCommand.resolveFontFace(cfg.fontFace);
+        }
+        if (cfg && cfg.windowskin && typeof ImageManager !== "undefined") {
+            const skinName = cfg.windowskin.replace(/\.png$/i, "");
+            ImageManager.loadSystem(skinName);
+        }
     };
 
 })();

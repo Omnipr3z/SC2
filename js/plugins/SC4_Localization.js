@@ -315,8 +315,11 @@ class SC4_Localization {
             rawPhys.forEach(t => {
                 if (!t || typeof t !== "object") return;
                 const txt = (locTutos[t.key] !== undefined) ? locTutos[t.key] : (t.txt || "");
+                const idKey = `tutoName_${t.id !== undefined ? t.id : t.key}`;
+                const name = locTutos[idKey] || (t.key ? locTutos[`tutoName_${t.key}`] : null) || idKey;
                 res.push({
                     ...t,
+                    name: name,
                     txt: txt
                 });
             });

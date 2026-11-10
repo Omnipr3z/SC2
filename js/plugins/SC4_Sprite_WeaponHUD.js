@@ -59,12 +59,12 @@ class Sprite_WeaponHUD extends Sprite_HudBase {
     }
 
     get weapon() {
-        return this.actor && typeof this.actor.gunfightWeapon === "function" ? this.actor.gunfightWeapon() : null;
+        return this.actor && this.actor.combat ? this.actor.combat.gunfightWeapon() : null;
     }
 
     get stats() {
-        if (this.actor && typeof this.actor.gunfightStats === "function") {
-            return this.actor.gunfightStats();
+        if (this.actor && this.actor.combat) {
+            return this.actor.combat.gunfightStats();
         }
         return typeof GunfightManager !== "undefined" && GunfightManager.defaultMeleeStats
             ? GunfightManager.defaultMeleeStats()
@@ -72,14 +72,14 @@ class Sprite_WeaponHUD extends Sprite_HudBase {
     }
 
     get loadedAmmo() {
-        return (this.actor && typeof this.actor.getLoadedAmmo === "function")
-            ? this.actor.getLoadedAmmo(this.weapon)
+        return (this.actor && this.actor.combat)
+            ? this.actor.combat.getLoadedAmmo(this.weapon)
             : -1;
     }
 
     get reserveAmmo() {
-        return (this.actor && typeof this.actor.getReserveAmmo === "function")
-            ? this.actor.getReserveAmmo(this.weapon)
+        return (this.actor && this.actor.combat)
+            ? this.actor.combat.getReserveAmmo(this.weapon)
             : 0;
     }
 

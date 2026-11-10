@@ -74,12 +74,9 @@ class RelationManager {
         }
         if (typeof $gameActors !== "undefined" && $gameActors) {
             const actor = $gameActors.actor(actorId);
-            if (actor && typeof actor.factionId === "function") {
-                // Source unique : notetag <factionId: X> / Game_Actor.setFactionId()
-                return Number(actor.factionId()) || 0;
-            }
-            if (actor && actor.factionId) {
-                return Number(actor.factionId);
+            if (actor && actor.social) {
+                // Source unique : Game_ScActorSocial.factionId() (<factionId: X>)
+                return Number(actor.social.factionId()) || 0;
             }
         }
         if (typeof $dataActors !== "undefined" && $dataActors && $dataActors[actorId]) {
@@ -99,8 +96,8 @@ class RelationManager {
     setActorFactionId(actorId, factionId) {
         if (typeof $gameActors !== "undefined" && $gameActors) {
             const actor = $gameActors.actor(actorId);
-            if (actor && typeof actor.setFactionId === "function") {
-                actor.setFactionId(factionId);
+            if (actor && actor.social) {
+                actor.social.setFactionId(factionId);
                 delete this._actorFactions[actorId];
                 return;
             }

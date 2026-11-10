@@ -222,6 +222,7 @@ const titleFontFamily = resolveFontFace(titleFontFaceParam);
     const _Window_Options_processOk = Window_Options.prototype.processOk;
     const _Window_Options_cursorRight = Window_Options.prototype.cursorRight;
     const _Window_Options_cursorLeft = Window_Options.prototype.cursorLeft;
+    const _Window_Options_changeValue = Window_Options.prototype.changeValue;
 
     Window_Options.prototype.addGeneralOptions = function () {
         _Window_Options_addGeneralOptions.call(this);
@@ -229,6 +230,7 @@ const titleFontFamily = resolveFontFace(titleFontFaceParam);
         this.addCommand("Clavier", "keyboardLayout");
         this.addCommand("Recharge auto", "autoReload");
         this.addCommand(SC4_Localization.getText("options.contextualHelp", "Aide contextuelle"), "contextualHelp");
+        this.addCommand(SC4_Localization.getText("options.fullscreen", "Plein écran (F4)"), "fullscreen");
     };
     Window_Options.prototype.statusText = function (index) {
         const symbol = this.commandSymbol(index);
@@ -279,6 +281,18 @@ const titleFontFamily = resolveFontFace(titleFontFaceParam);
             return;
         }
         _Window_Options_cursorLeft.call(this, wrap);
+    };
+    Window_Options.prototype.changeValue = function (symbol, value) {
+        if (_Window_Options_changeValue) {
+            _Window_Options_changeValue.call(this, symbol, value);
+        } else if (Window_Command.prototype.changeValue) {
+            Window_Command.prototype.changeValue.call(this, symbol, value);
+        }
+        if (symbol === "fullscreen") {
+            if (typeof ConfigManager !== "undefined" && typeof ConfigManager.applyFullscreen === "function") {
+                ConfigManager.applyFullscreen();
+            }
+        }
     };
     Window_Options.prototype.toggleLocale = function () {
         const current = SC4_Localization.locale();

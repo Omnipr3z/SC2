@@ -21,7 +21,21 @@ class Window_InventoryList extends Window_Selectable {
         this._isParty = isParty;
         this._data = [];
         this._targetInventory = null;
+        this._category = "all";
         this.refresh();
+    }
+
+    setCategory(cat) {
+        const targetCat = cat || "all";
+        if (this._category !== targetCat) {
+            this._category = targetCat;
+            this.refresh();
+            this.select(0);
+        }
+    }
+
+    category() {
+        return this._category || "all";
     }
 
     setTargetInventory(inv) {
@@ -43,8 +57,11 @@ class Window_InventoryList extends Window_Selectable {
     }
 
     maxPageRows() {
-        // Réserve la ligne du bas pour afficher le poids
-        return Math.max(1, Math.floor((this.innerHeight - this.lineHeight()) / this.itemHeight()));
+        if (!this._headerWindow) {
+            // Repli : Réserve la ligne du bas pour afficher le poids si aucun header externe
+            return Math.max(1, Math.floor((this.innerHeight - this.lineHeight()) / this.itemHeight()));
+        }
+        return Math.max(1, Math.floor(this.innerHeight / this.itemHeight()));
     }
 
     item() {
@@ -60,18 +77,27 @@ class Window_InventoryList extends Window_Selectable {
     }
 
     makeItemList() {
+        let list = [];
         if (this._isParty) {
             if (typeof $gameParty !== "undefined" && $gameParty) {
                 // Objets du sac (exclut naturellement les équipements portés qui sont dans actor._equips)
-                this._data = $gameParty.allItems().filter(item => item && $gameParty.numItems(item) > 0);
-            } else {
-                this._data = [];
+                list = $gameParty.allItems().filter(item => item && $gameParty.numItems(item) > 0);
             }
         } else if (this._targetInventory) {
-            this._data = this._targetInventory.items();
-        } else {
-            this._data = [];
+            list = this._targetInventory.items();
         }
+
+        // Filtrage dynamique selon la catégorie active
+        if (this._category && this._category !== "all") {
+            list = list.filter(item => {
+                const info = (typeof DataManager !== "undefined" && typeof DataManager.itemScTypeInfo === "function")
+                    ? DataManager.itemScTypeInfo(item)
+                    : { key: "misc" };
+                return info.key === this._category;
+            });
+        }
+
+        this._data = list;
     }
 
     // ========================================================================
@@ -202,21 +228,66 @@ class Window_InventoryList extends Window_Selectable {
         this.drawWeightStatusBlock();
     }
 
-    drawAllItems() {
-        this.makeItemList();
-        super.drawAllItems();
-        this.drawWeightStatus();
-    }
-
-    updateHelp() {
-        if (this._helpWindow) {
-            this._helpWindow.setItem(this.item());
-        }
+    setHeaderWindow(headerWindow) {
+        this._headerWindow = headerWindow;
+        this.refresh();
     }
 
     refresh() {
-        this.contents.clear();
-        this.drawAllItems();
+        this.makeItemList();
+        if (this.contents) {
+            this.contents.clear();
+        }
+        if (this.contentsBack) {
+            this.contentsBack.clear();
+        }
+        super.refresh();
+        if (this._headerWindow) {
+            this._headerWindow.refresh();
+        } else {
+            this.drawWeightStatus();
+        }
+    }
+
+    drawAllItems() {
+        super.drawAllItems();
+    }
+
+    drawItemBackground(index) {
+        if (index >= 0 && index < this.maxItems()) {
+            super.drawItemBackground(index);
+        }
+    }
+
+    updateHelp() {
+        if (!this._helpWindow) return;
+        const item = this.item();
+        if (!item) {
+            this._helpWindow.clear();
+            return;
+        }
+
+        const info = (typeof DataManager !== "undefined" && typeof DataManager.itemScTypeInfo === "function")
+            ? DataManager.itemScTypeInfo(item)
+            : { key: "misc", label: "Divers" };
+        const weight = (typeof DataManager !== "undefined" && typeof DataManager.itemWeight === "function")
+            ? DataManager.itemWeight(item)
+            : 1;
+
+        // Détection de surcharge prédictive si l'objet est dans le conteneur
+        let weightNotice = `\\c[4]${weight} kg\\c[0]`;
+        if (!this._isParty && typeof $gameParty !== "undefined" && $gameParty) {
+            const curW = (typeof $gameParty.totalWeight === "function") ? $gameParty.totalWeight() : 0;
+            const maxW = (typeof $gameParty.maxWeight === "function") ? $gameParty.maxWeight() : 48;
+            if (curW + weight > maxW) {
+                weightNotice = `\\c[2]⚠️ +${weight} kg (SURCHARGE !)\\c[0]`;
+            }
+        }
+
+        const typeColor = (info.key === "misc") ? "\\c[7]" : "\\c[14]";
+        const line1 = `${typeColor}[ TYPE : ${info.label.toUpperCase()} ]\\c[0]  |  Poids : ${weightNotice}`;
+        const line2 = item.description || "";
+        this._helpWindow.setText(line1 + "\n" + line2);
     }
 }
 

@@ -2,15 +2,15 @@
   null,
   {
     "id": 1,
-    "key": "tuto_0",
-    "name": "Déplacement",
-    "img": "arrow.png"
+    "key": "tuto_1",
+    "name": "Movements",
+    "img": "move.png"
   },
   {
     "id": 2,
-    "key": "tuto_1",
-    "name": "Équipement & Inventaire",
-    "img": "key.png"
+    "key": "tuto_2",
+    "name": "Interaction key",
+    "img": "enterKey.png"
   },
   {
     "id": 3,
@@ -31,4 +31,3 @@
     "img": null
   }
 ]
-

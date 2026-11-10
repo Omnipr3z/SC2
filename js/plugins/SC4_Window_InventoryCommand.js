@@ -14,11 +14,93 @@ class Window_InventoryCommand extends Window_HorzCommand {
         super(rect);
         this._targetInventory = null;
         this._isPersistent = true;
+        this._filterIndex = 0;
     }
 
     // ========================================================================
     // 1. DONNÉES & GETTERS MÉTIER
     // ========================================================================
+
+    static filterDefinitions() {
+        return [
+            { key: "all", label: "Tout" },
+            { key: "consumable", label: "Consommables" },
+            { key: "medical", label: "Biomédical" },
+            { key: "material", label: "Ingrédients" },
+            { key: "equipment", label: "Équipements" },
+            { key: "weapon_ammo", label: "Armes & Munitions" },
+            { key: "tool", label: "Outils" },
+            { key: "datapad", label: "Datapad" },
+            { key: "quest", label: "Objets Clés" },
+            { key: "misc", label: "Divers" }
+        ];
+    }
+
+    hasItemsOfCategory(catKey) {
+        if (!catKey || catKey === "all") return true;
+
+        if (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.allItems === "function") {
+            const partyHas = $gameParty.allItems().some(item => {
+                if (!item) return false;
+                if (typeof $gameParty.numItems === "function" && $gameParty.numItems(item) <= 0) return false;
+                const info = (typeof DataManager !== "undefined" && typeof DataManager.itemScTypeInfo === "function")
+                    ? DataManager.itemScTypeInfo(item)
+                    : { key: "misc" };
+                return info.key === catKey;
+            });
+            if (partyHas) return true;
+        }
+
+        if (this._targetInventory && typeof this._targetInventory.items === "function") {
+            const targetHas = this._targetInventory.items().some(item => {
+                if (!item) return false;
+                const info = (typeof DataManager !== "undefined" && typeof DataManager.itemScTypeInfo === "function")
+                    ? DataManager.itemScTypeInfo(item)
+                    : { key: "misc" };
+                return info.key === catKey;
+            });
+            if (targetHas) return true;
+        }
+
+        return false;
+    }
+
+    availableFilters() {
+        const all = Window_InventoryCommand.filterDefinitions();
+        return all.filter(f => {
+            if (f.key === "all") return true;
+            if (this._targetInventory && typeof this._targetInventory.isCategoryAllowed === "function") {
+                if (!this._targetInventory.isCategoryAllowed(f.key)) return false;
+            }
+            return this.hasItemsOfCategory(f.key);
+        });
+    }
+
+    currentFilter() {
+        const list = this.availableFilters();
+        if (this._filterIndex >= list.length) {
+            this._filterIndex = 0;
+        }
+        return list[this._filterIndex] || { key: "all", label: "Tout" };
+    }
+
+    cycleFilter() {
+        const list = this.availableFilters();
+        if (list.length > 0) {
+            this._filterIndex = (this._filterIndex + 1) % list.length;
+            this.refresh();
+        }
+        return this.currentFilter();
+    }
+
+    setFilterCategory(key) {
+        const list = this.availableFilters();
+        const idx = list.findIndex(f => f.key === key);
+        if (idx >= 0) {
+            this._filterIndex = idx;
+            this.refresh();
+        }
+    }
 
     get hasTargetItems() {
         return this._targetInventory ? !this._targetInventory.isEmpty() : false;
@@ -34,8 +116,14 @@ class Window_InventoryCommand extends Window_HorzCommand {
         return ($gameParty.totalWeight() + targetW) <= $gameParty.maxWeight();
     }
 
+    get isTargetFull() {
+        return Boolean(this._targetInventory && typeof this._targetInventory.isFull === "function" && this._targetInventory.isFull());
+    }
+
     get canDeposit() {
-        return Boolean(this._isPersistent);
+        if (!this._isPersistent) return false;
+        if (this.isTargetFull) return false;
+        return this.hasPartyItems;
     }
 
     get hasPartyItems() {
@@ -57,7 +145,7 @@ class Window_InventoryCommand extends Window_HorzCommand {
     // ========================================================================
 
     maxCols() {
-        return 4;
+        return 5;
     }
 
     setTargetContext(targetInventory, isPersistent) {
@@ -68,14 +156,39 @@ class Window_InventoryCommand extends Window_HorzCommand {
 
     makeCommandList() {
         const txtTake = this.loc("inventory.take", "Prendre");
-        const txtDump = this.loc("inventory.dump", "Tout vider");
-        const txtDeposit = this.loc("inventory.deposit", "Déposer");
+        const isDumpOverload = this.hasTargetItems && !this.canDump;
+        const txtDump = isDumpOverload
+            ? this.loc("inventory.dump", "Tout vider") + " ⚠️"
+            : this.loc("inventory.dump", "Tout vider");
+        const isFull = this.isTargetFull;
+        const txtDeposit = isFull
+            ? this.loc("inventory.deposit_full", "Déposer (Plein !)")
+            : this.loc("inventory.deposit", "Déposer");
+        const curFilter = this.currentFilter();
+        const txtFilter = `Tri : ${curFilter.label}`;
         const txtClose = this.loc("inventory.close", "Fermer");
 
         this.addCommand(txtTake, "take", this.hasTargetItems);
-        this.addCommand(txtDump, "dump", this.canDump);
-        this.addCommand(txtDeposit, "deposit", this.canDeposit && this.hasPartyItems);
+        this.addCommand(txtDump, "dump", this.hasTargetItems && this.canDump);
+        this.addCommand(txtDeposit, "deposit", this.canDeposit);
+        this.addCommand(txtFilter, "filter", true);
         this.addCommand(txtClose, "close", true);
+    }
+
+    drawItem(index) {
+        const rect = this.itemLineRect(index);
+        const align = this.itemTextAlign();
+        const symbol = this.commandSymbol(index);
+        this.resetTextColor();
+        if (symbol === "dump" && this.hasTargetItems && !this.canDump) {
+            this.changeTextColor("#ef4444"); // Alerte rouge surcharge
+        } else if (symbol === "deposit" && this.isTargetFull) {
+            this.changeTextColor("#ef4444"); // Alerte rouge meuble plein
+        } else if (symbol === "filter") {
+            this.changeTextColor("#00e5ff"); // Cyan néon pour le tri
+        }
+        this.changePaintOpacity(this.isCommandEnabled(index));
+        this.drawText(this.commandName(index), rect.x, rect.y, rect.width, align);
     }
 }
 

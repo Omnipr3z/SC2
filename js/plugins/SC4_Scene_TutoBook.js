@@ -79,7 +79,21 @@
         this.resetTextColor();
         if (seen) {
             this.changePaintOpacity(true);
-            const title = (typeof SC4_Localization !== "undefined") ? SC4_Localization.parse(item.name || item.key) : (item.name || item.key);
+            const idKey = `tutoName_${item.id !== undefined ? item.id : item.key}`;
+            let title = "";
+            if (typeof SC4_Localization !== "undefined") {
+                const locVal = SC4_Localization.getText(idKey, "");
+                if (locVal && locVal !== idKey) {
+                    title = locVal;
+                } else if (item.key) {
+                    const locByKey = SC4_Localization.getText(`tutoName_${item.key}`, "");
+                    if (locByKey && locByKey !== `tutoName_${item.key}`) {
+                        title = locByKey;
+                    }
+                }
+            }
+            if (!title) title = item.name || idKey;
+            title = (typeof SC4_Localization !== "undefined") ? SC4_Localization.parse(title) : title;
             this.drawText(`◈ ${title}`, rect.x + 4, rect.y, rect.width - 8, "left");
         } else {
             this.changePaintOpacity(false);
@@ -118,8 +132,16 @@
         this._isSeen = isSeen;
 
         if (tuto && isSeen && tuto.img) {
-            const imgKey = String(tuto.img).replace(/\.png$/i, "");
-            this._illustrationBitmap = ImageManager.loadBitmap("img/GUI/tuto/", imgKey);
+            const rawImg = String(tuto.img).trim();
+            const hasExt = /\.(png|jpe?g|webp)$/i.test(rawImg);
+            const url = hasExt ? `img/GUI/tuto/${rawImg}` : `img/GUI/tuto/${rawImg}.png`;
+            if (typeof ImageManager !== "undefined" && typeof ImageManager.loadBitmapFromUrl === "function") {
+                this._illustrationBitmap = ImageManager.loadBitmapFromUrl(url);
+            } else if (typeof ImageManager !== "undefined" && typeof ImageManager.loadBitmap === "function") {
+                this._illustrationBitmap = ImageManager.loadBitmap("img/GUI/tuto/", rawImg.replace(/\.png$/i, ""));
+            } else {
+                this._illustrationBitmap = null;
+            }
         } else {
             this._illustrationBitmap = null;
         }
@@ -146,7 +168,21 @@
         this.changeTextColor("#00eeff");
         this.contents.fontBold = true;
         this.contents.fontSize = 24;
-        const parsedTitle = (typeof SC4_Localization !== "undefined") ? SC4_Localization.parse(this._tuto.name || this._tuto.key) : (this._tuto.name || this._tuto.key);
+        const idKey = `tutoName_${this._tuto.id !== undefined ? this._tuto.id : this._tuto.key}`;
+        let title = "";
+        if (typeof SC4_Localization !== "undefined") {
+            const locVal = SC4_Localization.getText(idKey, "");
+            if (locVal && locVal !== idKey) {
+                title = locVal;
+            } else if (this._tuto.key) {
+                const locByKey = SC4_Localization.getText(`tutoName_${this._tuto.key}`, "");
+                if (locByKey && locByKey !== `tutoName_${this._tuto.key}`) {
+                    title = locByKey;
+                }
+            }
+        }
+        if (!title) title = this._tuto.name || idKey;
+        const parsedTitle = (typeof SC4_Localization !== "undefined") ? SC4_Localization.parse(title) : title;
         this.drawText(parsedTitle, 10, curY, cw - 20, "left");
         this.contents.fontBold = false;
         this.resetTextColor();

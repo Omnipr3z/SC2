@@ -226,7 +226,7 @@ class Game_Spaceship {
         }
         this._ownerActorId = id;
         const actor = (window.$gameActors && typeof $gameActors.actor === "function") ? $gameActors.actor(id) : null;
-        this._factionId = (actor && typeof actor.factionId === "function") ? actor.factionId() : null;
+        this._factionId = (actor && actor.social) ? actor.social.factionId() : null;
     }
     get bitmapName() { return this._bitmapName; }
     get sectorId() {

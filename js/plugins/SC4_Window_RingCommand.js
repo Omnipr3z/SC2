@@ -1,16 +1,16 @@
 //=============================================================================
-// SC4_RingCommand.js
+// SC4_Window_RingCommand.js
 //=============================================================================
 /*:
  * @target MZ
- * @plugindesc [SC4 v1.0.0] Menu circulaire rotatif (Ring Command) et intégration carte.
+ * @plugindesc [SC4 v1.0.0] Fenêtre de commandes circulaire rotative (Window_RingCommand).
  * @author SimCraft
  * @help
  * ============================================================================
- * SC4_RingCommand.js
+ * SC4_Window_RingCommand.js
  * ============================================================================
- * Ce plugin implémente une fenêtre de commandes circulaire (Ring Menu) où les
- * options sont disposées en cercle avec animation d'ouverture fluide (ease-out).
+ * Ce plugin implémente la classe Window_RingCommand où les options sont disposées
+ * en cercle avec animation d'ouverture fluide (Ease-Out).
  * 
  * 1. Caractéristiques :
  *    - Disposition radiale des éléments autour du centre.
@@ -19,11 +19,9 @@
  *    - Intégration de la localisation dynamique (\L[KEY]).
  *    - Navigation circulaire intuitive au clavier/manette/souris/tactile.
  * 
- * 2. Intégration sur la carte (Scene_Map) :
- *    - Clic/Touch sur le héros ouvre le menu radial contextuel.
- *    - Désactivable ou activable à la volée :
- *      $gameSystem.setRingMenuEnabled(true/false)
- *    - Positionnement automatique centré sur la cible avec edge clamping.
+ * 2. Intégrations architecturales (Norme SimCraft Engine) :
+ *    - Les surcharges et méthodes de Game_System sont dans SC4_rmmz_objects_Patches.js
+ *    - Les surcharges et méthodes de Scene_Map sont dans SC4_rmmz_scenes_Patches.js
  * 
  * 3. Personnalisation de l'apparence :
  *    - Police, taille, dimensions des items, rayon et transparence configurables via :
@@ -383,177 +381,6 @@ class Window_RingCommand extends Window_Command {
 }
 
 // Exposer globalement la classe
-window.Window_RingCommand = Window_RingCommand;
-
-// ============================================================================
-// Extensions Game_System pour le Ring Command Menu
-// ============================================================================
-
-Game_System.prototype.isRingMenuEnabled = function() {
-    if (this._ringMenuEnabled === undefined) {
-        this._ringMenuEnabled = true;
-    }
-    return !!this._ringMenuEnabled;
-};
-
-Game_System.prototype.setRingMenuEnabled = function(enabled) {
-    this._ringMenuEnabled = !!enabled;
-};
-
-Game_System.prototype.getRingCommandConfig = function() {
-    this._ringCommandConfig = this._ringCommandConfig || {};
-    return this._ringCommandConfig;
-};
-
-Game_System.prototype.setRingCommandConfig = function(cfg) {
-    this._ringCommandConfig = Object.assign(this.getRingCommandConfig(), cfg || {});
-    if (cfg && cfg.fontFace) {
-        Window_RingCommand.resolveFontFace(cfg.fontFace);
-    }
-    if (cfg && cfg.windowskin && typeof ImageManager !== "undefined") {
-        const skinName = cfg.windowskin.replace(/\.png$/i, "");
-        ImageManager.loadSystem(skinName);
-    }
-};
-
-// ============================================================================
-// Intégration dans Scene_Map
-// ============================================================================
-
-const _Scene_Map_createAllWindows = Scene_Map.prototype.createAllWindows;
-Scene_Map.prototype.createAllWindows = function() {
-    _Scene_Map_createAllWindows.call(this);
-    this.createRingCommandWindow();
-};
-
-Scene_Map.prototype.createRingCommandWindow = function() {
-    const boxH = (typeof Graphics !== "undefined" && Graphics.boxHeight) ? Graphics.boxHeight : 720;
-    const size = Math.min(boxH, 440);
-    const rect = new Rectangle(0, 0, size, size);
-
-    this._ringCommandWindow = new Window_RingCommand(rect);
-    this._ringCommandWindow.setHandler("cancel", this.onRingCommandCancel.bind(this));
-
-    this.addWindow(this._ringCommandWindow);
-    this._ringCommandWindow.close();
-    this._ringCommandWindow.deactivate();
-    this._ringCommandWindow.hide();
-};
-
-Scene_Map.prototype.onRingCommandCancel = function() {
-    this.closeRingMenu();
-};
-
-Scene_Map.prototype.onRingCommandOk = function(symbol) {
-    if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.log) {
-        DEBUGTOOL.log(`[RingMenu] Commande sélectionnée : ${symbol}`, "ui");
-    }
-    if (typeof SoundManager !== "undefined" && SoundManager.playOk) {
-        SoundManager.playOk();
-    }
-    this.closeRingMenu();
-};
-
-Scene_Map.prototype.openRingMenu = function(commands, onSelect) {
-    if (!this._ringCommandWindow) return;
-
-    if (commands && Array.isArray(commands)) {
-        this._ringCommandWindow.setCommands(commands);
-        commands.forEach(cmd => {
-            const handler = onSelect || this.onRingCommandOk.bind(this, cmd.symbol);
-            this._ringCommandWindow.setHandler(cmd.symbol, handler);
-        });
-    }
-
-    this._ringCommandWindow.show();
-    this._ringCommandWindow.open();
-    this._ringCommandWindow.activate();
-    this._ringCommandWindow._radius = 0;
-};
-
-Scene_Map.prototype.closeRingMenu = function() {
-    if (!this._ringCommandWindow) return;
-    this._ringCommandWindow.close();
-    this._ringCommandWindow.deactivate();
-    if (typeof TouchInput !== "undefined" && TouchInput.clear) {
-        TouchInput.clear();
-    }
-};
-
-/**
- * Ouvre le menu circulaire centré sur le joueur avec les options par défaut.
- */
-Scene_Map.prototype.openRingMenuAtPlayer = function(commands, onSelect) {
-    if (!this._ringCommandWindow) return;
-
-    const defaultCommands = commands || [
-        { name: "\\L[menu.item]", symbol: "item", enabled: true, icon: "🎒" },
-        { name: "\\L[menu.skill]", symbol: "skill", enabled: true, icon: "✨" },
-        { name: "\\L[menu.equip]", symbol: "equip", enabled: true, icon: "⚔️" },
-        { name: "\\L[menu.status]", symbol: "status", enabled: true, icon: "📊" },
-        { name: "\\L[options.language]", symbol: "options", enabled: true, icon: "⚙️" }
-    ];
-
-    this._ringCommandWindow.setCommands(defaultCommands);
-
-    defaultCommands.forEach(cmd => {
-        const handler = onSelect || this.onRingCommandOk.bind(this, cmd.symbol);
-        this._ringCommandWindow.setHandler(cmd.symbol, handler);
-    });
-
-    this._ringCommandWindow.openAtTarget(typeof $gamePlayer !== "undefined" ? $gamePlayer : null);
-
-    if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.log) {
-        DEBUGTOOL.log("[RingMenu] Menu circulaire ouvert sur le héros", "ui");
-    }
-    if (typeof TouchInput !== "undefined" && TouchInput.clear) {
-        TouchInput.clear();
-    }
-};
-
-// Vérification du clic joueur sur la carte
-const _Scene_Map_update = Scene_Map.prototype.update;
-Scene_Map.prototype.update = function() {
-    _Scene_Map_update.call(this);
-    this.updateRingCommandTrigger();
-};
-
-Scene_Map.prototype.updateRingCommandTrigger = function() {
-    if (!this._ringCommandWindow) return;
-
-    const isEnabled = (typeof $gameSystem !== "undefined" && $gameSystem && $gameSystem.isRingMenuEnabled)
-        ? $gameSystem.isRingMenuEnabled()
-        : true;
-
-    if (!isEnabled) return;
-
-    const isEventRunning = (typeof $gameMap !== "undefined" && $gameMap && $gameMap.isEventRunning)
-        ? $gameMap.isEventRunning()
-        : false;
-
-    if (!isEventRunning && !this._ringCommandWindow.active && !this._ringCommandWindow.isClosing()) {
-        if (typeof TouchInput !== "undefined" && TouchInput.isTriggered && TouchInput.isTriggered()) {
-            if (this.isTouchOnPlayer()) {
-                this.openRingMenuAtPlayer();
-            }
-        }
-    }
-};
-
-/**
- * Détecte si le clic de la souris ou le toucher se situe sur l'empreinte du héros.
- * @returns {boolean}
- */
-Scene_Map.prototype.isTouchOnPlayer = function() {
-    if (typeof $gamePlayer === "undefined" || !$gamePlayer) return false;
-    const px = $gamePlayer.screenX();
-    const py = $gamePlayer.screenY();
-    const tx = TouchInput.x;
-    const ty = TouchInput.y;
-    // Empreinte standard 48x48 centrée au pied
-    return (tx >= px - 24 && tx <= px + 24 && ty >= py - 48 && ty <= py);
-};
-
 window.Window_RingCommand = Window_RingCommand;
 if (typeof module !== "undefined" && module.exports) {
     module.exports = Window_RingCommand;

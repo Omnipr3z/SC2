@@ -90,7 +90,7 @@ class Sprite_Hero extends Sprite_Character {
         const actionChanged = this._currentAction !== action;
 
         if (hero) {
-            const currentKey = hero.getCompositeCacheKey(action);
+            const currentKey = (hero.character) ? hero.character.getCompositeCacheKey(action) : "";
             if (this._lastCacheKey !== currentKey) {
                 return true;
             }
@@ -113,10 +113,10 @@ class Sprite_Hero extends Sprite_Character {
      */
     setHeroBitmap() {
         const hero = this.getHero();
-        if (hero) {
+        if (hero && hero.character) {
             this._currentAction = this.resolveAction();
-            this._lastCacheKey = hero.getCompositeCacheKey(this._currentAction);
-            this._compositeEntry = hero.getCompositeEntry(this._currentAction);
+            this._lastCacheKey = hero.character.getCompositeCacheKey(this._currentAction);
+            this._compositeEntry = hero.character.getCompositeEntry(this._currentAction);
 
             if (this._compositeEntry) {
                 this.bitmap = this._compositeEntry.bitmap;

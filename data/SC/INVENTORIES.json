@@ -17,6 +17,7 @@
   ],
   "C_1": {
     "persistent": true,
+    "icon": "defautInventoryIcon.png",
     "items": [
       {
         "item_id": 7,

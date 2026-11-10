@@ -96,6 +96,14 @@
         }
     };
 
+    const _Scene_Boot_start = Scene_Boot.prototype.start;
+    Scene_Boot.prototype.start = function () {
+        _Scene_Boot_start.call(this);
+        if (typeof ConfigManager !== "undefined" && typeof ConfigManager.applyFullscreen === "function") {
+            ConfigManager.applyFullscreen();
+        }
+    };
+
     // SCENE TITLE
     //=============================================================================
     const _Scene_Title_initialize = Scene_Title.prototype.initialize;
@@ -503,21 +511,64 @@
 
     // SCENE MAP
     //=============================================================================
+    const _Scene_Map_initialize = Scene_Map.prototype.initialize;
     const _Scene_Map_onMapTouch = Scene_Map.prototype.onMapTouch;
     const _Scene_Map_start = Scene_Map.prototype.start;
+    const _Scene_Map_onMapLoaded = Scene_Map.prototype.onMapLoaded;
     const _Scene_Map_update = Scene_Map.prototype.update;
     const _Scene_Map_updateMain = Scene_Map.prototype.updateMain;
     const _Scene_Map_createDisplayObjects = Scene_Map.prototype.createDisplayObjects;
     const _Scene_Map_createAllWindows = Scene_Map.prototype.createAllWindows;
+    const _Scene_Map_isMapTouchOk = Scene_Map.prototype.isMapTouchOk;
     const _Scene_Map_processMapTouch = Scene_Map.prototype.processMapTouch;
     const _Scene_Map_isMenuEnabled = Scene_Map.prototype.isMenuEnabled;
     const _Scene_Map_isPlayerActive = Scene_Map.prototype.isPlayerActive;
     const _Scene_Map_terminate = Scene_Map.prototype.terminate;
 
+    Scene_Map.prototype.initialize = function () {
+        _Scene_Map_initialize.call(this);
+        this._touchCooldown = 0;
+        this._touchReleaseGuard = false;
+    };
+
+    Scene_Map.prototype.onMapLoaded = function () {
+        let skipOverlayRefresh = false;
+        const currentMapId = window.$gameMap ? window.$gameMap.mapId() : 0;
+        const lastOverlayMapId = (window.$mapOverlaysManager && typeof window.$mapOverlaysManager.lastMapId === "number")
+            ? window.$mapOverlaysManager.lastMapId : 0;
+
+        if (this._transfer && typeof $gamePlayer !== "undefined") {
+            const targetMapId = typeof $gamePlayer.newMapId === "function" ? $gamePlayer.newMapId() : 0;
+            const isSameMap = (targetMapId > 0 && targetMapId === currentMapId);
+            const isNoFade = (typeof $gamePlayer.fadeType === "function" && $gamePlayer.fadeType() === 2);
+            if (isSameMap && isNoFade) {
+                skipOverlayRefresh = true;
+            }
+            $gamePlayer.performTransfer();
+        } else if (!this._transfer && currentMapId > 0 && lastOverlayMapId === currentMapId) {
+            // Retour d'une scène fille/pushée (Inventaire, Menu, etc.) sans transfert : préservation de l'état
+            skipOverlayRefresh = true;
+        }
+
+        // Si une réinitialisation a été forcée manuellement via la console
+        if (window.$mapOverlaysManager && window.$mapOverlaysManager.forceRefresh) {
+            skipOverlayRefresh = false;
+            window.$mapOverlaysManager.forceRefresh = false;
+        }
+
+        if (window.$mapOverlaysManager) {
+            window.$mapOverlaysManager.onMapInit(null, null, { skipRefresh: skipOverlayRefresh });
+        }
+        this.createDisplayObjects();
+    };
+
     Scene_Map.prototype.start = function () {
         _Scene_Map_start.call(this);
         if (typeof SubSceneManager !== "undefined") {
             SubSceneManager.resume(this);
+        }
+        if (typeof TouchInput !== "undefined" && TouchInput.isPressed && TouchInput.isPressed()) {
+            this.activateTouchReleaseGuard();
         }
     };
 
@@ -535,8 +586,16 @@
     };
     Scene_Map.prototype.update = function () {
         _Scene_Map_update.call(this);
+        if (window.$tutoManager && typeof window.$tutoManager.update === "function") {
+            window.$tutoManager.update();
+        }
+        this.updateRingCommandTrigger();
 
         const isTutoBusy = Boolean(window.$tutoManager && window.$tutoManager.isBusy());
+
+        if (window.$mapOverlaysManager && !isTutoBusy) {
+            window.$mapOverlaysManager.update();
+        }
 
         if (!isTutoBusy) {
             if (window.$gameDate && (!window.SC4 || window.SC4._enableMapTicks !== false)) {
@@ -593,6 +652,7 @@
     Scene_Map.prototype.createAllWindows = function () {
         _Scene_Map_createAllWindows.call(this);
         this.createTutoWindow();
+        this.createRingCommandWindow();
     };
     Scene_Map.prototype.createTutoWindow = function () {
         if (typeof Window_Tuto !== "undefined" && !this._tutoWindow) {
@@ -602,11 +662,104 @@
             }
             this._tutoWindow = new Window_Tuto(this._tutoArrowSprite);
             this.addWindow(this._tutoWindow);
+            if (this._tutoWindow._confirmWindow) {
+                this.addWindow(this._tutoWindow._confirmWindow);
+            }
 
             if (window.$tutoManager && window.$tutoManager.currentTuto()) {
                 this._tutoWindow.openTuto(window.$tutoManager.currentTuto());
             }
         }
+    };
+    Scene_Map.prototype.createRingCommandWindow = function () {
+        if (typeof Window_RingCommand === "undefined") return;
+        const boxH = (typeof Graphics !== "undefined" && Graphics.boxHeight) ? Graphics.boxHeight : 720;
+        const size = Math.min(boxH, 440);
+        const rect = new Rectangle(0, 0, size, size);
+
+        this._ringCommandWindow = new Window_RingCommand(rect);
+        this._ringCommandWindow.setHandler("cancel", this.onRingCommandCancel.bind(this));
+
+        this.addWindow(this._ringCommandWindow);
+        this._ringCommandWindow.close();
+        this._ringCommandWindow.deactivate();
+        this._ringCommandWindow.hide();
+    };
+    Scene_Map.prototype.onRingCommandCancel = function () {
+        this.closeRingMenu();
+    };
+    Scene_Map.prototype.onRingCommandOk = function (symbol) {
+        if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.log) {
+            DEBUGTOOL.log(`[RingMenu] Commande sélectionnée : ${symbol}`, "ui");
+        }
+        if (typeof SoundManager !== "undefined" && SoundManager.playOk) {
+            SoundManager.playOk();
+        }
+        this.closeRingMenu();
+    };
+    Scene_Map.prototype.openRingMenu = function (commands, onSelect) {
+        if (!this._ringCommandWindow) return;
+
+        if (commands && Array.isArray(commands)) {
+            this._ringCommandWindow.setCommands(commands);
+            commands.forEach(cmd => {
+                const handler = onSelect || this.onRingCommandOk.bind(this, cmd.symbol);
+                this._ringCommandWindow.setHandler(cmd.symbol, handler);
+            });
+        }
+
+        this._ringCommandWindow.show();
+        this._ringCommandWindow.open();
+        this._ringCommandWindow.activate();
+        this._ringCommandWindow._radius = 0;
+    };
+    Scene_Map.prototype.closeRingMenu = function () {
+        if (!this._ringCommandWindow) return;
+        this._ringCommandWindow.close();
+        this._ringCommandWindow.deactivate();
+        if (typeof TouchInput !== "undefined" && TouchInput.clear) {
+            TouchInput.clear();
+        }
+    };
+    Scene_Map.prototype.openRingMenuAtPlayer = function (commands, onSelect) {
+        if (!this._ringCommandWindow) return;
+
+        const defaultCommands = commands || [
+            { name: "\\L[menu.item]", symbol: "item", enabled: true, icon: "🎒" },
+            { name: "\\L[menu.skill]", symbol: "skill", enabled: true, icon: "✨" },
+            { name: "\\L[menu.equip]", symbol: "equip", enabled: true, icon: "⚔️" },
+            { name: "\\L[menu.status]", symbol: "status", enabled: true, icon: "📊" },
+            { name: "\\L[options.language]", symbol: "options", enabled: true, icon: "⚙️" }
+        ];
+
+        this._ringCommandWindow.setCommands(defaultCommands);
+
+        defaultCommands.forEach(cmd => {
+            const handler = onSelect || this.onRingCommandOk.bind(this, cmd.symbol);
+            this._ringCommandWindow.setHandler(cmd.symbol, handler);
+        });
+
+        this._ringCommandWindow.openAtTarget(typeof $gamePlayer !== "undefined" ? $gamePlayer : null);
+
+        if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.log) {
+            DEBUGTOOL.log("[RingMenu] Menu circulaire ouvert sur le héros", "ui");
+        }
+        if (typeof TouchInput !== "undefined" && TouchInput.clear) {
+            TouchInput.clear();
+        }
+    };
+    Scene_Map.prototype.updateRingCommandTrigger = function () {
+        // Menu circulaire sur clic joueur désactivé pour le moment sur demande utilisateur
+        return;
+    };
+    Scene_Map.prototype.isTouchOnPlayer = function () {
+        if (typeof $gamePlayer === "undefined" || !$gamePlayer) return false;
+        const px = $gamePlayer.screenX();
+        const py = $gamePlayer.screenY();
+        const tx = TouchInput.x;
+        const ty = TouchInput.y;
+        // Empreinte standard 48x48 centrée au pied
+        return (tx >= px - 24 && tx <= px + 24 && ty >= py - 48 && ty <= py);
     };
     Scene_Map.prototype.createDisplayObjects = function () {
         _Scene_Map_createDisplayObjects.call(this);
@@ -631,7 +784,36 @@
         if (window.$fightManager && typeof window.$fightManager.clearProjectiles === "function") {
             window.$fightManager.clearProjectiles();
         }
+
+        // Masquer le joueur avant le snap si la prochaine scène est Scene_Inventory
+        let restorePlayer = null;
+        if (typeof Scene_Inventory !== "undefined" && SceneManager.isNextScene(Scene_Inventory)) {
+            const playerChar = (typeof $gamePlayer !== "undefined") ? $gamePlayer : null;
+            const wasTransparent = playerChar ? playerChar.isTransparent() : false;
+            const hiddenSprites = [];
+
+            if (playerChar) {
+                playerChar.setTransparent(true);
+            }
+            if (this._spriteset && Array.isArray(this._spriteset._characterSprites)) {
+                for (const s of this._spriteset._characterSprites) {
+                    if (s && s._character === playerChar && s.visible) {
+                        s.visible = false;
+                        hiddenSprites.push(s);
+                    }
+                }
+            }
+            restorePlayer = () => {
+                if (playerChar) playerChar.setTransparent(wasTransparent);
+                for (const s of hiddenSprites) s.visible = true;
+            };
+        }
+
         _Scene_Map_terminate.call(this);
+
+        if (restorePlayer) {
+            restorePlayer();
+        }
     };
     Scene_Map.prototype.openSubScene = function (subSceneClass, ...args) {
         this._subSceneStack = this._subSceneStack || [];
@@ -694,8 +876,52 @@
     Scene_Map.prototype.onSubSceneClose = function (subScene) {
         this._subSceneInputBlocked = false;
     };
+    Scene_Map.prototype.setTouchCoolDown = function (frames) {
+        this._touchCooldown = Math.max(0, Number(frames) || 0);
+    };
+    Scene_Map.prototype.isTouchCoolDownOk = function () {
+        if (this._touchCooldown && this._touchCooldown > 0) {
+            this._touchCooldown--;
+            return false;
+        }
+        return true;
+    };
+    Scene_Map.prototype.activateTouchReleaseGuard = function (deadTimeFrames = 0) {
+        this._touchReleaseGuard = true;
+        if (deadTimeFrames > 0) {
+            this.setTouchCoolDown(deadTimeFrames);
+        }
+    };
+    Scene_Map.prototype.isTouchReleaseGuardOk = function () {
+        if (!this._touchReleaseGuard) {
+            return true;
+        }
+        if (typeof TouchInput !== "undefined" && TouchInput.isPressed && TouchInput.isPressed()) {
+            return false;
+        }
+        this._touchReleaseGuard = false;
+        return true;
+    };
+    Scene_Map.prototype.isMapTouchOk = function () {
+        if (window.$tutoManager && window.$tutoManager.isBusy()) {
+            return false;
+        }
+        if (!this.isTouchCoolDownOk()) {
+            return false;
+        }
+        if (!this.isTouchReleaseGuardOk()) {
+            return false;
+        }
+        return _Scene_Map_isMapTouchOk.call(this);
+    };
     Scene_Map.prototype.processMapTouch = function () {
         if (this._currentSubScene && this._currentSubScene.isActive()) {
+            return;
+        }
+        if (!this.isTouchCoolDownOk()) {
+            return;
+        }
+        if (!this.isTouchReleaseGuardOk()) {
             return;
         }
         _Scene_Map_processMapTouch.call(this);
@@ -822,6 +1048,48 @@
     Scene_Item.prototype.useItem = function () {
         _Scene_Item_useItem.call(this);
         if (this._weightWindow) this._weightWindow.refresh();
+    };
+
+    //=============================================================================
+    // SCENE OPTIONS
+    //=============================================================================
+    const _Scene_Options_createOptionsWindow = Scene_Options.prototype.createOptionsWindow;
+
+    Scene_Options.prototype.maxCommands = function () {
+        return 30; // Accueille confortablement toutes les options natives et SC4
+    };
+
+    Scene_Options.prototype.maxVisibleCommands = function () {
+        const boxH = (typeof Graphics !== "undefined" && Graphics.boxHeight) ? Graphics.boxHeight : 990;
+        const maxH = boxH - 32;
+        return Math.max(7, Math.floor((maxH - 24) / 36));
+    };
+
+    Scene_Options.prototype.optionsWindowRect = function () {
+        const boxW = (typeof Graphics !== "undefined" && Graphics.boxWidth) ? Graphics.boxWidth : 1760;
+        const boxH = (typeof Graphics !== "undefined" && Graphics.boxHeight) ? Graphics.boxHeight : 990;
+        const maxH = boxH - 32; // Marge max de 16px en haut et en bas
+        const ww = Math.min(560, boxW - 32);
+        const n = Math.min(this.maxCommands(), this.maxVisibleCommands());
+        const contentH = this.calcWindowHeight(n, true);
+        const wh = Math.min(maxH, contentH);
+        const wx = Math.round((boxW - ww) / 2);
+        const wy = Math.round((boxH - wh) / 2);
+        return new Rectangle(wx, wy, ww, wh);
+    };
+
+    Scene_Options.prototype.createOptionsWindow = function () {
+        _Scene_Options_createOptionsWindow.call(this);
+        if (this._optionsWindow) {
+            const boxH = (typeof Graphics !== "undefined" && Graphics.boxHeight) ? Graphics.boxHeight : 990;
+            const maxH = boxH - 32;
+            const realCount = (typeof this._optionsWindow.maxItems === "function") ? this._optionsWindow.maxItems() : this.maxCommands();
+            const exactH = Math.min(maxH, this.calcWindowHeight(realCount, true));
+            if (exactH !== this._optionsWindow.height) {
+                const wy = Math.round((boxH - exactH) / 2);
+                this._optionsWindow.move(this._optionsWindow.x, wy, this._optionsWindow.width, exactH);
+            }
+        }
     };
 
 })();

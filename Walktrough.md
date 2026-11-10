@@ -764,7 +764,401 @@ DEBUGTOOL.logFormat({ actor: "Paolo", hp: 120 }, "Acteur : %[actor], PV : %[hp]"
 
 ---
 
+### 11.21 Refonte Ergonomique du Didacticiel : Fenêtre de Titre Enfant (`Window_TutoName`), Découpage d'Icône 32px & Word-Wrap Natif 26px
+- **Alignement & Word-Wrap Natif à 26px** :
+  - Harmonisation complète entre la mesure du texte et le tracé effectif de `Window_Base.prototype.drawTextEx` : les lignes sont découpées (`computeWrappedLines`) en utilisant la police réelle du jeu (26px).
+  - La largeur par défaut est fixée à **520px** avec support d'une largeur personnalisée (`width`) passée en paramètre d'appel ou dans le JSON.
+  - Si une illustration est présente (`img`), la largeur de la fenêtre s'étend automatiquement pour égaler au minimum la largeur de l'image plus les marges intérieures.
+  - La hauteur de la fenêtre s'adapte dynamiquement au nombre exact de lignes enveloppées (`lineHeight() = 36px`), éliminant tout risque de texte tronqué horizontalement ou verticalement.
+- **Fenêtre de Titre Dédiée (`Window_TutoName`)** :
+  - Sous-fenêtre enfant instanciée et rattachée directement à `Window_Tuto` (`this.addChild(this._nameWindow)`), héritant de `Window_NameBox` (ou fallback `Window_Base`).
+  - Utilise le Windowskin `WindowTuto.png`.
+  - Positionnée en superposition en haut à gauche de la fenêtre parente, débordant de 8px en Y (`x = 0`, `y = -this.height + 8`).
+  - Largeur dynamique s'ajustant exactement à l'icône 32px + espacement + titre.
+  - Tracé du texte en vert néon (`#00ff88`).
+- **Découpage de l'Icône de Titre (`tuto_icons.png`)** :
+  - Extraction de tuiles 32×32px depuis `img/GUI/tuto/tuto_icons.png` (grille horizontale 160×32px).
+  - Priorité de résolution : `paramètre d'appel iconIndex` ➔ `donnée json iconIndex` ➔ `index 0 par défaut`.
+- **Envoi Groupé de Didacticiels (`$tutoManager.showTutos`)** :
+  - Nouvelle méthode `$tutoManager.showTutos(list)` (et alias global `showTutos(list)`) acceptant un tableau d'identifiants (IDs, clés) ou d'objets complets de configuration (ex: `[{id: "tuto_1"}, {id: 1, data: {xMap: 4, yMap: 15}}, 2]`).
+  - Délégation automatique depuis `show(array)` et `showTuto(array)`.
+- **Confinement Écran Strict & Flèche Hors-Écran Radar** :
+  - *Confinement Écran* : Clamping bidirectionnel strict de `Window_Tuto` et de son titre enfant `Window_TutoName`. Si `winY + winH > boxH`, la fenêtre remonte automatiquement vers le haut jusqu'à `y: 0` (avec réserve d'espace pour le titre). Pareil horizontalement : si `winX + totalW > boxW`, elle est décalée vers la gauche jusqu'à `x: 0`.
+  - *Flèche Guidage Hors-Écran* : Si la cible est définie par `xMap, yMap` et se trouve en dehors du champ de la caméra, `Sprite_TutoArrow` se positionne automatiquement sur la bordure de l'écran (marge de 8px) et pivote en temps réel pour pointer précisément vers la case cible hors-champ avec oscillation continue.
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_tuto_system.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_tuto_system.js) (18/18 tests validés).
+
+---
+
+### 11.22 Système d'Overlays Cartographiques & Toits Escamotables (`MapOverlaysManager`, `Game_MapOverlay`, `Spriteset_Overlays`)
+- **Modèle Métier & Interpolation (`Game_MapOverlay` & Classes Filles)** :
+  - Modèle d'état découplé de la vue avec gestion des cibles (`targetOpacity`, `targetZoomX/Y`, `targetX/YMap`) et interpolation progressive automatique (*Tweening/Damping*).
+  - Méthodes de transition : `fadeOut(speed)`, `fadeIn(speed)`, `setTargetOpacity(val, speed)`, `setTargetPosition(x, y, speed)`, `setTargetZoom(zx, zy, speed)`.
+  - Déclencheur intelligent de toit (*Smart Roof*) : propriété `regionTrigger` détectant la présence de `$gamePlayer` sur le Region ID spécifié pour masquer (`targetOpacity: 0`) ou afficher (`targetOpacity: baseOpacity`) l'overlay sans aucune ligne de code événementiel.
+  - Classes spécialisées : `Game_MapFogOverlay` (autoscroll continu `offsetX/Y`) et `Game_MapLightOverlay` (pulsation et oscillation d'échelle paramétrables).
+- **Gestionnaire Global & Persistance Sélective (`MapOverlaysManager`)** :
+  - Singleton `window.$mapOverlaysManager` stockant l'état par carte (`_data[mapId][overlayId]`).
+  - Synchronisation automatique au chargement de carte (`onMapInit`) :
+    - Les overlays déclarés par notetag sont créés ou restaurés (sauf si `persistant: true` auquel cas leur état en jeu est conservé).
+    - Les overlays dynamiques créés en jeu (`createOverlay` / `addOverlay`) avec `persistant: false` sont automatiquement nettoyés lors du transfert de carte.
+    - Les overlays dynamiques persistants (`persistant: true`) sont conservés d'une visite à l'autre et sérialisés dans la sauvegarde (`sc_mapOverlays`).
+  - Méthodes d'accès : `getOverlay(id, mapId)`, `removeOverlay(id, mapId)`, `getOverlaysData(mapId)` (ordonné par `zIndex` croissant).
+- **Rendu Graphique Bi-Calque & Arbre d'Affichage (`Spriteset_Overlays`, `Sprite_MapOverlay`)** :
+  - Répertoire des assets dédié : `img/GUI/overlays/` (ou `img/tileset/overlays/`).
+  - **Architecture Bi-Calque Intégrée au Tilemap Natif** :
+    - `lowerContainer` (`z = 2`) : Directement rattaché au `_tilemap` de RMMZ, placé sous les héros (`z = 3`) et au-dessus des tuiles de sol (`z = 0/1`). Les personnages marchent ainsi *sur* les ombres projetées sans que leur visage ou corps ne soit ombré.
+    - `upperContainer` (`z = 6`) : Directement rattaché au `_tilemap` de RMMZ, placé au-dessus des héros (`z = 3/5`) et des tuiles hautes (`z = 4`), mais sous l'indicateur de clic blanc (`z = 9`). Accueille les halos de lumière, toits et brumes.
+    - Neutralisation des ombres carrées natives de RMMZ (`createShadow` neutralisé).
+  - **Acheminement Automatique par Type & Z-Index** :
+    - Tout overlay dont le `type` contient `"shadow"` ou dont le `zIndex < 3` est automatiquement affecté au `lowerContainer`.
+    - Tout autre type (`"light"`, `"roof"`, `"static"`, `"fog"`) est affecté au `upperContainer`.
+    - Prise en charge des transferts dynamiques à chaud si le type ou le zIndex d'un overlay change en cours de partie.
+  - **Positionnement Pixel-Perfect avec le Tilemap RMMZ** :
+    - Alignement mathématique strict sur la formule interne de `Tilemap.prototype.updateTransform` (`Math.round(wrappedX * tileW) - Math.ceil(displayX * tileW)`). Élimine tout décalage d'un pixel provoqué par les résolutions non multiples de 48 (ex: 1760×990) lors du centrage caméra.
+  - Support natif du centrage d'ancrage (`anchorX`, `anchorY` : `(0, 0)` par défaut, `(0.5, 0.5)` pour les halos de lumière).
+  - Support natif du `blendMode` (0=Normal, 1=Additif, 2=Produit, 3=Superposition) et de la teinte `hue` (0-360°) accélérée par GPU shader (`ColorFilter`).
+  - Scintillement synchronisé (`flickerType`) : modulation d'opacité en miroir pour les ombres, et douce oscillation d'échelle/lumière pour les halos.
+  - Vitesse de transition adaptative : les overlays de type `"roof"` adoptent automatiquement une durée de transition douce de **80 frames (~1,33s)** (contre 16 frames pour les transitions rapides).
+  - Protection contre les transferts intra-carte : lors d'un transfert sur la même carte sans fondu (`isSameMap && fadeType === 2`), `skipRefresh: true` préserve l'état courant des overlays sans réinitialiser les toits effacés.
+  - *Frustum Culling* : masquage automatique (`visible = false`) dès que le rectangle de l'overlay se trouve en dehors du champ de la caméra, garantissant un framerate parfait à 60 FPS.
+- **Syntaxe Notetag de Carte** :
+  - `<overlay: id, imgName, type, zIndex, xMap, yMap, opacity, persistant, blendMode, hue, regionTrigger, flickerType, fadeDuration>`
+- **Coexistence Multi-Calques & Balises Multiples** :
+  - Parsing simultané de balises multiples sur une même carte (`setupMapOverlays`).
+  - Coexistence transparente du calque d'ombre (`lowerContainer`, z = 2, au sol sous les héros) et des toits escamotables (`upperContainer`, z = 6, au-dessus des héros).
+  - Préservation de l'opacité des overlays au retour d'une scène fille / pushée (inventaire, menu) sur la même carte (`skipRefresh: true`).
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_map_overlays.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_map_overlays.js) (18/18 tests validés).
+
+---
+
+### 11.23 Système d'Actions Transitives, Rotation 8-Dir & File d'Attente (`_actionQueue`)
+- **Principe & Zone de Superposition 24px** :
+  - Conçu pour résoudre les transitions de postures complexes (se lever du lit, s'extraire d'un siège, franchir un rebord) exploitant le format Paperdoll 96×96 pixels sur la grille de 48px.
+  - La zone de débordement de 24px de chaque côté du personnage permet de raccorder deux poses distinctes sans artefact visuel ni décalage de frame.
+- **Moteur de File d'Attente (`_actionQueue`) & Architecture Modulaire** :
+  - Chaque `Game_CharacterBase` possède sa propre file d'attente d'ordres (`_actionQueue`) et une méthode de dépilement séquentielle (`processNextAction()`).
+  - Types d'ordres pris en charge :
+    - `rotate` : rotation progressive 8-dir avec délai en frames par cran de 45° (`stepDelay`).
+    - `action` : animation Paperdoll avec gestion des durées, frames et répétitions (`repeat`).
+    - `translate` : translation physique instantanée (`dx, dy, direction`).
+    - `setPose` / `clearPose` : changement ou réinitialisation propre de posture dans la file.
+    - `wait` : attente passive de X frames sans bloquer le moteur de rendu.
+    - `call` : callback JavaScript personnalisé.
+  - **Moteur de Répétition (`repeat`)** :
+    - Répétition finie : `repeat: N` (décrémente à chaque cycle jusqu'à 0).
+    - Répétition infinie : `repeat: true`, `repeat: -1` ou `repeat: Infinity`.
+    - Arrêt contrôlé : `character.stopActionRepeat()` ou vidage complet via `character.clearActionQueue()`.
+- **Rotation Progressive 8 Directions (`playRotate`)** :
+  - Calcul trigonométrique systématique du chemin angulaire le plus court (sens horaire vs anti-horaire).
+  - Règle de départage déterministe à 180° (demi-tour franc) : privilégie le passage par le bas (2) ou la droite (6).
+  - Intégrée par défaut dans `playTranslateAction` : le personnage pivote avec fluidité (3 frames par angle) vers sa cible avant d'enclencher l'Action 1.
+- **Cycle d'Exécution en Deux Phases (`playTranslateAction`)** :
+  1. **Phase 0 (Optionnelle)** : Rotation progressive fluide vers l'angle de translation si non aligné.
+  2. **Phase 1** : `action1` démarre sur la case source.
+  3. **Translation physique** : au terme d'`action1`, les coordonnées du personnage sont instantanément translatées (`_x += dx, _y += dy, _realX = _x, _realY = _y`) sans saut de caméra ni rechargement de scène.
+  4. **Phase 2** : `action2` prend immédiatement le relais sur la case d'arrivée.
+  5. **Gestion de Pose Finale** : nettoie automatiquement la pose initiale (`clearPose: true` par défaut si le personnage avait une pose active comme lit/sommeil) ou applique `finalPose`.
+  6. **Synchronisation continue** : `isActing() === true` reste actif sans interruption du début à la fin, permettant aux événements RMMZ d'attendre la fin de l'enchaînement de façon fluide.
+- **Script Calls & Ergonomie Développeur** :
+  - Sur le personnage : `$gamePlayer.playTranslateAction("standup_bed", "realign", 6)`
+  - Dans un événement RMMZ : `this.playTranslateAction("standup_bed", "realign", 6)`
+  - Forme objet : `this.playTranslateAction({ action1: "...", action2: "...", direction: 6, finalPose: "walk", onEnd: ... })`
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_translate_action.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_translate_action.js) (14/14 tests validés).
+
+---
+
+### 11.24 Refonte du Curseur de Destination Animé (`Sprite_Destination` dans `SC4_rmmz_sprites_Patches.js`)
+- **Problématique & Esthétique** :
+  - Remplacement du carré clignotant blanc natif de RMMZ par un curseur bi-composant fluide épousant la perspective **3/4 plongeante** (*Top-Down Oblique / Cavalière*).
+- **Architecture Bi-Composant** :
+  - **1. Disque & Anneau Lumineux au Sol (`_groundSprite`)** :
+    - Rayon maximal de 36px (diamètre 72px, soit un débordement doux de 12px de part et d'autre de la case 48px), permettant au curseur de rester visible même sous un meuble ou un toit.
+    - Dessiné avec dégradé radial et ratio d'ellipse adapté (~1.85:1) en fusion additive (`blendMode = 1`).
+    - Animation par pulsation continue (cycle de 25 frames) associant expansion d'échelle ($0.67 \to 1.00$) et atténuation d'opacité ($220 \to 0$).
+  - **2. Flèche Supérieure Flottante (`_pointerSprite`)** :
+    - Charge l'asset [`img/GUI/cursors/destPointer.png`](file:///c:/SERVER/htdocs/SimCraft/SC4/img/GUI/cursors/destPointer.png) avec ancrage sur la pointe dirigée vers le sol (`anchor = 0.5, 1.0`).
+    - Flottement vertical sinusoïdal doux au-dessus du centre de la case (-12px à -2px).
+    - **Opacité Dynamique Synchronisée avec l'Oscillation** :
+      - L'opacité est inversement proportionnelle à la hauteur : plus la flèche monte, plus elle s'atténue.
+      - Opacité maximale de **65%** ($166/255$) au point le plus bas (proche du sol) et opacité minimale de **45%** ($115/255$) au point le plus haut.
+    - **Condition de praticabilité (Passability)** :
+      - Visible uniquement si la case cliquée est franchissable par le joueur (`!isCollidedWithCharacters` et tuile passable sur la carte).
+      - Sur un mur, meuble bloquant ou PNJ, la flèche s'efface automatiquement tout en conservant le disque au sol pour accuser réception du clic.
+  - **3. Désactivation du Menu Circulaire sur Clic Héros** :
+    - Dans [`SC4_Window_RingCommand.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_RingCommand.js), `Game_System.prototype.isRingMenuEnabled` est désactivé (`false`) et `Scene_Map.prototype.updateRingCommandTrigger` est neutralisé pour suspendre le menu circulaire sur clic joueur pour l'instant.
+  - **Masquage Automatique** :
+    - L'ensemble du curseur s'estompe et se masque instantanément dès que la destination est atteinte ou effacée (`!$gameTemp.isDestinationValid()`).
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_destination_sprite.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_destination_sprite.js) (10/10 tests validés).
+
+---
+
+### 11.25 Modularité Architecturale du Ring Command & Intégration Événementielle des Tutos
+- **Nettoyage et Répartition par Classe Vanilla** :
+  - [`SC4_Window_RingCommand.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_RingCommand.js) : Définition exclusive de la classe d'interface graphique `Window_RingCommand` (sans injection de monkey-patches).
+  - [`SC4_rmmz_objects_Patches.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_rmmz_objects_Patches.js) : Centralisation des méthodes de `Game_System` (`isRingMenuEnabled`, `setRingMenuEnabled`, `getRingCommandConfig`, `setRingCommandConfig`).
+  - [`SC4_rmmz_scenes_Patches.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_rmmz_scenes_Patches.js) : Centralisation du cycle de vie dans `Scene_Map` (`createRingCommandWindow`, `openRingMenu`, `closeRingMenu`, `updateRingCommandTrigger`, `isTouchOnPlayer`).
+- **Pont Événementiel `Game_Interpreter` & Localisation des Titres de Tutos** :
+  - Support de `this.showTuto(tutoId, data)` et `this.showTutos(list)` directement utilisables dans les commandes d'événements RMMZ en délégation vers `$tutoManager`.
+  - Résolution des titres de didacticiels via la clé `tutoName_[ID_DU_TUTO]` dans `data/SC/loc/TUTOS_[LANG].json`.
+  - Si la traduction est absente du fichier de langue, la fenêtre affiche directement la clé brute `tutoName_[ID]` pour repérer immédiatement les éléments non traduits.
+- **Validation** :
+  - 64 tests unitaires validés avec succès sur l'ensemble des suites.
+
+---
+
+### 11.26 Positionnement par Mots-Clés et Marge d'Écran (`Window_Tuto` & `SC4_TutoManager`)
+- **Positionnement Contextuel par Mots-Clés** :
+  - En complément du centrage par défaut et du ciblage de coordonnées sur la carte (`coord: { x, y }`), la fenêtre de tutoriel supporte désormais des mots-clés de placement à l'écran :
+    - `top`, `bottom`, `left`, `right`
+    - `top-left`, `top-right`, `bottom-left`, `bottom-right`
+    - `middle-left` (ou `center-left`), `middle-right` (ou `center-right`), `center` (ou `middle`)
+- **Gestion Dynamique du Padding Écran (`getPadding`)** :
+  - Padding automatique de **12px** par rapport aux bords de l'écran par défaut.
+  - Méthode d'accès normalisée : `Window_Tuto.prototype.getPadding()`.
+  - Configurable globalement via `Window_Tuto.prototype.setPadding(pad)` ou localement dans la commande via la propriété `padding: 16`.
+- **Alignement Précis du Badge de Titre (`Window_TutoName`)** :
+  - La fenêtre de titre chevauche le bord supérieur de la fenêtre principale (`y = -height + 8`).
+  - Lors d'un positionnement `top`, le décalage `topPadding = Math.max(0, nameH - 8)` est automatiquement calculé et injecté pour que le badge de titre soit lui-même parfaitement espacé de `getPadding()` (12px) du sommet de l'écran.
+  - Confinement de sécurité (`clamping`) garantissant que la fenêtre et son titre ne débordent jamais hors écran.
+- **Ergonomie des Appels & Script Calls** :
+  - Raccourci direct avec argument chaîne :
+    - `showTuto("nomDuTuto", "top")`
+    - `this.showTuto("nomDuTuto", "bottom-right")`
+  - Forme objet paramétrée :
+    - `this.showTuto("nomDuTuto", { position: "top", padding: 16 })`
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_tuto_system.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_tuto_system.js) (24/24 tests validés).
+
+---
+
+### 11.27 Bouton de Désactivation Rapide & Modal de Confirmation (`Window_TutoConfirm`)
+- **Bouton de Désactivation Contextuelle Intégré** :
+  - Ajout d'un bouton interactif `[ ⊘ Désactiver les tutos ]` en bas à gauche de [`SC4_Window_Tuto.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_Tuto.js) (`_disableButtonSprite`).
+  - Détection de survol (hover) avec rétro-éclairage et encadrement rouge doux (`rgba(255, 100, 100, 0.2)`).
+  - Clic intercepté avant le gestionnaire de fermeture standard du didacticiel : cliquer sur ce bouton n'entraîne pas la fermeture du didacticiel.
+- **Fenêtre Modale de Confirmation (`Window_TutoConfirm`)** :
+  - Fenêtre 2 colonnes avec windowskin `WindowTuto`, centrée à l'écran (`winW = 540, winH = 170`).
+  - Texte explicatif rappelant au joueur la possibilité de réactiver l'aide à tout moment : *"Les didacticiels peuvent être réactivés à tout moment depuis le menu Options."*
+  - Choix de commande : `"Désactiver"` et `"Annuler"` (`"Annuler"` pré-sélectionné par défaut pour prévenir toute validation accidentelle).
+- **Gestion Stricte des Flux d'Interaction** :
+  - **Annulation / Rétractation** : Si le joueur sélectionne `"Annuler"`, presse Échap ou clique hors de la fenêtre modale, seule la confirmation se referme. Le tutoriel courant reste ouvert et redevient interactif. Le joueur doit à nouveau cliquer ou appuyer sur Entrée pour fermer le tutoriel courant.
+  - **Validation de la Désactivation** : Si le joueur confirme `"Désactiver"` :
+    - `ConfigManager.contextualHelp = false` est appliqué et sauvegardé immédiatement (`ConfigManager.save()`).
+    - La file d'attente active de didacticiels est vidée via `$tutoManager.disableContextualHelp()`.
+    - La fenêtre de tutoriel courante se ferme immédiatement et la carte reprend son cours.
+- **Localisation Dynamique & Validation** :
+  - Clés bilingues FR/EN ajoutées dans `data/SC/loc/TUTOS_FR.json` et `TUTOS_EN.json`.
+  - Test unitaire dédié : [`UNIT_TESTS/test_tuto_system.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_tuto_system.js) (27/27 tests validés).
+
+---
+
+### 11.28 Option Plein Écran (F4) & Adaptation Dynamique des Résolutions
+- **Gestion des Écrans de Résolution Inférieure (Format 1760×990)** :
+  - **En Mode Fenêtré** : Sur les écrans de faible résolution (ex: 1366×768 ou 1600×900), la fenêtre de jeu s'ouvre à sa taille native 1760×990 et peut déborder du cadre sans maximisation.
+  - **En Mode Plein Écran** : Le moteur graphique de RMMZ (`Graphics` / PixiJS) applique automatiquement une réduction d'échelle bilinéaire proportionnelle (`downscaling`) basée sur le ratio de l'écran. L'ensemble de la zone de jeu (1760×990) est ainsi parfaitement contenu dans l'écran sans distorsion ni débordement.
+- **Intégration dans `Window_Options` & `ConfigManager`** :
+  - **Lancement par défaut en fenêtré** : `ConfigManager.fullscreen = false`.
+  - **Commande d'Options** : Intitulée `"Plein écran (F4)"` (FR) et `"Fullscreen (F4)"` (EN) avec bascule d'état `ON` / `OFF`.
+  - **Bascule en Temps Réel** : Toute modification via la touche Entrée, Espace, les flèches ou le clic tactile déclenche instantanément `Graphics._requestFullScreen()` ou `Graphics._cancelFullScreen()`.
+  - **Synchronisation avec F4** : Appuyer sur la touche **F4** en cours de jeu met à jour la valeur de `ConfigManager.fullscreen` et sauvegarde l'état dans `config.rpgsave`.
+  - **Restauration au Démarrage** : `Scene_Boot.prototype.start` rétablit automatiquement le plein écran au lancement si configuré.
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_fullscreen_option.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_fullscreen_option.js) (9/9 tests validés).
+
+---
+
+### 11.29 Agrandissement & Dimensionnement Dynamique de `Scene_Options`
+- **Résolution & Ergonomie Visuelle (`SC4_rmmz_scenes_Patches.js`)** :
+  - **Largeur portée à 560px** (`Math.min(560, boxW - 32)`) au lieu des 400px étriqués natifs, pour donner tout l'espace d'affichage nécessaire aux intitulés bilingues et rappels de touches.
+  - **Débridage de la capacité** : `Scene_Options.prototype.maxCommands` passe de 7 à 30 commandes sans bridage artificiel.
+  - **Marge maximale de 16px en haut et en bas** : `maxVisibleCommands()` et `optionsWindowRect()` calculent dynamiquement une hauteur plafonnée à `boxHeight - 32` (958px max en 1760×990), garantissant 16px de marge min en haut et 16px en bas.
+  - **Adaptation précise au contenu réel** : `createOptionsWindow` recalcule la hauteur exacte selon `maxItems()` (12 options = 456px actuellement). La fenêtre se centre verticalement sans aucun espace vide ni ascenseur superflu tant que les éléments tiennent à l'écran.
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_options_window.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_options_window.js) (6/6 tests validés).
+
+---
+
+### 11.30 Verrou de Relâchement Tactile (*Touch Release Guard*) à la Fermeture d'Interfaces
+- **Problématique résolue** :
+  - Lors de la fermeture d'un didacticiel (`Window_Tuto`) ou d'une fenêtre modale par un clic tactile, le temps de réaction musculaire humain (80 à 150 ms) fait que le bouton physique de la souris est encore enfoncé quand la fenêtre disparaît.
+  - Dans le même tour de boucle du moteur ou les frames suivantes, `Scene_Map.prototype.processMapTouch()` détectait un clic sur la carte et faisait marcher involontairement le personnage vers les coordonnées du clic.
+- **Architecture SRP & Double Barrière (`SC4_Window_Tuto.js`, `SC4_rmmz_scenes_Patches.js`, `SC4_TutoManager.js`)** :
+  - 1. **Consommation Immédiate (`TouchInput.clear()`)** : À la fermeture de la fenêtre, purge instantanée de l'état tactile (`triggered`, `pressed`, `clicked` remis à `false`).
+  - 2. **Méthode à responsabilité unique : `isTouchCoolDownOk()`** :
+    - Gère un temps mort déterministe en frames (`_touchCooldown`, ex: 8 frames par défaut).
+    - Décrémente le compteur frame par frame et renvoie `false` tant qu'il n'a pas atteint zéro.
+  - 3. **Méthode à responsabilité unique : `isTouchReleaseGuardOk()`** :
+    - Surveille l'état du verrou `_touchReleaseGuard`.
+    - Bloque (`false`) tant que `TouchInput.isPressed()` est maintenu par le joueur.
+    - Dès que le doigt physique est levé, désarme automatiquement le verrou (`_touchReleaseGuard = false`) et renvoie `true`.
+  - 4. **Orchestration fluide dans `Scene_Map.prototype.isMapTouchOk`** :
+    - `isMapTouchOk()` valide successivement : `!$tutoManager.isBusy()`, `isTouchCoolDownOk()`, `isTouchReleaseGuardOk()`, puis la condition native RMMZ.
+    - Également armé lors du retour sur la carte depuis une scène fille (`Scene_Map.prototype.start`).
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_tuto_system.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_tuto_system.js) Suite 4 (29/29 tests validés).
+
+---
+
+### 11.31. Refonte Architecturale de l'Acteur : `Game_ScActor` & Sous-Composants Modulaires
+- **Contexte & Problématique** :
+  - Historiquement, la classe native `Game_Actor` de RMMZ était directement surchargée par de multiples monkey-patches dans le prototype (`SC4_rmmz_objects_Patches.js`), mélangeant combat, munitions, allégeances de factions, inventaire secondaire, poids d'équipement et localisation.
+  - De plus, `Game_Hero` héritait directement de `Game_Actor`, créant une dette technique empêchant les acteurs non-héros (compagnons, PNJs recrutables) de bénéficier proprement des fonctionnalités avancées sans alourdir le prototype global.
+- **Architecture par Décomposition & Composition Modulaire (SRP)** :
+  - **`Game_ScActor` ([`SC4_Game_ScActor.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActor.js))** :
+    - Classe ES6 étendant nativement `Game_Actor`.
+    - Instancie et orchestre 5 sous-composants dédiés lors de `setup(actorId)` :
+      1. **`Game_ScActorEquipment` ([`SC4_Game_ScActorEquipment.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActorEquipment.js))** : Gestion des slots (11 types d'équipement), association arme/armure, détection d'équipement, extraction des calques Paperdoll (`<visual_equip: ...>`) et Faceset (`<face: ...>`), calcul du bonus de charge d'emport.
+      2. **`Game_ScActorInventory` ([`SC4_Game_ScActorInventory.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActorInventory.js))** : Couplage avec le conteneur secondaire `$inventories.inventory("A_" + actorId)`, calcul de la charge portée, capacité maximale (`atk * 2.5 + bonus`), état de surcharge et fatigue (`exhaustion`).
+      3. **`Game_ScActorCombat` ([`SC4_Game_ScActorCombat.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActorCombat.js))** : Arme active de gunfight, gestion des munitions engagées dans le chargeur (`_weaponAmmo`), réserve globale ou sac, compétence d'attaque (`<attackId: X>`) et parsing des animations d'attaque (`<visual_attack>`).
+      4. **`Game_ScActorSocial` ([`SC4_Game_ScActorSocial.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActorSocial.js))** : Allégeance de faction (`<factionId: X>`), accès à l'entité `$gameFactions.faction()`, relations interpersonnelles `$gameRelations`.
+      5. **`Game_ScActorLocation` ([`SC4_Game_ScActorLocation.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActorLocation.js))** : Coordonnées spatiales hiérarchiques (Secteur, Système, Planète, POI), synchronisation par défaut avec la flotte/groupe (`$gameGalaxy`) et possibilité de détachement géographique.
+  - **`Game_Hero` ([`SC4_Game_Hero.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_Hero.js))** :
+    - Hérite désormais de `Game_ScActor` (`class Game_Hero extends Game_ScActor`).
+    - Se recentre exclusivement sur les spécificités de rendu Paperdoll (race, sexe, visage composite, hub `$heroHub`, clés de cache et bitmaps composites).
+  - **Factory `Game_Actors.prototype.actor` ([`SC4_rmmz_objects_Patches.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_rmmz_objects_Patches.js))** :
+    - Instancie `Game_Hero` si l'acteur possède `<hero>`, sinon instancie `Game_ScActor`.
+- **Validation** :
+  - Test unitaire dédié : [`UNIT_TESTS/test_sc_actor_hierarchy.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_sc_actor_hierarchy.js) (70/70 tests validés).
+
+---
+
+### 11.32. Architecture SC4 Niveau 2 : Modèle QQOQCP Driven & Unification Radicale
+- **Cadre Conceptuel QQOQCP (Qui, Quand, Où, Quoi, Comment, Pourquoi)** :
+  - **QUI** : `$gameActors` (`Game_ScActor` unifié pour PJ, PNJ, compagnons et factions).
+  - **QUAND** : `$gameDate` (Progression temporelle et calendrier stellaire).
+  - **OÙ** : `$gameGalaxy` (Spatial macro : Secteur → Système → Planète → POI) et `$gameMap` (Micro local).
+  - **QUOI** : Moteur d'interactions (`Game_InteractionBase`, `Game_ReactionBase`, dialogue, combat, échanges d'inventaire).
+  - **COMMENT** : Managers, Scènes, Fenêtres et Sprites (`$questManager`, `$storyManager`, `$tutoManager`, `$inventories`, SubScenes).
+  - **POURQUOI** : Finalité et quêtes (`$gameQuests`, `$storyManager`, Contrats, Nœuds Narratifs et Nexus).
+- **Implémentations Livrées** :
+  1. **Lazy Loading Pur sur `Game_ScActor`** : Les 6 sous-composants (`equipment`, `inventory`, `combat`, `social`, `location`, `character`) sont initialisés à `null` et ne s'instancient qu'à la première demande.
+  2. **Parsing Unique des Notetags (`_meta`)** : Les balises de l'acteur sont extraites une seule fois lors de `setup(actorId)` dans `_meta` (0 regex répétée au runtime, modification dynamique avec `setMeta`).
+  3. **Absorption de `Game_Hero` dans `Game_ScActor`** : Rétrocompatibilité totale assurée par alias direct (`window.Game_Hero = Game_ScActor`).
+  4. **Sous-objet `Game_ScActorCharacter` ([`SC4_Game_ScActorCharacter.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActorCharacter.js))** : Encapsule l'apparence sur carte, le Paperdoll, les coordonnées et la liaison avec l'entité concrète (`$gamePlayer`, `Game_Follower`, `Game_Event`).
+  5. **Décentralisation des Relations dans `_social._opinions`** : Chaque acteur héberge les sentiments / opinions que les interlocuteurs portent à son égard (`actor.social.opinion(targetId)`).
+  6. **Factions comme Acteurs (<Faction>)** : Détection via `actor.isFaction()`, accès naturel à un inventaire (banque/stock) et diplomatie sans corps cartographique.
+- **Validation** :
+  - Suite de tests unitaire dédiée : [`UNIT_TESTS/test_sc_actor_hierarchy.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_sc_actor_hierarchy.js) (46/46 tests validés).
+
+---
+
+### 11.33 Purge des Monkey-Patches de Game_Actor.prototype & Victoire du Fail Fast
+- **Objectif** :
+  - Éliminer la dette technique en supprimant les greffes sauvages sur le prototype vanilla de RMMZ (`Game_Actor.prototype`).
+  - Forcer l'utilisation stricte des sous-composants spécialisés (`actor.combat`, `actor.inventory`, `actor.social`, `actor.character`, `actor.equipment`).
+  - Appliquer la règle d'or **Clean Code & Fail Fast** : aucune façade de complaisance masquant les erreurs de routage.
+- **Réalisations Techniques** :
+  1. **Purge de `Game_Actor.prototype` dans [`SC4_rmmz_objects_Patches.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_rmmz_objects_Patches.js)** :
+     - Retrait complet de : `gunfightWeapon`, `gunfightStats`, `getLoadedAmmo`, `setLoadedAmmo`, `consumeLoadedAmmo`, `getReserveAmmo`, `hasNoWeapons`, `getFaceEquipLayers`, `factionId`, `faction`, `setFactionId`, `equipmentWeightCapacityBonus`, `weightCapacity`, `exhaustion`.
+     - Seules subsistent les surcharges vanilla nécessaires : localisation (`name`, `nickname`, `profile`) et la fabrique `$gameActors.actor(id)` qui instancie désormais directement `Game_ScActor`.
+  2. **Nettoyage Radical de [`SC4_Game_ScActor.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActor.js)** :
+     - Élimination des façades redondantes qui déléguaient passivement aux sous-objets.
+     - Seule la méthode native du moteur RMMZ `attackSkillId()` est conservée comme surcharge ES6 native pour répondre aux requêtes internes du moteur de combat de RMMZ.
+  3. **Reroutage Global des Points d'Appel (Call-Sites)** :
+     - Balistique : `Game_Player` et [`SC4_Sprite_WeaponHUD.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_WeaponHUD.js) appellent directement `actor.combat.*`.
+     - Visuels Paperdoll : `Game_Follower`, `Game_Event`, [`SC4_Sprite_Hero.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_Hero.js) et [`SC4_Bitmap_Composite.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Bitmap_Composite.js) appellent `actor.character.*` et `actor.equipment.*`.
+     - Inventaire & Poids : `Game_Party.prototype.maxWeight` appelle `actor.inventory.weightCapacity()`.
+     - Social & Allégeance : [`SC4_Game_Planet.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_Planet.js), [`SC4_Game_Spaceship.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_Spaceship.js) et [`SC4_RelationManager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_RelationManager.js) appellent `actor.social.factionId()`.
+- **Validation** :
+  - [`UNIT_TESTS/test_sc_actor_hierarchy.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_sc_actor_hierarchy.js) : 46/46 tests réussis (atteste l'inexistence des façades directes et la pureté des composants).
+  - [`UNIT_TESTS/test_weapon_hud.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_weapon_hud.js) : 10/10 tests réussis.
+  - [`UNIT_TESTS/test_step24_faction_allegiance.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_step24_faction_allegiance.js) : 17/17 tests réussis.
+  - Synchronisation SHA256 absolue de `plugins.js` et `plugins.backup.js` (`E712721441530C65365681FB5FCB19BF280F2B0516CDCE6FF0816ABD308EC087`).
+
+---
+
+### 11.34 Refonte Immersive de Scene_Inventory, Tri Adaptatif & Action Contextuelle "Équiper" (Étapes 1 à 3)
+- **Objectif** :
+  - Métamorphoser l'interface de transfert d'inventaires pour éliminer l'abstraction des menus textuels classiques et préserver l'immersion spatiale diégétique.
+  - Laisser le centre de l'écran ouvert sur la carte en cours (héros visible dans sa cabine du vaisseau en train d'interagir avec l'armoire).
+  - Fournir un habillage direct sans manipulation superflue : équiper instantanément armures et armes depuis un conteneur ou le sac.
+  - Offrir un système de tri toggle universel adaptatif aux restrictions du meuble, avec affichage informatif du type dans l'aide et détection des données non typées ("Divers").
+- **Réalisations Techniques** :
+  1. **Photomask Focus Procédural (`createFocusVignette`)** :
+     - Remplacement du flou intégral (`BlurFilter`) par un dégradé radial Canvas procédural.
+     - Le centre reste parfaitement net et transparent pour voir le héros et le décor ; les périphéries et colonnes latérales sont ombrées (`rgba(2, 6, 16, 0.65..0.88)`). Aucun asset image lourd n'est requis.
+  2. **En-têtes Supérieurs Dédiés ([`SC4_Window_InventoryHeader.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_InventoryHeader.js))** :
+     - Header Joueur (Gauche) : Portrait de face composite Paperdoll ou vanilla, titre "Sac du joueur", jauge graphique de poids dynamique avec paliers de couleur (Bleu < 85%, Orange < 100%, Rouge Surchargé).
+     - Header Conteneur (Droite) : Icône graphique HD dédiée `img/GUI/defautInventoryIcon.png` (ou personnalisable par conteneur dans `data/SC/INVENTORIES.json`), titre contextuel ("Armoire perso", cadavre, allié), jauge de charge du réceptacle.
+  3. **Flèche Néon Animée ([`SC4_Sprite_InventoryArrow.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_InventoryArrow.js))** :
+     - Sprite procédural cyan néon jaillissant horizontalement depuis la ligne de l'item sélectionné vers la modale volante d'action (`Window_InventoryAction`), suivi d'une respiration/pulsation subtile continue.
+  4. **Action Contextuelle "Équiper"** :
+     - Détection dynamique si l'item survolé est une pièce d'armure ou une arme (`DataManager.isWeapon` / `DataManager.isArmor`) équipable par le héros (`actor.canEquip(item)`).
+     - Intégration de la commande `"equip"` dans `Window_InventoryAction` (adaptant dynamiquement sa hauteur via `fittingHeight`).
+     - Exécution directe dans `Scene_Inventory.prototype.onActionEquip` : transfert de la pièce, équipement via `actor.equipment.equip(item)` et `actor.changeEquip`, rafraîchissement synchrone du portrait Paperdoll de l'en-tête et notification cartographique `$gamePlayer.refresh()`.
+  5. **Bouton de Tri Toggle Synchronisé & Adaptatif** :
+     - Commande `[ Tri : [Label] ]` dans `Window_InventoryCommand` (bas d'écran à 5 colonnes).
+     - Cycle séquentiel entre : *Tout, Consommables, Biomédical, Ingrédients, Équipements, Armes & Munitions, Outils, Datapads, Objets Clés, Divers*.
+     - Filtre simultanément et en temps réel le sac du joueur et le conteneur (`_partyWindow` et `_targetWindow`).
+     - **Adaptatif** : Si le conteneur cible impose des restrictions (`onlyWeapons`, `onlyItems`, etc.), le toggle saute automatiquement les catégories incompatibles.
+  6. **Typage Notetag `<sc_type: ...>` & Détection "Divers"** :
+     - Résolution universelle dans `DataManager.itemScTypeInfo(item)`.
+     - Affichage dans l'en-tête de `Window_Help` : `[ TYPE : ÉQUIPEMENT ]` ou `[ TYPE : DIVERS ]` en surbrillance, suivi de la description en ligne 2.
+     - Permet d'identifier immédiatement en jeu les objets non tagués afin de compléter les bases de données.
+  7. **Avertissements Prédictifs de Surcharge Pondérale (Poids !)** :
+     - Affichage de `⚠️ +X kg (SURCHARGE !)` en rouge dans la fenêtre d'aide.
+     - Mention `⚠️` et texte rouge sur `Prendre 1` et `Prendre Tout` dans la modale d'action.
+     - Bouton `Tout vider` en rouge d'alerte avec `⚠️` si le déversement dépasse la charge maximale du joueur.
+- **Validation** :
+  - Suite de tests complète : [`UNIT_TESTS/test_inventory_layout.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_inventory_layout.js) (**16/16 tests** validés avec succès).
+  - Synchronisation stricte de [`plugins.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins.js) et [`plugins.backup.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins.backup.js) (SHA256: `C184C159BDD46171132427FAD58F7B9C9AB62FC6D7CC85376AFA5119AA171071`).
+
+---
+
+### 11.35 Didacticiels Contextuels : Synchronisation et Priorité aux Boîtes de Message
+- **Statut** : Complété et validé par tests unitaires automatisés ([`UNIT_TESTS/test_tuto_system.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_tuto_system.js) - 35/35 tests).
+- **Problématique** :
+  - Empêcher l'ouverture intrusive d'une fenêtre de tutoriel (`Window_Tuto`) par-dessus un dialogue narratif ou un événement textuel en cours (`Window_Message` / `$gameMessage`).
+  - Assurer la conservation ordonnée de la file d'attente (`_queue`) tant qu'un message est visible ou en cours d'animation de fermeture, puis ouvrir automatiquement le didacticiel dès le retour au calme.
+- **Fonctionnalités Techniques** :
+  1. **Détection `isMessageActive()`** :
+     - Écoute `$gameMessage.isBusy()` (textes, choix, inputs).
+     - Surveille l'état de fermeture de `_messageWindow` (`!isClosed()`) et `_scrollTextWindow` pour couvrir l'intégralité de l'animation de disparition de la fenêtre de dialogue (openness de 255 à 0).
+  2. **File d'Attente Non-Destructive** :
+     - `processNext()` suspend son dépilement si `isMessageActive()` est vrai. Le tutoriel reste sagement dans `_queue`.
+     - `isBusy()` de `TutoManager` reste à `false` tant qu'aucun didacticiel n'est affiché à l'écran, ce qui préserve la réactivité de la boucle de jeu (`updateMain`) et permet au joueur de faire défiler ses dialogues.
+  3. **Reprise Automatique (`update()`)** :
+     - `Scene_Map.prototype.update` invoque `window.$tutoManager.update()`.
+     - Dès que le message s'éteint complètement, le prochain tutoriel de la file est dépilé et s'ouvre proprement.
+
+---
+
+### 11.36 Résolution de la Sérialisation Profonde JsonEx et Refonte Haute Définition UI Inventaire
+- **Statut** : Complété et validé ([`UNIT_TESTS/test_sc_actor_hierarchy.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_sc_actor_hierarchy.js) - 49/49 tests, [`UNIT_TESTS/test_inventory_layout.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_inventory_layout.js) - 18/18 tests).
+- **Correctif `Object too deep` (Menu Équipement Vanilla)** :
+  - `Window_EquipItem.prototype.updateHelp` effectue un `JsonEx.makeDeepCopy(this._actor)` pour simuler les variations de statistiques.
+  - Les références `_actor`, `_entity` et `_target` ont été rendues non-énumérables (`enumerable: false`) dans tous les sous-composants (`equipment`, `inventory`, `combat`, `social`, `location`, `character`).
+  - Suppression complète de toute récursion cyclique lors de la sérialisation / désérialisation JSON.
+- **Améliorations UI Scene_Inventory** :
+  - **Assets Dédiés** : Déplacement dans `img/GUI/inventory/` (`defautInventoryIcon.png`, `bagIcon.png`, `PF-Mouvement.jpg`).
+  - **Hauteur 168px (Headers & Help)** : Faceset RMMZ natif 144x144 rendu intégralement sans rognage, icône conteneur redimensionnée à 136px.
+  - **Masque Photomask Radial** : Superposition de `PF-Mouvement.jpg` en mode `MULTIPLY`.
+  - **Sprite Vivant en Arrière-Plan** : Intégration de `Sprite_Character($gamePlayer)` sous le masque pour actualiser visuellement en direct le héros lors de l'équipement.
+  - **Nettoyage des Rectangles Fantômes** : Suppression d'une surcharge doublon `refresh()` dans `Window_InventoryList` et synchronisation stricte de `contentsBack`.
+
+---
+
+### 11.37 Refonte Architecturale Découplée de Game_ScActor (WeakMap & Sérialisation Whitelistée) & Snap de Carte Sans Acteur
+- **Statut** : Complété et validé ([`UNIT_TESTS/test_sc_actor_hierarchy.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_sc_actor_hierarchy.js) - 62/62 tests, [`UNIT_TESTS/test_inventory_layout.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_inventory_layout.js) - 18/18 tests).
+- **Architecture des Composants Enfants sans Référence `_actor` Directe** :
+  - **Éradication des Références Circulaires** : Suppression complète du stockage de `this._actor` sous forme de propriété sur les 6 sous-composants (`equipment`, `inventory`, `combat`, `social`, `location`, `character`).
+  - **Résolution Dynamique et Sûre** : Utilisation de `WeakMap` isolées par composant (`_scActorXxxMap`) associées à un getter/méthode `actor()` qui résout en repli l'acteur via son identifiant souverain `$gameActors.actor(this._actorId)`.
+  - **Isolation Vis-à-vis de JsonEx** : Les 6 propriétés de composants sur `Game_ScActor` sont définies comme non-énumérables (`enumerable: false`), empêchant `JsonEx.stringify` et `JsonEx.makeDeepCopy` de traverser récursivement les sous-arbres.
+  - **Sérialisation Whitelistée Dédiée** : Implémentation du pattern `makeSavefileData()` et `loadSavefileData(data)` sur `Game_ScActor`, ses sous-composants, `Game_Actors` et `SC_DataManager` (`contents.sc_actors`), calqué sur l'architecture robuste de la Galaxy et des Quêtes.
+- **Capture Propre du Fond de Carte (Scene_Inventory)** :
+  - **Masquage Pré-Snap dans Scene_Map** : `Scene_Map.prototype.terminate` masque temporairement l'entité `$gamePlayer` (`setTransparent(true)` et `visible = false` sur son sprite) juste avant l'appel à `SceneManager.snapForBackground()`, puis restaure immédiatement sa visibilité. Le snapshot bitmap ne contient ainsi aucun sprite figé du joueur.
+  - **Centrage In-World du Masque Vignette** : La vignette radiale `PF-Mouvement.jpg` (en `MULTIPLY`) est ancrée en `(0.5, 0.5)` et centrée précisément sur les coordonnées réelles écran du joueur `($gamePlayer.screenX(), $gamePlayer.screenY() - 24)`, s'adaptant à n'importe quelle configuration de carte (avec ou sans scrolling).
+  - **Sprite Vivant Positionné et Orienté** : `_playerLiveSprite` (`Sprite_Hero` avec support Paperdoll) est positionné aux coordonnées exactes de l'avatar et orienté selon son `direction()` natif, garantissant une actualisation visuelle immédiate et fluide sans superposition résiduelle lors du changement d'équipement.
+
+---
+
 ## 12. Feuille de Route & Perspectives Futures
+
+### Ergonomie, Contrôles & Entrées
+- Architecture `SC4_KeymapManager` & Getter strict sur `Input.keyMapper` : gestionnaire contextuel centralisé des touches (exploration, cockpit FTL, mini-jeux), profils joueur configurables en options et hooks sans effets de bord.
 
 ### Combat & Balistique
 - Trajectoires balistiques paraboliques pour grenades et armes de jet.

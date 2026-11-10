@@ -22,12 +22,22 @@ console.log("==============================================================\n");
 // 1. Mocks minimaux RMMZ (même harnais que test_step20)
 global.window = global;
 global.Graphics = { frameCount: 0, width: 1760, height: 990 };
-global.DEBUGTOOL = { log: () => {} };
+global.DEBUGTOOL = { log: () => {}, error: () => {}, warn: () => {} };
 
+global.Game_Temp = class { setDestination() {} };
+global.Game_System = class { isRingMenuEnabled() { return true; } };
+global.Game_BattlerBase = class { xparam() { return 0; } };
+global.Game_Battler = class extends global.Game_BattlerBase {};
+global.Game_Enemy = class extends global.Game_Battler {};
+global.Game_Unit = class {};
+global.Game_Party = class extends global.Game_Unit { members() { return []; } };
+global.Game_Troop = class extends global.Game_Unit {};
 global.Game_CharacterBase = class { constructor() { this.initMembers(); } initMembers() {} };
 global.Game_Character = class extends global.Game_CharacterBase {};
+global.Game_Vehicle = class extends global.Game_Character {};
 global.Game_Player = class extends global.Game_Character {};
 global.Game_Follower = class extends global.Game_Character { actor() { return null; } };
+global.Game_Followers = class { forEach() {} };
 global.Game_Event = class extends global.Game_Character {};
 global.Game_Map = class {};
 global.Game_Actor = class {
@@ -56,11 +66,14 @@ global.$dataActors = [
 $dataActors[51] = { id: 51, name: "Gouverneur", note: "<factionId: 1>" };
 $dataActors[52] = { id: 52, name: "Contrôleur", note: "<factionId: 1>" };
 
+require("../js/plugins/SC4_Game_ScActorSocial.js");
+require("../js/plugins/SC4_Game_ScActor.js");
 require("../js/plugins/SC4_rmmz_objects_Patches.js");
 
 // Après le patch, Game_Actors.actor instancie les acteurs à partir de $dataActors
 global.$gameActors = new Game_Actors();
 
+require("../js/plugins/SC4_Game_GalacticRepoBase.js");
 require("../js/plugins/SC4_Game_Planet.js");
 require("../js/plugins/SC4_Game_Spaceship.js");
 require("../js/plugins/SC4_RelationManager.js");
@@ -75,24 +88,24 @@ function test(name, fn) {
 // ----------------------------------------------------------------------------
 // A. Game_Actor
 // ----------------------------------------------------------------------------
-console.log("A. Game_Actor.factionId()");
+console.log("A. Game_ScActorSocial.factionId()");
 
 test("Notetag <factionId: 3> lu correctement", () => {
-    assert.strictEqual($gameActors.actor(4).factionId(), 3);
+    assert.strictEqual($gameActors.actor(4).social.factionId(), 3);
 });
 test("Notetag absent → null (sans allégeance)", () => {
-    assert.strictEqual($gameActors.actor(2).factionId(), null);
+    assert.strictEqual($gameActors.actor(2).social.factionId(), null);
 });
 test("Notetag <factionId: 0> → null (sans allégeance)", () => {
-    assert.strictEqual($gameActors.actor(3).factionId(), null);
+    assert.strictEqual($gameActors.actor(3).social.factionId(), null);
 });
 test("setFactionId() change l'allégeance (défection) et 0 la retire", () => {
     const a = $gameActors.actor(4);
-    a.setFactionId(5);
-    assert.strictEqual(a.factionId(), 5);
-    a.setFactionId(0);
-    assert.strictEqual(a.factionId(), null);
-    a.setFactionId(3);
+    a.social.setFactionId(5);
+    assert.strictEqual(a.social.factionId(), 5);
+    a.social.setFactionId(0);
+    assert.strictEqual(a.social.factionId(), null);
+    a.social.setFactionId(3);
 });
 
 // ----------------------------------------------------------------------------
@@ -172,7 +185,7 @@ test("getActorFactionId() utilise Game_Actor.factionId()", () => {
     assert.strictEqual(mgr.getActorFactionId(51), 1);
     assert.strictEqual(mgr.getActorFactionId(2), 0);
     mgr.setActorFactionId(52, 4);
-    assert.strictEqual($gameActors.actor(52).factionId(), 4);
+    assert.strictEqual($gameActors.actor(52).social.factionId(), 4);
     assert.strictEqual(mgr.getActorFactionId(52), 4);
 });
 

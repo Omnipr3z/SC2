@@ -53,11 +53,20 @@
 
         /**
          * Déclenche l'affichage d'un tutoriel contextuel.
-         * @param {number|string|object} tutoId ID ou clé de tutoriel dans $dataTutos.
-         * @param {object} [data={}] Paramètres optionnels (coord, arrow, imgName, force, txt, name).
-         * @returns {boolean} True si le tutoriel a été pris en compte/mis en file.
+         * Si tutoId est un tableau, délègue automatiquement à showTutos.
+         * @param {number|string|object|Array} tutoId ID ou clé de tutoriel dans $dataTutos (ou tableau).
+         * @param {object} [data={}] Paramètres optionnels (coord, arrow, imgName, force, txt, name, iconIndex, width).
+         * @returns {boolean|number} True si le tutoriel a été pris en compte/mis en file (ou nombre pour showTutos).
          */
         show(tutoId, data = {}) {
+            if (typeof data === "string") {
+                data = { position: data };
+            }
+
+            if (Array.isArray(tutoId)) {
+                return this.showTutos(tutoId);
+            }
+
             if (typeof ConfigManager !== "undefined" && ConfigManager.contextualHelp === false) {
                 return false;
             }
@@ -84,14 +93,60 @@
                 if (locTxt) resolvedTxt = locTxt;
             }
 
+            // Résolution prioritaire du titre traduit : clé tutoName_[ID_DU_TUTO] via SC4_Localization
+            let resolvedName = data.name || "";
+            if (!resolvedName) {
+                const idKey = `tutoName_${item.id !== undefined ? item.id : item.key}`;
+                if (typeof SC4_Localization !== "undefined" && typeof SC4_Localization.getText === "function") {
+                    const locById = SC4_Localization.getText(idKey, "");
+                    if (locById && locById !== idKey) {
+                        resolvedName = locById;
+                    } else if (item.key) {
+                        const keyKey = `tutoName_${item.key}`;
+                        const locByKey = SC4_Localization.getText(keyKey, "");
+                        if (locByKey && locByKey !== keyKey) {
+                            resolvedName = locByKey;
+                        }
+                    }
+                }
+                // Si aucune traduction n'est trouvée dans le dictionnaire, afficher directement tutoName_[ID]
+                if (!resolvedName) {
+                    resolvedName = idKey;
+                }
+            }
+
+            // Résolution prioritaire de l'icône : data de l'appel => data du json/item => index 0 par défaut
+            let resolvedIconIndex = 0;
+            if (data && data.iconIndex !== undefined) {
+                resolvedIconIndex = Number(data.iconIndex);
+            } else if (item && item.iconIndex !== undefined) {
+                resolvedIconIndex = Number(item.iconIndex);
+            }
+
+            // Résolution de la largeur personnalisée éventuelle
+            const customWidth = (data && data.width !== undefined)
+                ? Number(data.width)
+                : ((item && item.width !== undefined) ? Number(item.width) : null);
+
+            // Résolution du positionnement par mot-clé (ex: "top", "bottom-right", "top-left") ou coordonnées
+            const rawPosition = (data && (data.position || data.pos))
+                || (data && typeof data.coord === "string" ? data.coord : null)
+                || item.position || item.pos
+                || (typeof item.coord === "string" ? item.coord : null)
+                || null;
+
             const tutoEntry = {
                 id: item.id,
                 key: item.key,
-                name: data.name || item.name || "",
+                name: resolvedName,
                 txt: resolvedTxt,
+                iconIndex: resolvedIconIndex,
+                width: customWidth,
                 img: data.imgName !== undefined ? data.imgName : (item.img || null),
-                coord: data.coord || null,    // { xMap, yMap } ou { x, y }
+                position: rawPosition,
+                coord: (data && typeof data.coord === "object") ? data.coord : ((typeof item.coord === "object") ? item.coord : null),
                 arrow: data.arrow || null,    // { xMap, yMap, x, y, angle }
+                padding: (data && data.padding !== undefined) ? data.padding : (item.padding !== undefined ? item.padding : null),
                 force: Boolean(data.force)
             };
 
@@ -108,13 +163,82 @@
          * Alias pour show()
          */
         showTuto(tutoId, data = {}) {
+            if (typeof data === "string") {
+                data = { position: data };
+            }
+            if (Array.isArray(tutoId)) {
+                return this.showTutos(tutoId);
+            }
             return this.show(tutoId, data);
         }
 
         /**
-         * Dépile et active le prochain tutoriel de la file d'attente.
+         * Déclenche ou enfile une série de plusieurs tutoriels d'un coup.
+         * Accepte un tableau d'identifiants (IDs numériques ou clés) ou d'objets de configuration.
+         * Exemples :
+         *   $tutoManager.showTutos([1, 2, "tuto_sector"]);
+         *   $tutoManager.showTutos([{ id: "tuto_1" }, { id: 1, data: { xMap: 4, yMap: 15 } }, 2, "tuto_2"]);
+         * @param {Array<number|string|object>} list
+         * @returns {number} Nombre de tutoriels ajoutés avec succès à la file.
+         */
+        showTutos(list) {
+            if (!Array.isArray(list)) return 0;
+            let addedCount = 0;
+            for (const item of list) {
+                if (item === null || item === undefined) continue;
+                if (typeof item === "number" || typeof item === "string") {
+                    if (this.show(item)) addedCount++;
+                } else if (typeof item === "object") {
+                    const tutoId = (item.id !== undefined) ? item.id : ((item.key !== undefined) ? item.key : item);
+                    const data = item.data || item;
+                    if (this.show(tutoId, data)) addedCount++;
+                }
+            }
+            return addedCount;
+        }
+
+        /**
+         * Vérifie si une boîte de dialogue ou fenêtre de message est actuellement active ou en cours d'affichage/fermeture.
+         * @returns {boolean}
+         */
+        isMessageActive() {
+            if (typeof $gameMessage !== "undefined" && $gameMessage && typeof $gameMessage.isBusy === "function") {
+                if ($gameMessage.isBusy()) return true;
+            }
+            if (typeof SceneManager !== "undefined" && SceneManager._scene) {
+                const scene = SceneManager._scene;
+                if (scene._messageWindow && typeof scene._messageWindow.isClosed === "function") {
+                    if (!scene._messageWindow.isClosed()) return true;
+                }
+                if (scene._scrollTextWindow && typeof scene._scrollTextWindow.isClosed === "function") {
+                    if (!scene._scrollTextWindow.isClosed()) return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Vérifie si le gestionnaire peut dépiler et afficher le prochain tutoriel.
+         * @returns {boolean}
+         */
+        canProcessNext() {
+            if (this.isMessageActive()) return false;
+            if (typeof SceneManager !== "undefined") {
+                if (typeof SceneManager.isSceneChanging === "function" && SceneManager.isSceneChanging()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /**
+         * Dépile et active le prochain tutoriel de la file d'attente si aucune fenêtre de message n'est active.
+         * @returns {boolean}
          */
         processNext() {
+            if (!this.canProcessNext()) {
+                return false;
+            }
             if (this._queue.length > 0) {
                 this._current = this._queue.shift();
                 const key = this._current.key;
@@ -125,8 +249,23 @@
                 if (typeof SceneManager !== "undefined" && SceneManager._scene && SceneManager._scene._tutoWindow) {
                     SceneManager._scene._tutoWindow.openTuto(this._current);
                 }
+                return true;
             } else {
                 this._current = null;
+                return false;
+            }
+        }
+
+        /**
+         * Actualisation périodique du gestionnaire de tutoriels.
+         * Si des tutoriels sont en attente dans la file d'attente et qu'aucune fenêtre de message
+         * n'est active, déclenche l'ouverture du prochain tutoriel.
+         */
+        update() {
+            if (!this._current && this._queue && this._queue.length > 0) {
+                if (this.canProcessNext()) {
+                    this.processNext();
+                }
             }
         }
 
@@ -136,14 +275,61 @@
         closeCurrent() {
             this._current = null;
             this.processNext();
+            if (!this.isBusy()) {
+                if (typeof TouchInput !== "undefined" && typeof TouchInput.clear === "function") {
+                    TouchInput.clear();
+                }
+                if (typeof SceneManager !== "undefined" && SceneManager._scene && typeof SceneManager._scene.activateTouchReleaseGuard === "function") {
+                    SceneManager._scene.activateTouchReleaseGuard(8);
+                }
+            }
         }
 
         /**
-         * Indique si un didacticiel est en cours d'affichage ou en attente.
+         * Désactive l'aide contextuelle globalement et vide la file d'attente active.
+         */
+        disableContextualHelp() {
+            if (typeof ConfigManager !== "undefined") {
+                ConfigManager.contextualHelp = false;
+                if (typeof ConfigManager.save === "function") {
+                    ConfigManager.save();
+                }
+            }
+            this._queue = [];
+            this._current = null;
+            if (typeof TouchInput !== "undefined" && typeof TouchInput.clear === "function") {
+                TouchInput.clear();
+            }
+            if (typeof SceneManager !== "undefined" && SceneManager._scene && typeof SceneManager._scene.activateTouchReleaseGuard === "function") {
+                SceneManager._scene.activateTouchReleaseGuard(8);
+            }
+        }
+
+        /**
+         * Indique si un didacticiel est actuellement affiché à l'écran.
+         * Note : Si un didacticiel est simplement en attente dans la file (_queue) pendant
+         * qu'un message d'événement est actif, isBusy reste false pour ne pas bloquer
+         * la boucle de jeu et permettre à la boîte de dialogue de se dérouler.
          * @returns {boolean}
          */
         isBusy() {
-            return Boolean(this._current || (this._queue && this._queue.length > 0));
+            return Boolean(this._current);
+        }
+
+        /**
+         * Indique si la file d'attente contient des tutoriels en attente.
+         * @returns {boolean}
+         */
+        hasQueue() {
+            return Boolean(this._queue && this._queue.length > 0);
+        }
+
+        /**
+         * Indique si un tutoriel attend la fermeture d'un message avant de s'afficher.
+         * @returns {boolean}
+         */
+        isWaitingForMessage() {
+            return Boolean(!this._current && this._queue && this._queue.length > 0 && this.isMessageActive());
         }
 
         /**
@@ -223,5 +409,18 @@
     if (!window.$tutoManager) {
         window.$tutoManager = new TutoManager();
     }
+
+    window.showTuto = function (tutoId, data = {}) {
+        if (typeof data === "string") {
+            data = { position: data };
+        }
+        if (window.$tutoManager) return window.$tutoManager.showTuto(tutoId, data);
+        return false;
+    };
+
+    window.showTutos = function (list) {
+        if (window.$tutoManager) return window.$tutoManager.showTutos(list);
+        return 0;
+    };
 
 })();

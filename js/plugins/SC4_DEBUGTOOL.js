@@ -36,7 +36,7 @@
     "use strict";
 
     const pluginName = "DEBUGTOOL";
-    const rawParams = PluginManager.parameters(pluginName) || {};
+    const rawParams = (typeof PluginManager !== "undefined" && PluginManager.parameters) ? (PluginManager.parameters(pluginName) || {}) : {};
 
     class DEBUGTOOL {
         static _enabled = rawParams["enabled"] !== undefined ? rawParams["enabled"] === "true" || rawParams["enabled"] === true : true;

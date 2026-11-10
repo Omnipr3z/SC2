@@ -11,6 +11,7 @@
   "options": {
     "language": "Langue",
     "contextualHelp": "Aide contextuelle",
+    "fullscreen": "Plein écran (F4)",
     "lang_fr": "Français",
     "lang_en": "English",
     "alwaysDash": "Toujours courir",
@@ -93,7 +94,8 @@
     "slot_limit": "Emplacements pleins",
     "weight_limit": "Poids maximum atteint",
     "restricted": "Objet non autorisé",
-    "player_bag": "🎒 Sac du joueur"
+    "player_bag": "🎒 Sac du joueur",
+    "equip": "Équiper"
   },
   "quest": {
     "header": "DATAPAD FÉDÉRAL ▷ REGISTRE DES MISSIONS & TRANSMISSIONS",

@@ -25,6 +25,7 @@ class Game_Inventory {
         // Par convention SC4 : les conteneurs (C_) et sacs d'acteurs (A_) sont persistants par défaut
         this._persistent = this._id.startsWith("A_") || this._id.startsWith("C_");
         this._explicitEphemeral = false;
+        this._icon = null;
         this._maxWeight = null;
         this._maxSlots = null;
         this._onlyWeapons = false;
@@ -230,6 +231,22 @@ class Game_Inventory {
     }
 
     /**
+     * Indique si l'inventaire a atteint sa capacité maximale (poids ou slots).
+     * @returns {boolean}
+     */
+    isFull() {
+        const mw = this.maxWeight();
+        if (mw !== null && mw !== undefined && mw !== Infinity && mw > 0) {
+            if (this.totalWeight() >= mw) return true;
+        }
+        const ms = this.maxSlots();
+        if (ms !== null && ms !== undefined && ms !== Infinity && ms > 0) {
+            if (this.items().length >= ms) return true;
+        }
+        return false;
+    }
+
+    /**
      * Nombre maximum d'emplacements différents (slots).
      * @returns {number}
      */
@@ -270,6 +287,38 @@ class Game_Inventory {
         if (options.allowedTypes !== undefined) this._allowedTypes = Array.isArray(options.allowedTypes) ? options.allowedTypes.slice() : null;
         if (options.allowedItemIds !== undefined) this._allowedItemIds = Array.isArray(options.allowedItemIds) ? options.allowedItemIds.slice() : null;
         if (options.blockedItemIds !== undefined) this._blockedItemIds = Array.isArray(options.blockedItemIds) ? options.blockedItemIds.slice() : null;
+        if (options.icon !== undefined) this._icon = String(options.icon).trim();
+    }
+
+    /**
+     * @returns {string|null} Nom du fichier icône dans img/GUI/ (ex: "defautInventoryIcon.png")
+     */
+    icon() {
+        return this._icon || null;
+    }
+
+    /**
+     * @param {string|null} name 
+     */
+    setIcon(name) {
+        this._icon = name ? String(name).trim() : null;
+    }
+
+    /**
+     * Indique si une catégorie de tri est compatible avec les restrictions de cet inventaire.
+     * @param {string} catKey 
+     * @returns {boolean}
+     */
+    isCategoryAllowed(catKey) {
+        if (!catKey || catKey === "all") return true;
+        if (this._onlyWeapons && catKey !== "weapon_ammo") return false;
+        if (this._onlyArmors && catKey !== "equipment") return false;
+        if (this._onlyAmmo && catKey !== "weapon_ammo") return false;
+        if (this._onlyItems && (catKey === "weapon_ammo" || catKey === "equipment")) return false;
+        if (this._allowedTypes && Array.isArray(this._allowedTypes) && this._allowedTypes.length > 0) {
+            return this._allowedTypes.includes(catKey);
+        }
+        return true;
     }
 
     /**

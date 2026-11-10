@@ -242,7 +242,9 @@ class Bitmap_Composite {
     static getCompositeEntry(hero, action = "walk") {
         if (!hero) return null;
 
-        const cacheKey = hero.getCompositeCacheKey(action);
+        const cacheKey = (hero.character)
+            ? hero.character.getCompositeCacheKey(action)
+            : (typeof hero.getCompositeCacheKey === "function" ? hero.getCompositeCacheKey(action) : "");
         if (this._cache.has(cacheKey)) {
             return this._cache.get(cacheKey);
         }
@@ -298,7 +300,9 @@ class Bitmap_Composite {
 
         // 3. Couches d'équipements (<visual_equip: FILENAME, ZINDEX>)
         // Structure cible : img/characters/composite/[race]/[sex]/equipments/[filename]_[action].png
-        const equipLayers = hero.getVisualEquipLayers();
+        const equipLayers = (hero.equipment)
+            ? hero.equipment.getVisualEquipLayers()
+            : (typeof hero.getVisualEquipLayers === "function" ? hero.getVisualEquipLayers() : []);
         for (const eq of equipLayers) {
             let eqFilename = "";
             let folder = "";
@@ -376,9 +380,9 @@ class Bitmap_Composite {
         }
 
         // 2. Couches d'équipements (<face: [EQUIP_FILENAME], [Z_INDEX], [UNISEX]>)
-        const faceEquipLayers = (typeof hero.getFaceEquipLayers === "function")
-            ? hero.getFaceEquipLayers()
-            : [];
+        const faceEquipLayers = (hero.equipment)
+            ? hero.equipment.getFaceEquipLayers()
+            : (typeof hero.getFaceEquipLayers === "function" ? hero.getFaceEquipLayers() : []);
 
         for (const eq of faceEquipLayers) {
             const rawFn = (eq.filename || "").toLowerCase();

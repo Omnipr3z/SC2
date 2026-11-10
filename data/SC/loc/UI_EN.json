@@ -11,6 +11,7 @@
   "options": {
     "language": "Language",
     "contextualHelp": "Contextual Help",
+    "fullscreen": "Fullscreen (F4)",
     "lang_fr": "Français",
     "lang_en": "English",
     "alwaysDash": "Always Dash",
@@ -93,7 +94,8 @@
     "slot_limit": "Slots full",
     "weight_limit": "Max weight reached",
     "restricted": "Item not allowed",
-    "player_bag": "🎒 Player Bag"
+    "player_bag": "🎒 Player Bag",
+    "equip": "Equip"
   },
   "quest": {
     "header": "FEDERAL DATAPAD ▷ MISSIONS & TRANSMISSIONS LOG",

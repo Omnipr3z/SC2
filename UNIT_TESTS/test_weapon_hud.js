@@ -91,10 +91,12 @@ let isPlayerReloading = false;
 const mockLeader = {
     actorId: () => 1,
     name: () => "Mosay",
-    gunfightWeapon: () => mockWeapon,
-    gunfightStats: () => mockStats,
-    getLoadedAmmo: () => currentAmmo,
-    getReserveAmmo: () => currentReserve
+    combat: {
+        gunfightWeapon: () => mockWeapon,
+        gunfightStats: () => mockStats,
+        getLoadedAmmo: () => currentAmmo,
+        getReserveAmmo: () => currentReserve
+    }
 };
 
 global.$gameParty = {

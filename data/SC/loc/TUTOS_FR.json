@@ -1,6 +1,4 @@
 {
-  "tuto_0": "Utilisez les touche directionnelle ou cliquez sur une detination pour vous deplacer.",
-  "tuto_1": "Enfiler votre equipement accedant à votre inventaire.\nbouton en haut ou touche 0num du clavier",
   "tuto_sector": "1. ◈ Télémesure : Cliquez sur un système pour inspecter ses données.\n2. ▷ Trajectoire : Cliquez à nouveau sur la cible pour tracer le vecteur de saut.\n3. ⚡ Navigation : Le saut FTL Warp consomme 500 unités de carburant.\n4. ❖ Système : Basculez vers la vue système détaillée via le menu inférieur.",
   "tuto_system": "1. ◈ Navigation : Cliquez sur un corps céleste pour analyser sa composition.\n2. ▷ Propulsion : Cliquez à nouveau pour engager l approche orbitale.\n3. ❖ Vitesse : Maintenez Shift pour activer l hyperdrive à forte poussée.\n4. ⚓ Débarquement : Atteignez l orbite pour accéder aux installations et POI.",
   "tuto_subsystem": "◈ DÉBARQUEMENT & COMMUNICATIONS SUBCOM\nQuittez la console de pilotage pour rejoindre une destination à quai ou en surface.\nPour toute négociation ou liaison à distance, initiez un contact par Subcom.",
@@ -8,5 +6,14 @@
     "tuto_sector": "1. ◈ Télémesure : Cliquez sur un système pour inspecter ses données.\n2. ▷ Trajectoire : Cliquez à nouveau sur la cible pour tracer le vecteur de saut.\n3. ⚡ Navigation : Le saut FTL Warp consomme 500 unités de carburant.\n4. ❖ Système : Basculez vers la vue système détaillée via le menu inférieur.",
     "tuto_system": "1. ◈ Navigation : Cliquez sur un corps céleste pour analyser sa composition.\n2. ▷ Propulsion : Cliquez à nouveau pour engager l approche orbitale.\n3. ❖ Vitesse : Maintenez Shift pour activer l hyperdrive à forte poussée.\n4. ⚓ Débarquement : Atteignez l orbite pour accéder aux installations et POI.",
     "tuto_subsystem": "◈ DÉBARQUEMENT & COMMUNICATIONS SUBCOM\nQuittez la console de pilotage pour rejoindre une destination à quai ou en surface.\nPour toute négociation ou liaison à distance, initiez un contact par Subcom."
-  }
+  },
+  "tuto_disable_btn": "Désactiver les tutos",
+  "tuto_disable_title": "Désactiver l'aide contextuelle ?",
+  "tuto_disable_desc": "Les didacticiels peuvent être réactivés à tout moment depuis le menu Options.",
+  "tuto_disable_confirm": "Désactiver",
+  "tuto_disable_cancel": "Annuler",
+  "tutoName_1": "Déplacements",
+  "tuto_1": "Utilisez les \\c[3]touches directionnelles\\c[0] ou faite un \\c[3]clic gauche\\c[0] sur une destination pour déplacer \\n[1]. Vous pouvez definir les réglages du clavier depuis le \\c[3]menu de configurations\\c[0].",
+  "tutoName_2": "Interagir",
+  "tuto_2": "Pour interagir avec les éléments du décors, les personnages et les autres créatures, pressez la touche \\c[3]E\\c[0] ou \\c[3]Entrée\\c[0] en étant en contact ou faite un \\c[3]clic gauche\\c[0] en le pointant pour que \\n[1] se dirige à proximité et interagisse directement."
 }
