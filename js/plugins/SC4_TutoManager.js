@@ -210,9 +210,6 @@
                 if (scene._messageWindow && typeof scene._messageWindow.isClosed === "function") {
                     if (!scene._messageWindow.isClosed()) return true;
                 }
-                if (scene._scrollTextWindow && typeof scene._scrollTextWindow.isClosed === "function") {
-                    if (!scene._scrollTextWindow.isClosed()) return true;
-                }
             }
             return false;
         }

@@ -26,12 +26,12 @@ global.$dataPlanets = planetsRaw;
 global.$dataPois = poisRaw;
 
 // Charger les classes spatiales dans l'ordre d'héritage
-require("../js/plugins/SC4Space_Game_GalacticRepoBase.js");
-require("../js/plugins/SC4Space_Game_POIs.js");
-require("../js/plugins/SC4Space_Game_Planet.js");
-require("../js/plugins/SC4Space_Game_PlanetarySystem.js");
-require("../js/plugins/SC4Space_Game_Sector.js");
-require("../js/plugins/SC4Space_Game_Galaxy.js");
+require("../js/plugins/SC4_Game_GalacticRepoBase.js");
+require("../js/plugins/SC4_Game_POI.js");
+require("../js/plugins/SC4_Game_Planet.js");
+require("../js/plugins/SC4_Game_PlanetarySystem.js");
+require("../js/plugins/SC4_Game_Sector.js");
+require("../js/plugins/SC4_Game_Galaxy.js");
 
 let totalTests = 0;
 let passedTests = 0;

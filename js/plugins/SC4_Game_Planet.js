@@ -46,7 +46,9 @@ class Game_Planet extends Game_GalacticRepoBase {
             "_orbitAngle",
             "_rotationAngle",
             "_active",
-            "_landingAllowed"
+            "_landingAllowed",
+            "_governorId",
+            "_spaceControllerId"
         ];
 
         this._index = 0;

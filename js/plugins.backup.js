@@ -75,6 +75,7 @@ var $plugins =
 {"name":"SC4_Window_InventoryHeader","status":true,"description":"[SC4 v1.0.0] En-tête supérieur d'inventaire avec portrait, jauge de poids et icône conteneur.","parameters":{}},
 {"name":"SC4_Window_InventoryList","status":true,"description":"[SC4 v1.0.0] Liste d'inventaire avec barre de jauge de poids intégrée.","parameters":{}},
 {"name":"SC4_Window_InventoryAction","status":true,"description":"[SC4 v1.0.0] Fenêtre d'action contextuelle (Prendre / Déposer / Jeter).","parameters":{}},
+{"name":"SC4_Window_InventoryCompare","status":true,"description":"[SC4 v1.0.0] Fenêtre comparative de statistiques d'équipement pour Scene_Inventory.","parameters":{}},
 {"name":"SC4_Window_ItemWeight","status":true,"description":"[SC4 v1.0.0] Fenêtre d'affichage de la jauge de charge d'inventaire (Scene_Item).","parameters":{}},
 {"name":"SC4_Window_ItemAction","status":true,"description":"[SC4 v1.0.0] Menu contextuel d'action sur un objet (Utiliser / Jeter 1 / Jeter Tout).","parameters":{}},
 {"name":"SC4_Window_RelationStatus","status":true,"description":"[SC4 v1.0.0] Volet d'affichage des jauges de relation.","parameters":{}},

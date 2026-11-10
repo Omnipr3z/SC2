@@ -61,6 +61,25 @@ class Window_InventoryHeader extends Window_Base {
         return this.currentWeight > this.maxWeight;
     }
 
+    update() {
+        super.update();
+        this.updateFaceComposition();
+    }
+
+    updateFaceComposition() {
+        if (!this._isParty) return;
+        const actor = typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null;
+        if (!actor || !actor.hasFace || !actor.hasFace()) return;
+        const faceEntry = actor.character ? actor.character.getCompositeFaceEntry() : null;
+        if (faceEntry && !faceEntry.isComposed && faceEntry.composer) {
+            if (faceEntry.composer.isReady()) {
+                faceEntry.composer.bltComposite(faceEntry.bitmap);
+                faceEntry.isComposed = true;
+                this.refresh();
+            }
+        }
+    }
+
     refresh() {
         this.contents.clear();
         if (this._isParty) {
@@ -81,9 +100,15 @@ class Window_InventoryHeader extends Window_Base {
             let drawn = false;
             if (actor.hasFace && actor.hasFace() && typeof Bitmap_Composite !== "undefined") {
                 const faceEntry = actor.character ? actor.character.getCompositeFaceEntry() : null;
-                if (faceEntry && faceEntry.bitmap && faceEntry.isComposed) {
-                    this.contents.blt(faceEntry.bitmap, 0, 0, faceEntry.bitmap.width, faceEntry.bitmap.height, padX, padY, faceSize, faceSize);
-                    drawn = true;
+                if (faceEntry) {
+                    if (!faceEntry.isComposed && faceEntry.composer && faceEntry.composer.isReady()) {
+                        faceEntry.composer.bltComposite(faceEntry.bitmap);
+                        faceEntry.isComposed = true;
+                    }
+                    if (faceEntry.isComposed && faceEntry.bitmap && faceEntry.bitmap.width > 0) {
+                        this.contents.blt(faceEntry.bitmap, 0, 0, faceEntry.bitmap.width, faceEntry.bitmap.height, padX, padY, faceSize, faceSize);
+                        drawn = true;
+                    }
                 }
             }
             if (!drawn && actor.faceName()) {
@@ -220,17 +245,17 @@ class Window_InventoryHeader extends Window_Base {
             this.contents.fillRect(x + 1, y + 3, fillW, h - 6, fillColor);
         }
 
-        // Texte : Poids: X/Y
+        // Texte : Charge: X/Y UM
         this.contents.fontSize = 14;
         this.resetTextColor();
         const curStr = Number(cur.toFixed(1)).toString();
         const maxStr = isInfinite ? "∞" : Number(max.toFixed(1)).toString();
-        const label = "Poids: ";
+        const label = "Charge :";
         this.changeTextColor("rgba(180, 220, 255, 0.8)");
         this.drawText(label, x + 4, y - 1, w, "left");
 
         this.changeTextColor(isOver ? "#ef4444" : "#ffffff");
-        this.drawText(`${curStr}/${maxStr}`, x, y - 1, w - 4, "right");
+        this.drawText(`${curStr}/${maxStr} UM`, x, y - 1, w - 4, "right");
         this.resetTextColor();
     }
 }

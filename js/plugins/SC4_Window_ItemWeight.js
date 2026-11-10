@@ -22,7 +22,7 @@ class Window_ItemWeight extends Window_Base {
         const isOverloaded = curWeight > maxWeight;
         const label = LocalisationManager.getText("inventory.weight", "Poids");
         const maxStr = (maxWeight === Infinity || isNaN(maxWeight)) ? "∞" : maxWeight;
-        const text = `${label}: ${curWeight}/${maxStr}`;
+        const text = `${label}: ${curWeight}/${maxStr} UM`;
         if (isOverloaded) {
             this.changeTextColor("#ff4d4d");
         } else {

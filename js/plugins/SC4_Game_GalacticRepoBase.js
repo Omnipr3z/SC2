@@ -361,18 +361,30 @@ class Game_GalacticRepoBase {
     // ========================================================================
 
     makeSavefileData() {
-        let baseData = {
-            id: this.id,
-            name: this.name,
-            description: this.description
+        const baseData = {
+            id: this.id
         };
 
         if (Array.isArray(this._savedDataKeys)) {
-            this._savedDataKeys.forEach(key => {
-                if (this[key] !== undefined) {
-                    baseData[key] = this[key];
-                } else if (this._data && this._data[key] !== undefined) {
-                    baseData[key] = this._data[key];
+            this._savedDataKeys.forEach(rawKey => {
+                const keyNo_ = rawKey.startsWith("_") ? rawKey.substring(1) : rawKey;
+                const keyWith_ = "_" + keyNo_;
+
+                let val = undefined;
+                if (this[rawKey] !== undefined) {
+                    val = this[rawKey];
+                } else if (this[keyWith_] !== undefined) {
+                    val = this[keyWith_];
+                } else if (this[keyNo_] !== undefined) {
+                    val = this[keyNo_];
+                } else if (this._data && this._data[rawKey] !== undefined) {
+                    val = this._data[rawKey];
+                } else if (this._data && this._data[keyNo_] !== undefined) {
+                    val = this._data[keyNo_];
+                }
+
+                if (val !== undefined) {
+                    baseData[rawKey] = val;
                 }
             });
         }
@@ -388,9 +400,26 @@ class Game_GalacticRepoBase {
         if (!data || typeof data !== "object") return;
 
         if (Array.isArray(this._savedDataKeys)) {
-            this._savedDataKeys.forEach(key => {
-                if (data[key] !== undefined) {
-                    this[key] = data[key];
+            this._savedDataKeys.forEach(rawKey => {
+                const keyNo_ = rawKey.startsWith("_") ? rawKey.substring(1) : rawKey;
+                const keyWith_ = "_" + keyNo_;
+
+                let val = undefined;
+                if (data[rawKey] !== undefined) {
+                    val = data[rawKey];
+                } else if (data[keyNo_] !== undefined) {
+                    val = data[keyNo_];
+                } else if (data[keyWith_] !== undefined) {
+                    val = data[keyWith_];
+                }
+
+                if (val !== undefined) {
+                    try { this[keyWith_] = val; } catch (e) {}
+                    try { this[rawKey] = val; } catch (e) {}
+                    if (this._data) {
+                        this._data[rawKey] = val;
+                        this._data[keyNo_] = val;
+                    }
                 }
             });
         }

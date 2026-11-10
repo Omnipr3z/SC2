@@ -241,6 +241,13 @@ class Window_InventoryList extends Window_Selectable {
         if (this.contentsBack) {
             this.contentsBack.clear();
         }
+        if (this.maxItems() > 0) {
+            if (this.index() >= this.maxItems() || this.index() < 0) {
+                this.select(0);
+            }
+        } else {
+            this.select(-1);
+        }
         super.refresh();
         if (this._headerWindow) {
             this._headerWindow.refresh();
@@ -275,17 +282,17 @@ class Window_InventoryList extends Window_Selectable {
             : 1;
 
         // Détection de surcharge prédictive si l'objet est dans le conteneur
-        let weightNotice = `\\c[4]${weight} kg\\c[0]`;
+        let weightNotice = `\\c[4]${weight} UM\\c[0]`;
         if (!this._isParty && typeof $gameParty !== "undefined" && $gameParty) {
             const curW = (typeof $gameParty.totalWeight === "function") ? $gameParty.totalWeight() : 0;
             const maxW = (typeof $gameParty.maxWeight === "function") ? $gameParty.maxWeight() : 48;
             if (curW + weight > maxW) {
-                weightNotice = `\\c[2]⚠️ +${weight} kg (SURCHARGE !)\\c[0]`;
+                weightNotice = `\\c[2]⚠️ +${weight} UM (SURCHARGE !)\\c[0]`;
             }
         }
 
         const typeColor = (info.key === "misc") ? "\\c[7]" : "\\c[14]";
-        const line1 = `${typeColor}[ TYPE : ${info.label.toUpperCase()} ]\\c[0]  |  Poids : ${weightNotice}`;
+        const line1 = `${typeColor}[ TYPE : ${info.label.toUpperCase()} ]\\c[0]  |  Charge : ${weightNotice}`;
         const line2 = item.description || "";
         this._helpWindow.setText(line1 + "\n" + line2);
     }

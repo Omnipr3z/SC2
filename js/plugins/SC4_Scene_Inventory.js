@@ -9,6 +9,7 @@
  * @base SC4_Window_InventoryList
  * @base SC4_Window_InventoryAction
  * @base SC4_Window_InventoryHeader
+ * @base SC4_Window_InventoryCompare
  * @base SC4_Sprite_InventoryArrow
  * 
  * @help SC4_Scene_Inventory.js
@@ -23,6 +24,14 @@ class Scene_Inventory extends Scene_MenuBase {
     // ========================================================================
     // 1. INITIALISATION & GÉOMÉTRIE ADAPTATIVE
     // ========================================================================
+
+    margin() {
+        return 16;
+    }
+
+    needsCancelButton() {
+        return false;
+    }
 
     columnWidth() {
         const bw = (typeof Graphics !== "undefined" && Graphics.boxWidth) ? Graphics.boxWidth : 1280;
@@ -53,6 +62,7 @@ class Scene_Inventory extends Scene_MenuBase {
             : null;
 
         this.createHelpWindow();
+        this.createCompareWindow();
         this.createHeaders();
         this.createPartyWindow();
         this.createTargetWindow();
@@ -202,21 +212,31 @@ class Scene_Inventory extends Scene_MenuBase {
         this.addWindow(this._helpWindow);
     }
 
+    createCompareWindow() {
+        const rect = this.helpWindowRect();
+        if (typeof Window_InventoryCompare !== "undefined") {
+            this._compareWindow = new Window_InventoryCompare(rect);
+            this.addWindow(this._compareWindow);
+        }
+    }
+
     helpWindowRect() {
+        const m = this.margin();
         const colW = this.columnWidth();
-        const wx = colW;
-        const wy = 0;
-        const ww = Graphics.boxWidth - colW * 2;
+        const wx = m + colW + m;
+        const wy = m;
+        const ww = Graphics.boxWidth - colW * 2 - m * 4;
         const wh = this.headerHeight();
         return new Rectangle(wx, wy, ww, wh);
     }
 
     createHeaders() {
+        const m = this.margin();
         const colW = this.columnWidth();
         const headerH = this.headerHeight();
 
         // 1. Header Joueur (Haut Gauche)
-        const pRect = new Rectangle(0, 0, colW, headerH);
+        const pRect = new Rectangle(m, m, colW, headerH);
         const pTitle = (typeof LocalisationManager !== "undefined" && typeof LocalisationManager.getText === "function")
             ? LocalisationManager.getText("inventory.player_bag", "Sac du joueur")
             : "Sac du joueur";
@@ -224,7 +244,7 @@ class Scene_Inventory extends Scene_MenuBase {
         this.addWindow(this._partyHeaderWindow);
 
         // 2. Header Conteneur (Haut Droit)
-        const tRect = new Rectangle(Graphics.boxWidth - colW, 0, colW, headerH);
+        const tRect = new Rectangle(Graphics.boxWidth - m - colW, m, colW, headerH);
         const tTitle = this.formatTargetTitle();
         this._targetHeaderWindow = new Window_InventoryHeader(tRect, tTitle, false);
         this._targetHeaderWindow.setTargetInventory(this._targetInventory);
@@ -246,13 +266,14 @@ class Scene_Inventory extends Scene_MenuBase {
     }
 
     partyWindowRect() {
+        const m = this.margin();
         const colW = this.columnWidth();
         const headerH = this.headerHeight();
         const cmdH = this.commandHeight();
-        const wx = 0;
-        const wy = headerH;
+        const wx = m;
+        const wy = m + headerH + m;
         const ww = colW;
-        const wh = Graphics.boxHeight - cmdH - headerH;
+        const wh = Graphics.boxHeight - headerH - cmdH - m * 4;
         return new Rectangle(wx, wy, ww, wh);
     }
 
@@ -270,13 +291,14 @@ class Scene_Inventory extends Scene_MenuBase {
     }
 
     targetWindowRect() {
+        const m = this.margin();
         const colW = this.columnWidth();
         const headerH = this.headerHeight();
         const cmdH = this.commandHeight();
-        const wx = Graphics.boxWidth - colW;
-        const wy = headerH;
+        const wx = Graphics.boxWidth - m - colW;
+        const wy = m + headerH + m;
         const ww = colW;
-        const wh = Graphics.boxHeight - cmdH - headerH;
+        const wh = Graphics.boxHeight - headerH - cmdH - m * 4;
         return new Rectangle(wx, wy, ww, wh);
     }
 
@@ -294,10 +316,11 @@ class Scene_Inventory extends Scene_MenuBase {
     }
 
     commandWindowRect() {
+        const m = this.margin();
         const cmdH = this.commandHeight();
-        const wx = 0;
-        const wy = Graphics.boxHeight - cmdH;
-        const ww = Graphics.boxWidth;
+        const wx = m;
+        const wy = Graphics.boxHeight - m - cmdH;
+        const ww = Graphics.boxWidth - m * 2;
         const wh = cmdH;
         return new Rectangle(wx, wy, ww, wh);
     }
@@ -449,6 +472,8 @@ class Scene_Inventory extends Scene_MenuBase {
 
     onListCancel() {
         if (this._arrowSprite) this._arrowSprite.hide();
+        if (this._compareWindow) this._compareWindow.hide();
+        if (this._helpWindow) this._helpWindow.show();
         this._partyWindow.deactivate();
         this._targetWindow.deactivate();
         this._commandWindow.activate();
@@ -469,18 +494,17 @@ class Scene_Inventory extends Scene_MenuBase {
         this._partyWindow.deactivate();
 
         // Calcul de position de la flèche et de la modale
-        const colW = this.columnWidth();
         const rect = this._partyWindow.itemRectWithPadding(this._partyWindow.index());
         const itemScreenY = this._partyWindow.y + rect.y + rect.height / 2;
         const arrowW = 56;
-        const originX = colW;
-        const targetArrowX = colW + Math.round(arrowW / 2);
+        const originX = this._partyWindow.x + this._partyWindow.width;
+        const targetArrowX = originX + Math.round(arrowW / 2);
 
         if (this._arrowSprite) {
             this._arrowSprite.deploy(originX, itemScreenY, targetArrowX, "right");
         }
 
-        const actionX = colW + arrowW + 10;
+        const actionX = originX + arrowW + 10;
         const actionY = Math.round(itemScreenY - 50);
         this._actionWindow.reposition(actionX, actionY);
 
@@ -494,6 +518,18 @@ class Scene_Inventory extends Scene_MenuBase {
             const qty = (typeof this._partyWindow.itemQuantity === "function") ? this._partyWindow.itemQuantity(item) : 1;
             canAcceptOne = this._targetInventory.checkAcceptItem(item, 1).allowed;
             canAcceptAll = this._targetInventory.checkAcceptItem(item, qty).allowed;
+        }
+
+        if (canEquip) {
+            if (this._helpWindow) this._helpWindow.hide();
+            if (this._compareWindow) {
+                this._compareWindow.setItem(item);
+                this._compareWindow.show();
+                this._compareWindow.open();
+            }
+        } else {
+            if (this._compareWindow) this._compareWindow.hide();
+            if (this._helpWindow) this._helpWindow.show();
         }
 
         this._actionWindow.setup("party", canDeposit, canEquip, false, false, canAcceptOne, canAcceptAll);
@@ -510,18 +546,17 @@ class Scene_Inventory extends Scene_MenuBase {
         this._targetWindow.deactivate();
 
         // Calcul de position de la flèche et de la modale
-        const colW = this.columnWidth();
         const rect = this._targetWindow.itemRectWithPadding(this._targetWindow.index());
         const itemScreenY = this._targetWindow.y + rect.y + rect.height / 2;
         const arrowW = 56;
-        const originX = Graphics.boxWidth - colW;
-        const targetArrowX = Graphics.boxWidth - colW - Math.round(arrowW / 2);
+        const originX = this._targetWindow.x;
+        const targetArrowX = originX - Math.round(arrowW / 2);
 
         if (this._arrowSprite) {
             this._arrowSprite.deploy(originX, itemScreenY, targetArrowX, "left");
         }
 
-        const actionX = Graphics.boxWidth - colW - arrowW - this._actionWindow.width - 10;
+        const actionX = originX - arrowW - this._actionWindow.width - 10;
         const actionY = Math.round(itemScreenY - 50);
         this._actionWindow.reposition(actionX, actionY);
 
@@ -533,12 +568,31 @@ class Scene_Inventory extends Scene_MenuBase {
         const qty = (typeof this._targetWindow.itemQuantity === "function") ? this._targetWindow.itemQuantity(item) : 1;
         const isOverloadOne = (curW + itemW) > maxW;
         const isOverloadAll = (curW + itemW * qty) > maxW;
+
+        if (canEquip) {
+            if (this._helpWindow) this._helpWindow.hide();
+            if (this._compareWindow) {
+                this._compareWindow.setItem(item);
+                this._compareWindow.show();
+                this._compareWindow.open();
+            }
+        } else {
+            if (this._compareWindow) this._compareWindow.hide();
+            if (this._helpWindow) this._helpWindow.show();
+        }
+
         this._actionWindow.setup("target", this.isTargetPersistent(), canEquip, isOverloadOne, isOverloadAll);
     }
 
     onActionCancel() {
         if (this._arrowSprite) {
             this._arrowSprite.hide();
+        }
+        if (this._compareWindow) {
+            this._compareWindow.hide();
+        }
+        if (this._helpWindow) {
+            this._helpWindow.show();
         }
         this._actionWindow.close();
         this._actionWindow.deactivate();
@@ -783,6 +837,9 @@ class Scene_Inventory extends Scene_MenuBase {
         super.terminate();
         if (this._arrowSprite) {
             this._arrowSprite.hide();
+        }
+        if (this._compareWindow) {
+            this._compareWindow.hide();
         }
         this.updateContainerSelfSwitchB();
     }

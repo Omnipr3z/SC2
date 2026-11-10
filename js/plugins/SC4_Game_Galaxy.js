@@ -42,7 +42,7 @@ class Game_Galaxy extends Game_GalacticRepoBase {
         this._subObjectsClassName = "Game_Sector";
         this._subObjectsDatabaseSourceName = "$dataSectors";
         this._subObjectsIdsKey = "sectorIds";
-        this._savedDataKeys = [];
+        this._savedDataKeys = ["_defaultPosition"];
 
         // Position de repli hors session de jeu / avant initialisation de $gameParty
         this._defaultPosition = {

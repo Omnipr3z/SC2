@@ -103,6 +103,8 @@ global.Window_Base = class {
     get innerHeight() { return Math.max(0, this.height - this.padding * 2); }
     lineHeight() { return 36; }
     refresh() {}
+    show() { this.visible = true; }
+    hide() { this.visible = false; }
     open() { this.openness = 255; }
     close() { this.openness = 0; }
     activate() { this._active = true; }
@@ -243,6 +245,10 @@ global.DataManager = {
     }
 };
 
+global.JsonEx = {
+    makeDeepCopy: obj => (obj ? Object.assign(Object.create(Object.getPrototypeOf(obj)), obj) : obj)
+};
+
 global.window = global;
 
 // ----------------------------------------------------------------------------
@@ -253,6 +259,7 @@ const headerPath = path.join(__dirname, "../js/plugins/SC4_Window_InventoryHeade
 const actionPath = path.join(__dirname, "../js/plugins/SC4_Window_InventoryAction.js");
 const commandPath = path.join(__dirname, "../js/plugins/SC4_Window_InventoryCommand.js");
 const listPath = path.join(__dirname, "../js/plugins/SC4_Window_InventoryList.js");
+const comparePath = path.join(__dirname, "../js/plugins/SC4_Window_InventoryCompare.js");
 const scenePath = path.join(__dirname, "../js/plugins/SC4_Scene_Inventory.js");
 
 eval(fs.readFileSync(arrowPath, "utf8"));
@@ -260,6 +267,7 @@ eval(fs.readFileSync(headerPath, "utf8"));
 eval(fs.readFileSync(actionPath, "utf8"));
 eval(fs.readFileSync(commandPath, "utf8"));
 eval(fs.readFileSync(listPath, "utf8"));
+eval(fs.readFileSync(comparePath, "utf8"));
 eval(fs.readFileSync(scenePath, "utf8"));
 
 let passed = 0;
@@ -357,32 +365,36 @@ test("B2: Sprite_InventoryArrow déploiement gauche", () => {
 
 console.log("\n--- Section C: Scene_Inventory Géométrie & Composants ---");
 
-test("C1: Scene_Inventory calculs de colonnes et layout", () => {
+test("C1: Scene_Inventory calculs de colonnes et layout avec marges 16px", () => {
     const scene = new Scene_Inventory();
+    const m = scene.margin();
+    assert.strictEqual(m, 16);
     const colW = scene.columnWidth(); // 28% of 1280 = 358
     assert.strictEqual(colW, 358);
     assert.strictEqual(scene.headerHeight(), 168);
 
     const helpRect = scene.helpWindowRect();
-    assert.strictEqual(helpRect.x, 358);
-    assert.strictEqual(helpRect.y, 0);
-    assert.strictEqual(helpRect.width, 1280 - 358 * 2); // 564
+    assert.strictEqual(helpRect.x, 16 + 358 + 16); // 390
+    assert.strictEqual(helpRect.y, 16);
+    assert.strictEqual(helpRect.width, 1280 - 358 * 2 - 64); // 500
     assert.strictEqual(helpRect.height, 168);
 
     const cmdRect = scene.commandWindowRect();
-    assert.strictEqual(cmdRect.x, 0);
-    assert.strictEqual(cmdRect.width, 1280);
-    assert.strictEqual(cmdRect.y, 720 - cmdRect.height);
+    assert.strictEqual(cmdRect.x, 16);
+    assert.strictEqual(cmdRect.width, 1280 - 32); // 1248
+    assert.strictEqual(cmdRect.y, 720 - 16 - cmdRect.height);
 
     const partyRect = scene.partyWindowRect();
-    assert.strictEqual(partyRect.x, 0);
-    assert.strictEqual(partyRect.y, 168);
+    assert.strictEqual(partyRect.x, 16);
+    assert.strictEqual(partyRect.y, 16 + 168 + 16); // 200
     assert.strictEqual(partyRect.width, 358);
+    assert.strictEqual(partyRect.height, 720 - 168 - cmdRect.height - 64);
 
     const targetRect = scene.targetWindowRect();
-    assert.strictEqual(targetRect.x, 1280 - 358);
-    assert.strictEqual(targetRect.y, 168);
+    assert.strictEqual(targetRect.x, 1280 - 16 - 358); // 906
+    assert.strictEqual(targetRect.y, 16 + 168 + 16); // 200
     assert.strictEqual(targetRect.width, 358);
+    assert.strictEqual(targetRect.height, 720 - 168 - cmdRect.height - 64);
 });
 
 test("C2: Scene_Inventory initialisation des fenêtres et focus vignette", () => {
@@ -410,6 +422,8 @@ test("C2: Scene_Inventory initialisation des fenêtres et focus vignette", () =>
     scene.create();
 
     assert(scene._helpWindow, "Help window créée");
+    assert(scene._compareWindow, "Compare window créée");
+    assert.strictEqual(scene.needsCancelButton(), false, "needsCancelButton doit être false (bouton retour supprimé)");
     assert(scene._partyHeaderWindow, "Party Header créé");
     assert(scene._targetHeaderWindow, "Target Header créé");
     assert(scene._partyWindow, "Party Window créée");
@@ -419,8 +433,8 @@ test("C2: Scene_Inventory initialisation des fenêtres et focus vignette", () =>
     assert(scene._arrowSprite, "Arrow Sprite créé");
 });
 
-test("C3: Scene_Inventory sélection OK déploie la flèche vers l'Action Window", () => {
-    const mockItem = { id: 4, name: "Armure Flak", etypeId: 2 };
+test("C3: Scene_Inventory sélection OK déploie la flèche et bascule Help/Compare", () => {
+    const mockItem = { id: 4, name: "Armure Flak", etypeId: 2, params: [0, 0, 0, 10, 0, 0, 0, 0] };
     const mockContainer = {
         totalWeight: () => 10,
         maxWeight: () => 100,
@@ -431,6 +445,20 @@ test("C3: Scene_Inventory sélection OK déploie la flèche vers l'Action Window
     };
     global.$inventories = {
         inventory: () => mockContainer
+    };
+    global.$gameParty = {
+        leader: () => ({
+            name: () => "Hero",
+            faceName: () => "",
+            faceIndex: () => 0,
+            canEquip: () => true,
+            param: () => 10,
+            equipSlots: () => [1, 2, 3]
+        }),
+        allItems: () => [],
+        numItems: () => 0,
+        totalWeight: () => 10,
+        maxWeight: () => 48
     };
 
     Scene_Inventory.prepare("C_1", { persistent: true });
@@ -447,6 +475,13 @@ test("C3: Scene_Inventory sélection OK déploie la flèche vers l'Action Window
     assert.strictEqual(scene._actionWindow.openness, 255, "La modale action est ouverte");
     assert.strictEqual(scene._actionWindow._mode, "target");
     assert.strictEqual(scene._actionWindow.canEquip, true, "Armure Flak doit activer l'option Équiper");
+    assert.strictEqual(scene._compareWindow.visible, true, "Compare window doit être visible");
+    assert.strictEqual(scene._helpWindow.visible, false, "Help window doit être masquée");
+
+    // Annulation
+    scene.onActionCancel();
+    assert.strictEqual(scene._compareWindow.visible, false, "Compare window masquée après annulation");
+    assert.strictEqual(scene._helpWindow.visible, true, "Help window visible après annulation");
 });
 
 console.log("\n--- Section D: Action Contextuelle Équiper (Étape 3) ---");
