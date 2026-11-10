@@ -245,6 +245,41 @@ global.DataManager = {
     }
 };
 
+global.Sprite_TutoArrow = class extends global.Sprite {
+    constructor() {
+        super();
+        this.setupCalledWith = null;
+    }
+    setup(data) {
+        this.setupCalledWith = data;
+        this.visible = Boolean(data);
+    }
+};
+
+global.Window_Tuto = class extends global.Window_Base {
+    constructor(arrow) {
+        super(new Rectangle(0, 0, 520, 200));
+        this._arrow = arrow;
+        this._confirmWindow = null;
+        this.openTutoCalledWith = null;
+    }
+    openTuto(data) {
+        this.openTutoCalledWith = data;
+        this.visible = true;
+    }
+    close() {
+        this.visible = false;
+    }
+};
+
+global.Input = {
+    clear: () => {}
+};
+
+global.TouchInput = {
+    clear: () => {}
+};
+
 global.JsonEx = {
     makeDeepCopy: obj => (obj ? Object.assign(Object.create(Object.getPrototypeOf(obj)), obj) : obj)
 };
@@ -795,6 +830,167 @@ test("E7: Conteneur plein bloque Déposer et affiche la mention (Plein !)", () =
     assert(actWin.commandName(actWin.findSymbol("deposit_one")).includes("Plein !"));
 });
 
+console.log("\n--- Section F: Didacticiels Contextuels dans Scene_Inventory ---");
+
+function setupPartyMock() {
+    global.$gameParty = {
+        leader: () => ({
+            name: () => "Hero",
+            faceName: () => "",
+            faceIndex: () => 0,
+            canEquip: () => true,
+            param: () => 10,
+            equipSlots: () => [1, 2, 3]
+        }),
+        allItems: () => [],
+        numItems: () => 0,
+        totalWeight: () => 10,
+        maxWeight: () => 48
+    };
+    global.$inventories = {
+        inventory: () => ({
+            totalWeight: () => 10,
+            maxWeight: () => 100,
+            items: () => [],
+            numItems: () => 0,
+            isEmpty: () => true,
+            isPersistent: () => true
+        })
+    };
+}
+
+test("F1: Scene_Inventory instancie _tutoArrowSprite et _tutoWindow", () => {
+    setupPartyMock();
+    Scene_Inventory.prepare("C_1", { persistent: true });
+    const scene = new Scene_Inventory();
+    scene.create();
+
+    assert(scene._tutoArrowSprite, "Sprite_TutoArrow doit être instancié");
+    assert(scene._tutoWindow, "Window_Tuto doit être instanciée");
+    assert(scene.children.includes(scene._tutoArrowSprite), "La flèche doit être ajoutée aux enfants de la scène");
+});
+
+test("F2: Scene_Inventory.start() enfile automatiquement tuto_inv_transfer et tuto_inv_commands", () => {
+    setupPartyMock();
+    global.$tutoManager = {
+        _seen: {},
+        _queue: [],
+        _busy: false,
+        isSeen(id) { return Boolean(this._seen[id]); },
+        show(id, data = {}) {
+            if (this.isSeen(id)) return false;
+            this._queue.push({ id, data });
+            this._seen[id] = true;
+            this._busy = true;
+            return true;
+        },
+        isBusy() { return this._busy; }
+    };
+
+    Scene_Inventory.prepare("C_1", { persistent: true });
+    const scene = new Scene_Inventory();
+    scene.create();
+    scene.start();
+
+    assert.strictEqual(global.$tutoManager._queue.length, 2, "Les 2 premiers tutoriels doivent être mis en file");
+    assert.strictEqual(global.$tutoManager._queue[0].id, "tuto_inv_transfer");
+    assert.strictEqual(global.$tutoManager._queue[0].data.position, "center");
+    assert.strictEqual(global.$tutoManager._queue[0].data.arrow.angle, 0);
+
+    assert.strictEqual(global.$tutoManager._queue[1].id, "tuto_inv_commands");
+    assert.strictEqual(global.$tutoManager._queue[1].data.position, "top");
+    assert.strictEqual(global.$tutoManager._queue[1].data.arrow.angle, 0);
+});
+
+test("F3: Clic item déclenche tuto_inv_action et tuto_inv_compare si équipable", () => {
+    global.$tutoManager = {
+        _seen: {},
+        _queue: [],
+        _busy: false,
+        isSeen(id) { return Boolean(this._seen[id]); },
+        show(id, data = {}) {
+            if (this.isSeen(id)) return false;
+            this._queue.push({ id, data });
+            this._seen[id] = true;
+            this._busy = true;
+            return true;
+        },
+        isBusy() { return this._busy; }
+    };
+
+    const armor = { id: 4, name: "Armure Flak", etypeId: 2, params: [0, 0, 0, 10, 0, 0, 0, 0] };
+    const mockContainer = {
+        totalWeight: () => 10,
+        maxWeight: () => 100,
+        items: () => [armor],
+        numItems: () => 1,
+        isEmpty: () => false,
+        isPersistent: () => true
+    };
+    global.$inventories = { inventory: () => mockContainer };
+    global.$gameParty = {
+        leader: () => ({
+            name: () => "Hero",
+            faceName: () => "",
+            faceIndex: () => 0,
+            canEquip: () => true,
+            param: () => 10,
+            equipSlots: () => [1, 2, 3]
+        }),
+        allItems: () => [],
+        numItems: () => 0,
+        totalWeight: () => 10,
+        maxWeight: () => 48
+    };
+
+    Scene_Inventory.prepare("C_1", { persistent: true });
+    const scene = new Scene_Inventory();
+    scene.create();
+
+    // Sélection d'un équipement
+    scene._targetWindow.item = () => armor;
+    scene._targetWindow.index = () => 0;
+    scene.onTargetListOk();
+
+    // Tuto 8 (action) et Tuto 9 (compare) doivent être dans la queue
+    const queueIds = global.$tutoManager._queue.map(q => q.id);
+    assert(queueIds.includes("tuto_inv_action"), "Tuto action doit être déclenché");
+    assert(queueIds.includes("tuto_inv_compare"), "Tuto compare doit être déclenché pour un équipement");
+
+    const compareTuto = global.$tutoManager._queue.find(q => q.id === "tuto_inv_compare");
+    assert.strictEqual(compareTuto.data.arrow.angle, 180, "La flèche du comparateur doit pointer vers le haut (180)");
+});
+
+test("F4: updateTutoInputGuard désactive les fenêtres d'inventaire pendant le didacticiel et les restaure après", () => {
+    let tutoBusy = true;
+    let inputCleared = false;
+    let touchCleared = false;
+    global.Input.clear = () => { inputCleared = true; };
+    global.TouchInput.clear = () => { touchCleared = true; };
+
+    global.$tutoManager = {
+        isBusy() { return tutoBusy; },
+        update() {}
+    };
+
+    Scene_Inventory.prepare("C_1", { persistent: true });
+    const scene = new Scene_Inventory();
+    scene.create();
+    scene._commandWindow.activate();
+    assert.strictEqual(scene._commandWindow._active, true);
+
+    // Frame avec tuto actif -> les fenêtres doivent être désactivées
+    scene.update();
+    assert.strictEqual(scene._commandWindow._active, false, "La fenêtre de commande doit être désactivée pendant le tuto");
+
+    // Fermeture du tuto
+    tutoBusy = false;
+    scene.update();
+    assert.strictEqual(inputCleared, true, "Input.clear doit être appelé pour purger la validation");
+    assert.strictEqual(touchCleared, true, "TouchInput.clear doit être appelé pour purger le clic");
+    assert.strictEqual(scene._commandWindow._active, true, "Le focus doit être restauré sur la fenêtre précédente");
+});
+
 console.log(`\n==============================================================`);
-console.log(`   RÉSULTAT : ${passed}/18 tests passés avec succès !`);
+console.log(`   RÉSULTAT : ${passed}/22 tests passés avec succès !`);
 console.log(`==============================================================\n`);

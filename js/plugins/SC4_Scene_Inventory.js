@@ -10,6 +10,7 @@
  * @base SC4_Window_InventoryAction
  * @base SC4_Window_InventoryHeader
  * @base SC4_Window_InventoryCompare
+ * @base SC4_Window_Tuto
  * @base SC4_Sprite_InventoryArrow
  * 
  * @help SC4_Scene_Inventory.js
@@ -51,6 +52,10 @@ class Scene_Inventory extends Scene_MenuBase {
         if (this._playerLiveSprite && typeof this._playerLiveSprite.update === "function") {
             this._playerLiveSprite.update();
         }
+        if (typeof $tutoManager !== "undefined" && $tutoManager && typeof $tutoManager.update === "function") {
+            $tutoManager.update();
+        }
+        this.updateTutoInputGuard();
     }
 
     create() {
@@ -69,6 +74,7 @@ class Scene_Inventory extends Scene_MenuBase {
         this.createCommandWindow();
         this.createArrowSprite();
         this.createActionWindow();
+        this.createTutoWindow();
     }
 
     start() {
@@ -76,6 +82,7 @@ class Scene_Inventory extends Scene_MenuBase {
         this.refreshAll();
         this._commandWindow.activate();
         this._commandWindow.select(0);
+        this.checkInitialTutorials();
     }
 
     // ========================================================================
@@ -352,6 +359,120 @@ class Scene_Inventory extends Scene_MenuBase {
         return new Rectangle(wx, wy, ww, wh);
     }
 
+    createTutoWindow() {
+        if (typeof Window_Tuto !== "undefined" && !this._tutoWindow) {
+            if (typeof Sprite_TutoArrow !== "undefined" && !this._tutoArrowSprite) {
+                this._tutoArrowSprite = new Sprite_TutoArrow();
+                this.addChild(this._tutoArrowSprite);
+            }
+            this._tutoWindow = new Window_Tuto(this._tutoArrowSprite);
+            this.addWindow(this._tutoWindow);
+            if (this._tutoWindow._confirmWindow) {
+                this.addWindow(this._tutoWindow._confirmWindow);
+            }
+        }
+    }
+
+    // ========================================================================
+    // 3 bis. ORCHESTRATION DES DIDACTICIELS CONTEXTUELS
+    // ========================================================================
+
+    updateTutoInputGuard() {
+        const isTutoBusy = Boolean(typeof $tutoManager !== "undefined" && $tutoManager && typeof $tutoManager.isBusy === "function" && $tutoManager.isBusy());
+        if (isTutoBusy) {
+            if (!this._tutoGuardActive) {
+                this._tutoGuardActive = true;
+                this._preTutoActiveWindow = this.findActiveWindow();
+                this.deactivateAllInventoryWindows();
+            }
+        } else if (this._tutoGuardActive) {
+            this._tutoGuardActive = false;
+            if (typeof Input !== "undefined" && typeof Input.clear === "function") {
+                Input.clear();
+            }
+            if (typeof TouchInput !== "undefined" && typeof TouchInput.clear === "function") {
+                TouchInput.clear();
+            }
+            const targetWin = this._preTutoActiveWindow || this._commandWindow;
+            if (targetWin && typeof targetWin.activate === "function") {
+                targetWin.activate();
+            }
+            this._preTutoActiveWindow = null;
+        }
+    }
+
+    deactivateAllInventoryWindows() {
+        if (this._commandWindow && typeof this._commandWindow.deactivate === "function") this._commandWindow.deactivate();
+        if (this._partyWindow && typeof this._partyWindow.deactivate === "function") this._partyWindow.deactivate();
+        if (this._targetWindow && typeof this._targetWindow.deactivate === "function") this._targetWindow.deactivate();
+        if (this._actionWindow && typeof this._actionWindow.deactivate === "function") this._actionWindow.deactivate();
+    }
+
+    findActiveWindow() {
+        if (this._actionWindow && this._actionWindow.active) return this._actionWindow;
+        if (this._partyWindow && this._partyWindow.active) return this._partyWindow;
+        if (this._targetWindow && this._targetWindow.active) return this._targetWindow;
+        if (this._commandWindow && this._commandWindow.active) return this._commandWindow;
+        return null;
+    }
+
+    checkInitialTutorials() {
+        if (typeof $tutoManager === "undefined" || !$tutoManager) return;
+        if (typeof ConfigManager !== "undefined" && ConfigManager.contextualHelp === false) return;
+
+        // Tuto 6 : Découverte du diptyque Sac / Conteneur
+        if (typeof $tutoManager.isSeen === "function" && !$tutoManager.isSeen("tuto_inv_transfer")) {
+            const tw = this._targetWindow;
+            const arrowX = tw ? tw.x + Math.round(tw.width / 2) : 900;
+            const arrowY = tw ? tw.y + 20 : 200;
+
+            $tutoManager.show("tuto_inv_transfer", {
+                position: "center",
+                arrow: { x: arrowX, y: arrowY, angle: 0 }
+            });
+
+            // Tuto 7 : Commandes & Tri (enchaîné immédiatement à la suite dans la file)
+            const cw = this._commandWindow;
+            const cmdArrowX = cw ? cw.x + Math.round(cw.width / 2) : 640;
+            const cmdArrowY = cw ? cw.y - 12 : 640;
+
+            $tutoManager.show("tuto_inv_commands", {
+                position: "top",
+                arrow: { x: cmdArrowX, y: cmdArrowY, angle: 0 }
+            });
+        }
+    }
+
+    checkActionTutorials(canEquip) {
+        if (typeof $tutoManager === "undefined" || !$tutoManager) return;
+        if (typeof ConfigManager !== "undefined" && ConfigManager.contextualHelp === false) return;
+
+        // Tuto 8 : Modale contextuelle d'action
+        if (typeof $tutoManager.isSeen === "function" && !$tutoManager.isSeen("tuto_inv_action")) {
+            const aw = this._actionWindow;
+            const arrowX = aw ? aw.x + Math.round(aw.width / 2) : 640;
+            const arrowY = aw ? aw.y - 12 : 300;
+            const pos = (aw && aw.x > 640) ? "middle-left" : "middle-right";
+
+            $tutoManager.show("tuto_inv_action", {
+                position: pos,
+                arrow: { x: arrowX, y: arrowY, angle: 0 }
+            });
+        }
+
+        // Tuto 9 : Fenêtre comparative d'équipement
+        if (canEquip && typeof $tutoManager.isSeen === "function" && !$tutoManager.isSeen("tuto_inv_compare")) {
+            const comp = this._compareWindow;
+            const compArrowX = comp ? comp.x + Math.round(comp.width / 2) : 640;
+            const compArrowY = comp ? comp.y + comp.height + 12 : 200;
+
+            $tutoManager.show("tuto_inv_compare", {
+                position: "center",
+                arrow: { x: compArrowX, y: compArrowY, angle: 180 }
+            });
+        }
+    }
+
     formatTargetTitle() {
         const id = this._targetId;
         if (id.startsWith("A_")) {
@@ -533,6 +654,7 @@ class Scene_Inventory extends Scene_MenuBase {
         }
 
         this._actionWindow.setup("party", canDeposit, canEquip, false, false, canAcceptOne, canAcceptAll);
+        this.checkActionTutorials(canEquip);
     }
 
     onTargetListOk() {
@@ -582,6 +704,7 @@ class Scene_Inventory extends Scene_MenuBase {
         }
 
         this._actionWindow.setup("target", this.isTargetPersistent(), canEquip, isOverloadOne, isOverloadAll);
+        this.checkActionTutorials(canEquip);
     }
 
     onActionCancel() {
@@ -840,6 +963,12 @@ class Scene_Inventory extends Scene_MenuBase {
         }
         if (this._compareWindow) {
             this._compareWindow.hide();
+        }
+        if (this._tutoArrowSprite && typeof this._tutoArrowSprite.setup === "function") {
+            this._tutoArrowSprite.setup(null);
+        }
+        if (this._tutoWindow && typeof this._tutoWindow.close === "function") {
+            this._tutoWindow.close();
         }
         this.updateContainerSelfSwitchB();
     }

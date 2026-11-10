@@ -29,5 +29,29 @@
     "key": "tuto_subsystem",
     "name": "Sous-système & Subcom",
     "img": null
+  },
+  {
+    "id": 6,
+    "key": "tuto_inv_transfer",
+    "name": "Gestion d'Inventaires",
+    "img": null
+  },
+  {
+    "id": 7,
+    "key": "tuto_inv_commands",
+    "name": "Commandes & Tri",
+    "img": null
+  },
+  {
+    "id": 8,
+    "key": "tuto_inv_action",
+    "name": "Actions d'Objet",
+    "img": null
+  },
+  {
+    "id": 9,
+    "key": "tuto_inv_compare",
+    "name": "Comparateur d'Équipement",
+    "img": null
   }
 ]
