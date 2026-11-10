@@ -4,13 +4,16 @@
 //=============================================================================
 
 const assert = require("assert");
+const fs = require("fs");
+const path = require("path");
 
 console.log("==============================================================");
-console.log("   TEST: Système de Relations (Game_Relation, Relations, Managers) ");
+console.log("   TEST: Système de Relations (actor.social._opinions, Fail-Fast) ");
 console.log("==============================================================");
 
 // 1. Mocks de l'environnement RMMZ / SC4
 global.window = global;
+global.DEBUGTOOL = { log: () => {}, warn: () => {}, error: () => {} };
 global.DataManager = {
     loadDatabase: () => {},
     isDatabaseLoaded: () => true,
@@ -21,31 +24,19 @@ global.DataManager = {
 };
 global.$dataActors = [
     null,
-    { id: 1, name: "Capitaine Harlock", meta: {} },
-    { id: 2, name: "Soldat Fédéral", meta: { factionId: 1 } },
-    { id: 3, name: "Contrebandier Saurien", meta: { faction: 3 } },
-    { id: 4, name: "Garde Intimidé", meta: {} }
+    { id: 1, name: "Capitaine Harlock", note: "<Hero>", meta: {} },
+    { id: 2, name: "Soldat Fédéral", note: "<factionId: 1>", meta: { factionId: 1 } },
+    { id: 3, name: "Contrebandier Saurien", note: "<factionId: 3>", meta: { factionId: 3 } },
+    { id: 4, name: "Garde Intimidé", note: "", meta: {} },
+    { id: 5, name: "Corsaire Hostile", note: "", meta: {} }
 ];
+global.$dataActors[10] = { id: 10, name: "Informateur", meta: {} };
+for (let i = 20; i < 30; i++) {
+    global.$dataActors[i] = { id: i, name: `PNJ Batch #${i}`, meta: {} };
+}
 
 global.$gameParty = {
     leader: () => ({ actorId: () => 1 })
-};
-
-global.$gameActors = {
-    _actors: {},
-    actor: function(id) {
-        if (!this._actors[id]) {
-            this._actors[id] = {
-                _id: id,
-                _states: [],
-                actorId: () => id,
-                states: function() { return this._states; },
-                addState: function(stId) { this._states.push({ id: stId }); },
-                removeState: function(stId) { this._states = this._states.filter(s => s.id !== stId); }
-            };
-        }
-        return this._actors[id];
-    }
 };
 
 global.$gameFactions = {
@@ -154,9 +145,9 @@ global.SubScene_Base = class extends global.Scene_Base {
     updateMain() {}
 };
 
-// 2. Chargement des modules du système de relations
+// 2. Chargement des modules du système de relations (sans SC4_Game_Relations purgé)
 const Game_Relation = require("../js/plugins/SC4_Game_Relation");
-const Game_Relations = require("../js/plugins/SC4_Game_Relations");
+const Game_ScActorSocial = require("../js/plugins/SC4_Game_ScActorSocial");
 const RelationManager = require("../js/plugins/SC4_RelationManager");
 const Game_InteractionBase = require("../js/plugins/SC4_Game_InteractionBase");
 const Game_ReactionBase = require("../js/plugins/SC4_Game_ReactionBase");
@@ -183,7 +174,7 @@ global.Scene_MenuRelations = Scene_MenuRelations;
 
 // Exposer globalement pour le runtime
 global.Game_Relation = Game_Relation;
-global.Game_Relations = Game_Relations;
+global.Game_ScActorSocial = Game_ScActorSocial;
 global.RelationManager = RelationManager;
 global.Game_InteractionBase = Game_InteractionBase;
 global.Game_ReactionBase = Game_ReactionBase;
@@ -191,17 +182,99 @@ global.Game_ReactionChat = Game_ReactionChat;
 global.Game_InteractionChat = Game_InteractionChat;
 global.RelationDialogManager = RelationDialogManager;
 
+// Modèle Game_Actors conforme RMMZ (_data[]) + lazy-loading de Game_ScActorSocial
+global.Game_Actors = class Game_Actors {
+    constructor() {
+        this._data = [];
+    }
+    actor(id) {
+        if (!global.$dataActors[id]) return null;
+        if (!this._data[id]) {
+            const def = global.$dataActors[id];
+            const instanceMeta = {};
+            if (def.meta) {
+                for (const [k, v] of Object.entries(def.meta)) {
+                    instanceMeta[k.toLowerCase()] = v;
+                }
+            }
+            const actorObj = {
+                _actorId: id,
+                _states: [],
+                _meta: instanceMeta,
+                _social: null,
+                actorId: () => id,
+                actor: () => def,
+                name: () => def.name,
+                states: function() { return this._states; },
+                addState: function(stId) { this._states.push({ id: stId }); },
+                removeState: function(stId) { this._states = this._states.filter(s => s.id !== stId); },
+                hasSocial: function() { return Boolean(this._social); },
+                meta: function(key, defaultValue = null) {
+                    const k = String(key).trim().toLowerCase();
+                    return this._meta[k] !== undefined ? this._meta[k] : defaultValue;
+                },
+                setMeta: function(key, val) {
+                    const k = String(key).trim().toLowerCase();
+                    this._meta[k] = val;
+                },
+                makeSavefileData: function() {
+                    const data = { actorId: this._actorId, meta: this._meta };
+                    if (this._social) data.social = this._social.makeSavefileData();
+                    return data;
+                },
+                loadSavefileData: function(data) {
+                    if (!data) return;
+                    if (data.meta) Object.assign(this._meta, data.meta);
+                    if (data.social) this.social.loadSavefileData(data.social);
+                }
+            };
+            Object.defineProperty(actorObj, "social", {
+                get() {
+                    if (!this._social) {
+                        this._social = new Game_ScActorSocial(this);
+                    }
+                    return this._social;
+                }
+            });
+            this._data[id] = actorObj;
+        }
+        return this._data[id];
+    }
+    makeSavefileData() {
+        const result = {};
+        for (let i = 1; i < this._data.length; i++) {
+            const actor = this._data[i];
+            if (actor && typeof actor.makeSavefileData === "function") {
+                result[i] = actor.makeSavefileData();
+            }
+        }
+        return result;
+    }
+    loadSavefileData(data) {
+        if (!data || typeof data !== "object") return;
+        for (const [idStr, actorData] of Object.entries(data)) {
+            const id = parseInt(idStr, 10);
+            if (id > 0) {
+                const actor = this.actor(id);
+                if (actor) actor.loadSavefileData(actorData);
+            }
+        }
+    }
+};
+
 // Initialiser les instances globales
-global.$gameRelations = new Game_Relations();
+global.$gameActors = new Game_Actors();
 global.$relationManager = new RelationManager();
 global.$relationDialogManager = new RelationDialogManager();
 
 // ============================================================================
-// TEST 1: Modèle Game_Relation
+// TEST 1: Modèle Game_Relation (sans getter obsolète .key)
 // ============================================================================
 console.log("➡️ Test 1: Modèle unitaire Game_Relation...");
 const rel1 = new Game_Relation({ actorId1: 1, actorId2: 4, affinity: 15, threat: 30, notoriety: 2 });
-assert.strictEqual(rel1.key, "1_4", "La clé canonique doit être 1_4");
+assert.strictEqual(rel1.actorId1, 1);
+assert.strictEqual(rel1.actorId2, 4);
+assert.strictEqual(typeof rel1.key, "undefined", "Fail Fast : Game_Relation.key doit être supprimé");
 assert.strictEqual(rel1.affinity, 15);
 assert.strictEqual(rel1.threat, 30);
 assert.strictEqual(rel1.notoriety, 2);
@@ -233,49 +306,71 @@ assert.strictEqual(rel1.canInteract("chat", 5000, 3600), true, "Le cooldown doit
 const saveData = rel1.makeSavefileData();
 const relRestored = new Game_Relation();
 relRestored.loadSavefileData(saveData);
-assert.strictEqual(relRestored.key, "1_4");
+assert.strictEqual(relRestored.actorId1, 1);
+assert.strictEqual(relRestored.actorId2, 4);
 assert.strictEqual(relRestored.affinity, 0);
 assert.strictEqual(relRestored.threat, 30);
 console.log("   ✅ Game_Relation validé.");
 
 // ============================================================================
-// TEST 2: Registre Game_Relations & Unicité Symétrique
+// TEST 2: Orientation actor.social.opinionFrom & Purge de $gameRelations
 // ============================================================================
-console.log("➡️ Test 2: Registre Game_Relations & Unicité Symétrique...");
-const relationsRegistry = new Game_Relations();
+console.log("➡️ Test 2: Orientation actor.social.opinionFrom & Purge $gameRelations...");
+assert.strictEqual(
+    fs.existsSync(path.resolve(__dirname, "../js/plugins/SC4_Game_Relations.js")),
+    false,
+    "SC4_Game_Relations.js doit être physiquement supprimé"
+);
+assert.strictEqual(typeof global.$gameRelations, "undefined", "$gameRelations ne doit plus exister");
+assert.strictEqual(typeof global.$relationManager.getRelation, "undefined", "Fail Fast : getRelation doit être supprimé");
+assert.strictEqual(typeof global.$relationManager._actorFactions, "undefined", "Fail Fast : _actorFactions doit être supprimé");
 
-// relation(1, 2) et relation(2, 1) doivent pointer vers le même objet !
-const rA = relationsRegistry.relation(1, 2);
-const rB = relationsRegistry.relation(2, 1);
-assert.strictEqual(rA, rB, "relation(1, 2) et relation(2, 1) doivent être la même instance unique");
-assert.strictEqual(rA.key, "1_2");
+const actor1 = global.$gameActors.actor(1);
+const actor2 = global.$gameActors.actor(2);
 
-rA.affinity = 35;
-assert.strictEqual(rB.affinity, 35, "La mutation doit être répercutée immédiatement");
+assert.strictEqual(actor1.social.hasOpinionFrom(2), false, "Aucune opinion enregistrée initialement");
+const opFrom2 = actor1.social.opinionFrom(2);
+assert.ok(opFrom2 instanceof Game_Relation, "opinionFrom(2) doit retourner un Game_Relation");
+assert.strictEqual(opFrom2.actorId1, 1, "actorId1 = sujet évalué (acteur 1 / Mosay)");
+assert.strictEqual(opFrom2.actorId2, 2, "actorId2 = détenteur de l'opinion (acteur 2)");
+assert.strictEqual(actor1.social.hasOpinionFrom(2), true);
+assert.strictEqual(actor2.social.hasOpinionFrom(1), false, "Orientation stricte : l'opinion de 2 envers 1 est stockée sur 1, pas sur 2");
 
-// Helper joueur
-global.$gameRelations = relationsRegistry;
-const rPlayer = relationsRegistry.relationWithPlayer(2);
-assert.strictEqual(rPlayer, rA, "relationWithPlayer(2) doit résoudre la relation avec le PJ");
-console.log("   ✅ Game_Relations validé.");
+opFrom2.affinity = 35;
+assert.strictEqual(actor1.social.opinionFrom(2).affinity, 35, "Référence conservée dans actor1.social._opinions[2]");
+assert.strictEqual(typeof actor1.social.opinionOf, "undefined", "Fail Fast : opinionOf doit être supprimé");
+assert.strictEqual(typeof actor1.social.relationWith, "undefined", "Fail Fast : relationWith doit être supprimé");
+console.log("   ✅ Orientation opinionFrom & Purge Fail-Fast validées.");
 
 // ============================================================================
-// TEST 3: RelationManager (Héritage Faction, Façade & Temps)
+// TEST 3: RelationManager (getOpinionToSubjectFromHolder, Héritage Faction & Temps)
 // ============================================================================
 console.log("➡️ Test 3: RelationManager (Héritage Faction & Horloge)...");
-global.$gameRelations = new Game_Relations();
+global.$gameActors = new Game_Actors();
 const manager = new RelationManager();
 global.$relationManager = manager;
 
+// Lazy-loading préservé par hasOpinionToSubjectFromHolder
+const actor4Check = global.$gameActors.actor(4);
+assert.strictEqual(manager.hasOpinionToSubjectFromHolder(4, 1), false);
+assert.strictEqual(actor4Check.hasSocial(), false, "hasOpinionToSubjectFromHolder ne doit pas instancier .social");
+
 // Acteur 2 a la faction 1 (affinité Faction envers le joueur = +25)
 const relActor2 = manager.getRelationWithPlayer(2);
+assert.strictEqual(relActor2.actorId1, 1, "getRelationWithPlayer doit cibler le leader (1) comme sujet");
+assert.strictEqual(relActor2.actorId2, 2, "getRelationWithPlayer doit placer l'interlocuteur (2) en détenteur");
 assert.strictEqual(relActor2.affinity, 25, "L'acteur 2 doit hériter de l'affinité de sa faction (+25)");
+assert.strictEqual(manager.getOpinionToSubjectFromHolder(1, 2), relActor2, "getOpinionToSubjectFromHolder doit retourner exactement la même instance");
 
 // Acteur 3 a la faction 3 (affinité Faction = -15)
 const relActor3 = manager.getRelationWithPlayer(3);
 assert.strictEqual(relActor3.affinity, -15, "L'acteur 3 doit hériter de l'affinité de sa faction (-15)");
 
-// Erosion temporelle vers la base
+// Vérifier setActorFactionId sans cache _actorFactions
+manager.setActorFactionId(4, 3);
+assert.strictEqual(manager.getActorFactionId(4), 3, "setActorFactionId doit persister uniquement sur actor.social");
+
+// Érosion temporelle vers la base de faction du holder (rel.actorId2)
 relActor2.affinity = 50; // Boosté artificiellement au-dessus de sa base de 25
 manager._lastUpdateTimestamp = 1000000;
 manager.update(1000000 + 86400 * 5); // 5 jours s'écoulent
@@ -343,24 +438,29 @@ assert.strictEqual(session.relation.affinity, initialAffinity + reaction.affinit
 console.log("   ✅ RelationDialogManager validé.");
 
 // ============================================================================
-// TEST 6: Intégration DataManager (Sauvegarde / Extraction)
+// TEST 6: Intégration DataManager (Persistance via sc_actors uniquement)
 // ============================================================================
 console.log("➡️ Test 6: Intégration SC_DataManager...");
 const SC_DataManager = require("../js/plugins/SC4_DataManager");
 const saveContents = {};
 SC_DataManager.makeSaveContents(saveContents);
 
-assert.ok(saveContents.sc_relations, "sc_relations doit être dans le paquet de sauvegarde");
+assert.strictEqual(saveContents.sc_relations, undefined, "sc_relations ne doit plus figurer dans la sauvegarde");
+assert.ok(saveContents.sc_actors, "sc_actors doit être dans le paquet de sauvegarde");
 assert.ok(saveContents.sc_relationManager, "sc_relationManager doit être dans le paquet de sauvegarde");
+assert.strictEqual(saveContents.sc_relationManager.actorFactions, undefined, "actorFactions ne doit plus figurer dans sc_relationManager");
 
-// Réinitialisation et restauration
-global.$gameRelations = new Game_Relations();
+// Réinitialisation complète et restauration
+global.$gameActors = new Game_Actors();
 global.$relationManager = new RelationManager();
 
-SC_DataManager.extractSaveContents(saveContents);
-const restoredRel = global.$gameRelations.relationWithPlayer(2);
-assert.ok(restoredRel, "La relation avec l'acteur 2 doit être restaurée");
-assert.strictEqual(restoredRel.key, "1_2");
+SC_DataManager.extractSaveContents(JSON.parse(JSON.stringify(saveContents)));
+assert.strictEqual(global.$relationManager.getActorFactionId(4), 3, "La faction modifiée sur l'acteur 4 doit être restaurée via sc_actors");
+const restoredRel = global.$relationManager.getOpinionToSubjectFromHolder(1, 2);
+assert.ok(restoredRel, "L'opinion portée par l'acteur 2 envers le joueur doit être restaurée");
+assert.strictEqual(restoredRel.actorId1, 1);
+assert.strictEqual(restoredRel.actorId2, 2);
+assert.strictEqual(restoredRel.affinity, initialAffinity + reaction.affinityDelta, "L'affinité modifiée doit être restaurée fidèlement");
 
 console.log("   ✅ SC_DataManager validé.");
 
@@ -509,12 +609,13 @@ const batchManager = new RelationManager();
 assert.strictEqual(batchManager.getSimulationTickDelay(), 2, "Doit lire le tick_delay depuis $dataSceSystem");
 assert.strictEqual(batchManager.getSimulationBatchBudget(), 3, "Doit lire le batch_budget depuis $dataSceSystem");
 
-// Créer plusieurs relations dans $gameRelations
+// Créer plusieurs opinions portées envers le joueur sur actor(1).social._opinions
 for (let i = 20; i < 30; i++) {
-    const r = global.$gameRelations.relation(1, i);
+    const r = batchManager.getOpinionToSubjectFromHolder(1, i);
     r.patience = 50;
     r.lastPatienceTimestamp = global.$gameDate.timestamp;
 }
+assert.ok(batchManager.allActiveRelations().length >= 10, "allActiveRelations() doit collecter toutes les opinions actives");
 
 // Tick 1 : ne doit pas encore exécuter le batch (délai = 2)
 batchManager.updateTick(global.$gameDate.timestamp + 3600);

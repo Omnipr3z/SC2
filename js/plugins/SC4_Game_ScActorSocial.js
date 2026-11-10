@@ -9,10 +9,22 @@
  * ============================================================================
  * Game_ScActorSocial.js
  * ============================================================================
- * Composant délégué gérant le profil social d'un acteur :
+ * Composant délégué gérant le profil social complet d'un acteur :
  * - Allégeance de faction (<factionId: X>) et accès à l'entité Faction ($gameFactions).
- * - Registre local des opinions / appréciations portées par les autres acteurs (_opinions).
- * - Intégration rétrocompatible avec le registre global $gameRelations.
+ * - Registre local des opinions reçues par cet acteur (_opinions).
+ * - Extension prévue : réputation, charisme et traits sociaux.
+ *
+ * ----------------------------------------------------------------------------
+ * RÉFÉRENTIEL ORIENTÉ DES OPINIONS (`opinionFrom`) :
+ *   actorA.social.opinionFrom(actorB_Id)
+ *   = « L'opinion que B (`actorB_Id`, holder) porte envers A (`actorA`, subject) »
+ *
+ * Dans l'objet Game_Relation retourné et stocké sous `actorA._social._opinions[actorB_Id]` :
+ *   - `actorId1` = `actorA` (sujet évalué / propriétaire du registre)
+ *   - `actorId2` = `actorB` (détenteur / interlocuteur qui émet l'opinion)
+ *
+ * En mode symétrique sur un seul acteur, les relations du joueur sont portées
+ * exclusivement par le leader du groupe (`leader.social._opinions[npcId]`).
  * ============================================================================
  */
 
@@ -100,27 +112,42 @@ class Game_ScActorSocial {
     }
 
     /**
-     * Récupère ou instancie la relation représentant le sentiment / l'opinion d'un
-     * interlocuteur envers cet acteur.
-     * @param {number} actorId ID de l'autre acteur
+     * Vérifie si un acteur détenteur possède déjà une opinion enregistrée envers cet acteur.
+     * N'instancie pas d'entrée si elle n'existe pas encore.
+     * @param {number} holderActorId ID de l'acteur détenteur de l'opinion
+     * @returns {boolean}
+     */
+    hasOpinionFrom(holderActorId) {
+        const id = Number(holderActorId) || 0;
+        const myActorId = this._actorId || (this.actor() ? this.actor().actorId() : 0);
+        if (id <= 0 || id === myActorId) return false;
+        return Boolean(this._opinions[id]);
+    }
+
+    /**
+     * Récupère ou instancie l'opinion portée par `holderActorId` envers cet acteur (`this.actor()`).
+     * Exemple : `mosay.social.opinionFrom(ibanId)` = l'opinion qu'Iban porte envers Mosay.
+     * @param {number} holderActorId ID de l'acteur qui porte cette opinion envers cet acteur
      * @returns {Game_Relation|null}
      */
-    opinionOf(actorId) {
-        const id = Number(actorId) || 0;
+    opinionFrom(holderActorId) {
+        const id = Number(holderActorId) || 0;
         const myActorId = this._actorId || (this.actor() ? this.actor().actorId() : 0);
         if (id <= 0 || id === myActorId) return null;
 
         if (!this._opinions[id]) {
-            if (typeof Game_Relation !== "undefined") {
-                this._opinions[id] = new Game_Relation({
-                    actorId1: myActorId,
-                    actorId2: id
-                });
-            } else if (typeof $gameRelations !== "undefined" && $gameRelations && typeof $gameRelations.relation === "function") {
-                this._opinions[id] = $gameRelations.relation(myActorId, id);
+            if (typeof Game_Relation === "undefined") {
+                if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.error) {
+                    DEBUGTOOL.error("Game_ScActorSocial.opinionFrom", "Classe Game_Relation introuvable !", { myActorId, holderActorId: id });
+                }
+                throw new Error("Game_Relation est requis pour instancier une opinion dans Game_ScActorSocial.");
             }
+            this._opinions[id] = new Game_Relation({
+                actorId1: myActorId,
+                actorId2: id
+            });
         }
-        return this._opinions[id] || null;
+        return this._opinions[id];
     }
 
     /**
@@ -132,20 +159,6 @@ class Game_ScActorSocial {
     }
 
     /**
-     * Récupère la relation avec un autre acteur via le registre global $gameRelations
-     * (ou via le registre local d'opinions).
-     * @param {number} targetActorId 
-     * @returns {Game_Relation|null}
-     */
-    relationWith(targetActorId) {
-        const myActorId = this._actorId || (this.actor() ? this.actor().actorId() : 0);
-        if (typeof $gameRelations !== "undefined" && $gameRelations && typeof $gameRelations.getRelation === "function") {
-            return $gameRelations.getRelation(myActorId, targetActorId);
-        }
-        return this.opinionOf(targetActorId);
-    }
-
-    /**
      * Sérialisation whitelistée (déléguée depuis Game_ScActor).
      * @returns {object}
      */
@@ -154,13 +167,6 @@ class Game_ScActorSocial {
         for (const [k, v] of Object.entries(this._opinions)) {
             if (v && typeof v.makeSavefileData === "function") {
                 opinions[k] = v.makeSavefileData();
-            } else if (v) {
-                opinions[k] = {
-                    actor1Id: v.actor1Id,
-                    actor2Id: v.actor2Id,
-                    affinity: v.affinity,
-                    trust: v.trust
-                };
             }
         }
         return {
@@ -180,16 +186,18 @@ class Game_ScActorSocial {
         }
         if (data.opinions) {
             this._opinions = {};
-            for (const [k, opData] of Object.entries(data.opinions)) {
-                if (typeof Game_Relation !== "undefined") {
-                    const rel = new Game_Relation(opData);
-                    if (typeof rel.loadSavefileData === "function") {
-                        rel.loadSavefileData(opData);
-                    }
-                    this._opinions[k] = rel;
-                } else {
-                    this._opinions[k] = opData;
+            if (typeof Game_Relation === "undefined") {
+                if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.error) {
+                    DEBUGTOOL.error("Game_ScActorSocial.loadSavefileData", "Classe Game_Relation introuvable lors du rechargement !");
                 }
+                throw new Error("Game_Relation est requis pour restaurer Game_ScActorSocial.");
+            }
+            for (const [k, opData] of Object.entries(data.opinions)) {
+                const rel = new Game_Relation(opData);
+                if (typeof rel.loadSavefileData === "function") {
+                    rel.loadSavefileData(opData);
+                }
+                this._opinions[k] = rel;
             }
         }
     }

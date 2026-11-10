@@ -26,13 +26,22 @@
  * 
  * Façade centrale du système de relations, diplomatie et interactions sociales.
  * Évite les enchevêtrements en offrant un point d'accès unifié aux Factions,
- * Acteurs, Relations et à l'écoulement du Temps.
+ * Acteurs, Relations (`actor.social._opinions`) et à l'écoulement du Temps.
+ *
+ * ----------------------------------------------------------------------------
+ * RÉFÉRENTIEL ORIENTÉ DES OPINIONS :
+ *   `getOpinionToSubjectFromHolder(subjectActorId, holderActorId)`
+ *   délègue à `subjectActor.social.opinionFrom(holderActorId)` et désigne :
+ *   « L'opinion que `holderActorId` porte envers `subjectActorId` ».
+ *   Dans le Game_Relation retourné :
+ *   - `actorId1` = subjectActorId (sujet évalué / propriétaire de `_opinions`)
+ *   - `actorId2` = holderActorId (détenteur / interlocuteur qui juge)
+ * ----------------------------------------------------------------------------
  */
 
 class RelationManager {
     constructor() {
         this._lastUpdateTimestamp = 0;
-        this._actorFactions = {};
         this._decayInterval = 86400; // 24h galactiques en secondes
         this._tickCounter = 0;
         this._simulationCursor = 0;
@@ -64,28 +73,25 @@ class RelationManager {
     }
 
     /**
-     * Résout l'ID de faction associé à un acteur
+     * Résout l'ID de faction associé à un acteur (source unique : Game_ScActorSocial)
      * @param {number} actorId 
      * @returns {number} ID de faction (1..8) ou 0 si neutre/inconnu
      */
     getActorFactionId(actorId) {
-        if (this._actorFactions[actorId]) {
-            return this._actorFactions[actorId];
-        }
-        if (typeof $gameActors !== "undefined" && $gameActors) {
-            const actor = $gameActors.actor(actorId);
-            if (actor && actor.social) {
-                // Source unique : Game_ScActorSocial.factionId() (<factionId: X>)
-                return Number(actor.social.factionId()) || 0;
+        if (typeof $gameActors === "undefined" || !$gameActors) {
+            if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.error) {
+                DEBUGTOOL.error("RelationManager.getActorFactionId", "$gameActors introuvable !", { actorId });
             }
+            return 0;
         }
-        if (typeof $dataActors !== "undefined" && $dataActors && $dataActors[actorId]) {
-            const meta = $dataActors[actorId].meta;
-            if (meta && (meta.faction || meta.factionId)) {
-                return Number(meta.faction || meta.factionId);
+        const actor = $gameActors.actor(actorId);
+        if (!actor || !actor.social) {
+            if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.error) {
+                DEBUGTOOL.error("RelationManager.getActorFactionId", "Acteur ou composant .social introuvable !", { actorId });
             }
+            return 0;
         }
-        return 0;
+        return Number(actor.social.factionId()) || 0;
     }
 
     /**
@@ -94,45 +100,92 @@ class RelationManager {
      * @param {number} factionId 
      */
     setActorFactionId(actorId, factionId) {
-        if (typeof $gameActors !== "undefined" && $gameActors) {
-            const actor = $gameActors.actor(actorId);
-            if (actor && actor.social) {
-                actor.social.setFactionId(factionId);
-                delete this._actorFactions[actorId];
-                return;
+        if (typeof $gameActors === "undefined" || !$gameActors) {
+            if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.error) {
+                DEBUGTOOL.error("RelationManager.setActorFactionId", "$gameActors introuvable !", { actorId, factionId });
+            }
+            return;
+        }
+        const actor = $gameActors.actor(actorId);
+        if (!actor || !actor.social) {
+            if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.error) {
+                DEBUGTOOL.error("RelationManager.setActorFactionId", "Acteur ou composant .social introuvable !", { actorId, factionId });
+            }
+            return;
+        }
+        actor.social.setFactionId(factionId);
+    }
+
+    /**
+     * Retourne l'identifiant du leader du groupe (acteur sujet du joueur).
+     * @returns {number}
+     */
+    playerActorId() {
+        if (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.leader === "function") {
+            const leader = $gameParty.leader();
+            if (leader && typeof leader.actorId === "function") {
+                return leader.actorId();
             }
         }
-        this._actorFactions[actorId] = Number(factionId) || 0;
+        if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.error) {
+            DEBUGTOOL.error("RelationManager.playerActorId", "$gameParty.leader() introuvable !");
+        }
+        return 0;
     }
 
     /**
-     * Récupère ou instancie la relation entre deux acteurs quelconques
-     * @param {number} actorId1 
-     * @param {number} actorId2 
+     * Vérifie sans lazy-loading intempestif si `holderActorId` possède déjà une opinion envers `subjectActorId`.
+     * @param {number} subjectActorId ID de l'acteur évalué (propriétaire du registre _opinions)
+     * @param {number} holderActorId ID de l'acteur détenteur / émetteur de l'opinion
+     * @returns {boolean}
+     */
+    hasOpinionToSubjectFromHolder(subjectActorId, holderActorId) {
+        if (typeof $gameActors === "undefined" || !$gameActors) return false;
+        const subject = $gameActors.actor(subjectActorId);
+        if (!subject) return false;
+        if (typeof subject.hasSocial === "function" && !subject.hasSocial()) return false;
+        if (!subject.social || typeof subject.social.hasOpinionFrom !== "function") return false;
+        return subject.social.hasOpinionFrom(holderActorId);
+    }
+
+    /**
+     * Récupère ou instancie l'opinion que `holderActorId` porte envers `subjectActorId`.
+     * Exemple : `getOpinionToSubjectFromHolder(playerId, ibanId)` = l'opinion qu'Iban porte envers le joueur.
+     * @param {number} subjectActorId ID de l'acteur évalué (propriétaire du registre _opinions)
+     * @param {number} holderActorId ID de l'acteur détenteur / émetteur de l'opinion
      * @returns {Game_Relation|null}
      */
-    getRelation(actorId1, actorId2) {
-        if (typeof $gameRelations === "undefined" || !$gameRelations) return null;
-        return $gameRelations.relation(actorId1, actorId2);
+    getOpinionToSubjectFromHolder(subjectActorId, holderActorId) {
+        if (typeof $gameActors === "undefined" || !$gameActors) {
+            if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.error) {
+                DEBUGTOOL.error("RelationManager.getOpinionToSubjectFromHolder", "$gameActors introuvable !", { subjectActorId, holderActorId });
+            }
+            return null;
+        }
+        const subject = $gameActors.actor(subjectActorId);
+        if (!subject || !subject.social) {
+            if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.error) {
+                DEBUGTOOL.error("RelationManager.getOpinionToSubjectFromHolder", "Acteur sujet ou composant .social introuvable !", { subjectActorId, holderActorId });
+            }
+            return null;
+        }
+        return subject.social.opinionFrom(holderActorId);
     }
 
     /**
-     * Récupère la relation entre le joueur et un PNJ, avec initialisation d'héritage
-     * de l'affinité de faction lors du premier contact.
-     * @param {number} targetActorId 
+     * Récupère l'opinion qu'un PNJ (`targetActorId`) porte envers le joueur (`leader`),
+     * avec initialisation d'héritage de l'affinité de faction lors du premier contact.
+     * @param {number} targetActorId ID du PNJ interlocuteur (holder)
      * @returns {Game_Relation|null}
      */
     getRelationWithPlayer(targetActorId) {
-        if (typeof $gameRelations === "undefined" || !$gameRelations) return null;
+        const playerId = this.playerActorId();
+        if (!playerId) return null;
 
-        const isNew = !$gameRelations.hasRelation(
-            (typeof $gameParty !== "undefined" && $gameParty && $gameParty.leader()) ? $gameParty.leader().actorId() : 1,
-            targetActorId
-        );
-
-        const relation = $gameRelations.relationWithPlayer(targetActorId);
+        const isNew = !this.hasOpinionToSubjectFromHolder(playerId, targetActorId);
+        const relation = this.getOpinionToSubjectFromHolder(playerId, targetActorId);
         if (relation && isNew) {
-            // Héritage direct de la Faction lors de la première rencontre
+            // Héritage direct de la Faction du PNJ lors de la première rencontre
             const factionId = this.getActorFactionId(targetActorId);
             if (factionId > 0 && typeof $gameFactions !== "undefined" && $gameFactions) {
                 const factionAffinity = $gameFactions.affinity(factionId);
@@ -140,6 +193,42 @@ class RelationManager {
             }
         }
         return relation;
+    }
+
+    /**
+     * Retourne toutes les opinions portées envers le joueur (leader).
+     * Utilisé par le Carnet Diplomatique (Window_RelationList).
+     * @returns {Game_Relation[]}
+     */
+    getPlayerOpinions() {
+        const playerId = this.playerActorId();
+        if (!playerId || typeof $gameActors === "undefined" || !$gameActors) return [];
+        const player = $gameActors.actor(playerId);
+        if (!player) return [];
+        if (typeof player.hasSocial === "function" && !player.hasSocial()) return [];
+        if (!player.social || typeof player.social.allOpinions !== "function") return [];
+        return player.social.allOpinions();
+    }
+
+    /**
+     * Collecte l'ensemble des opinions sociales déjà instanciées sur les acteurs actifs
+     * (sans déclencher le lazy-loading sur les acteurs dont `.social` n'a jamais été sollicité).
+     * @returns {Game_Relation[]}
+     */
+    allActiveRelations() {
+        if (typeof $gameActors === "undefined" || !$gameActors || !Array.isArray($gameActors._data)) {
+            return [];
+        }
+        const relations = [];
+        for (let i = 1; i < $gameActors._data.length; i++) {
+            const actor = $gameActors._data[i];
+            if (!actor) continue;
+            if (typeof actor.hasSocial === "function" && !actor.hasSocial()) continue;
+            if (actor.social && typeof actor.social.allOpinions === "function") {
+                relations.push(...actor.social.allOpinions());
+            }
+        }
+        return relations;
     }
 
     /**
@@ -209,8 +298,7 @@ class RelationManager {
      * @param {number} batchBudget 
      */
     updateSimulationBatch(currentTimestamp, batchBudget = 15) {
-        if (typeof $gameRelations === "undefined" || !$gameRelations) return;
-        const relations = $gameRelations.all();
+        const relations = this.allActiveRelations();
         const total = relations.length;
         if (total === 0) return;
 
@@ -273,8 +361,7 @@ class RelationManager {
      * @param {number} steps Nombre de crans temporels écoulés
      */
     applyTemporalDecay(steps = 1) {
-        if (typeof $gameRelations === "undefined" || !$gameRelations) return;
-        const relations = $gameRelations.all();
+        const relations = this.allActiveRelations();
 
         for (const rel of relations) {
             const factionId = this.getActorFactionId(rel.actorId2);
@@ -327,7 +414,7 @@ class RelationManager {
         if (!interaction || !reaction) return;
 
         const currentTimestamp = (typeof $gameDate !== "undefined" && $gameDate) ? $gameDate.timestamp : 0;
-        const relation = this.getRelation(interaction.actorId1, interaction.actorId2);
+        const relation = this.getOpinionToSubjectFromHolder(interaction.actorId1, interaction.actorId2);
 
         if (relation) {
             // 1. Mise à jour de l'affinité et de la menace
@@ -374,7 +461,6 @@ class RelationManager {
     makeSavefileData() {
         return {
             lastUpdateTimestamp: this._lastUpdateTimestamp,
-            actorFactions: this._actorFactions,
             simulationCursor: this._simulationCursor,
             tickCounter: this._tickCounter,
             tickDelay: this._tickDelay,
@@ -389,7 +475,6 @@ class RelationManager {
     loadSavefileData(data) {
         if (!data) return;
         this._lastUpdateTimestamp = Number(data.lastUpdateTimestamp) || 0;
-        this._actorFactions = data.actorFactions ? JSON.parse(JSON.stringify(data.actorFactions)) : {};
         this._simulationCursor = Number(data.simulationCursor) || 0;
         this._tickCounter = Number(data.tickCounter) || 0;
         this._tickDelay = typeof data.tickDelay === "number" ? data.tickDelay : 1;

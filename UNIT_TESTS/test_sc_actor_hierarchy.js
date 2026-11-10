@@ -60,10 +60,25 @@ global.Game_Interpreter = class {};
 
 global.Game_Relation = class Game_Relation {
     constructor(data = {}) {
-        this.actor1Id = data.actorId1 || 0;
-        this.actor2Id = data.actorId2 || 0;
-        this.affinity = data.affinity || 50;
-        this.trust = data.trust || 50;
+        this.actorId1 = data.actorId1 || 0;
+        this.actorId2 = data.actorId2 || 0;
+        this.affinity = data.affinity !== undefined ? data.affinity : 50;
+        this.trust = data.trust !== undefined ? data.trust : 50;
+    }
+    makeSavefileData() {
+        return {
+            actorId1: this.actorId1,
+            actorId2: this.actorId2,
+            affinity: this.affinity,
+            trust: this.trust
+        };
+    }
+    loadSavefileData(data) {
+        if (!data) return;
+        this.actorId1 = data.actorId1 || 0;
+        this.actorId2 = data.actorId2 || 0;
+        if (data.affinity !== undefined) this.affinity = data.affinity;
+        if (data.trust !== undefined) this.trust = data.trust;
     }
 };
 
@@ -125,10 +140,6 @@ global.$gameFactions = {
     faction: function(id) {
         return this._factions[id] || null;
     }
-};
-
-global.$gameRelations = {
-    getRelation: (a1, a2) => ({ actor1Id: a1, actor2Id: a2, value: 25 })
 };
 
 global.$gameGalaxy = {
@@ -314,16 +325,22 @@ const socialComp = actor1.social;
 assert(socialComp instanceof Game_ScActorSocial, "actor1.social instancie Game_ScActorSocial");
 assert(socialComp.factionId() === 1, "factionId résolu depuis _meta (1)");
 
-// Enregistrement d'une relation représentant le sentiment de l'interlocuteur 2 envers actor1
-const op2 = socialComp.opinionOf(2);
-assert(op2 instanceof Game_Relation, "opinionOf(2) retourne une instance de Game_Relation");
+// Enregistrement d'une relation représentant l'opinion que l'interlocuteur 2 porte envers actor1
+assert(socialComp.hasOpinionFrom(2) === false, "hasOpinionFrom(2) retourne false avant toute création");
+const op2 = socialComp.opinionFrom(2);
+assert(op2 instanceof Game_Relation, "opinionFrom(2) retourne une instance de Game_Relation");
+assert(op2.actorId1 === 1 && op2.actorId2 === 2, "Orientation opinionFrom : actorId1 = sujet (1), actorId2 = holder (2)");
+assert(socialComp.hasOpinionFrom(2) === true, "hasOpinionFrom(2) retourne true après instanciation");
 assert(op2.affinity === 50, "Affinité initiale à 50");
 op2.affinity = 75;
 
-// Vérification de la persistance de l'opinion
-assert(socialComp.opinionOf(2).affinity === 75, "opinionOf(2) conserve la mise à jour (affinité 75)");
+// Vérification de la persistance de l'opinion et de l'absence de reliquats Fail-Fast
+assert(socialComp.opinionFrom(2).affinity === 75, "opinionFrom(2) conserve la mise à jour (affinité 75)");
 assert(socialComp.allOpinions().length === 1, "allOpinions() recense correctement les opinions actives");
+assert(typeof socialComp.opinionOf === "undefined", "Fail Fast : social.opinionOf supprimé");
+assert(typeof socialComp.relationWith === "undefined", "Fail Fast : social.relationWith supprimé");
 assert(typeof actor1.opinionOf === "undefined", "actor1 n'a plus de façade opinionOf (Fail Fast -> actor.social)");
+assert(typeof actor1.opinionFrom === "undefined", "actor1 n'a plus de façade opinionFrom (Fail Fast -> actor.social)");
 assert(typeof actor1.factionId === "undefined", "actor1 n'a plus de façade factionId (Fail Fast -> actor.social)");
 assert(typeof actor1.gunfightWeapon === "undefined", "actor1 n'a plus de façade gunfightWeapon (Fail Fast -> actor.combat)");
 assert(typeof actor1.weightCapacity === "undefined", "actor1 n'a plus de façade weightCapacity (Fail Fast -> actor.inventory)");
@@ -397,7 +414,7 @@ fullActor.setMeta("customStatus", "elite");
 fullActor.inventory.setExhaustion(15);
 fullActor.combat.setAiType("sniper");
 fullActor.social.setFactionId(2);
-fullActor.social.opinionOf(3).affinity = 90;
+fullActor.social.opinionFrom(3).affinity = 90;
 fullActor.character.setPose("kneel", { angle: 45 });
 
 const savedData = fullActor.makeSavefileData();
@@ -427,7 +444,7 @@ assert(reloadedActor.meta("customStatus") === "elite", "Rechargement : méta res
 assert(reloadedActor.inventory.exhaustion() === 15, "Rechargement : inventory exhaustion restauré");
 assert(reloadedActor.combat.aiType() === "sniper", "Rechargement : combat aiType restauré");
 assert(reloadedActor.social.factionId() === 2, "Rechargement : social factionId restauré");
-assert(reloadedActor.social.opinionOf(3).affinity === 90, "Rechargement : social opinion restaurée");
+assert(reloadedActor.social.opinionFrom(3).affinity === 90, "Rechargement : social opinion restaurée");
 assert(reloadedActor.character._pose === "kneel", "Rechargement : character pose restaurée");
 
 console.log("\n=================================================");

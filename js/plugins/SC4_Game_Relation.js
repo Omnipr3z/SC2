@@ -9,8 +9,10 @@
  * @author SimCraft
  * @help SC4_Game_Relation.js
  * 
- * Modèle unitaire représentant l'état relationnel entre deux entités (acteurs).
- * Entièrement découplé de la vue et sérialisable pour les sauvegardes RMMZ.
+ * Modèle unitaire représentant l'opinion relationnelle portée par un acteur détenteur
+ * (`actorId2` / holder) envers un acteur sujet (`actorId1` / subject), stockée dans
+ * `subjectActor.social._opinions[holderActorId]`.
+ * Entièrement découplé de la vue et sérialisable via `Game_ScActorSocial`.
  */
 
 class Game_Relation {
@@ -27,19 +29,12 @@ class Game_Relation {
         this._data = data.data ? JSON.parse(JSON.stringify(data.data)) : {};
     }
 
-    /**
-     * Clé canonique ordonnée unique : minId_maxId
-     */
-    get key() {
-        const min = Math.min(this._actorId1, this._actorId2);
-        const max = Math.max(this._actorId1, this._actorId2);
-        return `${min}_${max}`;
-    }
-
+    /** ID de l'acteur sujet évalué (propriétaire du registre _opinions) */
     get actorId1() {
         return this._actorId1;
     }
 
+    /** ID de l'acteur détenteur / émetteur de cette opinion envers actorId1 */
     get actorId2() {
         return this._actorId2;
     }

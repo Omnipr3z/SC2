@@ -66,9 +66,10 @@ class RelationDialogManager {
     selectInteraction(interactionType) {
         if (!this._activeInterlocutorId) return null;
 
-        const playerId = (typeof $gameParty !== "undefined" && $gameParty && $gameParty.leader())
-            ? $gameParty.leader().actorId()
-            : 1;
+        const playerId = (typeof $relationManager !== "undefined" && $relationManager && typeof $relationManager.playerActorId === "function")
+            ? $relationManager.playerActorId()
+            : ((typeof $gameParty !== "undefined" && $gameParty && $gameParty.leader()) ? $gameParty.leader().actorId() : 0);
+        if (!playerId) return null;
 
         if (interactionType === "chat") {
             const InteractionChatClass = (typeof Game_InteractionChat !== "undefined")
@@ -91,7 +92,7 @@ class RelationDialogManager {
         if (!this._currentInteraction || !this._activeInterlocutorId) return null;
 
         const relation = (typeof $relationManager !== "undefined" && $relationManager)
-            ? $relationManager.getRelation(this._currentInteraction.actorId1, this._currentInteraction.actorId2)
+            ? $relationManager.getOpinionToSubjectFromHolder(this._currentInteraction.actorId1, this._currentInteraction.actorId2)
             : null;
 
         const playerActor = (typeof $gameActors !== "undefined" && $gameActors)

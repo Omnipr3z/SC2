@@ -137,9 +137,6 @@ class SC_DataManager {
         if (typeof Game_Factions !== "undefined") {
             window.$gameFactions = new Game_Factions();
         }
-        if (typeof Game_Relations !== "undefined") {
-            window.$gameRelations = new Game_Relations();
-        }
         if (typeof RelationManager !== "undefined") {
             window.$relationManager = new RelationManager();
         }
@@ -182,9 +179,6 @@ class SC_DataManager {
         }
         if (window.$gameFactions && typeof window.$gameFactions.makeSavefileData === "function") {
             contents.sc_factions = window.$gameFactions.makeSavefileData();
-        }
-        if (window.$gameRelations && typeof window.$gameRelations.makeSavefileData === "function") {
-            contents.sc_relations = window.$gameRelations.makeSavefileData();
         }
         if (window.$relationManager && typeof window.$relationManager.makeSavefileData === "function") {
             contents.sc_relationManager = window.$relationManager.makeSavefileData();
@@ -231,9 +225,6 @@ class SC_DataManager {
         }
         if (contents && contents.sc_factions && window.$gameFactions && typeof window.$gameFactions.extractSavefileData === "function") {
             window.$gameFactions.extractSavefileData(contents.sc_factions);
-        }
-        if (contents && contents.sc_relations && window.$gameRelations && typeof window.$gameRelations.loadSavefileData === "function") {
-            window.$gameRelations.loadSavefileData(contents.sc_relations);
         }
         if (contents && contents.sc_relationManager && window.$relationManager && typeof window.$relationManager.loadSavefileData === "function") {
             window.$relationManager.loadSavefileData(contents.sc_relationManager);

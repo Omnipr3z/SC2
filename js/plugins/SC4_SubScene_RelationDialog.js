@@ -87,7 +87,13 @@ class SubScene_RelationDialog extends SubScene_Base {
     }
 
     createPlayerFactionWindow() {
-        const playerFactionId = $relationManager.getActorFactionId(1);
+        const player = (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.leader === "function")
+            ? $gameParty.leader()
+            : null;
+        if (!player && typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.error) {
+            DEBUGTOOL.error("SubScene_RelationDialog.createPlayerFactionWindow", "$gameParty.leader() introuvable !");
+        }
+        const playerFactionId = player ? $relationManager.getActorFactionId(player.actorId()) : 0;
         const pRect = this.playerFactionRect();
 
         this._playerFactionWindow = new Window_FactionInfo(pRect);

@@ -29,8 +29,8 @@ class Window_RelationList extends Window_Selectable {
 
     refresh() {
         this._data = [];
-        if (typeof $gameRelations !== "undefined" && $gameRelations) {
-            this._data = $gameRelations.all();
+        if (typeof $relationManager !== "undefined" && $relationManager) {
+            this._data = $relationManager.getPlayerOpinions();
         }
         if (typeof super.refresh === "function") {
             super.refresh();

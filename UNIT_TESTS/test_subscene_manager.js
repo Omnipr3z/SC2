@@ -94,6 +94,10 @@ global.Window_InteractionCommand = class Window_InteractionCommand extends globa
     setAvailableInteractions(list) { this._interactions = list; }
 };
 
+global.DEBUGTOOL = { log: () => {}, warn: () => {}, error: () => {} };
+global.$gameParty = {
+    leader: () => ({ actorId: () => 1 })
+};
 global.$gameActors = {
     actor: (id) => ({ actorId: () => id, name: () => "Test Actor " + id })
 };

@@ -37,7 +37,6 @@ var $plugins =
 {"name":"SC4_Game_Inventory","status":true,"description":"[SC4 v1.0.0] Classe représentant une instance d'inventaire secondaire.","parameters":{}},
 {"name":"SC4_Game_Inventories","status":true,"description":"[SC4 v1.0.0] Hub gestionnaire des inventaires secondaires ($inventories).","parameters":{}},
 {"name":"SC4_Game_Relation","status":true,"description":"[SC4 v1.0.0] Modèle d'instance unitaire de Relation.","parameters":{}},
-{"name":"SC4_Game_Relations","status":true,"description":"[SC4 v1.0.0] Registre global des relations ($gameRelations).","parameters":{}},
 {"name":"SC4_Game_ReactionBase","status":true,"description":"[SC4 v1.0.0] Classe parente des réactions sociales.","parameters":{}},
 {"name":"SC4_Game_ReactionChat","status":true,"description":"[SC4 v1.0.0] Réactions spécialisées pour l'interaction Discuter.","parameters":{}},
 {"name":"SC4_Game_InteractionBase","status":true,"description":"[SC4 v1.0.0] Classe parente des interactions sociales.","parameters":{}},
