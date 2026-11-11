@@ -24,8 +24,10 @@ class Game_Relation {
         this._notoriety = typeof data.notoriety === "number" ? data.notoriety : 1;
         this._lastInteractionTimestamp = Number(data.lastInteractionTimestamp) || 0;
         this._cooldowns = data.cooldowns ? JSON.parse(JSON.stringify(data.cooldowns)) : {};
-        this._patience = typeof data.patience === "number" ? Math.max(0, Math.min(100, data.patience)) : 100;
-        this._lastPatienceTimestamp = Number(data.lastPatienceTimestamp) || 0;
+        this._agacement = typeof data.agacement === "number" ? Math.max(0, Math.min(100, data.agacement)) : 0;
+        this._lastAgacementTimestamp = Number(data.lastAgacementTimestamp) || 0;
+        this._lastInteractionType = typeof data.lastInteractionType === "string" ? data.lastInteractionType : "";
+        this._consecutiveSameCount = Number(data.consecutiveSameCount) || 0;
         this._data = data.data ? JSON.parse(JSON.stringify(data.data)) : {};
     }
 
@@ -71,71 +73,107 @@ class Game_Relation {
         this._lastInteractionTimestamp = Math.max(0, Number(val) || 0);
     }
 
-    get patience() {
-        return this._patience;
+    get agacement() {
+        return this._agacement;
     }
 
-    set patience(val) {
-        this._patience = Math.max(0, Math.min(100, Math.round(Number(val) || 0)));
+    set agacement(val) {
+        this._agacement = Math.max(0, Math.min(100, Math.round(Number(val) || 0)));
     }
 
-    get lastPatienceTimestamp() {
-        return this._lastPatienceTimestamp;
+    get lastAgacementTimestamp() {
+        return this._lastAgacementTimestamp;
     }
 
-    set lastPatienceTimestamp(val) {
-        this._lastPatienceTimestamp = Math.max(0, Number(val) || 0);
+    set lastAgacementTimestamp(val) {
+        this._lastAgacementTimestamp = Math.max(0, Number(val) || 0);
+    }
+
+    get lastInteractionType() {
+        return this._lastInteractionType;
+    }
+
+    get consecutiveSameCount() {
+        return this._consecutiveSameCount;
     }
 
     /**
-     * Calcule la patience actuelle en appliquant la régénération avec le temps écoulé
+     * Calcule l'agacement actuel en appliquant l'apaisement temporel via $gameDate.
      * @param {number|null} currentTimestamp
-     * @param {number} regenPerHour Points régénérés par heure (défaut 25)
+     * @param {number} decayPerHour Points apaisés par heure (défaut 25)
      * @returns {number}
      */
-    getPatience(currentTimestamp = null, regenPerHour = 25) {
+    getAgacement(currentTimestamp = null, decayPerHour = 25) {
         const time = (typeof currentTimestamp === "number" && currentTimestamp > 0)
             ? currentTimestamp
             : ((typeof $gameDate !== "undefined" && $gameDate) ? $gameDate.timestamp : 0);
 
-        if (time > 0 && this._lastPatienceTimestamp > 0 && time > this._lastPatienceTimestamp) {
-            const elapsed = time - this._lastPatienceTimestamp;
-            const hoursPassed = Math.floor(elapsed / 3600);
-            if (hoursPassed > 0) {
-                this._patience = Math.min(100, this._patience + hoursPassed * regenPerHour);
-                this._lastPatienceTimestamp += hoursPassed * 3600;
+        if (time > 0 && this._lastAgacementTimestamp > 0 && time > this._lastAgacementTimestamp) {
+            const elapsed = time - this._lastAgacementTimestamp;
+            const decay = Math.floor((elapsed * decayPerHour) / 3600);
+            if (decay > 0) {
+                this._agacement = Math.max(0, this._agacement - decay);
+                this._lastAgacementTimestamp += Math.floor((decay * 3600) / decayPerHour);
             }
-        } else if (this._lastPatienceTimestamp === 0 && time > 0) {
-            this._lastPatienceTimestamp = time;
+            if (elapsed >= 1800) {
+                this._consecutiveSameCount = 0;
+                this._lastInteractionType = "";
+            }
+        } else if (this._lastAgacementTimestamp === 0 && time > 0) {
+            this._lastAgacementTimestamp = time;
         }
 
-        return this._patience;
+        return this._agacement;
     }
 
     /**
-     * Consomme de la patience sociale (fatigue/boredom suite à une interaction)
-     * @param {number} amount
+     * Augmente l'agacement en fonction du type d'interaction et de sa répétition consécutive.
+     * La répétition rapide du même type d'action escalade plus vite ; l'alternance ou le temps calme modère l'augmentation.
+     * @param {string} interactionType
+     * @param {number} baseCost
      * @param {number|null} currentTimestamp
+     * @returns {number}
      */
-    consumePatience(amount = 25, currentTimestamp = null) {
-        this.getPatience(currentTimestamp);
-        this._patience = Math.max(0, this._patience - (Number(amount) || 0));
+    addAgacement(interactionType = "chat", baseCost = 8, currentTimestamp = null) {
         const time = (typeof currentTimestamp === "number" && currentTimestamp > 0)
             ? currentTimestamp
             : ((typeof $gameDate !== "undefined" && $gameDate) ? $gameDate.timestamp : 0);
-        if (time > 0) {
-            this._lastPatienceTimestamp = time;
+
+        this.getAgacement(time);
+
+        const action = String(interactionType || "chat");
+        const elapsedSinceLast = (time > 0 && this._lastAgacementTimestamp > 0)
+            ? Math.max(0, time - this._lastAgacementTimestamp)
+            : 0;
+
+        if (action === this._lastInteractionType && elapsedSinceLast < 300) {
+            this._consecutiveSameCount += 1;
+        } else {
+            this._consecutiveSameCount = 1;
         }
+        this._lastInteractionType = action;
+
+        const cost = Number(baseCost);
+        if (cost > 0) {
+            const streakFactor = 1 + Math.min(2.5, (this._consecutiveSameCount - 1) * 0.65);
+            const delta = Math.max(1, Math.round(cost * streakFactor));
+            this._agacement = Math.max(0, Math.min(100, this._agacement + delta));
+        }
+
+        if (time > 0) {
+            this._lastAgacementTimestamp = time;
+        }
+        return this._agacement;
     }
 
     /**
-     * Vérifie si le PNJ est saturé / agacé par les bavardages répétitifs
+     * Vérifie si le PNJ est saturé / agacé par les interactions répétitives
      * @param {number|null} currentTimestamp
-     * @param {number} threshold Seuil de saturation (défaut 20)
+     * @param {number} threshold Seuil de saturation (défaut 80)
      * @returns {boolean}
      */
-    isSaturated(currentTimestamp = null, threshold = 20) {
-        return this.getPatience(currentTimestamp) < threshold;
+    isSaturated(currentTimestamp = null, threshold = 80) {
+        return this.getAgacement(currentTimestamp) >= threshold;
     }
 
     /**
@@ -247,8 +285,10 @@ class Game_Relation {
             notoriety: this._notoriety,
             lastInteractionTimestamp: this._lastInteractionTimestamp,
             cooldowns: this._cooldowns,
-            patience: this._patience,
-            lastPatienceTimestamp: this._lastPatienceTimestamp,
+            agacement: this._agacement,
+            lastAgacementTimestamp: this._lastAgacementTimestamp,
+            lastInteractionType: this._lastInteractionType,
+            consecutiveSameCount: this._consecutiveSameCount,
             data: this._data
         };
     }
@@ -266,8 +306,10 @@ class Game_Relation {
         this._notoriety = typeof data.notoriety === "number" ? data.notoriety : this._notoriety;
         this._lastInteractionTimestamp = Number(data.lastInteractionTimestamp) || this._lastInteractionTimestamp;
         this._cooldowns = data.cooldowns ? JSON.parse(JSON.stringify(data.cooldowns)) : this._cooldowns;
-        this._patience = typeof data.patience === "number" ? data.patience : 100;
-        this._lastPatienceTimestamp = Number(data.lastPatienceTimestamp) || 0;
+        this._agacement = typeof data.agacement === "number" ? Math.max(0, Math.min(100, data.agacement)) : 0;
+        this._lastAgacementTimestamp = Number(data.lastAgacementTimestamp) || 0;
+        this._lastInteractionType = typeof data.lastInteractionType === "string" ? data.lastInteractionType : "";
+        this._consecutiveSameCount = Number(data.consecutiveSameCount) || 0;
         this._data = data.data ? JSON.parse(JSON.stringify(data.data)) : this._data;
     }
 }

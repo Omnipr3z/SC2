@@ -45,6 +45,7 @@ const testFiles = [
     'test_step22_subscenes.js',
     'test_step23_phase3_features.js',
     'test_relationship_system.js',
+    'test_step2_subcom_ui.js',
     'test_galactic_repo_refactor.js'
 ];
 

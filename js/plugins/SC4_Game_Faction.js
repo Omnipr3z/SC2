@@ -44,7 +44,14 @@ class Game_Faction {
         return "";
     }
     get bannerName() {
-        return `banner_${$dataFactions[this._id].banner}`;
+        const dataFactions = (typeof $dataFactions !== "undefined" && $dataFactions)
+            ? $dataFactions
+            : (typeof window !== "undefined" ? window.$dataFactions : null);
+        const df = dataFactions ? dataFactions[this._id] : null;
+        if (df && df.banner) {
+            return `banner_${df.banner}`;
+        }
+        return "banner_blank";
     }
     get affinity() {
         return this._affinity;

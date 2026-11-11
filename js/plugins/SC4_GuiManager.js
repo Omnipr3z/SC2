@@ -4,6 +4,7 @@ class GuiManager {
     }
     init() {
         this._isPlayerHudVisible = false;
+        this._isPlayerRelationHudVisible = false;
         this._isWeaponHudVisible = false;
         this._isBattleHudVisible = false;
         this._isMenuVisible = false;
@@ -19,7 +20,20 @@ class GuiManager {
         this._isPlayerHudVisible = !this._isPlayerHudVisible;
     }
     isPlayerHudVisible() {
-        return this._isPlayerHudVisible;
+        return Boolean(this._isPlayerHudVisible);
+    }
+    //PLAYER RELATION HUD
+    showPlayerRelationHud() {
+        this._isPlayerRelationHudVisible = true;
+    }
+    hidePlayerRelationHud() {
+        this._isPlayerRelationHudVisible = false;
+    }
+    togglePlayerRelationHud() {
+        this._isPlayerRelationHudVisible = !this._isPlayerRelationHudVisible;
+    }
+    isPlayerRelationHudVisible() {
+        return Boolean(this._isPlayerRelationHudVisible);
     }
     //WEAPON HUD
     showWeaponHud() {
@@ -37,6 +51,7 @@ class GuiManager {
     //GLOBAL CONTROLS
     hideAllHuds() {
         this.hidePlayerHud();
+        this.hidePlayerRelationHud();
         this.hideWeaponHud();
         this.hideBattleHud();
     }

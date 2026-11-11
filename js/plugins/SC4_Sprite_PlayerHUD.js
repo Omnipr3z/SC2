@@ -10,78 +10,55 @@
  * @help SC4_Sprite_PlayerHUD.js
  *
  * Hérite de Sprite_ActorHUD. Affiche les constantes vitales du leader du groupe ($gameParty.leader()) :
- *  - Positionné en haut à gauche de l'écran.
- *  - Jauges de vitalité (PV, PM) avec interpolation fluide.
- *  - Portrait dynamique du héros avec rétro-éclairage lors de la parole.
+ *  - Positionné en haut à gauche de l'écran (222x97 conforme à bg_player.png).
+ *  - Jauges de vitalité (PV, PM) avec interpolation fluide pilotée par le cache de Sprite_HudBase.
+ *  - Portrait dynamique unifié via Sprite_PaperdollFace.
  *  - Visibilité contrôlée par $guiManager.
  */
 
 class Sprite_PlayerHUD extends Sprite_ActorHUD {
     constructor(data) {
-
-
         super(data);
     }
+
     init(data) {
         super.init(data);
         this._dir = "left";
-        this._hudRect = new Rectangle(20, 20, 260, 260);
+        this._hudRect = new Rectangle(20, 20, 222, 97);
         this._hudType = "player";
-        this._faceLoaded = false;
-        this._isSpeaking = false;
     }
-    //UTILS
-    // Getters
-    get actor() { return $gameParty.leader(); }
-    // Dimensions
+
+    // ========================================================================
+    // GETTERS & DIMENSIONS
+    // ========================================================================
+
+    get actor() {
+        return (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.leader === "function")
+            ? $gameParty.leader()
+            : null;
+    }
+
     hpRect() {
         return new Rectangle(93, 26, 56, 9);
     }
+
     mpRect() {
         const rect = this.hpRect();
         rect.x += rect.width + 5;
         return rect;
     }
-    needRedraw() {
-        if (!$guiManager.isPlayerHudVisible()) return false;
-        return super.needRedraw();
-    }
 
     isSystemVisible() {
-        return $guiManager._isPlayerHudVisible;
+        return Boolean(typeof $guiManager !== "undefined" && $guiManager && $guiManager.isPlayerHudVisible());
     }
-    //UPDATE
-    updateHudCache() {
-        const current = this.getCurrentData();
-        const actor = this.actor;
-        const equips = actor.equips();
-        this._cache = {
-            actorId: actor.actorId(),
-            name: actor.name(),
 
-            // BASE STATS
-            hp: this.approach(this._cache.hp, current.hp, this.gaugeRefreshStep("hp")),
-            mhp: actor.mhp,
-            mp: this.approach(this._cache.mp, current.mp, this.gaugeRefreshStep("mp")),
-            mmp: actor.mmp,
-            tp: this.approach(this._cache.tp, current.tp, this.gaugeRefreshStep("tp")),
+    // ========================================================================
+    // CACHE INDIVIDUALISÉ & LISSAGE DES JAUGES
+    // ========================================================================
 
-            // EXP
-            nextLvlExp: actor.nextRequiredExp(),
-
-            //Equips
-            equipsKey: equips.map(e => e ? e.id : 0).join("-")
-        };
-
-        if (current.lvl > this._cache.lvl) {
-            this._cache.lvl = actor.level;
-            this._cache.currentExp = 0;
-        }
-        this._cache.currentExp = this.approach(this._cache.currentExp, current.currentExp, this.gaugeRefreshStep);
-
-    }
     getCurrentData() {
         const actor = this.actor;
+        if (!actor) return {};
         const equips = actor.equips();
 
         return {
@@ -100,40 +77,88 @@ class Sprite_PlayerHUD extends Sprite_ActorHUD {
             currentExp: actor.currentExp(),
             nextLvlExp: actor.nextRequiredExp(),
 
-            //Equips
+            // Equips
             equipsKey: equips.map(e => e ? e.id : 0).join("-")
         };
     }
+
+    shouldThrottleRedraw() {
+        if (!this._hasDrawn || this._dirty || !this._cache) return false;
+        const cur = this._currentData;
+        return (
+            this._cache.actorId === cur.actorId &&
+            this._cache.name === cur.name &&
+            this._cache.mhp === cur.mhp &&
+            this._cache.mmp === cur.mmp &&
+            this._cache.lvl === cur.lvl &&
+            this._cache.nextLvlExp === cur.nextLvlExp &&
+            this._cache.equipsKey === cur.equipsKey
+        );
+    }
+
+    updateHudCache() {
+        const current = (this._currentData && this._currentData.actorId) ? this._currentData : this.getCurrentData();
+        if (!current || !current.actorId) return;
+
+        const sameActor = this._hasDrawn && this._cache && this._cache.actorId === current.actorId;
+        if (!sameActor) {
+            this._cache = Object.assign({}, current);
+            return;
+        }
+
+        const expOrigin = (current.lvl > this._cache.lvl) ? 0 : this._cache.currentExp;
+        this._cache = {
+            actorId: current.actorId,
+            name: current.name,
+
+            hp: this.approach(this._cache.hp, current.hp, this.gaugeRefreshStep("hp")),
+            mhp: current.mhp,
+            mp: this.approach(this._cache.mp, current.mp, this.gaugeRefreshStep("mp")),
+            mmp: current.mmp,
+            tp: this.approach(this._cache.tp, current.tp, this.gaugeRefreshStep("tp")),
+
+            lvl: current.lvl,
+            nextLvlExp: current.nextLvlExp,
+            currentExp: this.approach(expOrigin, current.currentExp, this.gaugeRefreshStep("exp")),
+
+            equipsKey: current.equipsKey
+        };
+    }
+
+    // ========================================================================
+    // RENDU
+    // ========================================================================
 
     drawHudContents() {
         super.drawHudContents();
         this.drawStats();
     }
+
     drawStats() {
         this.drawHpGauge();
         this.drawMpGauge();
     }
+
     drawHpGauge() {
         const actor = this.actor;
-        const tempHp = this._cache.hp;
-        const currentHp = actor.hp;
-        const maxHp = actor.mhp;
+        if (!actor) return;
+        const tempHp = this._cache.hp !== undefined ? this._cache.hp : actor.hp;
         const rect = this.hpRect();
         const style = this.styleHpGauge();
         const txtSettings = { value: true, max: false, name: false };
 
-        this.drawDynamicGauge(tempHp, currentHp, maxHp, rect, style, txtSettings, { txt: "hp", align: "left" });
+        this.drawDynamicGauge(tempHp, actor.hp, actor.mhp, rect, style, txtSettings, { txt: "hp", align: "left" });
     }
+
     drawMpGauge() {
         const actor = this.actor;
-        const tempMp = this._cache.mp;
-        const currentMp = actor.mp;
-        const maxMp = actor.mmp;
+        if (!actor) return;
+        const tempMp = this._cache.mp !== undefined ? this._cache.mp : actor.mp;
         const rect = this.mpRect();
         const style = this.styleMpGauge();
         const txtSettings = { value: true, name: false };
 
-        this.drawDynamicGauge(tempMp, currentMp, maxMp, rect, style, txtSettings, { txt: "mp", align: "right" });
+        this.drawDynamicGauge(tempMp, actor.mp, actor.mmp, rect, style, txtSettings, { txt: "mp", align: "right" });
     }
 }
 

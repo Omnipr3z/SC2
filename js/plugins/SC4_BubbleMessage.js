@@ -263,11 +263,25 @@
             this._isBubbleMode = false;
             this._vanillaRect = rect ? new Rectangle(rect.x, rect.y, rect.width, rect.height) : new Rectangle(0, 0, 0, 0);
             this._instanceConfig = {};
+            this._bubbleArrowSprite = null;
             const cfg = this.currentConfig();
             if (cfg.windowskin) {
                 const skinName = cfg.windowskin.replace(/\.png$/i, "");
                 ImageManager.loadSystem(skinName);
             }
+            this.createBubbleArrow();
+        }
+
+        createBubbleArrow() {
+            if (typeof Sprite === "undefined" || typeof ImageManager === "undefined") return;
+            const bitmap = ImageManager.loadSystem("WindowArrow");
+            const arrow = new Sprite(bitmap);
+            if (arrow.anchor && typeof arrow.anchor.set === "function") {
+                arrow.anchor.set(0.5, 0);
+            }
+            arrow.visible = false;
+            this._bubbleArrowSprite = arrow;
+            this.addChild(arrow);
         }
 
         /**
@@ -396,7 +410,6 @@
             if (this._nameBoxWindow) {
                 this._nameBoxWindow.start();
             }
-            this.updateDialogueHuds(parsed, rawText);
         }
 
         adjustBubbleSize(cleanText) {
@@ -502,6 +515,44 @@
                 this._nameBoxWindow.x = this.x;
                 this._nameBoxWindow.y = Math.max(0, this.y - this._nameBoxWindow.height);
             }
+            this.updateBubbleArrow(coords);
+        }
+
+        updateBubbleArrow(coords) {
+            const arrow = this._bubbleArrowSprite;
+            if (!arrow) return;
+            if (!this._isBubbleMode || !coords || !this.visible || this.openness < 180) {
+                arrow.visible = false;
+                return;
+            }
+
+            const edgePad = Math.min(26, Math.max(12, Math.floor(this.width / 4)));
+            const localTargetX = coords.x - this.x;
+            arrow.x = Math.round(Math.max(edgePad, Math.min(this.width - edgePad, localTargetX)));
+
+            const bubbleCenterY = this.y + (this.height / 2);
+            const targetAnchorY = coords.isCoords ? coords.y : (coords.y - 24);
+            const isBubbleAbove = bubbleCenterY <= targetAnchorY;
+            const scaleX = (coords.x > this.x + (this.width / 2)) ? -1 : 1;
+
+            if (isBubbleAbove) {
+                arrow.y = this.height - 4;
+                if (arrow.scale && typeof arrow.scale.set === "function") {
+                    arrow.scale.set(scaleX, 1);
+                } else if (arrow.scale) {
+                    arrow.scale.x = scaleX;
+                    arrow.scale.y = 1;
+                }
+            } else {
+                arrow.y = 4;
+                if (arrow.scale && typeof arrow.scale.set === "function") {
+                    arrow.scale.set(scaleX, -1);
+                } else if (arrow.scale) {
+                    arrow.scale.x = scaleX;
+                    arrow.scale.y = -1;
+                }
+            }
+            arrow.visible = true;
         }
 
         getTargetCoordinates(target) {
@@ -522,6 +573,16 @@
                 this.updatePlacement();
             }
             super.open();
+            if (this._isBubbleMode && this._mapTarget) {
+                this.updateBubbleArrow(this.getTargetCoordinates(this._mapTarget));
+            }
+        }
+
+        close() {
+            if (this._bubbleArrowSprite) {
+                this._bubbleArrowSprite.visible = false;
+            }
+            super.close();
         }
 
         checkToNotClose() {
@@ -540,105 +601,20 @@
 
         updateClose() {
             super.updateClose();
+            if (this._bubbleArrowSprite && this.openness < 180) {
+                this._bubbleArrowSprite.visible = false;
+            }
             if (this.isClosed() && this._isBubbleMode) {
                 this._isBubbleMode = false;
                 this.resetToVanillaRect();
             }
         }
 
-        updateDialogueHuds(parsed, rawText) {
-            const currentScene = SceneManager._scene;
-            if (!currentScene) return;
-            const playerHud = currentScene._playerHud;
-            const interlocutorHud = currentScene._interlocutorHud;
-
-            const faceName = $gameMessage.faceName();
-            const faceIndex = $gameMessage.faceIndex();
-            const rawSpeakerName = $gameMessage.speakerName();
-            const speakerName = (typeof SC4_Localization !== "undefined") ? SC4_Localization.parse(rawSpeakerName) : rawSpeakerName;
-
-            const leader = $gameParty.leader();
-            const leaderName = leader ? leader.name() : "";
-
-            const isPlayerSpeaker = Boolean(
-                (this._mapTarget && this._mapTarget === $gamePlayer) ||
-                (parsed && parsed.target && parsed.target === $gamePlayer) ||
-                (rawText && /(?:\x1b|\\)[Aa]/.test(rawText)) ||
-                (speakerName && leaderName && speakerName.toLowerCase() === leaderName.toLowerCase()) ||
-                ($gameMessage._speakerIsPlayer)
-            );
-
-            const isSystemFace = Boolean(faceName && faceName.toLowerCase() === "system" && faceIndex === 1);
-
-            if (faceName) {
-                if (isPlayerSpeaker) {
-                    if (playerHud && typeof playerHud.setSpeakingHighlight === "function") {
-                        playerHud.setSpeakingHighlight(true);
-                    }
-                    if (interlocutorHud && typeof interlocutorHud.hideInterlocutor === "function") {
-                        interlocutorHud.hideInterlocutor();
-                    }
-                } else {
-                    if (playerHud && typeof playerHud.setSpeakingHighlight === "function") {
-                        playerHud.setSpeakingHighlight(false);
-                    }
-                    if (isSystemFace) {
-                        let heroActor = null;
-                        const tgt = this._mapTarget;
-                        if (tgt) {
-                            if (typeof tgt.hero === "function" && tgt.hero()) {
-                                heroActor = tgt.hero();
-                            } else if (tgt._heroActorId && $gameActors) {
-                                heroActor = $gameActors.actor(tgt._heroActorId);
-                            } else if (tgt._actorId && $gameActors) {
-                                heroActor = $gameActors.actor(tgt._actorId);
-                            } else if (typeof tgt.event === "function") {
-                                const evData = tgt.event();
-                                if (evData && evData.note) {
-                                    const m = evData.note.match(/<Hero(?::(\d+))?>/i);
-                                    if (m) {
-                                        const actId = m[1] ? parseInt(m[1], 10) : 1;
-                                        heroActor = $gameActors ? $gameActors.actor(actId) : null;
-                                    }
-                                }
-                            }
-                        }
-                        if (!heroActor && speakerName && $gameActors && $gameActors._data) {
-                            heroActor = $gameActors._data.find(a => a && typeof a.name === "function" && a.name() === speakerName);
-                        }
-
-                        if (heroActor && interlocutorHud && typeof interlocutorHud.showInterlocutor === "function") {
-                            interlocutorHud.showInterlocutor(faceName, faceIndex, speakerName, heroActor);
-                        } else if (interlocutorHud && typeof interlocutorHud.hideInterlocutor === "function") {
-                            interlocutorHud.hideInterlocutor();
-                        }
-                    } else {
-                        if (interlocutorHud && typeof interlocutorHud.showInterlocutor === "function") {
-                            interlocutorHud.showInterlocutor(faceName, faceIndex, speakerName, null);
-                        }
-                    }
-                }
-            } else {
-                if (playerHud && typeof playerHud.setSpeakingHighlight === "function") {
-                    playerHud.setSpeakingHighlight(false);
-                }
-                if (interlocutorHud && typeof interlocutorHud.hideInterlocutor === "function") {
-                    interlocutorHud.hideInterlocutor();
-                }
-            }
-        }
-
         terminateMessage() {
             super.terminateMessage();
             this._mapTarget = null;
-            const currentScene = SceneManager._scene;
-            if (currentScene) {
-                if (currentScene._playerHud && typeof currentScene._playerHud.setSpeakingHighlight === "function") {
-                    currentScene._playerHud.setSpeakingHighlight(false);
-                }
-                if (currentScene._interlocutorHud && typeof currentScene._interlocutorHud.hideInterlocutor === "function") {
-                    currentScene._interlocutorHud.hideInterlocutor();
-                }
+            if (this._bubbleArrowSprite) {
+                this._bubbleArrowSprite.visible = false;
             }
             if (this.isClosed()) {
                 this._isBubbleMode = false;
@@ -647,6 +623,9 @@
         }
 
         resetToVanillaRect() {
+            if (this._bubbleArrowSprite) {
+                this._bubbleArrowSprite.visible = false;
+            }
             if (this._vanillaRect) {
                 this.x = this._vanillaRect.x;
                 this.y = this._vanillaRect.y;

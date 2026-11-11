@@ -18,7 +18,6 @@
  * pour offrir nativement :
  * - createWindowLayer() & addWindow()
  * - updateChildren() automatique
- * - Voile d'ombrage optionnel (Dimmer)
  * - Cycle de vie standardisé : create() -> start() -> update() -> stop() -> terminate()
  * ============================================================================
  */
@@ -34,7 +33,6 @@ class SubScene_Base extends Scene_Base {
         this._active = false;
         this._closing = false;
         this._windows = [];
-        this._dimmerSprite = null;
         this.initMembers(...args);
     }
 
@@ -74,19 +72,8 @@ class SubScene_Base extends Scene_Base {
     // ====================================================================
 
     create() {
-        this.createDimmer();
         this.createWindowLayer();
         this.createDisplayObjects();
-    }
-
-    createDimmer(opacity = 120) {
-        if (typeof Sprite !== "undefined" && typeof Bitmap !== "undefined" && typeof Graphics !== "undefined") {
-            this._dimmerSprite = new Sprite();
-            this._dimmerSprite.bitmap = new Bitmap(Graphics.width, Graphics.height);
-            this._dimmerSprite.bitmap.fillAll("rgba(0, 0, 0, 0.6)");
-            this._dimmerSprite.opacity = opacity;
-            this.addChild(this._dimmerSprite);
-        }
     }
 
     createWindowLayer() {

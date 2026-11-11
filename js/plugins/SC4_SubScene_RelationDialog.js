@@ -9,15 +9,13 @@
  * @author SimCraft
  * @help SC4_SubScene_RelationDialog.js
  * 
- * Orchestre les fenêtres d'échange social sur la carte sans décharger Scene_Map :
- * - Volet Faction PJ (gauche)
- * - Volet Faction PNJ (droite)
- * - Statut Relationnel (centre haut)
- * - Commandes d'Interaction (centre bas)
- * - Bulle de dialogue retour
+ * Orchestre l'échange social sur la carte sans décharger Scene_Map ni dimmer :
+ * - HUD Interlocuteur + Allégeance Joueur pilotés directement par $guiManager / $relationManager
+ * - Window_RingCommand centré sur le joueur, déployé en arc opposé à son regard
+ * - Séquence de bulles de dialogue flottantes (Window_BubbleMsg)
  * 
  * Appel script :
- *   SceneManager._scene.openSubScene(SubScene_RelationDialog, [targetActorId]);
+ *   SceneManager._scene.openSubScene(SubScene_RelationDialog, [targetActorId, targetEventId]);
  */
 
 class SubScene_RelationDialog extends SubScene_Base {
@@ -28,8 +26,9 @@ class SubScene_RelationDialog extends SubScene_Base {
         }
     }
 
-    initMembers(targetActorId, targetEventId = null) {
+    initMembers(targetActorId, targetEventId = null, options = {}) {
         if (Array.isArray(targetActorId)) {
+            options = targetActorId[2] || options;
             targetEventId = targetActorId[1];
             targetActorId = targetActorId[0];
         }
@@ -43,11 +42,9 @@ class SubScene_RelationDialog extends SubScene_Base {
             : 0;
 
         this._targetEventId = explicitId !== null ? explicitId : (interpreterId > 0 ? interpreterId : 0);
-        this._playerFactionWindow = null;
-        this._npcFactionWindow = null;
-        this._relationStatusWindow = null;
+        this._options = (options && typeof options === "object") ? options : {};
+        this._canCancel = (this._options.canCancel !== undefined) ? Boolean(this._options.canCancel) : true;
         this._commandWindow = null;
-        this._bubbleWindow = null;
         this._dialogueSequenceQueue = [];
         this._onDialogueSequenceComplete = null;
         this._waitingForMessage = false;
@@ -57,83 +54,90 @@ class SubScene_RelationDialog extends SubScene_Base {
     get targetEventId() { return this._targetEventId; }
     set targetEventId(v) { this._targetEventId = Math.max(0, Number(v) || 0); }
 
-    dialRect() {
-        const dialogW = Graphics.boxWidth;
-        const dialogH = Graphics.boxHeight;
-        const startX = 0;
-        const startY = 0;
-
-        return new Rectangle(startX, startY, dialogW, dialogH);
-    }
-    playerFactionRect() {
-        const rect = this.dialRect();
-
-        return new Rectangle(rect.x, rect.y, 260, 160);
-    }
-    npcFactionRect() {
-        const rect = this.dialRect();
-
-        return new Rectangle(rect.x + 260, rect.y, 260, 160);
-    }
-    relationStatusRect() {
-        const rect = this.dialRect();
-
-        return new Rectangle(rect.x + 260 * 2, rect.y, 420, 160);
-    }
-    commandWindowRect() {
-        const rect = this.dialRect();
-
-        return new Rectangle(rect.x + 260 * 2, rect.y + 180, 420, 140);
+    commandRingRect() {
+        const size = 420;
+        return new Rectangle(0, 0, size, size);
     }
 
-    createPlayerFactionWindow() {
-        const player = (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.leader === "function")
-            ? $gameParty.leader()
-            : null;
-        if (!player && typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.error) {
-            DEBUGTOOL.error("SubScene_RelationDialog.createPlayerFactionWindow", "$gameParty.leader() introuvable !");
+    buildRingCommands(availableInteractions = []) {
+        const interactions = Array.isArray(availableInteractions) ? availableInteractions : [];
+        const cmds = [];
+
+        if (interactions.includes("chat")) {
+            cmds.push({ name: "\\L[relation.cmd_chat]", symbol: "chat", enabled: true, icon: "💬" });
+        } else if (interactions.includes("chat_saturated")) {
+            cmds.push({ name: "\\L[relation.cmd_chat_saturated]", symbol: "chat", enabled: false, icon: "💬" });
+        } else {
+            cmds.push({ name: "\\L[relation.cmd_chat_cooldown]", symbol: "chat", enabled: false, icon: "💬" });
         }
-        const playerFactionId = player ? $relationManager.getActorFactionId(player.actorId()) : 0;
-        const pRect = this.playerFactionRect();
 
-        this._playerFactionWindow = new Window_FactionInfo(pRect);
-        this._playerFactionWindow.setFaction(playerFactionId, "Votre Faction");
-        this.addWindow(this._playerFactionWindow);
+        if (interactions.includes("intimidate")) {
+            cmds.push({ name: "\\L[relation.cmd_intimidate]", symbol: "intimidate", enabled: true, icon: "⚡" });
+        }
+        if (interactions.includes("recruit")) {
+            cmds.push({ name: "\\L[relation.cmd_recruit]", symbol: "recruit", enabled: true, icon: "🤝" });
+        }
+
+        if (this._canCancel) {
+            cmds.push({ name: "\\L[relation.cmd_leave]", symbol: "cancel", enabled: true, icon: "❌" });
+        }
+
+        return cmds;
     }
-    createNpcFactionRect() {
-        const npcFactionId = $relationManager.getActorFactionId(this._targetActorId);
-        const nRect = this.npcFactionRect();
 
-        this._npcFactionWindow = new Window_FactionInfo(nRect);
-        this._npcFactionWindow.setFaction(npcFactionId, "Faction Cible");
-        this.addWindow(this._npcFactionWindow);
-    }
-    createRelationStatusWindow(session) {
-        const relation = session.relation;
-        const sRect = this.relationStatusRect();
-        const targetActor = $gameActors.actor(this._targetActorId);
+    createCommandWindow(session) {
+        const rect = this.commandRingRect();
+        this._commandWindow = new Window_RingCommand(rect);
+        if (typeof this._commandWindow.setCanCancel === "function") {
+            this._commandWindow.setCanCancel(this._canCancel);
+        }
 
-        this._relationStatusWindow = new Window_RelationStatus(sRect);
-        this._relationStatusWindow.setRelation(relation, targetActor);
-        this.addWindow(this._relationStatusWindow);
-    }
-    createCommandWindowRect(session) {
-        const cRect = this.commandWindowRect();
+        const available = (session && session.availableInteractions) ? session.availableInteractions : ["chat"];
+        this.applyAvailableCommands(available);
 
-        this._commandWindow = new Window_InteractionCommand(cRect);
-        this._commandWindow.setAvailableInteractions(session.availableInteractions || ["chat"]);
         this._commandWindow.setHandler("chat", this.onCommandChat.bind(this));
         this._commandWindow.setHandler("cancel", this.onCommandCancel.bind(this));
         this.addWindow(this._commandWindow);
+        this.openCommandRing();
     }
+
+    applyAvailableCommands(availableInteractions = []) {
+        if (!this._commandWindow || typeof this._commandWindow.setCommands !== "function") return;
+        const cmds = this.buildRingCommands(availableInteractions);
+        this._commandWindow.setCommands(cmds);
+    }
+
+    openCommandRing() {
+        if (!this._commandWindow) return;
+        const facingDir = (typeof $gamePlayer !== "undefined" && $gamePlayer && typeof $gamePlayer.direction === "function")
+            ? $gamePlayer.direction()
+            : 2;
+        if (typeof this._commandWindow.setArcFromFacing === "function") {
+            this._commandWindow.setArcFromFacing(facingDir);
+        }
+        const target = (typeof $gamePlayer !== "undefined" && $gamePlayer)
+            ? $gamePlayer
+            : { x: Math.floor(((typeof Graphics !== "undefined" ? Graphics.boxWidth : 1280) || 1280) / 2), y: Math.floor(((typeof Graphics !== "undefined" ? Graphics.boxHeight : 720) || 720) / 2) };
+        if (typeof this._commandWindow.openAtTarget === "function") {
+            this._commandWindow.openAtTarget(target);
+        } else if (typeof this._commandWindow.activate === "function") {
+            this._commandWindow.activate();
+        }
+    }
+
+    hideCommandRing() {
+        if (!this._commandWindow) return;
+        if (typeof this._commandWindow.deactivate === "function") {
+            this._commandWindow.deactivate();
+        }
+        if (typeof this._commandWindow.hide === "function") {
+            this._commandWindow.hide();
+        }
+    }
+
     createDisplayObjects() {
         const session = $relationDialogManager.startExchange(this._targetActorId);
-        const relation = session.relation;
-
-        this.createPlayerFactionWindow();
-        this.createNpcFactionRect();
-        this.createRelationStatusWindow(session, relation);
-        this.createCommandWindowRect(session);
+        this.createCommandWindow(session);
     }
 
     onCommandChat() {
@@ -143,12 +147,13 @@ class SubScene_RelationDialog extends SubScene_Base {
         const reaction = $relationDialogManager.executeCurrentInteraction();
         $relationDialogManager.confirmReaction();
 
-        // Rafraîchir les fenêtres avec les nouvelles stats
-        if (this._relationStatusWindow) {
-            this._relationStatusWindow.refresh();
+        // Réactualiser les commandes disponibles (agacement / saturation / cooldown)
+        if (this._commandWindow && typeof $relationManager !== "undefined") {
+            const updated = $relationManager.getAvailableInteractions(this._targetActorId);
+            this.applyAvailableCommands(updated);
         }
 
-        // Afficher la bulle de réplique ou message sonore (simple ou séquence)
+        // Afficher la bulle de réplique ou séquence ping-pong
         if (reaction && reaction.dialogueText) {
             if (typeof SoundManager !== "undefined" && SoundManager.playOk) {
                 SoundManager.playOk();
@@ -161,21 +166,16 @@ class SubScene_RelationDialog extends SubScene_Base {
                     : [{ target: "npc", text: reaction.dialogueText }]);
 
             this.playDialogueSequence(sequence, () => {
-                // Clôture automatique si demandée par la réaction (ex: PNJ agacé, hostile ou congédiement)
                 if (reaction && reaction.shouldCloseScene) {
                     this.onCommandCancel();
-                } else if (this._commandWindow && typeof this._commandWindow.activate === "function") {
-                    this._commandWindow.activate();
+                } else {
+                    this.openCommandRing();
                 }
             });
         } else if (reaction && reaction.shouldCloseScene) {
             this.onCommandCancel();
-        }
-
-        // Réactualiser les commandes disponibles (ex: saturation / cooldown)
-        if (this._commandWindow && typeof $relationManager !== "undefined") {
-            const updated = $relationManager.getAvailableInteractions(this._targetActorId);
-            this._commandWindow.setAvailableInteractions(updated);
+        } else {
+            this.openCommandRing();
         }
     }
 
@@ -189,9 +189,7 @@ class SubScene_RelationDialog extends SubScene_Base {
             if (onComplete) onComplete();
             return;
         }
-        if (this._commandWindow && typeof this._commandWindow.deactivate === "function") {
-            this._commandWindow.deactivate();
-        }
+        this.hideCommandRing();
         this._dialogueSequenceQueue = sequence.slice();
         this._onDialogueSequenceComplete = onComplete;
         this._waitingForMessage = false;
@@ -260,7 +258,7 @@ class SubScene_RelationDialog extends SubScene_Base {
     // ========================================================================
 
     resumeArgs() {
-        return [this._targetActorId, this._targetEventId];
+        return [this._targetActorId, this._targetEventId, this._options];
     }
 
     onSuspend() {
@@ -268,11 +266,10 @@ class SubScene_RelationDialog extends SubScene_Base {
     }
 
     onResume(resumeData = null) {
-        if (this._commandWindow && typeof this._commandWindow.activate === "function") {
-            this._commandWindow.activate();
-        }
-        if (this._relationStatusWindow && typeof this._relationStatusWindow.refresh === "function") {
-            this._relationStatusWindow.refresh();
+        if (this._waitingForMessage) {
+            this.hideCommandRing();
+        } else {
+            this.openCommandRing();
         }
     }
 

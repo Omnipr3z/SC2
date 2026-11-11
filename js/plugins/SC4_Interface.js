@@ -607,7 +607,7 @@ SC4.performTakeoffSequence = function () {
 window.SC4 = window.SC4 || {};
 window.SC4.setHudVisible = function (visible) {
     if (visible)
-        $guiManger.showPlayerHud();
+        $guiManager.showPlayerHud();
     else
         $guiManager.hidePlayerHud();
 }

@@ -16,7 +16,10 @@
 
 class Game_InteractionChat extends Game_InteractionBase {
     constructor(actorId1 = 0, actorId2 = 0) {
-        super("chat", "Discuter", actorId1, actorId2, 3600);
+        const label = (typeof SC4_Localization !== "undefined" && typeof SC4_Localization.getText === "function")
+            ? SC4_Localization.getText("relation.cmd_chat", "Discuter")
+            : "Discuter";
+        super("chat", label, actorId1, actorId2, 3600);
     }
 
     /**
@@ -32,7 +35,7 @@ class Game_InteractionChat extends Game_InteractionBase {
             return ReactionClass.createNeutral(this._actorId2);
         }
 
-        // 1. Vérification du seuil de saturation ("Boring" / Patience sociale façon Les Sims)
+        // 1. Vérification du seuil de saturation (Agacement social)
         const currentTimestamp = (typeof $gameDate !== "undefined" && $gameDate) ? $gameDate.timestamp : 0;
         if (relation.isSaturated(currentTimestamp)) {
             // Antispam dynamique : 50% de chance de pénalité d'affinité
@@ -42,7 +45,7 @@ class Game_InteractionChat extends Game_InteractionBase {
             return ReactionClass.createBored(this._actorId2, "Je n'ai plus envie de discuter pour le moment.", penalty, shouldClose);
         }
 
-        const isRepetitive = relation.getPatience(currentTimestamp) <= 60;
+        const isRepetitive = relation.getAgacement(currentTimestamp) >= 40 || relation.consecutiveSameCount >= 3;
 
         // 2. Prise en compte prioritaire des États RMMZ ($dataStates) du PNJ
         if (actor2 && typeof actor2.states === "function") {

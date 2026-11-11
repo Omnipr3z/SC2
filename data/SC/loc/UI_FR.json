@@ -223,5 +223,35 @@
     "warp_motor_missing": "⚡ Saut Warp (Moteur non équipé)",
     "warp_fuel_low": "⚡ Saut Warp (Carburant insuffisant)",
     "captain": "Capitaine"
+  },
+  "hud": {
+    "unarmed": "Mains nues",
+    "reloading": "RECHARGE...",
+    "status": "Statut",
+    "affinity": "Affinité",
+    "sympathy": "Sympathie",
+    "antipathy": "Antipathie",
+    "authority": "Autorité",
+    "obedience": "Obéissance",
+    "submission": "Soumission",
+    "insubordination": "Insubordination",
+    "threat": "Menace",
+    "agacement": "Agacement",
+    "playerFaction": "Allégeance",
+    "factionStanding": "Réputation",
+    "noFaction": "Indépendant"
+  },
+  "relation": {
+    "threshold_total_hostility": "Hostilité Totale",
+    "threshold_hostility": "Hostilité",
+    "threshold_neutrality": "Neutralité",
+    "threshold_respect": "Respect",
+    "threshold_loyalty": "Loyauté",
+    "cmd_chat": "Discuter",
+    "cmd_chat_saturated": "Discuter (Agacé)",
+    "cmd_chat_cooldown": "Discuter (Attendre)",
+    "cmd_intimidate": "Intimider",
+    "cmd_recruit": "Recruter",
+    "cmd_leave": "Quitter"
   }
 }

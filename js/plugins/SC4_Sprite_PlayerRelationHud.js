@@ -1,396 +1,284 @@
-class Sprite_PlayerHUD extends Sprite {
-    constructor() {
-        super();
-        this.init();
-        this.create();
-        this._refreshCounter = 0;
-    }
-    //UTILS
-    approach(origin, target, step) {
-        const dir = target - origin;
-        if (dir > 0) {
-            return Math.min(target, origin + step);
-        } else {
-            return Math.max(target, origin - step);
-        }
-    }
-    forceDirty() {
-        this._cache = {};
-    }
-    drawGaugeText(ctx, txt, gaugeRect, style, key) {
-        if (key) {
-            ctx.font = "bold 10px sans-serif";
-            ctx.textAlign = key.align;
-            ctx.fillStyle = "#fff";
-            let x = gaugeRect.x + 2;
-            if (key.align == "right") x += gaugeRect.width - 4;
-            ctx.fillText(SC4_Localization.getText(`terms.${key.txt}`, `notxt:${key.txt}`), x, gaugeRect.y - 2);
-        }
+//=============================================================================
+// RPG Maker MZ - SC4_Sprite_PlayerRelationHud.js
+//=============================================================================
 
-        ctx.font = style.font;
-        ctx.textAlign = "left";
-        const rect = this.gaugeTxtRect(ctx, gaugeRect, style.align, txt);
-        ctx.fillStyle = style.color;
-        ctx.fillText(txt, rect.x, rect.y);
-    }
-    drawHudGauge(ctx, x, y, width, height, color) {
-        ctx.fillStyle = color;
-        ctx.fillRect(x, y, width, height);
-    }
-    drawDynamicGauge(start, target, max, rect, style, txtSettings, key) {
-        const actual = Math.min(start, max);
-        const ctx = this.contentCtx;
-        const targetRate = target / max;
-        const targetW = rect.width * targetRate;
-        const actualRate = actual / max;
-        const actualW = rect.width * actualRate;
+/*:
+ * @target MZ
+ * @plugindesc [SC4 v1.0.0] HUD social & allégeance du joueur (Sprite_PlayerRelationHud).
+ * @author SimCraft 4
+ *
+ * @help SC4_Sprite_PlayerRelationHud.js
+ *
+ * Hérite de Sprite_HudBase.
+ * Positionné à droite de Sprite_PlayerHUD avec une marge de 16px (x = 258, y = 20),
+ * réservant l'espace sous Sprite_PlayerHUD aux futurs FollowerHUDs.
+ * Affiche l'allégeance de faction du leader et sa réputation associée
+ * (extensible pour charisme et réputation globale).
+ */
 
-
-        //bg
-        this.drawHudGauge(ctx, rect.x, rect.y, rect.width, rect.height, style.bgColor, key);
-        if (target > actual) {
-            //grow gauge
-            this.drawHudGauge(ctx, rect.x, rect.y, targetW, rect.height, style.growColor);
-        }
-        //Actual
-        this.drawHudGauge(ctx, rect.x, rect.y, actualW, rect.height, style.fillColor);
-        if (target < actual) {
-            // malus gauge
-            const malusW = actualW - targetW;
-            const malusX = rect.x + actualW - malusW;
-            this.drawHudGauge(ctx, malusX, rect.y, malusW, rect.height, style.malusColor);
-        }
-        //text
-        if (txtSettings.value) {
-            let txt = "";
-
-            if (txtSettings.name) txt += `${txtSettings.name}: `;
-            txt += actual;
-            if (txtSettings.max) txt += ` / ${max}`;
-            this.drawGaugeText(ctx, txt, rect, style.txt, key);
-        }
-    }
-    // Getters
-    get refreshLapse() { return 2; }
-    get leaderActor() { return $gameParty.leader(); }
-    gaugeRefreshStep(type) {
-        switch (type) {
-            case "hp": return Math.floor(this.leaderActor.mhp / 60);
-            case "mp": return Math.floor(this.leaderActor.mmp / 60);
-            case "tp": return 1;
-            case "exp": return Math.floor(this.leaderActor.nextLvlExp() / 100);
-        }
-    }
-    get hudCtx() { return this.bitmap ? this.bitmap.context : null; }
-    get contentCtx() { return this._contentsLayer.bitmap ? this._contentsLayer.bitmap.context : null; }
-    isHero(actor) {
-        actor = actor || this.leaderActor;
-        return actor && actor.isHero();
-    }
-    // Dimensions
-    hudRect() {
-        return new Rectangle(20, 20, 260, 260)
-    }
-    faceRect() {
-        return new Rectangle(8, 16, 64, 64);
-    }
-    nameRect(name, ctx) {
-        const txtW = ctx.measureText(name).width;
-        const padding = (129 - txtW) / 2;
-        const x = 87 + padding;
-        const y = 22;
-        return new Rectangle(x, y, txtW, 20);
-    }
-    hpRect() {
-        return new Rectangle(93, 26, 56, 9);
-    }
-    mpRect() {
-        const rect = this.hpRect();
-        rect.x += rect.width + 5;
-        return rect;
-    }
-    gaugeTxtRect(ctx, gaugeRect, align) {
-        ctx.textAlign = align;
-        const txtPad = 2;
-        let x = gaugeRect.x + txtPad;
-        if (align == "center") x += (gaugeRect.width / 2) - txtPad;
-        const w = gaugeRect.width - txtPad * 2;
-        const y = gaugeRect.y + gaugeRect.height + 14;
-
-
-        return new Rectangle(x, y, w, gaugeRect.height);
-    }
-    // style
-    nameColor() {
-        return this.hpColor()[0];
-    }
-    hpColor() {
-        return ["#e58751", "#e96214ff"];
-    }
-    mpColor() {
-        return ["#5cd0dc", "#0dcee4ff"];
-    }
-    styleName(ctx) {
-        ctx.font = "bold 12px sans-serif";
-        ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-        ctx.textAlign = "left";
-        ctx.fillStyle = this.nameColor();
-    }
-    styleMpGauge() {
-        const style = this.styleHpGauge();
-        style.fillColor = this.mpColor()[0];
-        style.txt.color = this.mpColor()[1]
-
-        return style;
-    }
-    styleHpGauge() {
-        return {
-            bgColor: "rgba(0, 0, 0, 0.8)",
-            growColor: "rgba(39, 174, 96, .6)",
-            fillColor: this.hpColor()[0],
-            malusColor: "#c0392b",
-            txt: {
-                align: "center",
-                font: "normal 18px rmmz-numberfont, sans-serif",
-                color: this.hpColor()[1]
-            }
-        }
+class Sprite_PlayerRelationHud extends Sprite_HudBase {
+    constructor(data) {
+        super(data);
     }
 
-    // Methods
-    init() {
-        this._currentData = {};
-        this._cache = {};
-        this._faceLoaded = false;
-        this._isSpeaking = false;
+    init(data) {
+        super.init(data);
+        this._hudType = "playerRelation";
+        this._hudRect = this.calculateHudRect();
     }
+
+    // ========================================================================
+    // DIMENSIONS & POSITIONNEMENT
+    // ========================================================================
+
+    calculateHudRect() {
+        const playerHudX = 20;
+        const playerHudW = 222;
+        const gap = 16;
+        return new Rectangle(playerHudX + playerHudW + gap, 20, 216, 68);
+    }
+
+    get hudRect() {
+        return this._hudRect || this.calculateHudRect();
+    }
+
+    bannerRect() {
+        return new Rectangle(10, 12, 44, 44);
+    }
+
+    headerRect() {
+        return new Rectangle(62, 18, 144, 14);
+    }
+
+    factionNameRect() {
+        return new Rectangle(62, 37, 144, 18);
+    }
+
+    standingRect() {
+        return new Rectangle(62, 56, 144, 16);
+    }
+
+    // Hooks d'extension pour Charisme & Réputation globale
+    charismaRect() {
+        return new Rectangle(62, 56, 70, 16);
+    }
+
+    reputationRect() {
+        return new Rectangle(136, 56, 70, 16);
+    }
+
+    // ========================================================================
+    // COUCHES
+    // ========================================================================
+
     create() {
-        this.createBgLayer();
-        this.createFaceSprite();
-        this.createContentsLayer();
-        this.createUpperLayer();
-        this.setupCache();
-    }
-    setupCache() {
-        if (this.leaderActor)
-            this._cache = this.getCurrentData(this.leaderActor);
-        this._cache.actorId = -1;
-        this._cache.isComposed = false;
-    }
-    createBgLayer() {
-        const rect = this.hudRect();
-        this.bitmap = new Bitmap(rect.width, rect.height);
+        const rect = this.hudRect;
         this.x = rect.x;
         this.y = rect.y;
+        super.create();
+    }
 
-        const bitmap = ImageManager.loadBitmap("img/GUI/playerHud/", "bg");
-
-        this._bgSprite = new Sprite(bitmap);
+    createBgLayer() {
+        const rect = this.hudRect;
+        this._bgSprite = new Sprite(new Bitmap(rect.width, rect.height));
         this.addChild(this._bgSprite);
-
     }
-    createFaceSprite() {
-        const rect = this.faceRect();
-        this._faceSprite = new Sprite_PaperdollFace(null, rect.width, rect.height);
-        this._faceSprite.x = rect.x;
-        this._faceSprite.y = rect.y;
 
-        this.addChild(this._faceSprite);
+    createHudContents() {
+        this.createContentsLayer();
     }
-    createUpperLayer() {
-        const bitmap = ImageManager.loadBitmap("img/GUI/playerHud/", "upperLayer");
-        this._upperLayerSprite = new Sprite(bitmap);
-        this.addChild(this._upperLayerSprite);
-    }
-    createContentsLayer() {
-        const rect = this.hudRect();
-        const bitmap = new Bitmap(rect.width, rect.height);
 
-        this._contentsLayer = new Sprite(bitmap);
-        this.addChild(this._contentsLayer);
-    }
-    update() {
-        super.update();
-        const actor = this.leaderActor;
-        const isSystemVisible = $guiManager.isPlayerHudVisible();
-
-        if (!actor) this.visible = false;
-        if (isSystemVisible)
-            this.visible = true;
-        else
-            this.visible = false;
-        if (!this.visible) return;
-        if (!this.checkHudCache(actor)) return;
-
-        this.refreshHudCache(actor);
-        this.refreshHud(actor);
-    }
-    refreshHudCache(actor) {
-        if (this._refreshCounter > this.refreshLapse) {
-            this.updateHudCache(actor);
-            this._refreshCounter = 0;
-        } else {
-            this._refreshCounter++;
+    clearHudContents() {
+        if (this._bgSprite && this._bgSprite.bitmap) {
+            this._bgSprite.bitmap.clear();
         }
+        super.clearHudContents();
     }
-    updateHudCache(actor) {
-        const current = this.getCurrentData(actor);
-        const equips = actor.equips();
-        this._cache = {
-            actorId: actor.actorId(),
-            name: actor.name(),
 
-            // BASE STATS
-            hp: this.approach(this._cache.hp, current.hp, this.gaugeRefreshStep("hp")),
-            mhp: actor.mhp,
-            mp: this.approach(this._cache.mp, current.mp, this.gaugeRefreshStep("mp")),
-            mmp: actor.mmp,
-            tp: this.approach(this._cache.tp, current.tp, this.gaugeRefreshStep("tp")),
+    // ========================================================================
+    // GETTERS & CACHE INDIVIDUALISÉ
+    // ========================================================================
 
-            // EXP
-            nextLvlExp: actor.nextRequiredExp(),
+    get actor() {
+        return (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.leader === "function")
+            ? $gameParty.leader()
+            : null;
+    }
 
-            //Equips
-            equipsKey: equips.map(e => e ? e.id : 0).join("-")
-        };
+    getPlayerFaction() {
+        const actor = this.actor;
+        if (!actor || !actor.social) return null;
+        const factionId = actor.social.factionId();
+        if (!factionId || factionId <= 0) return null;
+        if (typeof $gameFactions === "undefined" || !$gameFactions) return null;
+        return $gameFactions.faction(factionId);
+    }
 
-        if (current.lvl > this._cache.lvl) {
-            this._cache.lvl = actor.level;
-            this._cache.currentExp = 0;
+    isSystemVisible() {
+        const manualVisible = Boolean(
+            typeof $guiManager !== "undefined" &&
+            $guiManager &&
+            typeof $guiManager.isPlayerRelationHudVisible === "function" &&
+            $guiManager.isPlayerRelationHudVisible()
+        );
+        const dialogActive = Boolean(
+            typeof $relationManager !== "undefined" &&
+            $relationManager &&
+            typeof $relationManager.isActiveDialog === "function" &&
+            $relationManager.isActiveDialog()
+        );
+        return manualVisible || dialogActive;
+    }
+
+    hasValidData() {
+        return Boolean(this.actor);
+    }
+
+    resolveFactionBannerBitmap(faction) {
+        if (typeof ImageManager === "undefined") return null;
+        const reqName = (faction && faction.bannerName) ? faction.bannerName : "banner_blank";
+        let bitmap = ImageManager.loadBitmap("img/GUI/factions/", reqName);
+        if (bitmap && typeof bitmap.isError === "function" && bitmap.isError()) {
+            if (!this._warnedAssets.has(reqName)) {
+                this._warnedAssets.add(reqName);
+                if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.warn) {
+                    DEBUGTOOL.warn("Sprite_PlayerRelationHud", `Bannière de faction manquante (${reqName}), bascule sur banner_blank.`);
+                }
+            }
+            bitmap = ImageManager.loadBitmap("img/GUI/factions/", "banner_blank");
         }
-        this._cache.currentExp = this.approach(this._cache.currentExp, current.currentExp, this.gaugeRefreshStep);
-
+        this.watchBitmapReady(bitmap);
+        return bitmap;
     }
-    getCurrentData(actor) {
-        const equips = actor.equips();
+
+    bitmapImageSource(bitmap) {
+        if (!bitmap) return null;
+        if (typeof bitmap.isReady === "function" && !bitmap.isReady()) return null;
+        if (typeof bitmap.isError === "function" && bitmap.isError()) return null;
+        return bitmap.canvas || bitmap._canvas || bitmap._image || null;
+    }
+
+    getCurrentData() {
+        const actor = this.actor;
+        if (!actor) return {};
+        const faction = this.getPlayerFaction();
+        const bannerBitmap = this.resolveFactionBannerBitmap(faction);
 
         return {
             actorId: actor.actorId(),
-            name: actor.name(),
-
-            // BASE STATS
-            hp: actor.hp,
-            mhp: actor.mhp,
-            mp: actor.mp,
-            mmp: actor.mmp,
-            tp: actor.tp,
-
-            // EXP
-            lvl: actor.level,
-            currentExp: actor.currentExp(),
-            nextLvlExp: actor.nextRequiredExp(),
-
-            //Equips
-            equipsKey: equips.map(e => e ? e.id : 0).join("-")
+            factionId: faction ? faction.id : 0,
+            factionName: faction ? faction.name : "",
+            factionAffinity: faction ? faction.affinity : 0,
+            bannerReady: Boolean(this.bitmapImageSource(bannerBitmap))
         };
     }
-    checkHudCache(actor) {
-        this._currentData = this.getCurrentData(actor);
-        let isDirty = false;
 
-        for (const key in this._currentData) {
-            if (this._cache[key] !== this._currentData[key]) {
-                isDirty = true;
-            }
-        }
+    // ========================================================================
+    // RENDU
+    // ========================================================================
 
-        return isDirty;
-    }
-    refreshHud(actor) {
-        this.drawHud(actor);
-    }
-    drawBg() {
-    }
-    drawActorFace() {
-        if (this.isHero()) {
-            this.updateCompositeFace();
-        } else {
-            this.drawVanillaFace();
-        }
-    }
-    updateCompositeFace() {
-        const actor = this.leaderActor;
-
-        this._faceSprite.setActor(actor);
-        this._faceSprite.visible = true;
-    }
-    drawVanillaFace() {
-        const pw = ImageManager.faceWidth || 144;
-        const ph = ImageManager.faceHeight || 144;
-
-        const faceIdx = actor.faceIndex();
-        const sx = (faceIdx % 4) * pw;
-        const sy = Math.floor(faceIdx / 4) * ph;
-        const rect = this.faceRect();
-        const img = faceBitmap._image || faceBitmap._canvas;
-
-        if (img) {
-            this.hudCtx.drawImage(img, sx, sy, pw, ph, fx, fy, fw, fh);
-        }
+    styleBackground() {
+        return {
+            fillColor: "rgba(18, 26, 38, 0.86)",
+            strokeColor: "rgba(130, 155, 180, 0.55)",
+            lineWidth: 1.5,
+            radius: 6
+        };
     }
 
     drawHud() {
-        const ctx = this.bitmap ? this.bitmap.context : null;
+        this.drawBackground();
+        const faction = this.getPlayerFaction();
+        this.drawFactionBanner(faction);
+        this.drawFactionInfo(faction);
+        this.drawSocialExtras(faction);
+    }
+
+    drawBackground() {
+        const ctx = this.bgCtx;
         if (!ctx) return;
-        this.bitmap.clear();
-        this.drawActorFace();
-        this.drawStats();
-    }
-    drawStats() {
-        this._contentsLayer.bitmap.clear();
+        const rect = this.hudRect;
+        const style = this.styleBackground();
+        const r = style.radius;
+        const w = rect.width;
+        const h = rect.height;
 
-        this.drawName();
-        this.drawHpGauge();
-        this.drawMpGauge();
+        ctx.save();
+        ctx.fillStyle = style.fillColor;
+        ctx.strokeStyle = style.strokeColor;
+        ctx.lineWidth = style.lineWidth;
+
+        ctx.beginPath();
+        ctx.moveTo(r, 0);
+        ctx.lineTo(w - r, 0);
+        ctx.arcTo(w, 0, w, r, r);
+        ctx.lineTo(w, h - r);
+        ctx.arcTo(w, h, w - r, h, r);
+        ctx.lineTo(r, h);
+        ctx.arcTo(0, h, 0, h - r, r);
+        ctx.lineTo(0, r);
+        ctx.arcTo(0, 0, r, 0, r);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
     }
-    drawName() {
+
+    drawFactionBanner(faction) {
         const ctx = this.contentCtx;
-        const actor = this.leaderActor;
-        const name = actor.name().toUpperCase();
-        this.styleName(ctx);
-        const rect = this.nameRect(name, ctx);
+        if (!ctx) return;
+        const bitmap = this.resolveFactionBannerBitmap(faction);
+        const img = this.bitmapImageSource(bitmap);
+        if (!img || !img.width || !img.height) return;
 
-        ctx.fillText(`${name}`, rect.x, rect.y);
-
-    }
-    drawHpGauge() {
-        const actor = this.leaderActor;
-        const tempHp = this._cache.hp;
-        const currentHp = actor.hp;
-        const maxHp = actor.mhp;
-        const rect = this.hpRect();
-        const style = this.styleHpGauge();
-        const txtSettings = { value: true, max: false, name: false };
-
-        this.drawDynamicGauge(tempHp, currentHp, maxHp, rect, style, txtSettings, { txt: "hp", align: "left" });
-    }
-    drawMpGauge() {
-        const actor = this.leaderActor;
-        const tempMp = this._cache.mp;
-        const currentMp = actor.mp;
-        const maxMp = actor.mmp;
-        const rect = this.mpRect();
-        const style = this.styleMpGauge();
-        const txtSettings = { value: true, name: false };
-
-        this.drawDynamicGauge(tempMp, currentMp, maxMp, rect, style, txtSettings, { txt: "mp", align: "right" });
+        const rect = this.bannerRect();
+        ctx.drawImage(img, 0, 0, img.width, img.height, rect.x, rect.y, rect.width, rect.height);
     }
 
-    setSpeakingHighlight(active) {
-        const bool = Boolean(active);
-        if (this._isSpeaking !== bool) {
-            this._isSpeaking = bool;
-            const actor = this.leaderActor;
-            if (actor) {
-                const faceName = (typeof actor.faceName === "function") ? actor.faceName() : "";
-                const faceBitmap = faceName ? ImageManager.loadFace(faceName) : null;
-                this.drawHud(actor, faceBitmap);
-            }
+    drawFactionInfo(faction) {
+        const ctx = this.contentCtx;
+        if (!ctx) return;
+
+        const hRect = this.headerRect();
+        const nRect = this.factionNameRect();
+        const sRect = this.standingRect();
+
+        ctx.save();
+        // En-tête localisé
+        ctx.font = "bold 10px sans-serif";
+        ctx.fillStyle = "#94a3b8";
+        ctx.textAlign = "left";
+        ctx.fillText(this.loc("hud.playerFaction", "Allégeance").toUpperCase(), hRect.x, hRect.y);
+
+        // Nom de la faction
+        const factionName = faction ? faction.name : this.loc("hud.noFaction", "Indépendant");
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillStyle = "#e2e8f0";
+        ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+        ctx.fillText(factionName, nRect.x, nRect.y, nRect.width);
+
+        // Réputation / Affinité de faction
+        if (faction) {
+            const aff = faction.affinity || 0;
+            const standingLabel = `${this.loc("hud.factionStanding", "Réputation")}: `;
+            ctx.font = "normal 11px sans-serif";
+            ctx.fillStyle = "#cbd5e1";
+            ctx.fillText(standingLabel, sRect.x, sRect.y);
+
+            const labelW = ctx.measureText(standingLabel).width;
+            ctx.font = "bold 12px rmmz-numberfont, sans-serif";
+            ctx.fillStyle = aff > 0 ? "#4ade80" : (aff < 0 ? "#f87171" : "#e2e8f0");
+            ctx.fillText(`${aff > 0 ? "+" : ""}${aff}`, sRect.x + labelW, sRect.y);
         }
+        ctx.restore();
+    }
+
+    drawSocialExtras(faction) {
+        // Extensible plus tard pour Charisme et Réputation globale
     }
 }
 
-window.Sprite_PlayerHUD = Sprite_PlayerHUD;
+window.Sprite_PlayerRelationHud = Sprite_PlayerRelationHud;
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = Sprite_PlayerHUD;
+    module.exports = Sprite_PlayerRelationHud;
 }

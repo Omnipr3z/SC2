@@ -35,25 +35,32 @@ class Window_InteractionCommand extends Window_Command {
         }
     }
 
+    loc(key, fallback) {
+        if (typeof SC4_Localization !== "undefined" && typeof SC4_Localization.getText === "function") {
+            return SC4_Localization.getText(key, fallback);
+        }
+        return fallback;
+    }
+
     makeCommandList() {
         this._availableInteractions = this._availableInteractions || [];
         if (this._availableInteractions.includes("chat")) {
-            this.addCommand("💬 Discuter", "chat", true);
+            this.addCommand(`💬 ${this.loc("relation.cmd_chat", "Discuter")}`, "chat", true);
         } else if (this._availableInteractions.includes("chat_saturated")) {
-            this.addCommand("💬 Discuter (Saturé)", "chat", false);
+            this.addCommand(`💬 ${this.loc("relation.cmd_chat_saturated", "Discuter (Agacé)")}`, "chat", false);
         } else {
-            this.addCommand("💬 Discuter (Cooldown)", "chat", false);
+            this.addCommand(`💬 ${this.loc("relation.cmd_chat_cooldown", "Discuter (Attendre)")}`, "chat", false);
         }
 
         // Perspectives V2 / Extensions
         if (this._availableInteractions.includes("intimidate")) {
-            this.addCommand("⚡ Intimider", "intimidate", true);
+            this.addCommand(`⚡ ${this.loc("relation.cmd_intimidate", "Intimider")}`, "intimidate", true);
         }
         if (this._availableInteractions.includes("recruit")) {
-            this.addCommand("🤝 Recruter", "recruit", true);
+            this.addCommand(`🤝 ${this.loc("relation.cmd_recruit", "Recruter")}`, "recruit", true);
         }
 
-        this.addCommand("❌ Quitter", "cancel", true);
+        this.addCommand(`❌ ${this.loc("relation.cmd_leave", "Quitter")}`, "cancel", true);
     }
 }
 

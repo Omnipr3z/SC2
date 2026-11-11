@@ -109,6 +109,34 @@ class Window_RingCommand extends Window_Command {
         };
     }
 
+    /**
+     * Convertit une direction RMMZ (8 directions) en angle écran en radians (0 = Droite, +PI/2 = Bas).
+     * @param {number} dir
+     * @returns {number}
+     */
+    static directionToAngle(dir) {
+        switch (Number(dir)) {
+            case 6: return 0;                  // Droite
+            case 3: return Math.PI / 4;        // Bas-Droite
+            case 2: return Math.PI / 2;        // Bas
+            case 1: return (3 * Math.PI) / 4;  // Bas-Gauche
+            case 4: return Math.PI;            // Gauche
+            case 7: return -(3 * Math.PI) / 4; // Haut-Gauche
+            case 8: return -Math.PI / 2;       // Haut
+            case 9: return -Math.PI / 4;       // Haut-Droite
+            default: return Math.PI / 2;       // Défaut : Bas
+        }
+    }
+
+    /**
+     * Retourne l'angle opposé à la direction regardée.
+     * @param {number} dir
+     * @returns {number}
+     */
+    static oppositeAngle(dir) {
+        return Window_RingCommand.directionToAngle(dir) + Math.PI;
+    }
+
     constructor(rect) {
         super(rect);
         if (!this._center && rect) {
@@ -121,12 +149,55 @@ class Window_RingCommand extends Window_Command {
         this._center = { x: rect.width / 2, y: rect.height / 2 };
         this._commandData = [];
         this._startAngle = -Math.PI / 2; // Position 12h (midi)
+        this._isArcMode = false;
+        this._arcCenterAngle = -Math.PI / 2;
+        this._maxArcSpan = Math.PI * 0.9;
+        this._canCancel = true;
         this._radius = 0;
         this._targetRadius = this.calculateTargetRadius();
         this._customConfig = {};
 
         const cfg = this.currentConfig();
         this.opacity = (cfg.opacity !== undefined) ? cfg.opacity : 0;
+    }
+
+    /**
+     * Active le déploiement en demi-cercle dans le dos du personnage (direction opposée au regard).
+     * @param {number} direction Direction RMMZ (1..9)
+     * @param {number} maxArcSpan Ouverture maximale de l'arc en radians
+     */
+    setArcFromFacing(direction, maxArcSpan = Math.PI * 0.9) {
+        this._isArcMode = true;
+        this._arcCenterAngle = Window_RingCommand.oppositeAngle(direction);
+        this._maxArcSpan = Number(maxArcSpan) > 0 ? Number(maxArcSpan) : (Math.PI * 0.9);
+        if (this._list && this._list.length > 0 && typeof Window_Selectable !== "undefined" && Window_Selectable.prototype.refresh) {
+            Window_Selectable.prototype.refresh.call(this);
+            this.updateCursor();
+        }
+    }
+
+    /**
+     * Rétablit la distribution complète sur 360°.
+     */
+    setFullCircleMode() {
+        this._isArcMode = false;
+        if (this._list && this._list.length > 0 && typeof Window_Selectable !== "undefined" && Window_Selectable.prototype.refresh) {
+            Window_Selectable.prototype.refresh.call(this);
+            this.updateCursor();
+        }
+    }
+
+    /**
+     * Contrôle si l'utilisateur peut annuler via Échap / Clic droit.
+     * @param {boolean} canCancel
+     */
+    setCanCancel(canCancel) {
+        this._canCancel = Boolean(canCancel);
+    }
+
+    isCancelEnabled() {
+        if (!this._canCancel) return false;
+        return (typeof super.isCancelEnabled === "function") ? super.isCancelEnabled() : true;
     }
 
     /**
@@ -212,7 +283,7 @@ class Window_RingCommand extends Window_Command {
     }
 
     /**
-     * Calcule le rectangle de l'item selon sa position angulaire sur le cercle.
+     * Calcule le rectangle de l'item selon sa position angulaire sur le cercle ou l'arc opposé.
      * @param {number} index 
      * @returns {Rectangle}
      */
@@ -222,8 +293,22 @@ class Window_RingCommand extends Window_Command {
             return new Rectangle(0, 0, 0, 0);
         }
 
-        const step = (Math.PI * 2) / max;
-        const angle = this._startAngle + (index * step);
+        let angle;
+        if (this._isArcMode) {
+            if (max === 1) {
+                angle = this._arcCenterAngle;
+            } else {
+                const idealStep = Math.PI / 3;
+                const span = Math.min(this._maxArcSpan, (max - 1) * idealStep);
+                const step = span / (max - 1);
+                const start = this._arcCenterAngle - (span / 2);
+                angle = start + (index * step);
+            }
+        } else {
+            const step = (Math.PI * 2) / max;
+            angle = this._startAngle + (index * step);
+        }
+
         const w = this.itemWidth();
         const h = this.itemHeight();
 

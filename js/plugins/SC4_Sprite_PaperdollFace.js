@@ -105,8 +105,13 @@ class Sprite_PaperdollFace extends Sprite {
     currentCacheKey() {
         const act = this.actor();
         if (!act) return "";
-        if (this.isHero() && typeof act.getCompositeFaceCacheKey === "function") {
-            return act.getCompositeFaceCacheKey();
+        if (this.isHero()) {
+            if (act.character && typeof act.character.getCompositeFaceCacheKey === "function") {
+                return act.character.getCompositeFaceCacheKey();
+            }
+            if (typeof act.getCompositeFaceCacheKey === "function") {
+                return act.getCompositeFaceCacheKey();
+            }
         }
         const equips = (typeof act.equips === "function") ? act.equips() : [];
         const equipIds = equips.map(e => e ? e.id : 0).join("-");
@@ -130,14 +135,27 @@ class Sprite_PaperdollFace extends Sprite {
             this._lastCacheKey = this.currentCacheKey();
             if (this._compositeEntry && this._compositeEntry.bitmap) {
                 this.bitmap = this._compositeEntry.bitmap;
+                if (typeof this.setFrame === "function") {
+                    this.setFrame(0, 0, 144, 144);
+                }
             }
         } else {
-            // Fallback vanilla faceset
+            // Faceset vanilla
             this._compositeEntry = null;
             this._lastCacheKey = this.currentCacheKey();
             const faceName = (typeof act.faceName === "function") ? act.faceName() : "";
             if (faceName && typeof ImageManager !== "undefined") {
                 this.bitmap = ImageManager.loadFace(faceName);
+                if (this.bitmap && typeof this.bitmap.isReady === "function" && this.bitmap.isReady()) {
+                    const pw = ImageManager.faceWidth || 144;
+                    const ph = ImageManager.faceHeight || 144;
+                    const faceIdx = (typeof act.faceIndex === "function") ? act.faceIndex() : 0;
+                    const sx = (faceIdx % 4) * pw;
+                    const sy = Math.floor(faceIdx / 4) * ph;
+                    this.setFrame(sx, sy, pw, ph);
+                } else {
+                    this.setFrame(0, 0, 0, 0);
+                }
             } else {
                 this.bitmap = null;
             }
@@ -188,6 +206,9 @@ class Sprite_PaperdollFace extends Sprite {
                 }
                 if (this.bitmap !== bitmap) {
                     this.bitmap = bitmap;
+                }
+                if (typeof this.setFrame === "function") {
+                    this.setFrame(0, 0, 144, 144);
                 }
             }
         } else {

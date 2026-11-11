@@ -49,7 +49,9 @@ class RelationManager {
         this._batchBudget = 15;
     }
     get currentSubScene() {
-        return SceneManager._scene._currentSubScene;
+        return (typeof SceneManager !== "undefined" && SceneManager && SceneManager._scene)
+            ? (SceneManager._scene._currentSubScene || null)
+            : null;
     }
 
     isActiveDialog() {
@@ -311,8 +313,8 @@ class RelationManager {
             const idx = (this._simulationCursor + i) % total;
             const rel = relations[idx];
             if (rel) {
-                // 1. Régénération de la patience sociale avec le temps
-                rel.getPatience(time);
+                // 1. Apaisement progressif de l'agacement avec le temps
+                rel.getAgacement(time);
 
                 // 2. Érosion progressive vers la base de faction si 24h écoulées
                 if (rel.lastInteractionTimestamp > 0 && (time - rel.lastInteractionTimestamp) >= this._decayInterval) {
@@ -393,11 +395,11 @@ class RelationManager {
             if (!isSaturated) {
                 list.push("chat");
             } else {
-                // Si la patience est à 0, l'action est complètement grisée
-                if (relation.patience === 0) {
+                // À 100 d'agacement, l'action est complètement grisée
+                if (relation.getAgacement(currentTimestamp) >= 100) {
                     list.push("chat_saturated");
                 } else {
-                    // Dernier clic possible qui déclenche la réaction de refus/saturation
+                    // Entre 80 et 99 : dernier clic possible qui déclenche la réaction de lassitude
                     list.push("chat");
                 }
             }
@@ -425,8 +427,8 @@ class RelationManager {
                 relation.changeThreat(reaction.threatDelta);
             }
 
-            // 2. Consommation de la patience sociale (fatigue/boredom)
-            relation.consumePatience(30, currentTimestamp);
+            // 2. Escalade de l'agacement (répétition / coût de base)
+            relation.addAgacement(interaction.id, 8, currentTimestamp);
 
             // 3. Enregistrement du cooldown
             relation.recordInteraction(interaction.id, currentTimestamp);

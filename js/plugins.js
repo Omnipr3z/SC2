@@ -51,6 +51,7 @@ var $plugins =
 {"name":"SC4_Sprite_HudBase","status":true,"description":"","parameters":{}},
 {"name":"SC4_Sprite_ActorHUD","status":true,"description":"","parameters":{}},
 {"name":"SC4_Sprite_PlayerHUD","status":true,"description":"","parameters":{}},
+{"name":"SC4_Sprite_PlayerRelationHud","status":true,"description":"[SC4 v1.0.0] HUD social et allégeance de faction du joueur (Sprite_PlayerRelationHud).","parameters":{}},
 {"name":"SC4_Sprite_InterlocutorHUD","status":true,"description":"","parameters":{}},
 {"name":"SC4_Sprite_WeaponHUD","status":true,"description":"[SC4 v1.0.0] HUD d'arme, jauge de munitions et réserve en temps réel (Sprite_WeaponHUD).","parameters":{}},
 {"name":"SC4_Sprite_ParallaxesUpperLayer","status":true,"description":"[SC4 v1.0.0] Sprite de couche haute de parallaxe pour l'affichage dynamique des planètes en vue hublot.","parameters":{}},

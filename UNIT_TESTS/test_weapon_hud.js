@@ -217,7 +217,9 @@ test("styleBackground() bascule en bordure alerte rouge si le chargeur est vide"
 
 test("styleAmmo() adapte la couleur de la munition selon le seuil", () => {
     const hud = new Sprite_WeaponHUD();
-    const ctx = hud.bitmap.context;
+    assert.strictEqual(hud.bitmap, null, "Sprite_WeaponHUD ne doit pas allouer de bitmap racine superflu");
+    const ctx = hud.contentCtx;
+    assert.ok(ctx, "contentCtx doit être disponible");
 
     hud.styleAmmo(ctx, 15, 15);
     assert.strictEqual(ctx.fillStyle, "#4ade80"); // Vert
@@ -236,6 +238,9 @@ test("drawHud() s'exécute sans erreur et met à jour le cache", () => {
     assert.strictEqual(hud._cache.loaded, 12);
     assert.strictEqual(hud._cache.reserve, 45);
     assert.strictEqual(hud._cache.weaponName, "Pistolet Laser");
+    assert.strictEqual(hud.needRedraw(), false, "Cache stable : aucun redraw tant que rien ne change");
+    currentAmmo = 11;
+    assert.strictEqual(hud.needRedraw(), true, "Cache invalidé dès variation des munitions");
 });
 
 console.log("\n==================================================");

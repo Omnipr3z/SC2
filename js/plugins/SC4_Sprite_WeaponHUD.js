@@ -10,10 +10,9 @@
  * @help SC4_Sprite_WeaponHUD.js
  * 
  * Classe Sprite_WeaponHUD (hérite de Sprite_HudBase) :
- * - Positionné en bas à droite de l'écran avec fond glassmorphism sombre.
- * - Architecture modulaire divisée en Getters, Positionnement, Styles et Blocs de rendu.
- * - Visibilité et cycle de vie pilotés par $guiManager (masqué par défaut en début de jeu).
- * - Prêt pour l'évolution graphique (barillet, balles individuelles, packs façon Recovery).
+ * - Positionné en bas à droite de l'écran avec fond glassmorphism sombre sur _bgSprite.
+ * - Architecture unifiée : _bgSprite + _contentsLayer + _upperLayerSprite (zéro bitmap racine).
+ * - Visibilité et cycle de vie pilotés par $guiManager et cache individualisé Sprite_HudBase.
  */
 
 class Sprite_WeaponHUD extends Sprite_HudBase {
@@ -31,11 +30,17 @@ class Sprite_WeaponHUD extends Sprite_HudBase {
         this._hudRect = this.calculateHudRect();
     }
 
-    createBgLayer() {
+    create() {
         const rect = this.hudRect;
-        this.bitmap = new Bitmap(rect.width, rect.height);
         this.x = rect.x;
         this.y = rect.y;
+        super.create();
+    }
+
+    createBgLayer() {
+        const rect = this.hudRect;
+        this._bgSprite = new Sprite(new Bitmap(rect.width, rect.height));
+        this.addChild(this._bgSprite);
     }
 
     createHudContents() {
@@ -46,8 +51,11 @@ class Sprite_WeaponHUD extends Sprite_HudBase {
         // Hook prêt pour les calques supérieurs ou filtres d'impact
     }
 
-    setupCache() {
-        this._cache = this.getCurrentData();
+    clearHudContents() {
+        if (this._bgSprite && this._bgSprite.bitmap) {
+            this._bgSprite.bitmap.clear();
+        }
+        super.clearHudContents();
     }
 
     // ============================================================================
@@ -56,6 +64,10 @@ class Sprite_WeaponHUD extends Sprite_HudBase {
 
     get actor() {
         return typeof $gameParty !== "undefined" && $gameParty ? $gameParty.leader() : null;
+    }
+
+    hasValidData() {
+        return Boolean(this.actor);
     }
 
     get weapon() {
@@ -68,7 +80,7 @@ class Sprite_WeaponHUD extends Sprite_HudBase {
         }
         return typeof GunfightManager !== "undefined" && GunfightManager.defaultMeleeStats
             ? GunfightManager.defaultMeleeStats()
-            : { name: "Mains nues", reload: false, ammoCap: 0, iconIndex: 16 };
+            : { name: this.loc("hud.unarmed", "Mains nues"), reload: false, ammoCap: 0, iconIndex: 16 };
     }
 
     get loadedAmmo() {
@@ -91,18 +103,28 @@ class Sprite_WeaponHUD extends Sprite_HudBase {
         return !this.stats.reload;
     }
 
+    resolveIconSetBitmap() {
+        if (typeof ImageManager === "undefined") return null;
+        const bitmap = ImageManager.loadSystem("IconSet");
+        this.watchBitmapReady(bitmap);
+        return bitmap;
+    }
+
     getCurrentData() {
         const actor = this.actor;
         if (!actor) {
-            return { actorId: 0, weaponId: 0, loaded: -1, reserve: 0, isReloading: false };
+            return {};
         }
         const weapon = this.weapon;
         const stats = this.stats;
+        const iconBitmap = this.resolveIconSetBitmap();
+
         return {
             actorId: actor.actorId(),
             weaponId: weapon ? weapon.id : 0,
-            weaponName: stats.name || "Mains nues",
+            weaponName: stats.name || this.loc("hud.unarmed", "Mains nues"),
             iconIndex: stats.iconIndex || (weapon ? weapon.iconIndex : 16),
+            iconReady: Boolean(iconBitmap && typeof iconBitmap.isReady === "function" ? iconBitmap.isReady() : iconBitmap),
             loaded: this.loadedAmmo,
             reserve: this.reserveAmmo,
             ammoCap: stats.ammoCap || 0,
@@ -238,7 +260,7 @@ class Sprite_WeaponHUD extends Sprite_HudBase {
     }
 
     drawBackground() {
-        const ctx = this.hudCtx;
+        const ctx = this.bgCtx;
         if (!ctx) return;
         const rect = this.backgroundRect();
         const style = this.styleBackground();
@@ -279,7 +301,7 @@ class Sprite_WeaponHUD extends Sprite_HudBase {
 
     drawWeaponIcon() {
         const iconIndex = this.stats.iconIndex || (this.weapon ? this.weapon.iconIndex : 16);
-        const iconBitmap = ImageManager.loadSystem("IconSet");
+        const iconBitmap = this.resolveIconSetBitmap();
         if (iconBitmap && iconBitmap.isReady() && this._contentsLayer && this._contentsLayer.bitmap) {
             const rect = this.iconRect();
             const sx = (iconIndex % 16) * 32;
@@ -292,7 +314,7 @@ class Sprite_WeaponHUD extends Sprite_HudBase {
         const ctx = this.contentCtx;
         if (!ctx) return;
         const rect = this.nameRect();
-        const name = this.stats.name || "Mains nues";
+        const name = this.stats.name || this.loc("hud.unarmed", "Mains nues");
 
         ctx.save();
         this.styleWeaponName(ctx);
@@ -317,7 +339,7 @@ class Sprite_WeaponHUD extends Sprite_HudBase {
 
         ctx.save();
         this.styleStatus(ctx);
-        ctx.fillText("RECHARGE...", rect.x, rect.y);
+        ctx.fillText(this.loc("hud.reloading", "RECHARGE..."), rect.x, rect.y);
         ctx.restore();
     }
 
@@ -377,19 +399,9 @@ class Sprite_WeaponHUD extends Sprite_HudBase {
         return Boolean(typeof window !== "undefined" && window.$guiManager && window.$guiManager.isWeaponHudVisible());
     }
 
-    needRedraw() {
-        if (!this.isSystemVisible()) return false;
-        if (!this.actor) return false;
-        return super.needRedraw();
-    }
-
     update() {
         this.updatePosition();
         super.update();
-    }
-
-    updateHudCache() {
-        this._cache = this.getCurrentData();
     }
 }
 

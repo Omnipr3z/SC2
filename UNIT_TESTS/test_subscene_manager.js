@@ -55,21 +55,74 @@ global.Scene_Base = class Scene_Base extends global.Stage {
 
 global.Window_Base = class Window_Base {
     constructor(rect) {
+        this.initialize(rect);
+    }
+    initialize(rect) {
         this._rect = rect;
+        this.x = rect ? rect.x : 0;
+        this.y = rect ? rect.y : 0;
+        this.width = rect ? rect.width : 0;
+        this.height = rect ? rect.height : 0;
+        this.padding = 12;
+        this.opacity = 255;
+        this.openness = 255;
         this._handlers = {};
         this._visible = true;
-        this._openness = 255;
+        this.visible = true;
         this._active = true;
+        this.active = true;
+        this.contents = { clear: () => {}, drawText: () => {}, fillRect: () => {}, blt: () => {} };
     }
     setHandler(s, h) { this._handlers[s] = h; }
+    isHandled(s) { return Boolean(this._handlers[s]); }
     callHandler(s) { if (this._handlers[s]) this._handlers[s](); }
-    open() { this._openness = 255; }
-    close() { this._openness = 0; }
-    activate() { this._active = true; }
-    deactivate() { this._active = false; }
+    open() { this.openness = 255; this.visible = true; }
+    close() { this.openness = 0; }
+    show() { this.visible = true; this._visible = true; }
+    hide() { this.visible = false; this._visible = false; }
+    isOpen() { return this.openness >= 255; }
+    isClosed() { return this.openness === 0; }
+    activate() { this._active = true; this.active = true; }
+    deactivate() { this._active = false; this.active = false; }
+    createContents() {}
+    drawText() {}
+    drawIcon() {}
     destroy() {}
     refresh() {}
     select() {}
+    update() {}
+};
+
+global.Window_Selectable = class Window_Selectable extends global.Window_Base {
+    initialize(rect) {
+        super.initialize(rect);
+        this._index = 0;
+        this._cursorRect = new global.Rectangle(0, 0, 0, 0);
+    }
+    index() { return this._index; }
+    select(i) { this._index = i; }
+    setCursorRect(x, y, w, h) { this._cursorRect = new global.Rectangle(x, y, w, h); }
+    updateCursor() {}
+    cursorDown() {}
+    cursorUp() {}
+};
+
+global.Window_Command = class Window_Command extends global.Window_Selectable {
+    initialize(rect) {
+        super.initialize(rect);
+        this._list = [];
+        this.makeCommandList();
+    }
+    clearCommandList() { this._list = []; }
+    makeCommandList() {}
+    addCommand(name, symbol, enabled = true, ext = null) {
+        this._list.push({ name, symbol, enabled, ext });
+    }
+    maxItems() { return this._list ? this._list.length : 0; }
+    refresh() {
+        this.clearCommandList();
+        this.makeCommandList();
+    }
 };
 
 global.Window_SpaceShipInfo = class Window_SpaceShipInfo extends global.Window_Base {
@@ -82,16 +135,10 @@ global.Window_BridgeConsole = class Window_BridgeConsole extends global.Window_B
     currentExt() { return { id: "test_poi" }; }
 };
 
-global.Window_FactionInfo = class Window_FactionInfo extends global.Window_Base {
-    setFaction(id, title) { this._factionId = id; this._title = title; }
-};
-
-global.Window_RelationStatus = class Window_RelationStatus extends global.Window_Base {
-    setRelation(rel, actor) { this._relation = rel; this._actor = actor; }
-};
-
-global.Window_InteractionCommand = class Window_InteractionCommand extends global.Window_Base {
-    setAvailableInteractions(list) { this._interactions = list; }
+global.$gamePlayer = {
+    screenX: () => 640,
+    screenY: () => 400,
+    direction: () => 2
 };
 
 global.DEBUGTOOL = { log: () => {}, warn: () => {}, error: () => {} };
@@ -118,6 +165,7 @@ global.$relationDialogManager = {
 };
 
 const baseDir = path.resolve(__dirname, "..");
+require(path.join(baseDir, "js/plugins/SC4_Window_RingCommand.js"));
 require(path.join(baseDir, "js/plugins/SC4_SubSceneManager.js"));
 require(path.join(baseDir, "js/plugins/SC4_SubScene_Base.js"));
 require(path.join(baseDir, "js/plugins/SC4_SubScene_Console.js"));
@@ -250,6 +298,8 @@ global.SceneManager._scene = map5;
 
 const relDialog = SubSceneManager.open(SubScene_RelationDialog, 2, 8);
 assert.ok(relDialog, "SubScene_RelationDialog doit être instancié");
+assert.strictEqual(relDialog._dimmerSprite, undefined, "SubScene_Base ne doit plus créer de dimmer");
+assert.ok(relDialog._commandWindow instanceof Window_RingCommand, "La roue de commandes doit être Window_RingCommand");
 assert.strictEqual(relDialog.targetActorId, 2, "targetActorId doit être 2");
 assert.strictEqual(relDialog.targetEventId, 8, "targetEventId doit être 8");
 assert.strictEqual(map5.currentSubScene(), relDialog, "Doit être la sous-scène active de map5");
@@ -258,7 +308,7 @@ testsPassed++;
 
 // TEST 8: Suspension & Restauration de SubScene_RelationDialog
 console.log("\n[Test 8] Suspension & Restauration de SubScene_RelationDialog...");
-assert.deepStrictEqual(relDialog.resumeArgs(), [2, 8], "resumeArgs doit retourner [2, 8]");
+assert.deepStrictEqual(relDialog.resumeArgs(), [2, 8, {}], "resumeArgs doit retourner [2, 8, options]");
 
 // Suspension simulée (ex: ouverture de l'inventaire ou du codex)
 relDialog.suspend({ lastInteraction: "chat" });

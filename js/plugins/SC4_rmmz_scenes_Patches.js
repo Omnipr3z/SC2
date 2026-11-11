@@ -769,18 +769,35 @@
         this.createPlayerHud();
         this.createWeaponHud();
     };
+    Scene_Map.prototype.addHudChild = function (sprite) {
+        if (!sprite) return;
+        const winLayerIdx = (this._windowLayer && this.children)
+            ? this.children.indexOf(this._windowLayer)
+            : -1;
+        if (winLayerIdx >= 0 && typeof this.addChildAt === "function") {
+            this.addChildAt(sprite, winLayerIdx);
+        } else {
+            this.addChild(sprite);
+        }
+    };
     Scene_Map.prototype.createPlayerHud = function () {
         if (typeof Sprite_PlayerHUD !== "undefined") {
             this._playerHud = new Sprite_PlayerHUD();
-            this.addChild(this._playerHud);
+            this.addHudChild(this._playerHud);
         }
-        this._interlocutorHud = new Sprite_InterlocutorHUD();
-        this.addChild(this._interlocutorHud);
+        if (typeof Sprite_PlayerRelationHud !== "undefined") {
+            this._playerRelationHud = new Sprite_PlayerRelationHud();
+            this.addHudChild(this._playerRelationHud);
+        }
+        if (typeof Sprite_InterlocutorHUD !== "undefined") {
+            this._interlocutorHud = new Sprite_InterlocutorHUD();
+            this.addHudChild(this._interlocutorHud);
+        }
     };
     Scene_Map.prototype.createWeaponHud = function () {
         if (!this._weaponHud && typeof Sprite_WeaponHUD !== "undefined") {
             this._weaponHud = new Sprite_WeaponHUD();
-            this.addChild(this._weaponHud);
+            this.addHudChild(this._weaponHud);
         }
     };
     Scene_Map.prototype.terminate = function () {

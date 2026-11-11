@@ -223,5 +223,35 @@
     "warp_motor_missing": "⚡ Warp Jump (No Warp Engine)",
     "warp_fuel_low": "⚡ Warp Jump (Low Fuel)",
     "captain": "Captain"
+  },
+  "hud": {
+    "unarmed": "Unarmed",
+    "reloading": "RELOADING...",
+    "status": "Status",
+    "affinity": "Affinity",
+    "sympathy": "Sympathy",
+    "antipathy": "Antipathy",
+    "authority": "Authority",
+    "obedience": "Obedience",
+    "submission": "Submission",
+    "insubordination": "Insubordination",
+    "threat": "Threat",
+    "agacement": "Annoyance",
+    "playerFaction": "Allegiance",
+    "factionStanding": "Standing",
+    "noFaction": "Independent"
+  },
+  "relation": {
+    "threshold_total_hostility": "Total Hostility",
+    "threshold_hostility": "Hostility",
+    "threshold_neutrality": "Neutrality",
+    "threshold_respect": "Respect",
+    "threshold_loyalty": "Loyalty",
+    "cmd_chat": "Chat",
+    "cmd_chat_saturated": "Chat (Annoyed)",
+    "cmd_chat_cooldown": "Chat (Wait)",
+    "cmd_intimidate": "Intimidate",
+    "cmd_recruit": "Recruit",
+    "cmd_leave": "Leave"
   }
 }

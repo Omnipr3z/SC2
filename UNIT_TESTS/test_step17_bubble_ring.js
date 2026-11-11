@@ -37,6 +37,31 @@ global.SoundManager = {
     playOk() {}
 };
 
+global.ColorManager = {
+    outlineColor() { return "rgba(0, 0, 0, 0.6)"; }
+};
+
+global.PluginManager = {
+    parameters() { return {}; },
+    registerCommand() {}
+};
+
+global.Sprite = class Sprite {
+    constructor(bitmap) {
+        this.bitmap = bitmap || null;
+        this.x = 0;
+        this.y = 0;
+        this.visible = true;
+        this.children = [];
+        this.anchor = { x: 0, y: 0, set(ax, ay) { this.x = ax; this.y = ay; } };
+        this.scale = { x: 1, y: 1, set(sx, sy) { this.x = sx; this.y = sy; } };
+    }
+    addChild(child) {
+        this.children.push(child);
+        return child;
+    }
+};
+
 global.DEBUGTOOL = {
     log(msg, flag) {}
 };
@@ -69,6 +94,11 @@ global.Window = class Window {
         this.openness = 255;
         this.visible = true;
         this.active = true;
+        this.children = [];
+    }
+    addChild(child) {
+        this.children.push(child);
+        return child;
     }
     move(x, y, w, h) {
         this.x = x;
@@ -78,6 +108,7 @@ global.Window = class Window {
     }
     isOpen() { return this.openness >= 255; }
     isClosed() { return this.openness === 0; }
+    isOpening() { return false; }
     isClosing() { return false; }
     open() { this.openness = 255; }
     close() { this.openness = 0; }
@@ -249,11 +280,22 @@ global.Game_System = class Game_System {
     constructor() {
         this._locale = "FR";
         this._bubbleMessageMode = false;
+        this._bubbleConfig = {};
         this._ringMenuEnabled = true;
     }
     windowPadding() { return 12; }
     mainFontFace() { return "rmmz-mainfont"; }
     mainFontSize() { return 26; }
+    isBubbleMessageMode() { return Boolean(this._bubbleMessageMode); }
+    setBubbleMessageMode(v) { this._bubbleMessageMode = Boolean(v); }
+    getBubbleConfig() { return this._bubbleConfig || {}; }
+    setBubbleConfig(cfg) {
+        this._bubbleConfig = Object.assign(this.getBubbleConfig(), cfg || {});
+        if (cfg && cfg.enabled !== false) this._bubbleMessageMode = true;
+        if (cfg && cfg.fontFace && typeof Window_BubbleMsg !== "undefined") {
+            Window_BubbleMsg.resolveFontFace(cfg.fontFace);
+        }
+    }
 };
 global.$gameSystem = new global.Game_System();
 
@@ -290,8 +332,35 @@ global.$gameMap = {
 };
 
 global.Scene_Base = class Scene_Base {
-    constructor() { this._windows = []; }
-    addWindow(w) { this._windows.push(w); }
+    constructor() { this._windows = []; this.children = []; this._windowLayer = null; }
+    addChild(c) { this.children.push(c); return c; }
+    addChildAt(c, idx) { this.children.splice(idx, 0, c); return c; }
+    addWindow(w) {
+        if (!this._windowLayer) {
+            this._windowLayer = { isWindowLayer: true };
+            this.addChild(this._windowLayer);
+        }
+        this._windows.push(w);
+    }
+    initialize() {}
+};
+
+global.Scene_Boot = class Scene_Boot extends global.Scene_Base {
+    loadCustomFonts() {}
+    start() {}
+};
+global.Scene_Title = class Scene_Title extends global.Scene_Base {
+    createCommandWindow() {}
+};
+global.Scene_Menu = class Scene_Menu extends global.Scene_Base {
+    createCommandWindow() {}
+};
+global.Scene_Item = class Scene_Item extends global.Scene_Base {
+    create() {}
+    useItem() {}
+};
+global.Scene_Options = class Scene_Options extends global.Scene_Base {
+    createOptionsWindow() {}
 };
 
 global.Scene_Message = class Scene_Message extends global.Scene_Base {
@@ -306,6 +375,12 @@ global.Scene_Message = class Scene_Message extends global.Scene_Base {
 };
 
 global.Scene_Map = class Scene_Map extends global.Scene_Message {
+    constructor() {
+        super();
+        this.initialize();
+    }
+    isPlayerActive() { return true; }
+    isMapTouchOk() { return true; }
     createAllWindows() {
         this.createMessageWindow();
     }
@@ -330,11 +405,14 @@ global.SC4_Localization = {
 };
 
 // Chargement des plugins
+require(path.resolve(__dirname, '../js/plugins/SC4_core.js'));
 const bubblePath = path.resolve(__dirname, '../js/plugins/SC4_BubbleMessage.js');
-const ringPath = path.resolve(__dirname, '../js/plugins/SC4_RingCommand.js');
+const ringPath = path.resolve(__dirname, '../js/plugins/SC4_Window_RingCommand.js');
+const scenesPatchPath = path.resolve(__dirname, '../js/plugins/SC4_rmmz_scenes_Patches.js');
 
-eval(fs.readFileSync(bubblePath, 'utf8'));
-eval(fs.readFileSync(ringPath, 'utf8'));
+require(bubblePath);
+require(ringPath);
+require(scenesPatchPath);
 
 // ============================================================================
 // DÉBUT DES TESTS
@@ -706,7 +784,10 @@ TouchInput._triggered = true;
 assert(sceneMap.isTouchOnPlayer() === true, "isTouchOnPlayer détecte le clic sur le joueur");
 
 sceneMap.updateRingCommandTrigger();
-assert(sceneMap._ringCommandWindow.active === true, "Ring Command activé après clic sur le joueur");
+assert(sceneMap._ringCommandWindow.active === false, "updateRingCommandTrigger reste désactivé sur clic joueur");
+
+sceneMap.openRingMenuAtPlayer();
+assert(sceneMap._ringCommandWindow.active === true, "Ring Command activé via openRingMenuAtPlayer()");
 
 sceneMap.closeRingMenu();
 assert(sceneMap._ringCommandWindow.active === false, "closeRingMenu désactive correctement le Ring Command");

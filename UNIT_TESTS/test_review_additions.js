@@ -605,27 +605,8 @@ it("Window_BubbleMsg ne réserve aucun espace pour les facesets et ne les dessin
     assert.strictEqual(msgWin.width, expectedW, "Largeur adaptée uniquement au texte");
 });
 
-it("Sprite_PlayerHUD active la bordure rouge 2px quand le joueur parle", () => {
-    const hud = new Sprite_PlayerHUD();
-    assert.strictEqual(hud._isSpeaking, false, "Initialement _isSpeaking = false");
-
-    hud.setSpeakingHighlight(true);
-    assert.strictEqual(hud._isSpeaking, true, "setSpeakingHighlight(true) active la surbrillance rouge");
-
-    hud.setSpeakingHighlight(false);
-    assert.strictEqual(hud._isSpeaking, false, "setSpeakingHighlight(false) désactive la surbrillance");
-});
-
-it("Sprite_InterlocutorHUD affiche le badge et supporte hideInterlocutor", () => {
-    const interHud = new Sprite_InterlocutorHUD();
-    assert.strictEqual(interHud.visible, false, "Interlocuteur HUD masqué au départ");
-
-    interHud.showInterlocutor("Actor2", 0, "Inspecteur", null);
-    assert.strictEqual(interHud.visible, true, "Interlocuteur HUD visible après showInterlocutor");
-
-    interHud.hideInterlocutor();
-    assert.strictEqual(interHud.visible, false, "Interlocuteur HUD masqué après hideInterlocutor");
-});
+// Note : les anciens hooks speaking highlight / interlocutor sur HUDs ont été remplacés
+// à l'Étape 2 par la queue BD dynamique (WindowArrow.png) de Window_BubbleMsg et les HUDs pilotés par $guiManager/$relationManager.
 
 it("Les noms d'interlocuteur parsent \\L[key] et \\l[key] pour la localisation", () => {
     SC4_Localization.loadAll();

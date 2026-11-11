@@ -66,6 +66,8 @@ global.$gameMessage = {
 
 // Mocks UI RMMZ
 global.Graphics = { boxWidth: 1280, boxHeight: 720, width: 1280, height: 720 };
+global.SoundManager = { playOk: () => {}, playCancel: () => {}, playBuzzer: () => {} };
+global.$gamePlayer = { screenX: () => 640, screenY: () => 400, direction: () => 2 };
 global.Rectangle = class {
     constructor(x, y, width, height) {
         this.x = x || 0;
@@ -80,35 +82,62 @@ global.ColorManager = {
 };
 global.Window_Base = class {
     constructor(rect) {
+        this.initialize(rect);
+    }
+    initialize(rect) {
         this.x = rect ? rect.x : 0;
         this.y = rect ? rect.y : 0;
         this.width = rect ? rect.width : 0;
         this.height = rect ? rect.height : 0;
-        this.contents = { clear: () => {}, drawText: () => {}, fillRect: () => {} };
+        this.padding = 12;
+        this.opacity = 255;
+        this.openness = 255;
+        this.visible = true;
+        this.active = true;
+        this.contents = { clear: () => {}, drawText: () => {}, fillRect: () => {}, blt: () => {} };
     }
     get innerWidth() { return this.width - 24; }
     get innerHeight() { return this.height - 24; }
     changeTextColor() {}
     drawText() {}
+    drawIcon() {}
+    createContents() {}
+    open() { this.openness = 255; this.visible = true; }
+    close() { this.openness = 0; }
+    show() { this.visible = true; }
+    hide() { this.visible = false; }
+    isOpen() { return this.openness >= 255; }
+    isClosed() { return this.openness === 0; }
+    update() {}
 };
 global.Window_Selectable = class extends global.Window_Base {
-    constructor(rect) {
-        super(rect);
+    initialize(rect) {
+        super.initialize(rect);
         this._index = -1;
         this._handlers = {};
+        this._cursorRect = new global.Rectangle();
     }
     select(i) { this._index = i; }
     index() { return this._index; }
     setHandler(sym, fn) { this._handlers[sym] = fn; }
+    isHandled(sym) { return Boolean(this._handlers[sym]); }
+    callHandler(sym) { if (this._handlers[sym]) this._handlers[sym](); }
+    setCursorRect(x, y, w, h) { this._cursorRect = new global.Rectangle(x, y, w, h); }
+    updateCursor() {}
     refresh() {}
-    activate() {}
+    activate() { this.active = true; }
+    deactivate() { this.active = false; }
+    maxItems() { return this._list ? this._list.length : 0; }
     itemRect(i) { return new global.Rectangle(0, i * 36, this.width, 36); }
 };
 global.Window_Command = class extends global.Window_Selectable {
-    constructor(rect) {
-        super(rect);
+    initialize(rect) {
+        super.initialize(rect);
         this._list = [];
+        this.makeCommandList();
     }
+    clearCommandList() { this._list = []; }
+    makeCommandList() {}
     addCommand(name, symbol, enabled = true, ext = null) {
         this._list.push({ name, symbol, enabled, ext });
     }
@@ -158,6 +187,7 @@ const RelationDialogManager = require("../js/plugins/SC4_RelationDialogManager")
 // Fenêtres et Scènes
 const Window_RelationStatus = require("../js/plugins/SC4_Window_RelationStatus");
 const Window_InteractionCommand = require("../js/plugins/SC4_Window_InteractionCommand");
+const Window_RingCommand = require("../js/plugins/SC4_Window_RingCommand");
 const Window_FactionInfo = require("../js/plugins/SC4_Window_FactionInfo");
 const Window_FactionStatus = require("../js/plugins/SC4_Window_FactionStatus");
 const Window_RelationList = require("../js/plugins/SC4_Window_RelationList");
@@ -166,6 +196,7 @@ const Scene_MenuRelations = require("../js/plugins/SC4_Scene_MenuRelations");
 
 global.Window_RelationStatus = Window_RelationStatus;
 global.Window_InteractionCommand = Window_InteractionCommand;
+global.Window_RingCommand = Window_RingCommand;
 global.Window_FactionInfo = Window_FactionInfo;
 global.Window_FactionStatus = Window_FactionStatus;
 global.Window_RelationList = Window_RelationList;
@@ -502,21 +533,22 @@ const winList = new Window_RelationList(listRect);
 assert.ok(winList.maxItems() >= 1, "La liste doit contenir au moins la relation enregistrée");
 assert.ok(winList.item());
 
-// 6. SubScene_RelationDialog avec targetEventId explicite
+// 6. SubScene_RelationDialog avec targetEventId explicite (Sans anciennes fenêtres, avec Window_RingCommand)
 global.$gameMessage.clear();
 const subScene = new SubScene_RelationDialog(null, 2, 7);
 subScene.createDisplayObjects();
 assert.strictEqual(subScene.targetActorId, 2, "targetActorId doit valoir 2");
 assert.strictEqual(subScene.targetEventId, 7, "targetEventId explicite doit valoir 7");
-assert.ok(subScene._playerFactionWindow, "La fenêtre de faction PJ doit être créée");
-assert.ok(subScene._npcFactionWindow, "La fenêtre de faction PNJ doit être créée");
-assert.ok(subScene._relationStatusWindow, "La fenêtre de statut relationnel doit être créée");
-assert.ok(subScene._commandWindow, "La fenêtre de commandes d'interaction doit être créée");
+assert.strictEqual(subScene._playerFactionWindow, undefined, "L'ancienne fenêtre Faction PJ doit être supprimée");
+assert.strictEqual(subScene._npcFactionWindow, undefined, "L'ancienne fenêtre Faction PNJ doit être supprimée");
+assert.strictEqual(subScene._relationStatusWindow, undefined, "L'ancienne fenêtre RelationStatus doit être supprimée");
+assert.ok(subScene._commandWindow instanceof Window_RingCommand, "La roue de commandes doit être Window_RingCommand");
 
 // Test de l'action 'chat' sur la sous-scène : doit injecter \E[7] dans $gameMessage
 const preAffinity = restoredRel.affinity;
+const preAgacement = restoredRel.agacement;
 subScene.onCommandChat();
-assert.ok(restoredRel.affinity !== preAffinity || restoredRel._cooldowns.chat, "L'action 'chat' doit être exécutée");
+assert.ok(restoredRel.affinity !== preAffinity || restoredRel._cooldowns.chat || restoredRel.agacement > preAgacement, "L'action 'chat' doit être exécutée");
 assert.ok(global.$gameMessage._texts.some(t => t.includes("\\E[7]")), "Le message de réaction doit contenir le tag \\E[7]");
 
 // Test de l'auto-détection via l'interpréteur RMMZ
@@ -548,9 +580,9 @@ assert.ok(menuScene._globalFactionWindow, "Window_FactionStatus doit être insta
 console.log("   ✅ Windows & Scènes validées.");
 
 // ============================================================================
-// TEST 8: Patience Sociale (The Sims), Seuil Boring & Simulation Étalée (Round-Robin)
+// TEST 8: Agacement Social (Répétition), Seuil Boring & Simulation Étalée (Round-Robin)
 // ============================================================================
-console.log("➡️ Test 8: Patience Sociale, Seuil Boring & Simulation par Lot...");
+console.log("➡️ Test 8: Agacement Social, Seuil Boring & Simulation par Lot...");
 
 // 1. Test Game_ReactionBase.shouldCloseScene
 const closeReaction = new Game_ReactionBase({ shouldCloseScene: true });
@@ -562,39 +594,49 @@ assert.strictEqual(boredReaction.type, "bored");
 assert.strictEqual(boredReaction.affinityDelta, -1);
 assert.strictEqual(boredReaction.shouldCloseScene, true);
 
-// 3. Test Game_Relation Patience & Saturation
+// 3. Test Game_Relation Agacement, Répétition & Saturation
 const now = global.$gameDate.timestamp;
-const simRel = new Game_Relation({ actorId1: 1, actorId2: 10, patience: 100, lastPatienceTimestamp: now });
-assert.strictEqual(simRel.patience, 100);
+const simRel = new Game_Relation({ actorId1: 1, actorId2: 10, agacement: 0, lastAgacementTimestamp: now });
+assert.strictEqual(simRel.agacement, 0);
 assert.strictEqual(simRel.isSaturated(now), false);
 
-// Consommation
-simRel.consumePatience(60, now);
-assert.strictEqual(simRel.patience, 40);
-assert.strictEqual(simRel.isSaturated(now), false);
+// Répétition rapprochée (< 300s) : escalade de pénalité
+simRel.addAgacement("chat", 10, now);
+assert.strictEqual(simRel.consecutiveSameCount, 1);
+assert.strictEqual(simRel.agacement, 10);
 
-// Chute sous le seuil (seuil = 20)
-simRel.consumePatience(25, now);
-assert.strictEqual(simRel.patience, 15);
-assert.strictEqual(simRel.isSaturated(now), true, "Patience < 20 doit être saturée");
+simRel.addAgacement("chat", 10, now + 10);
+assert.strictEqual(simRel.consecutiveSameCount, 2);
+assert.ok(simRel.agacement > 20, "La répétition du même type d'interaction doit amplifier l'agacement");
 
-// Régénération après écoulement de 2 heures (2 * 3600 sec = +50 patience)
-const newPatience = simRel.getPatience(now + 7200);
-assert.strictEqual(newPatience, 65, "Après 2h, patience doit remonter à 15 + 50 = 65");
-assert.strictEqual(simRel.isSaturated(now + 7200), false, "Ne doit plus être saturé");
+// Alternance : réinitialise le compteur consécutif à 1
+simRel.addAgacement("intimidate", 10, now + 20);
+assert.strictEqual(simRel.consecutiveSameCount, 1);
+
+// Franchissement du seuil de saturation (seuil = 80)
+simRel.addAgacement("chat", 60, now + 30);
+assert.ok(simRel.agacement >= 80);
+assert.strictEqual(simRel.isSaturated(now + 30), true, "Agacement >= 80 doit être saturé");
+
+// Décroissance temporelle après écoulement de 2 heures (2 * 25 = -50 agacement)
+const beforeCooldown = simRel.agacement;
+const cooledAgacement = simRel.getAgacement(now + 30 + 7200);
+assert.strictEqual(cooledAgacement, Math.max(0, beforeCooldown - 50), "Après 2h, l'agacement doit redescendre de 50 points");
+assert.strictEqual(simRel.isSaturated(now + 30 + 7200), false, "Ne doit plus être saturé après apaisement");
 
 // 4. Test Game_InteractionChat avec saturation
-simRel.consumePatience(50, now + 7200); // Patience retombe à 15 à l'heure actuelle
+simRel.agacement = 85;
+simRel.lastAgacementTimestamp = now + 7200;
 global.$gameDate.timestamp = now + 7200;
 const chatInteraction = new Game_InteractionChat(1, 10);
 const calcReaction = chatInteraction.calculateResult(simRel, null, null);
-assert.strictEqual(calcReaction.type, "bored", "Un PNJ saturé doit retourner une réaction bored");
+assert.strictEqual(calcReaction.type, "bored", "Un PNJ saturé (agacé) doit retourner une réaction bored");
 
 // 5. Test Window_InteractionCommand affichage saturé
 const saturatedCmdWin = new Window_InteractionCommand(cmdRect);
 saturatedCmdWin.setAvailableInteractions(["chat_saturated"]);
-const satCmd = saturatedCmdWin._list.find(c => c.name.includes("Saturé"));
-assert.ok(satCmd, "La commande 'Discuter (Saturé)' doit être présente");
+const satCmd = saturatedCmdWin._list.find(c => c.name.includes("Agacé"));
+assert.ok(satCmd, "La commande 'Discuter (Agacé)' doit être présente");
 assert.strictEqual(satCmd.enabled, false, "La commande saturée doit être désactivée/grisée");
 
 // 6. Test Simulation Étalée (Round-Robin Time-Slicing) dans RelationManager
@@ -612,8 +654,8 @@ assert.strictEqual(batchManager.getSimulationBatchBudget(), 3, "Doit lire le bat
 // Créer plusieurs opinions portées envers le joueur sur actor(1).social._opinions
 for (let i = 20; i < 30; i++) {
     const r = batchManager.getOpinionToSubjectFromHolder(1, i);
-    r.patience = 50;
-    r.lastPatienceTimestamp = global.$gameDate.timestamp;
+    r.agacement = 50;
+    r.lastAgacementTimestamp = global.$gameDate.timestamp;
 }
 assert.ok(batchManager.allActiveRelations().length >= 10, "allActiveRelations() doit collecter toutes les opinions actives");
 
@@ -625,7 +667,7 @@ assert.strictEqual(batchManager._simulationCursor, 0, "Curseur ne doit pas bouge
 batchManager.updateTick(global.$gameDate.timestamp + 3600);
 assert.strictEqual(batchManager._simulationCursor, 3, "Curseur doit avoir avancé de 3");
 
-console.log("   ✅ Patience Sociale, Seuil Boring & Simulation par Lot validés.");
+console.log("   ✅ Agacement Sociale, Seuil Boring & Simulation par Lot validés.");
 
 // ============================================================================
 // TEST 9: Séquences Multi-Messages & Dialogues Croisés (Ping-Pong PNJ / PJ)

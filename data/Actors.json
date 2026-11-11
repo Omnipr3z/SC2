@@ -1,6 +1,6 @@
 [
 null,
-{"id":1,"battlerName":"","characterIndex":0,"characterName":"Actors1","classId":1,"equips":[41,0,0,2,0],"faceIndex":0,"faceName":"Actor1","traits":[],"initialLevel":1,"maxLevel":10,"name":"Mosay","nickname":"Wesword","note":"<Hero>\n<Race: Human>\n<Sex: Male>\n<attackId: 1>","profile":""},
+{"id":1,"battlerName":"","characterIndex":0,"characterName":"Actors1","classId":1,"equips":[41,0,0,2,0],"faceIndex":0,"faceName":"Actor1","traits":[],"initialLevel":1,"maxLevel":10,"name":"Mosay","nickname":"Wesword_RMMZ","note":"<Hero>\n<Race: Human>\n<Sex: Male>\n<attackId: 1>","profile":""},
 {"id":2,"battlerName":"","characterIndex":1,"characterName":"Actors1","classId":1,"equips":[1,0,0,9,0],"faceIndex":1,"faceName":"Actor1","traits":[],"initialLevel":1,"maxLevel":99,"name":"Priscilla","nickname":"","note":"<Hero>\n<Race: arakna>\n<Sex: Male>\n<Face>\n<attackId: 1>","profile":""},
 {"id":3,"battlerName":"","characterIndex":2,"characterName":"Actors1","classId":5,"equips":[31,0,65,5,0],"faceIndex":2,"faceName":"Actor1","traits":[],"initialLevel":1,"maxLevel":99,"name":"Ennemy","nickname":"","note":"<Hero>\n<Race: arakna>\n<Sex: Male>\n","profile":""},
 {"id":4,"battlerName":"","characterIndex":3,"characterName":"Actors1","classId":5,"equips":[31,0,0,5,0],"faceIndex":3,"faceName":"Actor1","traits":[],"initialLevel":1,"maxLevel":99,"name":"Michelle","nickname":"","note":"","profile":""},
