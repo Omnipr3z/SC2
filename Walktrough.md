@@ -1,7 +1,7 @@
 # 🛠️ SimCraft Engine V2 (SC4) — Journal de Développement & Walkthrough
 
 > **SimCraft Engine V2 (SC4)** — Architecture modulaire pour RPG Maker MZ  
-> *Dernière mise à jour : 8 Novembre 2026*  
+> *Dernière mise à jour : 11 Novembre 2026*  
 > *Auteur : Pierre André Hernandez (Omnipr3z)*
 
 ---
@@ -1013,7 +1013,7 @@ DEBUGTOOL.logFormat({ actor: "Paolo", hp: 120 }, "Acteur : %[actor], PV : %[hp]"
       1. **`Game_ScActorEquipment` ([`SC4_Game_ScActorEquipment.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActorEquipment.js))** : Gestion des slots (11 types d'équipement), association arme/armure, détection d'équipement, extraction des calques Paperdoll (`<visual_equip: ...>`) et Faceset (`<face: ...>`), calcul du bonus de charge d'emport.
       2. **`Game_ScActorInventory` ([`SC4_Game_ScActorInventory.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActorInventory.js))** : Couplage avec le conteneur secondaire `$inventories.inventory("A_" + actorId)`, calcul de la charge portée, capacité maximale (`atk * 2.5 + bonus`), état de surcharge et fatigue (`exhaustion`).
       3. **`Game_ScActorCombat` ([`SC4_Game_ScActorCombat.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActorCombat.js))** : Arme active de gunfight, gestion des munitions engagées dans le chargeur (`_weaponAmmo`), réserve globale ou sac, compétence d'attaque (`<attackId: X>`) et parsing des animations d'attaque (`<visual_attack>`).
-      4. **`Game_ScActorSocial` ([`SC4_Game_ScActorSocial.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActorSocial.js))** : Allégeance de faction (`<factionId: X>`), accès à l'entité `$gameFactions.faction()`, relations interpersonnelles `$gameRelations`.
+      4. **`Game_ScActorSocial` ([`SC4_Game_ScActorSocial.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActorSocial.js))** : Allégeance de faction (`<factionId: X>`), accès à l'entité `$gameFactions.faction()`, relations interpersonnelles `$gameRelations` *(migrées vers `_opinions` / `opinionFrom`, cf. § 11.40)*.
       5. **`Game_ScActorLocation` ([`SC4_Game_ScActorLocation.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActorLocation.js))** : Coordonnées spatiales hiérarchiques (Secteur, Système, Planète, POI), synchronisation par défaut avec la flotte/groupe (`$gameGalaxy`) et possibilité de détachement géographique.
   - **`Game_Hero` ([`SC4_Game_Hero.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_Hero.js))** :
     - Hérite désormais de `Game_ScActor` (`class Game_Hero extends Game_ScActor`).
@@ -1155,7 +1155,125 @@ DEBUGTOOL.logFormat({ actor: "Paolo", hp: 120 }, "Acteur : %[actor], PV : %[hp]"
 
 ---
 
+### 11.38 Ergonomie Inventaire, Comparateur d'Équipement & Flèches Néon Modulaires (`beb139a` → `7660202`)
+- **Fenêtre Comparative d'Équipement ([`SC4_Window_InventoryCompare.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_InventoryCompare.js))** :
+  - Prévisualise en direct les deltas de statistiques (`ATK`, `DEF`, `MAT`, etc.) et d'encombrement entre l'objet porté et la sélection courante dans `Scene_Inventory` à la place de `Window_Help`.
+- **Architecture DRY des Flèches Néon Cyberpunk ([`SC4_Sprite_NeonArrowBase.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_NeonArrowBase.js))** :
+  - Socle commun du tracé vectoriel polygonal (`drawArrowPolygon`), déploiement élastique et oscillation douce hérités par [`SC4_Sprite_InventoryArrow.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_InventoryArrow.js) et [`SC4_Sprite_TutoArrow.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_TutoArrow.js).
+- **Intégration Didacticiels dans `Scene_Inventory`** :
+  - Déclenchement contextuel (`tuto_inv_transfer`, `tuto_inv_commands`, `tuto_inv_action`, `tuto_inv_compare`) et rattachement de `Window_TutoName` dans `WindowLayer` pour corriger le masquage stencil.
+- **Validation** :
+  - [`UNIT_TESTS/test_neon_arrows.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_neon_arrows.js) (10/10), [`UNIT_TESTS/test_inventory_layout.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_inventory_layout.js) (22/22), [`UNIT_TESTS/test_tuto_system.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_tuto_system.js) (35/35).
+
+---
+
+### 11.39 Séparation Poids en Stock vs Poids Porté (`a7e39ce`)
+- **Différenciation Logistique & Équipement (`SC4_DataManager.js`, `SC4_Game_ScActorInventory.js`, `SC4_Game_ScActorEquipment.js`)** :
+  - Distinction entre poids de stockage (`itemStockWeight`), poids résiduel une fois équipé (`itemWornWeight` / notetag `<worn_weight: ...>`) et bonus d'emport (`itemWeightBonus` pour sacs/exosquelettes), avec affichage dédié dans `Window_InventoryCompare` et `Window_InventoryList`.
+- **Validation** :
+  - [`UNIT_TESTS/test_stock_worn_weight.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_stock_worn_weight.js) (7/7 tests validés).
+
+---
+
+### 11.40 Socle Relationnel Pur : Migration `actor.social._opinions` & `opinionFrom` (Étape 1 — `cf3397c`)
+- **Purge Complète de `$gameRelations`** :
+  - Suppression de `SC4_Game_Relations.js`, suppression du registre global `$gameRelations` dans `SC4_DataManager.js` et retrait de la façade `plugins.js` (contrat *Fail Fast* strict).
+- **Référentiel Orienté sur [`SC4_Game_ScActorSocial.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActorSocial.js)** :
+  - `actorA.social.opinionFrom(actorB_Id)` lit ou instancie l'opinion portée par `actorB` envers `actorA` dans `actorA.social._opinions[actorB_Id]`.
+  - Reroutage de `SC4_RelationManager.js`, `SC4_RelationDialogManager.js`, `SC4_Window_RelationList.js`, `SC4_SubScene_RelationDialog.js` et `SC4_Game_Relation.js`.
+- **Validation** :
+  - [`UNIT_TESTS/test_relationship_system.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_relationship_system.js) (9/9 suites validées).
+
+---
+
+### 11.41 Refonte HUD Relations, Roue en Arc, Bulle BD & Agacement (Étape 2 — `61ee9ae`)
+- **Modularisation des HUDs** :
+  - [`SC4_Sprite_HudBase.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_HudBase.js) : suppression du bitmap racine inutile, lissage `approach()` et réactualisation sur chargement asynchrone (`watchBitmapReady()`).
+  - [`SC4_Sprite_PlayerRelationHud.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_PlayerRelationHud.js) : bandeau positionné 16px à droite de `PlayerHUD` avec repli sûr vers `banner_blank`.
+  - [`SC4_Sprite_InterlocutorHUD.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_InterlocutorHUD.js) : affichage Obéissance, Menace et barre graphique d'Agacement sans valeur chiffrée.
+- **Z-Order, Roue & Bulles BD** :
+  - `Scene_Map.addHudChild()` place tous les HUDs strictement avant `_windowLayer` ; suppression du dimmer noir de `SubScene_Base`.
+  - `Window_RingCommand.setArcFromFacing(dir)` déploie les choix à l'opposé du regard ; `Window_BubbleMsg` ([`SC4_BubbleMessage.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_BubbleMessage.js)) ajoute la queue BD dynamique (`img/system/WindowArrow.png`) et les traductions `UI_FR.json` / `UI_EN.json`.
+- **Validation** :
+  - [`UNIT_TESTS/test_step2_subcom_ui.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_step2_subcom_ui.js) (14/14 tests validés).
+
+---
+
+### 11.42 Orientation Relative Dialogue & Mode Visuel SubCom Hologramme (Pré-étape & Étape 3 — `ccae0ae`)
+- **Roue Sociale Orientée par Vecteur ([`SC4_Window_InteractionRingCommand.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_InteractionRingCommand.js))** :
+  - Calcule l'angle opposé à l'interlocuteur via `atan2` écran (avec repli sur le regard en mode sans event).
+  - En scène de dialogue, [`SC4_BubbleMessage.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_BubbleMessage.js) place les bulles dos à dos (axe vertical/diagonal) ou toutes deux en haut (axe latéral), tout en respectant `positionType` hors dialogue.
+- **Mode Visuel SubCom (`bubbleMode = 1`)** :
+  - `ColorManager` gère une pile d'appelants pour appliquer `WindowSubCom.png` / `WindowArrowSubCom.png` aux bulles SubCom sans perturber `Window_ChoiceList` ni `Window_Tuto`.
+  - [`SC4_GuiManager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_GuiManager.js) mémorise `_lastBubbleMode` avec restauration sur reprise.
+  - Filtre shader CRT WebGL [`SC4_SubComHologramFilter.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubComHologramFilter.js) appliqué uniquement au faceset de [`SC4_Sprite_InterlocutorHUD.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_InterlocutorHUD.js) (Hero composite et Vanilla), avec ancrage des bulles sur le HUD en l'absence d'événement carte.
+- **Validation** :
+  - [`UNIT_TESTS/test_step3_subcom_visual_mode.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_step3_subcom_visual_mode.js) (10/10 tests validés ; playtest RMMZ en attente).
+
+---
+
+### 11.43 Préchargement `Scene_Loading` & Cache Persistant `_system` des Composites *(Validé en playtest)*
+- **Scène de Préchargement Dédiée ([`SC4_Scene_Loading.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Scene_Loading.js))** :
+  - Lancée une seule fois au démarrage depuis `Scene_Boot` (`SC4_rmmz_scenes_Patches.js`), avant `Scene_Splash` / `Scene_Title` / `Scene_Map`.
+  - Scanne récursivement `img/characters/composite/` (`.png` / `.png_`), pré-remplit `Bitmap_Composite._fileExistsCache` et charge par lots avec logo rotatif `img/system/screwLoading.png` en bas à droite et flèche néon cyan (`Sprite_NeonArrowBase.prototype.drawArrowPolygon`) + compteur `chargés / total (XX %)`.
+- **Persistance `_system`, Spinner Vanilla & Anti-Flash Hero** :
+  - [`SC4_rmmz_core_Patches.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_rmmz_core_Patches.js) route `/characters/composite/` vers `ImageManager._system` pour survivre à `ImageManager.clear()` lors des transferts de carte, sans modifier le cache des autres dossiers, et adapte `#loadingSpinnerImage` (`css/game.css`) avec `img/system/screwLoading.png`.
+  - [`SC4_Sprite_Hero.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_Hero.js) et [`SC4_Sprite_PaperdollFace.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_PaperdollFace.js) composent de façon synchrone dès la frame 0 lorsque les briques sont prêtes ; sinon `Sprite_Hero` conserve son bitmap précédent jusqu'à la fin d'assemblage.
+  - Seuils d'alerte mémoire `DEBUGTOOL.warn` dans `Bitmap_Composite` / `Scene_Loading` et piste LRU consignée dans [`DIAL_with_AI.md`](file:///c:/SERVER/htdocs/SimCraft/SC4/DIAL_with_AI.md).
+- **Validation** :
+  - [`UNIT_TESTS/test_scene_loading_composite.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_scene_loading_composite.js) (7/7 tests validés) et playtest RMMZ confirmé.
+
+---
+
+### 11.44 Correctif Orbite Prématurée & Système SubCom Temps Réel *(Étape 4 — Validée en playtest)*
+- **Correctif Orbite Prématurée (`MoveToOrbit` vs `Orbiting`)** :
+  - [`Window_BridgeConsole`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_BridgeConsole.js), [`Scene_SpaceTravel`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Scene_SpaceTravel.js#L190) et [`SC4.performLandingSequence`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Interface.js#L397) exigent désormais `ship.status === "Orbiting"` (et non plus la seule présence d'`orbitingPlanetId`), empêchant le statut *"En orbite"*, la remise en vitesse `1x` et l'atterrissage pendant la phase d'approche (`MoveToOrbit`).
+- **Persistance `$guiManager` & Verrou Navigation ([`SC4_GuiManager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_GuiManager.js), [`SC4_DataManager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_DataManager.js))** :
+  - Ajout de `_isSubComActive` (`showSubCom`/`hideSubCom`/`isSubComVisible`), `_isNavigationLocked` (`lockNavigation`/`unlockNavigation`/`navigationLockReason`) sans toucher à `$gameSystem` ni `Game_Spaceship`, et câblage de `$guiManager` + `$subComManager` dans `SC_DataManager`.
+- **Modèle Contacts & Orchestrateur SubCom** :
+  - [`SC4_Game_ScActorSubCom.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActorSubCom.js) + [`SC4_Game_ScActor.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_ScActor.js) : lazy-loading `.subCom` (`0` contact initial, lien parent `WeakMap`), `pruneDeadContacts()`, `canBeCalledByPlayer()`, et échange mutuel à l'enrôlement dans `Game_Party.prototype.addActor` ([`SC4_rmmz_objects_Patches.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_rmmz_objects_Patches.js)).
+  - [`SC4_Game_DateFormatter.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Game_DateFormatter.js) : helpers statiques `fromTimestamp`, `formatTimestamp`, `formatShortTimestamp`.
+  - [`SC4_SubComManager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubComManager.js) : file `_pendingCalls` (fusion si `startTimestamp <= now`), appel entrant unique `_activeCall`, expirations sur `$gameDate.timestamp` avec `checkCallback()` / `recallAt-[X](min|hr|jr|dec)`, journal plafonné à 20 `_missedCalls`, purge des acteurs décédés, son `Ship_msg` restreint au vaisseau du joueur, appels masqués (`masked`) + `revealCaller()`, piloté depuis `Scene_Map.update()` ([`SC4_rmmz_scenes_Patches.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_rmmz_scenes_Patches.js)).
+- **Console Passerelle, UI SubCom (`900x420`) & Cartes RMMZ** :
+  - [`SC4_Window_BridgeConsole.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_BridgeConsole.js) + [`SC4_SubScene_Console.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_Console.js) : verrouillage `navigation` (`[Verrouillé]`), entrée `subcom` toujours active affichant l'appel entrant ou les manqués, clignotement rouge sur 24 frames via `redrawSubcomItem()` sans reconstruire `makeCommandList()`, et cycle `onDeactivate()`/`onReactivate()`.
+  - [`SC4_Sprite_SubcomHUD.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_SubcomHUD.js), [`SC4_Window_SubcomMissedList.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_SubcomMissedList.js) (pure visualisation passive sans curseur ni capture de clic), [`SC4_Window_SubcomContactCommand.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_SubcomContactCommand.js) (header sticky + scroll), [`SC4_Window_SubcomCommand.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_SubcomCommand.js), [`SC4_SubScene_Subcom.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_Subcom.js), [`SC4_SubScene_SubcomDialog.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_SubcomDialog.js), [`SC4_RelationManager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_RelationManager.js), [`SC4_Sprite_InterlocutorHUD.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_InterlocutorHUD.js) (identité masquée / `Signal Masqué` & démasquage direct), [`UI_FR.json`](file:///c:/SERVER/htdocs/SimCraft/SC4/data/SC/loc/UI_FR.json), [`UI_EN.json`](file:///c:/SERVER/htdocs/SimCraft/SC4/data/SC/loc/UI_EN.json) et manifeste [`plugins.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins.js) / [`plugins.backup.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins.backup.js) (`SHA256: 9AD35DED9A44914D62ADB2BAA7496AF1CA901C672DDF38F5E11BA1B2237368E2`, restauré après écrasement RMMZ).
+  - Intégration cartes & événements test RMMZ : [`Map005.json`](file:///c:/SERVER/htdocs/SimCraft/SC4/data/Map005.json) (trajectoire initiale vaisseau `ship(1)`), [`Map031.json`](file:///c:/SERVER/htdocs/SimCraft/SC4/data/Map031.json) (`EV006` appel SubCom de test `pushCall` avec `blocksNavigation: true`, terminal passerelle `EV007`/`EV008`), [`CommonEvents.json`](file:///c:/SERVER/htdocs/SimCraft/SC4/data/CommonEvents.json) (`BridgeConsoleTop->getOut` / `getIn`, préload animations) et [`Map038.json`](file:///c:/SERVER/htdocs/SimCraft/SC4/data/Map038.json) / [`MapInfos.json`](file:///c:/SERVER/htdocs/SimCraft/SC4/data/MapInfos.json).
+- **Correctifs Shader WebGL Hologramme, Double-Update SubScenes & Portrait Header Inventaire** :
+  - [`SC4_SubComHologramFilter.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubComHologramFilter.js) + [`SC4_Sprite_InterlocutorHUD.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_InterlocutorHUD.js) : harmonisation GLSL ES (`#ifdef GL_FRAGMENT_PRECISION_HIGH` + `precision highp float;` + `uniform highp vec4 inputSize;` / `outputFrame`) afin de correspondre à la précision `highp` du vertex shader par défaut de PixiJS (corrigeant `Precisions of uniform 'inputSize' differ between VERTEX and FRAGMENT shaders` à l'ouverture de [`SubScene_SubcomDialog`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_SubcomDialog.js)), remplacement de `pow(..., 2.0)` sur delta potentiellement négatif par une multiplication directe, et attente de `bitmap.isReady()` dans `syncHologramFilter()` ; relais complet de `callingEventId` sur `PluginManager.registerCommand("openBridgeConsole")` dans [`SC4_Interface.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Interface.js).
+  - [`SC4_rmmz_scenes_Patches.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_rmmz_scenes_Patches.js) + [`SC4_SubScene_Base.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_Base.js) : suppression de l'appel redondant `this._currentSubScene.update()` dans `Scene_Map.update` (car `SubScene_Base` ajoutée par `this.addChild(subScene)` est déjà mise à jour une fois par `Scene_Base.updateChildren()`), corrigeant le saut 2-par-2 du curseur et le contournement de la dernière commande *Quitter* dans [`Window_BridgeConsole`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_BridgeConsole.js) et [`Window_SubcomCommand`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_SubcomCommand.js) ; ajout de la garde `$tutoManager.isBusy()` dans `SubScene_Base.update()`.
+  - [`SC4_Window_InventoryHeader.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_InventoryHeader.js) : bascule du test `hasFace()` vers `isHeroActor()` (`<Hero>` suffit pour composer `img/faces/hero/*` sans exiger `<Face>` réservé aux sprites carte), suivi du `_lastFaceCacheKey` dans `updateFaceComposition()` pour rafraîchir le portrait dès un changement d'équipement et anti-flash durant le chargement asynchrone.
+- **Validation** :
+  - [`UNIT_TESTS/test_step4_subcom_system.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_step4_subcom_system.js) (19/19 tests validés) ; non-régression validée sur [`test_step3_subcom_visual_mode.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_step3_subcom_visual_mode.js) (10/10), [`test_step2_subcom_ui.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_step2_subcom_ui.js) (14/14), [`test_subscene_manager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_subscene_manager.js) (9/9) et [`test_relationship_system.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_relationship_system.js) (9/9), plus contrôle `verify_plugins.js` (`136/136` JS OK, `127` plugins actifs, SHA256 cohérent, `21` clés `subcom.*` synchronisées) ; playtest RMMZ complet validé en jeu (terminal SubCom + effet shader hologramme PixiJS).
+
+---
+
+### 11.45 Correctif `Game_Party.hasItem`, Inventaire Partagé, Action `Consommer` & Sur-Jauge (`tuto_10` / `tuto_11`)
+- **Patch `$gameParty.hasItem`, `consumeItem` & `tradeItemWithParty` ([`SC4_rmmz_objects_Patches.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_rmmz_objects_Patches.js))** :
+  - `Game_Party.prototype.findMemberInventoryWithItem(item)` inspecte les sacs `A_<id>` des membres actifs (`allMembers()`).
+  - `hasItem(item, includeEquip)` vérifie le sac commun puis les inventaires personnels des équipiers (rendant les Conditions éditeur RMMZ *Objet/Arme/Armure* compatibles avec `A_<id>`), tout en gardant `numItems()` et `allItems()` centrés sur `$gameParty` et en émettant un `DEBUGTOOL.warn` Fail Fast si un ID numérique est passé.
+  - `consumeItem(item)` et `Game_Actor.prototype.tradeItemWithParty(newItem, oldItem)` opèrent sur le bon sac `A_<id>` sans duplication si l'objet est absent de `$gameParty`.
+- **Agrégation « Inventaire partagé » & Action « Consommer » ([`SC4_Scene_Inventory.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Scene_Inventory.js), [`SC4_Window_InventoryList.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_InventoryList.js), [`SC4_Window_InventoryAction.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_InventoryAction.js), [`SC4_Window_InventoryCommand.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_InventoryCommand.js))** :
+  - Libellé `inventory.player_bag` renommé **`"Inventaire partagé"` / `"Shared Inventory"`** (`UI_FR/EN.json`, `Localisation_FR/EN.json`, `TUTOS_FR/EN.json`).
+  - La colonne gauche agrège `$gameParty` + le sac personnel du leader `A_<leaderId>` uniquement (sans inclure les compagnons `A_2+`), et évite l'auto-duplication quand `A_<leaderId>` est ouvert dans le volet droit ; `consumeFromPlayerContainers()` déduit du bon conteneur lors des transferts/dépôts/destructions.
+  - Ajout de `canConsumeItem(item)` et `onActionConsume()` (`Consommer` affiché dynamiquement dans `Window_InventoryAction` selon `consumable`, `occasion`, `scope`, `testApply` et support CommonEvent) + rollback sécurisé si `onActionEquip()` échoue depuis un conteneur.
+- **Sur-Jauge Poids Personnel & Tutoriels `tuto_10` / `tuto_11` ([`SC4_Window_InventoryHeader.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_InventoryHeader.js), [`data/SC/TUTOS.json`](file:///c:/SERVER/htdocs/SimCraft/SC4/data/SC/TUTOS.json))** :
+  - `Window_InventoryHeader` superpose une **sur-jauge sans fond** violette (`#a855f7`) au-dessus de la jauge cyan partagée (`#00b4d8`) pour représenter la proportion issue directement du sac personnel `A_<leaderId>` (`hasDifferentiatedWeight()`).
+  - **`tuto_10` (`tuto_inv_interact`)** : explique les actions directes *Équiper* / *Consommer* juste après `tuto_6` sur `Scene_Inventory`.
+  - **`tuto_11` (`tuto_inv_weight_gauge`)** : explique la double jauge partagée / perso immédiatement après `tuto_6` s'il y a un poids différencié, ou dynamiquement dès qu'un transfert crée cette différenciation dans `update()`.
+- **Validation** :
+  - [`UNIT_TESTS/test_party_has_item.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_party_has_item.js) (**6/6 tests validés**), [`UNIT_TESTS/test_inventory_layout.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_inventory_layout.js) (**36/36 tests validés**) et [`UNIT_TESTS/test_tuto_system.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/UNIT_TESTS/test_tuto_system.js) (**35/35 tests validés**).
+
+---
+
 ## 12. Feuille de Route & Perspectives Futures
+
+### Relations Sociales, Dialogue & Communications SubCom *(Feuille de Route Active)*
+- ✅ **Étape 1** — Socle relationnel pur (`actor.social._opinions` / `opinionFrom` sans `$gameRelations`).
+- ✅ **Étape 2** — Révision `SubScene_RelationDialog`, HUDs (`PlayerRelationHud`, `InterlocutorHUD`), Ring arc et bulle BD.
+- ✅ **Étape 3** — Mode visuel SubCom sur la scène de dialogue (windowskin, filtre hologramme CRT, ancrage HUD).
+- ✅ **Interlude technique** — Préchargement `Scene_Loading` & cache `_system` composite validés et prêts au commit.
+- ✅ **Étape 4** — Modèle & orchestrateur SubCom (`Game_ScActorSubCom` + `$subComManager`), verrou navigation console, UI SubCom complète, shader hologramme WebGL & correctif orbite prématurée *(validée en playtest RMMZ)*.
+- ⏳ **Étape 5** — Branchement du 1er échange avec le Gouverneur Iban (`Map031`) & optimisation du système relationnel / scène de dialogue.
 
 ### Ergonomie, Contrôles & Entrées
 - Architecture `SC4_KeymapManager` & Getter strict sur `Input.keyMapper` : gestionnaire contextuel centralisé des touches (exploration, cockpit FTL, mini-jeux), profils joueur configurables en options et hooks sans effets de bord.

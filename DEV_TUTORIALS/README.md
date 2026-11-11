@@ -17,8 +17,9 @@ Cette suite de guides détaille le fonctionnement, la syntaxe des notetags/flags
 | 🎒 **Conteneurs & Multi-Inventaires** | Gestion des inventaires secondaires (`Game_Inventories`), conteneurs persistants vs auto-erase, support items/armes/armures, sauvegarde/chargement. | [Tutoriel Conteneurs](./TUTORIAL_CONTAINERS_INVENTORIES.md) |
 | 🚀 **Navigation & Simulation Spatiale** | Navigation multi-échelles (Galaxie FTL, Système Solaire, Sous-système), console de passerelle, atterrissage/décollage V1, autorisations de clearance et hublot parallaxe dynamique. | [Tutoriel Navigation Spatiale](./TUTORIAL_SPACE_TRAVEL.md) |
 | 📜 **Système de Quêtes & Balises** | Gestionnaire `$gameQuests`, déclencheur temporel `$storyManager`, balises spatiales multi-échelles, objectifs hiérarchiques et alertes radio cockpit. | [Tutoriel Quêtes & Balises](./TUTORIAL_QUEST_SYSTEM.md) |
-| 🧘 **Poses Persistantes du Hero** | Postures durables statiques (`sit`, `lay`) et de locomotion (`sneak`, `rampe`), contraintes `canMove` et `allowDash`, vitesse, réveil automatique `onAlert` et intégration Paperdoll. | [Tutoriel Poses du Hero](./TUTORIAL_HERO_POSES.md) |
-| 🪟 **Sous-Scènes (SubScenes)** | Infrastructure modulaire de sous-scènes superposées sur Scene_Map (`SubScene_Base`), cycle de vie standardisé, isolation des fenêtres, et cockpit bi-écran (`SubScene_Console`). | [Tutoriel Sous-Scènes](./TUTORIAL_SUBSCENES.md) |
+| 🧘 **Poses Persistantes & Composite Paperdoll** | Postures durables (`sit`, `lay`, `sneak`, `rampe`), contraintes `canMove` / `allowDash`, réveil `onAlert`, préchargement `Scene_Loading` et cache `_system`. | [Tutoriel Poses du Hero](./TUTORIAL_HERO_POSES.md) |
+| 🪟 **Sous-Scènes (SubScenes)** | Infrastructure modulaire de sous-scènes superposées sur `Scene_Map` (`SubScene_Base`), pile enfant *Inception*, garde `$tutoManager.isBusy()` et `SubSceneManager`. | [Tutoriel Sous-Scènes](./TUTORIAL_SUBSCENES.md) |
+| 📡 **SubCom Temps Réel & Relations** | Référentiel `actor.social._opinions`, HUDs sociaux, orchestrateur `$subComManager`, terminal SubCom `900×420` et shader WebGL hologramme. | [Tutoriel SubCom & Relations](./TUTORIAL_SUBCOM_RELATIONS.md) |
 
 ---
 
@@ -28,8 +29,8 @@ Cette suite de guides détaille le fonctionnement, la syntaxe des notetags/flags
 2. **Compatibilité Native RMMZ** : Tous les comportements par défaut restent conformes aux standards de RPG Maker MZ tant qu'un flag ou une option de personnalisation n'est pas invoqué.
 3. **Journalisation Conditionnelle (`DEBUGTOOL`)** :
    Les messages de log utilisent le module centralisé `DEBUGTOOL.log(message, flag)` avec des catégories dédiées (`'gunfight'`, `'ui'`, etc.) pouvant être activées ou filtrées à la volée.
-4. **Persistance des Paramètres Joueur** :
-   Les préférences utilisateur (langue, visibilité de HUDs, mode de messages) sont persistées proprement via `ConfigManager` et `$gameSystem`.
+4. **Persistance des États & Paramètres** :
+   Les préférences joueur sont persistées dans `ConfigManager` / `$gameSystem`, tandis que les états d'interface et modules autonomes SC4 (`$guiManager`, `$subComManager`, `$inventories`, `$gameQuests`, `Game_ScActor`) sont sérialisés proprement via [`SC4_DataManager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_DataManager.js) sans polluer `$gameSystem`.
 5. **Validation par Tests Unitaires** :
    Toute modification d'un système doit être validée en exécutant le runner global :
    ```bash

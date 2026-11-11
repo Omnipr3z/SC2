@@ -54,13 +54,21 @@ Dans un RPG spatial et tactique, un personnage endormi ou assis doit réagir imm
 
 ## 🎨 4. Nomenclature Graphique Paperdoll (`Bitmap_Composite`)
 
-Le moteur composite multi-couches (`Bitmap_Composite.js`) assemble automatiquement les calques graphiques selon le nom de la pose active :
+Le moteur composite multi-couches ([`SC4_Bitmap_Composite.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Bitmap_Composite.js)) assemble automatiquement les calques graphiques selon le nom de la pose active :
 
 * Au lieu de charger la planche standard `_walk.png`, le compositeur résout automatiquement :
   * **Corps** : `img/characters/bodies/[race]_[sex]_[pose].png` (ex: `human_male_sit.png`).
   * **Visages** : `img/characters/faces/[id]_[pose].png`.
   * **Équipements** : `img/characters/equipments/[item]_[pose].png`.
 * Une clé de cache dédiée par pose garantit des transitions fluides à 60 FPS sans recompilation superflue.
+
+### 4.1 Préchargement `Scene_Loading` & Cache Persistant `ImageManager._system`
+
+Pour éliminer tout flash d'assemblage asynchrone et prévenir le déchargement des briques lors des transferts de carte (`ImageManager.clear()`), [`SC4_Scene_Loading.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Scene_Loading.js) s'exécute une fois au démarrage depuis `Scene_Boot` :
+1. **Scan & Cache d'Existence** : Parcourt récursivement `img/characters/composite/` (`.png` / `.png_`) et pré-remplit `Bitmap_Composite._fileExistsCache`.
+2. **Routage Persistant `_system`** : [`SC4_rmmz_core_Patches.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_rmmz_core_Patches.js) détourne uniquement les URLs contenant `/characters/composite/` vers `ImageManager._system`, tout en conservant `img/system/screwLoading.png` pour le spinner vanilla `#loadingSpinnerImage`.
+3. **Composition Synchrone & Anti-Flash** : Quand toutes les briques sont en cache, `Sprite_Hero` et `Sprite_PaperdollFace` composent dès la frame `0` ; en cas de nouveau calque non encore prêt, `Sprite_Hero` conserve son bitmap précédent jusqu'à la fin de l'assemblage.
+4. **Seuils Mémoire** : `DEBUGTOOL.warn` émet un avertissement si le volume composite dépasse les seuils (`WARN_COMPOSITE_FILES = 400` / `CACHE_WARN_RAM_MB = 250`). Valider via `node UNIT_TESTS/test_scene_loading_composite.js`.
 
 ---
 

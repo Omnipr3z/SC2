@@ -1,7 +1,7 @@
 # Tutoriel Développeur : Architecture des Sous-Scènes (`SubScene_Base`)
 
 > **SimCraft Engine V2 (SC4)**  
-> **Composants clés** : [SC4_SubScene_Base.js](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_Base.js), [SC4_SubScene_Console.js](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_Console.js), [SC4_Window_BridgeConsole.js](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_BridgeConsole.js).
+> **Composants clés** : [`SC4_SubScene_Base.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_Base.js), [`SC4_SubScene_Console.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_Console.js), [`SC4_Window_BridgeConsole.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_BridgeConsole.js), [`SC4_SubScene_Subcom.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_Subcom.js), [`SC4_SubScene_RelationDialog.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_RelationDialog.js), [`SC4_SubScene_SubcomDialog.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_SubcomDialog.js).
 
 ---
 
@@ -82,7 +82,7 @@ Chaque sous-scène suit un cycle de vie en 5 étapes rigoureusement cadencé :
              └──────┬──────┘
                     ▼
              ┌─────────────┐
-             │  create()   │ ➔ createDimmer() ➔ createWindowLayer() ➔ createDisplayObjects()
+             │  create()   │ ➔ createWindowLayer() ➔ createDisplayObjects()
              └──────┬──────┘
                     ▼
              ┌─────────────┐
@@ -90,11 +90,19 @@ Chaque sous-scène suit un cycle de vie en 5 étapes rigoureusement cadencé :
              └──────┬──────┘
                     ▼
       ┌──────▶ ┌─────────────┐
-      │ update │  update()   │ ➔ super.update() (updateChildren) ➔ updateMain()
+      │ update │  update()   │ ➔ garde $tutoManager.isBusy() ➔ super.update() ➔ updateMain()
       └──────── └──────┬──────┘
+                    ▼  (Sous-scène enfant via openChildSubScene)
+             ┌─────────────┐
+             │deactivate() │ ➔ _active = false ➔ désactive fenêtres ➔ onDeactivate()
+             └──────┬──────┘
+                    ▼  (Fermeture de l'enfant close(result))
+             ┌─────────────┐
+             │reactivate() │ ➔ _active = true ➔ onReactivate() ➔ onSubSceneResume(child, res)
+             └──────┬──────┘
                     ▼  (Au clic sur Quitter ou Action finale)
              ┌─────────────┐
-             │   close()   │ ➔ Déclenche parentScene.closeSubScene()
+             │   close()   │ ➔ Déclenche parentScene.closeSubScene(result)
              └──────┬──────┘
                     ▼
              ┌─────────────┐
@@ -105,6 +113,26 @@ Chaque sous-scène suit un cycle de vie en 5 étapes rigoureusement cadencé :
              │ terminate() │ ➔ onDestroy() ➔ destroyWindows() (libération mémoire RAM)
              └─────────────┘
 ```
+
+### Règles Critiques d'Exécution & Garde
+1. **Absence de Dimmer Opaque** : `SubScene_Base` n'ajoute **aucun** `createDimmer()` afin de préserver la lisibilité de la carte et des HUDs placés sous `_windowLayer` via `Scene_Map.addHudChild()`.
+2. **Mise à Jour Unique (Anti-Double Input)** : Parce que la sous-scène est attachée via `this.addChild(subScene)` dans `Scene_Map.openSubScene()`, `Scene_Base.prototype.updateChildren()` appelle déjà `subScene.update()` une fois par frame. **`Scene_Map.update` ne doit jamais appeler `this._currentSubScene.update()` en plus**, sans quoi le curseur et la validation des fenêtres avancent 2 fois par pression.
+3. **Garde Tutoriels** : `SubScene_Base.prototype.update()` retourne immédiatement si `$tutoManager && $tutoManager.isBusy()` afin de laisser `Window_Tuto` consommer les entrées sans traversée vers les commandes de la sous-scène.
+
+---
+
+## 🧱 4.1 Empilement Enfant (*Inception*) & Persistance (`SubSceneManager`)
+
+### A. Pile de Sous-Scènes Enfants (`openChildSubScene`)
+Une sous-scène peut ouvrir une autre sous-scène par-dessus elle sans fermer son contexte parent (ex. `SubScene_Console` → `SubScene_Subcom` → `SubScene_SubcomDialog`) :
+* `openChildSubScene(SubSceneClass, ...args)` appelle `parentScene.openSubScene(...)`, empile l'instance courante (`child._callerSubScene`) et appelle `deactivate()` / `onDeactivate()`.
+* À l'appel de `child.close(result)`, `Scene_Map.closeSubScene(result)` détruit l'enfant, restaure l'appelant, appelle `reactivate()` / `onReactivate()`, puis `onSubSceneResume(child, result)`.
+
+### B. Suspension Inter-Scènes (`SubSceneManager`)
+Lorsqu'une action dans une sous-scène bascule temporairement vers une scène RMMZ complète (ex. `Scene_SpaceTravel` depuis `SubScene_Console` ou pause menu) :
+* `subScene.suspend(resumeData)` enregistre la classe, `resumeArgs()`, et l'état dans `SubSceneManager.suspend(this, resumeData)` avant `SceneManager.push(...)`.
+* Au retour sur `Scene_Map`, `SubSceneManager` réinstancie la sous-scène et invoque `onResume(resumeData)`.
+* Appeler `SubSceneManager.clear()` lors d'une sortie définitive (`onCommandCancel`).
 
 ---
 
@@ -131,12 +159,18 @@ La console de passerelle de commandement ([SC4_SubScene_Console.js](file:///c:/S
 
 ### Déclenchement en Jeu :
 ```javascript
-// Depuis un événement sur la passerelle (Touche Action ou Script Call) :
+// Depuis un événement sur la passerelle (Capture automatique de callingEventId) :
 SC4.openBridgeConsole([shipId]);
 
 // Ou directement via la scène active :
-SceneManager._scene.openSubScene(SubScene_Console, [shipId]);
+SceneManager._scene.openSubScene(SubScene_Console, [shipId], callingEventId);
 ```
+
+### Catalogue des Sous-Scènes SC4 :
+* [`SubScene_Console`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_Console.js) : Cockpit bi-écran (`Window_SpaceShipInfo` + `Window_BridgeConsole`).
+* [`SubScene_Subcom`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_Subcom.js) : Terminal SubCom temps réel (`900×420`, ouvert comme sous-scène enfant depuis la console).
+* [`SubScene_RelationDialog`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_RelationDialog.js) : Dialogue social en arc (`Window_InteractionRingCommand` + `Window_BubbleMsg`).
+* [`SubScene_SubcomDialog`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_SubcomDialog.js) : Échange SubCom à distance (`mode = 1` hologramme CRT, bouton *Raccrocher*).
 
 ### Retour de Sous-Menu Fluide (Option A) :
 Dans `SubScene_Console`, lorsque le joueur clique sur **Atterrir**, la fenêtre de droite bascule dynamiquement en mode `land_sites` pour lister tous les POIs atterrissables (`Spatioport Magellan [Autorisé]`, `Ruines [Autorisation requise]`). Un appui sur **Échap** ou **◀ Retour au menu** réinitialise le mode principal sans fermer la sous-scène ni perturber la carte !

@@ -15,7 +15,7 @@ Le système de **Multi-Inventaires** de SimCraft 4 permet de gérer des inventai
 > 2. **Armes** (`$dataWeapons`)
 > 3. **Armures** (`$dataArmors`)
 
-Tous ces types sont affichés dans l'interface de transfert [Scene_Inventory](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/Scene_Inventory.js), s'échangent d'un simple clic avec l'inventaire du joueur, et sont entièrement sérialisés lors de la sauvegarde.
+Tous ces types sont affichés dans l'interface de transfert [`SC4_Scene_Inventory.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Scene_Inventory.js), s'échangent d'un simple clic avec l'inventaire partagé du joueur (`$gameParty` + `A_<leaderId>`), et sont entièrement sérialisés lors de la sauvegarde.
 
 ---
 
@@ -93,7 +93,7 @@ graph TD
 
 ## 💾 4. Persistance Sauvegarde & Chargement (Save / Load)
 
-La persistance des inventaires est orchestrée par [SC_DataManager.js](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC_DataManager.js) sans modifier le code natif de RPG Maker MZ :
+La persistance des inventaires est orchestrée par [`SC4_DataManager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_DataManager.js) sans modifier le code natif de RPG Maker MZ :
 
 1. **Sauvegarde de la partie (`DataManager.makeSaveContents`)** :
    - Tous les inventaires actifs sont sérialisés (`$inventories.makeSavefileData()`).
@@ -150,7 +150,7 @@ Dans la fenêtre de l'événement RPG Maker MZ :
 | `$inventories.create(id, options)` | Crée ou réinitialise un inventaire avec restrictions et options complètes. |
 | `$inventories.remove(id)` | Supprime un inventaire du registre actif (alias simple de unset). |
 | `$inventories.inventory(id)` | Récupère ou instancie l'inventaire `Game_Inventory` désigné. |
-| `$inventories.open(id, options)` | Ouvre l'interface de transfert [Scene_Inventory](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/Scene_Inventory.js) avec options `{ eventId, persistent }`. |
+| `$inventories.open(id, options)` | Ouvre l'interface de transfert [`SC4_Scene_Inventory.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Scene_Inventory.js) avec options `{ eventId, persistent }`. |
 | `$inventories.initEnnemyInventory(enemyId)` | Génère le butin unique d'un ennemi selon ses probabilités de drop et `INVENTORIES.json`. |
 | `$inventories.setPersistent(id, true/false)` | Définit dynamiquement si un inventaire est persistant ou auto-erase. |
 | `$inventories.updateEventSelfSwitchB(containerId)` | Active automatiquement l'interrupteur local B si le conteneur est vide, ou le désactive s'il contient des objets. |
@@ -245,40 +245,56 @@ ou
 
 ### D. Option pour Jeter des Objets (Drop)
 Pour se décharger rapidement d'un excédent de poids :
-- **Dans la scène de transfert ([Scene_Inventory](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/Scene_Inventory.js))** :
-  En sélectionnant un objet dans son sac, le joueur a accès à **« Jeter 1 »** et **« Jeter Tout »**.
-- **Dans l'inventaire personnel ([Scene_Item](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_rmmz_scenes_Patches.js))** :
+- **Dans la scène de transfert ([`SC4_Scene_Inventory.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Scene_Inventory.js))** :
+  En sélectionnant un objet dans l'inventaire partagé, le joueur a accès à **« Jeter 1 »** et **« Jeter Tout »** (ainsi qu'à **« Équiper »** / **« Consommer »**).
+- **Dans l'inventaire personnel (`Scene_Item`)** :
   En validant un objet, une fenêtre propose **« Utiliser »**, **« Jeter 1 »**, **« Jeter Tout »** ou **« Annuler »**. Jeter un objet allège immédiatement le sac et rétablit la mobilité.
+
+### E. Poids en Stock vs Poids Porté (`<worn_weight>`) & Sur-Jauge Leader
+- [`SC4_DataManager.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_DataManager.js) distingue `itemStockWeight(item)` (dans un sac ou conteneur) et `itemWornWeight(item)` via `<worn_weight: X>` (poids résiduel une fois porté) ainsi que le bonus de capacité `<weight: -X>` (`itemWeightBonus`).
+- Dans [`Window_InventoryHeader`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_InventoryHeader.js), la jauge de poids de l'**Inventaire partagé** affiche :
+  - **En cyan (`#00b4d8`)** *(orange ≥ 85%, rouge si surcharge)* : la charge partagée de toute l'équipe (`$gameParty.totalWeight()`).
+  - **En violet (`#a855f7`, sur-jauge sans fond)** : la proportion issue directement du sac personnel du leader `A_<leaderId>` lorsque celui-ci est agrégé (exclu si `A_<leaderId>` est lui-même ouvert dans le volet droit).
 
 ---
 
-## 🖥️ 9. Interface Utilisateur Repensée & Localisation
+## 🖥️ 9. Interface Immersive, Inventaire Partagé & `Game_Party.hasItem`
 
-### A. Scène de Transfert (`Scene_Inventory`)
-1. **Barre de commande supérieure (au-dessus de la description et des listes)** :
-   - **« Prendre »** : Active la liste du conteneur (Prendre 1, Prendre Tout).
-   - **« Déposer »** : Active la liste du sac personnel (Déposer 1, Déposer Tout). *Désactivé automatiquement si le conteneur est un cadavre d'ennemi ou éphémère.*
-   - **« Fermer »** : Quitte la scène.
-2. **Pied de liste avec suivi du poids** :
-   Chaque liste affiche en temps réel : `Poids: [accumulé]/[capacité]` (ex: `Poids: 14/50`).
-   Si la limite est dépassée, le texte s'affiche en **rouge d'alerte**.
+### A. Scène d'Inventaire Bi-Colonne (`SC4_Scene_Inventory.js`)
+1. **Volet Gauche « Inventaire partagé » (`inventory.player_bag`)** :
+   - Agrège `$gameParty` + le sac personnel du leader `A_<leaderId>` uniquement (sans inclure `A_2+`), sauf lorsque `A_<leaderId>` est ouvert à droite (évite l'auto-duplication).
+   - Les actions *Déposer*, *Jeter*, *Équiper* et *Consommer* opèrent sur le conteneur source exact via `consumeFromPlayerContainers()` / `actor.tradeItemWithParty()`.
+   - Header HD (`168px`) avec portrait Paperdoll live (même avec `<Hero>` sans `<Face>`, mis à jour instantanément au changement d'équipement et anti-flash).
+2. **Modale d'Action Contextuelle ([`Window_InventoryAction`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_InventoryAction.js))** :
+   - Propose dynamiquement **« Équiper »** si `leader.canEquip(item)` (avec rollback si un slot est introuvable) et **« Consommer »** si `Scene_Inventory.canConsumeItem(item)` (`consumable`, `occasion`, `scope`, `action.testApply(leader)`, et gestion CommonEvent).
+   - Inclut **Prendre 1 / Prendre Tout** (alerte `⚠️` rouge si surcharge), **Déposer 1 / Déposer Tout** (`(Plein !)` si bloqué), et **Jeter 1 / Jeter Tout**.
+3. **Comparateur, Tri Adaptatif & Tutoriels Contextuels** :
+   - [`Window_InventoryCompare`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_InventoryCompare.js) affiche les deltas stats/poids pour les armes et armures ; [`Window_InventoryCommand`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_InventoryCommand.js) filtre les deux colonnes selon `<sc_type: ...>`.
+   - Séquencement didactique : `tuto_6` (`tuto_inv_transfer`) → `tuto_11` (`tuto_inv_weight_gauge`, différé si poids non encore différencié) → `tuto_10` (`tuto_inv_interact`) → `tuto_7` (`tuto_inv_commands`), puis `tuto_8`/`tuto_9` à la sélection.
 
-### B. Interrupteur Local B Automatique (Conteneurs)
+### B. Patch `$gameParty.hasItem` Multi-Inventaires (`SC4_rmmz_objects_Patches.js`)
+- `$gameParty.hasItem(item, includeEquip)` vérifie `$gameParty` (+ équipements si `includeEquip`), puis inspecte les sacs `A_<id>` de chaque membre actif du groupe via `findMemberInventoryWithItem(item)` : les **Conditions éditeur** (objet/arme/armure) et prérequis de recettes détectent ainsi les objets rangés dans les sacs personnels des équipiers.
+- `$gameParty.consumeItem(item)` et `Game_Actor.prototype.tradeItemWithParty` puisent dans le sac du membre concerné sans duplication lorsqu'un item est absent de `$gameParty`.
+- `$gameParty.numItems()` et `$gameParty.allItems()` restent centrés sur le sac commun.
+- **Contrat Fail Fast** : passer un ID numérique à `$gameParty.hasItem(id)` émet un `DEBUGTOOL.warn` explicite et retourne `false`.
+
+### C. Interrupteur Local B Automatique (Conteneurs)
 Pour tout événement portant le tag `<inventory: C_[id]>` :
 - Si le conteneur devient vide, l'interrupteur local **B** de l'événement passe automatiquement à `true`.
 - Dès qu'un objet y est re-déposé, l'interrupteur local **B** repasse à `false`.
 
-### C. Localisation Multi-Langue
-Toutes les chaînes de texte (`inventory.take`, `inventory.deposit`, `inventory.drop_one`, `inventory.drop_all`, `inventory.weight`, etc.) sont connectées aux dictionnaires dynamiques [Localisation_FR.json](file:///c:/SERVER/htdocs/SimCraft/SC4/data/SC/Localisation_FR.json) et [Localisation_EN.json](file:///c:/SERVER/htdocs/SimCraft/SC4/data/SC/Localisation_EN.json).
+### D. Localisation Multi-Langue
+Toutes les chaînes de texte (`inventory.take`, `inventory.deposit`, `inventory.consume`, `inventory.equip`, `inventory.player_bag`, etc.) sont connectées aux dictionnaires dynamiques [`data/SC/loc/UI_FR.json`](file:///c:/SERVER/htdocs/SimCraft/SC4/data/SC/loc/UI_FR.json) et [`data/SC/loc/UI_EN.json`](file:///c:/SERVER/htdocs/SimCraft/SC4/data/SC/loc/UI_EN.json) (ainsi que [`data/SC/loc/TUTOS_FR.json`](file:///c:/SERVER/htdocs/SimCraft/SC4/data/SC/loc/TUTOS_FR.json) / `TUTOS_EN.json`).
 
 ---
 
 ## 🧪 10. Validation par les Tests Unitaires
 
-La suite de tests unitaires complète de l'Étape 10 valide l'ensemble des fonctionnalités :
-
 ```bash
 node UNIT_TESTS/test_step10.js
+node UNIT_TESTS/test_stock_worn_weight.js
+node UNIT_TESTS/test_party_has_item.js
+node UNIT_TESTS/test_inventory_layout.js
 ```
-*(16 tests exhaustifs validant l'instanciation, les restrictions de conteneurs, l'API simple, les notetags de poids, le bonus négatif d'équipement, la force d'équipe, le blocage de surcharge, l'alerte rouge, l'action drop, l'interrupteur local B et les règles de dépôt).*
+*(`test_inventory_layout.js` couvre 36 tests : headers, sur-jauge, Équiper, Consommer, tri, surcharge, agrégation partagée/leader et tutoriels ; `test_party_has_item.js` valide 6 scénarios de détection/consommation multi-inventaires).*
 

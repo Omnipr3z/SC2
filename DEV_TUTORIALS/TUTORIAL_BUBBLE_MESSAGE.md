@@ -155,3 +155,21 @@ testBubbleMsgCoords(400, 300, "Bulle fixe à (400, 300)", 1);
 // 4. Réinitialiser la cible active
 clearBubbleTarget();
 ```
+
+---
+
+## 💬 8. Queue BD Dynamique, Orientation Dialogue & Modes Visuels (`$guiManager.bubbleMode`)
+
+Depuis les évolutions HUD / SubCom, [`SC4_BubbleMessage.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_BubbleMessage.js) ajoute :
+1. **Queue / Flèche BD (`_bubbleArrowSprite`)** :
+   - Utilise `img/system/WindowArrow.png` en mode `0` et `img/system/WindowArrowSubCom.png` en mode `1`.
+   - S'ancre horizontalement vers la cible (`updateBubbleArrow(coords)`) et inverse son orientation verticale (`scale.y`) si la bulle est placée sous la tête du locuteur.
+2. **Orientation Relative Automatique en Scène de Dialogue (`resolveBubblePositionType`)** :
+   - Hors dialogue, `positionType` RMMZ est respecté à la lettre.
+   - Pendant [`SubScene_RelationDialog`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_RelationDialog.js) (`isDialogSceneActive()`), les bulles se placent dos à dos en axe vertical/diagonal (`top` vs `bottom`) ou toutes deux au-dessus en axe latéral (`|dx| > |dy|`).
+3. **Modes Visuels (`$guiManager.bubbleMode`) & Isolation `ColorManager`** :
+   - **Mode `0` (Standard)** : `Window_Bubble.png` + `WindowArrow.png`.
+   - **Mode `1` (SubCom Hologramme)** : `WindowSubCom.png` + `WindowArrowSubCom.png` pour l'interlocuteur distant (les répliques `\A` du joueur restent toujours en mode `0` via `effectiveMode()`).
+   - En appel SubCom sans événement sur carte, l'ancrage bascule automatiquement sous [`Sprite_InterlocutorHUD`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Sprite_InterlocutorHUD.js) (`subComHudFallbackTarget()`).
+   - [`SC4_rmmz_core_Patches.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_rmmz_core_Patches.js) encapsule les appels texte de `Window_BubbleMsg` avec `ColorManager._callerStack` afin que `\C[n]` lise la palette du windowskin actif sans affecter `Window_ChoiceList` ni `Window_Tuto` (`startInput` isole explicitement la pile).
+4. **Tests de référence** : `node UNIT_TESTS/test_step2_subcom_ui.js` & `node UNIT_TESTS/test_step3_subcom_visual_mode.js`.

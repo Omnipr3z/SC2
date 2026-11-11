@@ -498,8 +498,8 @@ Pour éviter de surcharger `Scene_Map` tout en maintenant le monde actif en arri
 
 * **Infrastructure Générique (`SubScene_Base extends Scene_Base`)** :
   - Dérivée de manière sécurisée de `Scene_Base` (qui est nativement un `PIXI.Container / Stage`).
-  - Fournit nativement le calque de fenêtrage officiel (`createWindowLayer()`, `addWindow()`), un voile d'ombrage semi-transparent (`createDimmer()`) et un cycle de vie standardisé (`create` ➔ `start` ➔ `update` ➔ `stop` ➔ `terminate`).
-  - Gérée par `Scene_Map` via `openSubScene(subSceneClass, ...args)` et `closeSubScene()`. Verrouille le déplacement du joueur et l'ouverture du menu pendant l'activité de la sous-scène.
+  - Fournit nativement le calque de fenêtrage officiel (`createWindowLayer()`, `addWindow()`), la pile d'empilement enfant (`openChildSubScene()` / `onDeactivate()` / `onReactivate()`), la garde `$tutoManager.isBusy()` et un cycle de vie standardisé (`create` ➔ `start` ➔ `update` ➔ `stop` ➔ `terminate`) sans dimmer opaque (`createDimmer()` supprimé pour préserver la lisibilité des HUDs et de la carte).
+  - Gérée par `Scene_Map` via `openSubScene(subSceneClass, ...args)` et `closeSubScene()` (mises à jour une seule fois par `Scene_Base.updateChildren()`). Verrouille le déplacement du joueur et l'ouverture du menu pendant l'activité de la sous-scène.
 
 * **Pupitre Bi-Écran (`SubScene_Console`)** :
   À l'ouverture du pupitre de commandement, deux fenêtres coordonnées s'ouvrent côte à côte au centre de l'écran (largeur totale 900px) :
@@ -510,20 +510,20 @@ Pour éviter de surcharger `Scene_Map` tout en maintenant le monde actif en arri
      - État des compartiments, vitesse orbitale et flotte de nefs embarquées.
   2. **Volet Droit (460px) - Commandes de Passerelle (`Window_BridgeConsole`)** :
      - Titre stylisé et barre de statut télémétrique de l'astre orbité.
-     - Commandes contextuelles d'actions spatiales.
+     - Commandes contextuelles d'actions spatiales et distinction stricte **`ship.status === "Orbiting"`** vs **`"MoveToOrbit"`** (tant que le vaisseau est en phase d'approche, l'atterrissage reste bloqué, le statut n'affiche pas *"En orbite"* et `Scene_SpaceTravel` conserve l'accélération de transit en cours).
 
 * **Déclenchement événementiel** :
-  - Commande de script : `SC4.openBridgeConsole([shipId]);` (ou `SceneManager._scene.openSubScene(SubScene_Console, [shipId])`).
-  - *Prérequis d'activation* : Les plugins `SC4_SubScene_Base` et `SC4_SubScene_Console` doivent être actifs dans le gestionnaire de plugins de RPG Maker MZ (**F10**).
+  - Plugin Command `openBridgeConsole` (Plugin `SC4_Interface`, capture automatiquement `this.eventId()` de l'interpréteur RMMZ pour relayer `callingEventId` jusqu'à `SubScene_Subcom` / `SubScene_SubcomDialog`) ou appel de script : `SC4.openBridgeConsole([shipId], [callingEventId]);`.
+  - *Prérequis d'activation* : Les plugins `SC4_SubScene_Base`, `SC4_SubScene_Console` et les plugins `SC4_*Subcom*` associés doivent être actifs dans le gestionnaire de plugins de RPG Maker MZ (**F10**).
 
 * **Matrice des Commandes Disponibles** :
   | Commande | Icône | Condition d'Activation | Effet |
   | :--- | :---: | :--- | :--- |
-  | **Navigation Stellaire** | 🛰️ | En vol / Orbite (`!isLanded`) | Ouvre `Scene_SpaceTravel` (Système) ou `Scene_SectorTravel` (Secteur). |
-  | **Atterrir** | 🛬 | `!isLanded && canLand && isLandingAuthorized` | Bascule vers le **sous-menu de sélection de site (Option A)**. |
+  | **Navigation Stellaire** | 🛰️ | En vol / Orbite (`!isLanded && !isNavigationLocked`) | Ouvre `Scene_SpaceTravel` (Système) ou `Scene_SectorTravel` (Secteur). Affiche `[Verrouillé]` si `$guiManager.isNavigationLocked` ou si `$subComManager.hasNavigationBlockingCall()` vaut `true`. |
+  | **Atterrir** | 🛬 | `isOrbiting (ship.status === "Orbiting") && canLand && isLandingAuthorized` | Bascule vers le **sous-menu de sélection de site (Option A)**. |
   | **Décoller** | 🛫 | Vaisseau posé (`isLanded === true`) | Lance la séquence cinématique de décollage vers l'orbite stationnaire. |
   | **Amarrage / Sas** | ⚓ | *(Désactivé WIP)* | Amarrage sas à sas vers une station ou navire ami. |
-  | **Subcom** | 📡 | *(Désactivé WIP)* | Communications radio (clearance, secours, avis météo). |
+  | **Subcom** | 📡 | Toujours disponible (`enabled: true`) | Ouvre [`SubScene_Subcom`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_Subcom.js) en sous-scène enfant. Affiche `APPEL` (clignotement rouge `24 frames` via `redrawSubcomItem()`) ou `(N manqués)`. |
   | **Quitter la Console** | ❌ | Toujours disponible | Referme le pupitre bi-écran et restitue le contrôle au joueur sur le pont. |
 
 * **Sélection Multizone de Site d'Atterrissage (Option A)** :
@@ -743,5 +743,6 @@ SC4.setLandingAuthorized("prime_spatioport", true);
 ## 7. Liens & Documentation Connexe
 
 * 📜 [**Tutoriel Système de Quêtes & Balises Multi-Échelles**](./TUTORIAL_QUEST_SYSTEM.md) : Gestionnaire `$gameQuests`, déclencheur `$storyManager`, balises hiérarchiques et transmissions radio CRT.
+* 📡 [**Tutoriel SubCom Temps Réel & Relations**](./TUTORIAL_SUBCOM_RELATIONS.md) : `$subComManager`, verrou navigation `$guiManager`, terminal SubCom et hologramme WebGL.
 * 🌐 [**Tutoriel Système de Localisation**](./TUTORIAL_LOCALIZATION.md) : Traduction dynamique des noms de systèmes et de planètes via les balises `\L[KEY]`.
 * 🎒 [**Tutoriel Conteneurs & Multi-Inventaires**](./TUTORIAL_CONTAINERS_INVENTORIES.md) : Gestion des cales et soutes du vaisseau.

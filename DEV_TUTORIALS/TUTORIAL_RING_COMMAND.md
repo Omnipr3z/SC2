@@ -162,3 +162,16 @@ $gameSystem.setRingCommandConfig({
    this._radius += (this._targetRadius - this._radius) * 0.2 + 0.5;
    ```
    Dès que `_radius` atteint `_targetRadius`, l'animation s'arrête automatiquement et stabilise le rendu.
+
+---
+
+## 🎯 7. Mode Arc Social & Roue Orientée par Vecteur (`Window_InteractionRingCommand`)
+
+Pour les échanges relationnels et SubCom ([`SubScene_RelationDialog`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_RelationDialog.js) / [`SubScene_SubcomDialog`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_SubScene_SubcomDialog.js)), [`SC4_Window_InteractionRingCommand.js`](file:///c:/SERVER/htdocs/SimCraft/SC4/js/plugins/SC4_Window_InteractionRingCommand.js) spécialise `Window_RingCommand` :
+
+1. **Mode Arc sur `Window_RingCommand` (`setArcFromFacing(dir)` / `setArcFromAngle(angle, maxArcSpan)`)** :
+   - Au lieu d'un cercle complet à 360°, déploie les commandes sur un secteur d'arc centré vers le dos du personnage (`oppositeAngle(dir)`).
+2. **Calcul Vectoriel Écran (`Window_InteractionRingCommand.setArcFromTargets`)** :
+   - Calcule l'angle exact opposé au vecteur reliant le joueur à l'événement interlocuteur via `Math.atan2(dy, dx) + Math.PI` (`computeOppositeAngleFromTargets`), quelle que soit l'orientation de marche animée.
+   - **Repli SubCom sans événement** : si aucun événement carte n'est ciblé (communication à distance `SubScene_SubcomDialog`), rebascule automatiquement sur la direction de regard du joueur.
+3. **Intégration `$guiManager.bubbleMode`** : expose le getter `bubbleMode` pour supporter les variantes visuelles contextuelles sans casser les menus radiaux de carte.
