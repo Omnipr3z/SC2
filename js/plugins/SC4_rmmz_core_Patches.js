@@ -27,11 +27,14 @@
  *    - Suivi du clic droit maintenu (_rightPressed) et des déclenchements.
  *    - Suivi continu des coordonnées du curseur et des positions de clic.
  * 
- * 4. ConfigManager :
+ * 4. ColorManager :
+ *    - Pile contextuelle de fenêtres appelantes (_callerStack) pour lire dynamiquement le windowskin actif de Window_BubbleMsg.
+ * 
+ * 5. ConfigManager :
  *    - Gestion de la disposition clavier (AZERTY / QWERTY), recharge auto et langue.
  *    - Configuration du keyMapper (ZQSD / WASD, E pour interagir, I pour inventaire).
  * 
- * 5. TextManager :
+ * 6. TextManager :
  *    - Traduction dynamique des libellés système et termes vanilla via SC4_Localization.
  * ============================================================================
  */
@@ -209,6 +212,125 @@
         }
         _Tilemap_update.call(this);
     };
+
+    // COLOR MANAGER
+    //=============================================================================
+    if (typeof ColorManager !== "undefined") {
+        const _ColorManager_textColor = ColorManager.textColor;
+        const _ColorManager_pendingColor = ColorManager.pendingColor;
+
+        ColorManager._callerStack = ColorManager._callerStack || [];
+
+        ColorManager.isUsableWindowskin = function (skin) {
+            return Boolean(
+                skin &&
+                typeof skin.getPixel === "function" &&
+                (typeof skin.isReady !== "function" || skin.isReady())
+            );
+        };
+        ColorManager.bindWindowContext = function (proto, methodNames) {
+            if (!proto || !Array.isArray(methodNames)) return;
+            for (const name of methodNames) {
+                const original = proto[name];
+                if (typeof original !== "function" || original.__sc4ColorContextBound) continue;
+                const wrapped = function (...args) {
+                    ColorManager._callerStack.push(this);
+                    try {
+                        return original.apply(this, args);
+                    } finally {
+                        ColorManager._callerStack.pop();
+                    }
+                };
+                wrapped.__sc4ColorContextBound = true;
+                proto[name] = wrapped;
+            }
+        };
+        ColorManager.withWindowContext = function (ctxWindow, fn) {
+            this._callerStack.push(ctxWindow || null);
+            try {
+                return fn();
+            } finally {
+                this._callerStack.pop();
+            }
+        };
+        ColorManager.currentCaller = function () {
+            const len = this._callerStack ? this._callerStack.length : 0;
+            return len > 0 ? this._callerStack[len - 1] : null;
+        };
+        ColorManager.currentWindowskin = function (overrideWindowskin = null) {
+            if (this.isUsableWindowskin(overrideWindowskin)) {
+                return overrideWindowskin;
+            }
+            const caller = this.currentCaller();
+            if (caller && this.isUsableWindowskin(caller.windowskin)) {
+                return caller.windowskin;
+            }
+            return this._windowskin;
+        };
+        ColorManager.textColor = function (n, windowskin = null) {
+            const skin = this.currentWindowskin(windowskin);
+            if (typeof _ColorManager_textColor === "function") {
+                if (skin && skin !== this._windowskin) {
+                    const prev = this._windowskin;
+                    this._windowskin = skin;
+                    try {
+                        return _ColorManager_textColor.call(this, n);
+                    } finally {
+                        this._windowskin = prev;
+                    }
+                }
+                return _ColorManager_textColor.call(this, n);
+            }
+            const px = 96 + (n % 8) * 12 + 6;
+            const py = 144 + Math.floor(n / 8) * 12 + 6;
+            return this.isUsableWindowskin(skin) ? skin.getPixel(px, py) : "#ffffff";
+        };
+        ColorManager.pendingColor = function (windowskin = null) {
+            const skin = this.currentWindowskin(windowskin);
+            if (typeof _ColorManager_pendingColor === "function") {
+                if (skin && skin !== this._windowskin) {
+                    const prev = this._windowskin;
+                    this._windowskin = skin;
+                    try {
+                        return _ColorManager_pendingColor.call(this);
+                    } finally {
+                        this._windowskin = prev;
+                    }
+                }
+                return _ColorManager_pendingColor.call(this);
+            }
+            return this.isUsableWindowskin(skin) ? skin.getPixel(120, 120) : "#ffffff";
+        };
+        ColorManager.bindBubbleMessageContext = function () {
+            if (typeof Window_BubbleMsg === "undefined" || !Window_BubbleMsg.prototype) return;
+            const proto = Window_BubbleMsg.prototype;
+            this.bindWindowContext(proto, [
+                "adjustBubbleSize",
+                "textSizeEx",
+                "drawTextEx",
+                "newPage",
+                "updateMessage",
+                "processAllText",
+                "processCharacter",
+                "processControlCharacter",
+                "processEscapeCharacter",
+                "processColorChange",
+                "resetFontSettings",
+                "resetTextColor",
+                "systemColor",
+                "currentOutlineColor"
+            ]);
+            if (typeof proto.startInput === "function" && !proto.startInput.__sc4ColorNullInputBound) {
+                const origStartInput = proto.startInput;
+                const wrappedStartInput = function (...args) {
+                    return ColorManager.withWindowContext(null, () => origStartInput.apply(this, args));
+                };
+                wrappedStartInput.__sc4ColorNullInputBound = true;
+                proto.startInput = wrappedStartInput;
+            }
+        };
+        ColorManager.bindBubbleMessageContext();
+    }
 
     // CONFIG MANAGER
     //=============================================================================

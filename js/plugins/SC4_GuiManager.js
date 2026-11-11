@@ -8,6 +8,33 @@ class GuiManager {
         this._isWeaponHudVisible = false;
         this._isBattleHudVisible = false;
         this._isMenuVisible = false;
+        this._bubbleMode = 0;
+        this._lastBubbleMode = 0;
+    }
+    // BUBBLE MODE
+    get bubbleMode() {
+        return this._bubbleMode;
+    }
+    get lastBubbleMode() {
+        return this._lastBubbleMode;
+    }
+    getBubbleMode() {
+        return this._bubbleMode;
+    }
+    getLastBubbleMode() {
+        return this._lastBubbleMode;
+    }
+    setBubbleMode(mode = 0) {
+        const nextMode = Math.max(0, Math.floor(Number(mode) || 0));
+        if (nextMode !== this._bubbleMode) {
+            this._lastBubbleMode = this._bubbleMode;
+            this._bubbleMode = nextMode;
+        }
+        return this._bubbleMode;
+    }
+    restoreLastBubbleMode() {
+        this._bubbleMode = this._lastBubbleMode;
+        return this._bubbleMode;
     }
     //PLAYER HUD
     showPlayerHud() {

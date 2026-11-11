@@ -85,6 +85,16 @@
  * @desc ID de l'événement sur la carte pour ancrer la bulle (0 pour auto-détecter l'événement appelant).
  * @default 0
  * 
+ * @arg mode
+ * @text Mode Visuel
+ * @type select
+ * @option Normal (Carte)
+ * @value 0
+ * @option SubCom (Hologramme)
+ * @value 1
+ * @desc Mode visuel des bulles et du portrait (0 = normal, 1 = SubCom).
+ * @default 0
+ * 
  * @command openMenuRelations
  * @text Ouvrir Carnet Relations
  * @desc Ouvre la scène plein écran du carnet diplomatique et relationnel.
@@ -291,13 +301,15 @@ SC4.openBridgeConsole = function (shipId) {
  * Ouvre la sous-scène de dialogue social avec un acteur cible.
  * @param {number} [targetActorId=2] 
  * @param {number|null} [targetEventId=null] ID optionnel de l'événement cible pour ancrer la bulle (null pour auto-détection)
+ * @param {number|Object} [modeOrOptions=0] Mode visuel (0 = normal, 1 = SubCom) ou objet d'options
+ * @param {Object} [extraOptions={}] Options complémentaires lorsque modeOrOptions est numérique
  */
-SC4.openRelationDialog = function (targetActorId = 2, targetEventId = null) {
+SC4.openRelationDialog = function (targetActorId = 2, targetEventId = null, modeOrOptions = 0, extraOptions = {}) {
     if (typeof $relationManager !== "undefined" && $relationManager && typeof $relationManager.openRelationDialog === "function") {
-        return $relationManager.openRelationDialog(targetActorId, targetEventId);
+        return $relationManager.openRelationDialog(targetActorId, targetEventId, modeOrOptions, extraOptions);
     }
     if (typeof SubSceneManager !== "undefined" && typeof SubScene_RelationDialog !== "undefined") {
-        return SubSceneManager.open(SubScene_RelationDialog, targetActorId, targetEventId);
+        return SubSceneManager.open(SubScene_RelationDialog, targetActorId, targetEventId, modeOrOptions, extraOptions);
     }
     return null;
 };
@@ -594,7 +606,10 @@ SC4.performTakeoffSequence = function () {
                 ? this.eventId()
                 : null;
             const targetEventId = explicitEventId !== null ? explicitEventId : callingEventId;
-            SC4.openRelationDialog(targetActorId, targetEventId);
+            const mode = (args && args.mode !== undefined && args.mode !== null && args.mode !== "")
+                ? Number(args.mode)
+                : 0;
+            SC4.openRelationDialog(targetActorId, targetEventId, mode);
         });
 
         PluginManager.registerCommand(target, "openMenuRelations", () => {

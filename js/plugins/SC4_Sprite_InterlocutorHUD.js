@@ -27,6 +27,54 @@ class Sprite_InterlocutorHUD extends Sprite_ActorHUD {
         this._dir = "right";
         this._hudRect = new Rectangle(boxW - 280, 20, 260, 260);
         this._hudType = "interlocutor";
+        this._hologramFilter = null;
+    }
+
+    isSubComHologramActive() {
+        return Boolean(
+            typeof $guiManager !== "undefined" &&
+            $guiManager &&
+            $guiManager.bubbleMode === 1
+        );
+    }
+
+    syncHologramFilter() {
+        if (!this._faceSprite) return;
+        const active = this.isSubComHologramActive() && this.visible && this._faceSprite.visible;
+        if (active) {
+            if (!this._hologramFilter && typeof SubComHologramFilter !== "undefined") {
+                this._hologramFilter = new SubComHologramFilter("green");
+            }
+            if (this._hologramFilter) {
+                const currentFilters = Array.isArray(this._faceSprite.filters) ? this._faceSprite.filters : [];
+                if (!currentFilters.includes(this._hologramFilter)) {
+                    this._faceSprite.filters = [...currentFilters, this._hologramFilter];
+                }
+            }
+        } else if (this._hologramFilter) {
+            if (Array.isArray(this._faceSprite.filters)) {
+                const remaining = this._faceSprite.filters.filter(f => f !== this._hologramFilter);
+                this._faceSprite.filters = remaining.length > 0 ? remaining : null;
+            } else if (this._faceSprite.filters) {
+                this._faceSprite.filters = null;
+            }
+        }
+    }
+
+    onHudHide() {
+        super.onHudHide();
+        this.syncHologramFilter();
+    }
+
+    update() {
+        super.update();
+        this.syncHologramFilter();
+        if (this._hologramFilter && this.isSubComHologramActive() && this.visible && this._faceSprite && this._faceSprite.visible) {
+            const dt = (typeof Graphics !== "undefined" && Graphics && Number(Graphics.deltaTime) > 0)
+                ? Math.min(0.1, Number(Graphics.deltaTime))
+                : (1 / 60);
+            this._hologramFilter.update(dt);
+        }
     }
 
     // ========================================================================

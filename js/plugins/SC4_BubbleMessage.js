@@ -148,6 +148,36 @@
             outlineColor: parseString(rawParams["outlineColor"], "")
         };
 
+        static _modeAssets = {
+            0: { windowskin: null, arrow: "WindowArrow", fontFace: null, fontSize: null },
+            1: { windowskin: "WindowSubCom", arrow: "WindowArrowSubCom", fontFace: null, fontSize: null }
+        };
+
+        /**
+         * Retourne la configuration spécifique à un mode visuel de bulle.
+         * @param {number} mode
+         * @returns {Object}
+         */
+        static getModeConfig(mode = 0) {
+            const m = Number(mode) || 0;
+            return Object.assign({}, this._modeAssets[0], this._modeAssets[m] || {});
+        }
+
+        /**
+         * Précharge les ressources graphiques de tous les modes de bulle (Windowskin & Flèche BD).
+         */
+        static preloadModeAssets() {
+            if (typeof ImageManager === "undefined" || typeof ImageManager.loadSystem !== "function") return;
+            for (const entry of Object.values(this._modeAssets)) {
+                if (entry.windowskin) {
+                    ImageManager.loadSystem(String(entry.windowskin).replace(/\.png$/i, ""));
+                }
+                if (entry.arrow) {
+                    ImageManager.loadSystem(String(entry.arrow).replace(/\.png$/i, ""));
+                }
+            }
+        }
+
         /**
          * Précharge la liste des polices configurées.
          */
@@ -163,6 +193,7 @@
                 const skinName = this._config.windowskin.replace(/\.png$/i, "");
                 ImageManager.loadSystem(skinName);
             }
+            this.preloadModeAssets();
         }
 
         /**
@@ -261,15 +292,65 @@
             super.initialize(rect);
             this._mapTarget = null;
             this._isBubbleMode = false;
+            this._speakerType = "none";
+            this._appliedVisualMode = 0;
+            this._lastCleanBubbleText = "";
+            this._listenedModeBitmaps = typeof WeakSet !== "undefined" ? new WeakSet() : null;
             this._vanillaRect = rect ? new Rectangle(rect.x, rect.y, rect.width, rect.height) : new Rectangle(0, 0, 0, 0);
             this._instanceConfig = {};
             this._bubbleArrowSprite = null;
+            Window_BubbleMsg.preloadModeAssets();
             const cfg = this.currentConfig();
             if (cfg.windowskin) {
                 const skinName = cfg.windowskin.replace(/\.png$/i, "");
                 ImageManager.loadSystem(skinName);
             }
             this.createBubbleArrow();
+        }
+
+        get mode() {
+            return (typeof $guiManager !== "undefined" && $guiManager)
+                ? ($guiManager.bubbleMode || 0)
+                : 0;
+        }
+
+        effectiveMode() {
+            if (this._speakerType === "player") {
+                return 0;
+            }
+            return this.mode;
+        }
+
+        isModeAssetsReady(mode = this.effectiveMode()) {
+            if (typeof ImageManager === "undefined" || typeof ImageManager.loadSystem !== "function") {
+                return true;
+            }
+            const modeCfg = Window_BubbleMsg.getModeConfig(mode);
+            const skinRaw = modeCfg.windowskin || Window_BubbleMsg._config.windowskin;
+            const arrowRaw = modeCfg.arrow || "WindowArrow";
+            const checkBitmap = (raw) => {
+                if (!raw) return true;
+                const bmp = ImageManager.loadSystem(String(raw).replace(/\.png$/i, ""));
+                if (!bmp) return true;
+                return typeof bmp.isReady === "function" ? bmp.isReady() : (bmp.ready !== false);
+            };
+            return checkBitmap(skinRaw) && checkBitmap(arrowRaw);
+        }
+
+        watchModeBitmap(bitmap) {
+            if (!bitmap) return;
+            const ready = (typeof bitmap.isReady === "function") ? bitmap.isReady() : (bitmap.ready !== false);
+            if (ready) return;
+            if (this._listenedModeBitmaps && this._listenedModeBitmaps.has(bitmap)) return;
+            if (this._listenedModeBitmaps) this._listenedModeBitmaps.add(bitmap);
+            if (typeof bitmap.addLoadListener === "function") {
+                bitmap.addLoadListener(() => {
+                    if (this._isBubbleMode) {
+                        this.loadWindowskin();
+                        this.updateBubblePlacement();
+                    }
+                });
+            }
         }
 
         createBubbleArrow() {
@@ -285,12 +366,100 @@
         }
 
         /**
-         * Retourne la configuration active pour cette instance.
+         * Retourne la configuration active pour cette instance et son mode effectif.
          * @returns {Object}
          */
         currentConfig() {
             const sysConfig = $gameSystem ? $gameSystem.getBubbleConfig() : {};
-            return Object.assign({}, Window_BubbleMsg._config, sysConfig, this._instanceConfig);
+            const base = Object.assign({}, Window_BubbleMsg._config, sysConfig, this._instanceConfig);
+            const modeCfg = Window_BubbleMsg.getModeConfig(this.effectiveMode());
+            for (const [k, v] of Object.entries(modeCfg)) {
+                if (v !== null && v !== undefined && v !== "") {
+                    base[k] = v;
+                }
+            }
+            return base;
+        }
+
+        applyBubbleModeVisuals() {
+            const nextMode = this.effectiveMode();
+            this._appliedVisualMode = nextMode;
+            const cfg = this.currentConfig();
+            this.loadWindowskin();
+            if (this.windowskin) {
+                this.watchModeBitmap(this.windowskin);
+            }
+            if (this._bubbleArrowSprite && typeof ImageManager !== "undefined" && typeof ImageManager.loadSystem === "function") {
+                const arrowName = String(cfg.arrow || "WindowArrow").replace(/\.png$/i, "");
+                const arrowBmp = ImageManager.loadSystem(arrowName);
+                if (arrowBmp && this._bubbleArrowSprite.bitmap !== arrowBmp) {
+                    this._bubbleArrowSprite.bitmap = arrowBmp;
+                }
+                this.watchModeBitmap(arrowBmp);
+            }
+            this.updateBackOpacity();
+            if (this.contents && typeof this.resetFontSettings === "function") {
+                this.resetFontSettings();
+            }
+        }
+
+        isDialogSceneActive() {
+            return Boolean(
+                typeof $relationManager !== "undefined" &&
+                $relationManager &&
+                typeof $relationManager.isActiveDialog === "function" &&
+                $relationManager.isActiveDialog()
+            );
+        }
+
+        subComHudFallbackTarget() {
+            const boxW = (typeof Graphics !== "undefined" && Graphics.boxWidth) ? Graphics.boxWidth : 1280;
+            return { x: boxW - 150, y: 296, isCoords: true, isHudAnchor: true };
+        }
+
+        resolveDialogInterlocutorTarget() {
+            if (this._speakerType === "event" && this._mapTarget) {
+                return this._mapTarget;
+            }
+            if (typeof $relationManager !== "undefined" && $relationManager && $relationManager.currentSubScene) {
+                const evId = $relationManager.currentSubScene._targetEventId;
+                if (evId > 0 && typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.event === "function") {
+                    return $gameMap.event(evId);
+                }
+            }
+            return null;
+        }
+
+        resolveBubblePositionType() {
+            const manualPos = (typeof $gameMessage !== "undefined" && $gameMessage && typeof $gameMessage.positionType === "function")
+                ? $gameMessage.positionType()
+                : 0;
+            if (!this.isDialogSceneActive()) {
+                return manualPos;
+            }
+            if (this._mapTarget && this._mapTarget.isHudAnchor && this._speakerType !== "player") {
+                return 2;
+            }
+            if (this._speakerType !== "player" && this._speakerType !== "event") {
+                return manualPos;
+            }
+            const playerCoords = this.getTargetCoordinates(typeof $gamePlayer !== "undefined" ? $gamePlayer : null);
+            const otherTarget = this.resolveDialogInterlocutorTarget();
+            const otherCoords = this.getTargetCoordinates(otherTarget);
+            if (!playerCoords || !otherCoords) {
+                return manualPos;
+            }
+            const dx = otherCoords.x - playerCoords.x;
+            const dy = otherCoords.y - playerCoords.y;
+            // Dialogue latéral ou superposé : les deux bulles restent au-dessus
+            if (Math.abs(dx) > Math.abs(dy) || (dx === 0 && dy === 0)) {
+                return 0;
+            }
+            // Vertical ou diagonal dominant : orientées à l'opposé l'une de l'autre
+            if (dy < 0) {
+                return this._speakerType === "player" ? 2 : 0;
+            }
+            return this._speakerType === "player" ? 0 : 2;
         }
 
         mapTarget() {
@@ -305,7 +474,7 @@
             if (typeof target.screenX === "function" && typeof target.screenY === "function") {
                 this._mapTarget = target;
             } else if (typeof target.x === "number" && typeof target.y === "number") {
-                this._mapTarget = { x: target.x, y: target.y, isCoords: true };
+                this._mapTarget = { x: target.x, y: target.y, isCoords: true, isHudAnchor: Boolean(target.isHudAnchor) };
             } else {
                 this._mapTarget = null;
             }
@@ -314,11 +483,11 @@
         /**
          * Analyse et extrait les flags de bulle (\A, \E[id], \PX[x], \PY[y]).
          * @param {string} text 
-         * @returns {{cleanText: string, isBubble: boolean, target: any}}
+         * @returns {{cleanText: string, isBubble: boolean, target: any, speakerType: string}}
          */
         parseBubbleFlags(text) {
             if (typeof text !== "string") {
-                return { cleanText: text, isBubble: false, target: null };
+                return { cleanText: text, isBubble: false, target: null, speakerType: "none" };
             }
 
             if (typeof SC4_Localization !== "undefined") {
@@ -327,12 +496,14 @@
 
             let isBubble = false;
             let target = null;
+            let speakerType = "none";
             let px = null;
             let py = null;
 
             // Flag \A : Joueur
             let clean = text.replace(/(?:\x1b|\\)[Aa](\s*)/g, () => {
                 isBubble = true;
+                speakerType = "player";
                 target = $gamePlayer;
                 return "";
             });
@@ -340,19 +511,24 @@
             // Flag \E[id] : Événement
             clean = clean.replace(/(?:\x1b|\\)[Ee]\[(\d+)\](\s*)/g, (match, p1) => {
                 isBubble = true;
+                speakerType = "event";
                 const eventId = parseInt(p1, 10);
-                target = $gameMap.event(eventId);
+                target = (typeof $gameMap !== "undefined" && $gameMap && typeof $gameMap.event === "function")
+                    ? $gameMap.event(eventId)
+                    : null;
                 return "";
             });
 
             // Flags \PX[x] et \PY[y] : Coordonnées
             clean = clean.replace(/(?:\x1b|\\)[Pp][Xx]\[(\d+)\](\s*)/g, (match, p1) => {
                 isBubble = true;
+                if (speakerType === "none") speakerType = "coords";
                 px = parseInt(p1, 10);
                 return "";
             });
             clean = clean.replace(/(?:\x1b|\\)[Pp][Yy]\[(\d+)\](\s*)/g, (match, p1) => {
                 isBubble = true;
+                if (speakerType === "none") speakerType = "coords";
                 py = parseInt(p1, 10);
                 return "";
             });
@@ -361,7 +537,7 @@
                 target = { x: px !== null ? px : 0, y: py !== null ? py : 0, isCoords: true };
             }
 
-            return { cleanText: clean, isBubble, target };
+            return { cleanText: clean, isBubble, target, speakerType };
         }
 
         startMessage() {
@@ -369,7 +545,10 @@
             const parsed = this.parseBubbleFlags(rawText);
 
             const isSystemBubble = $gameSystem ? $gameSystem.isBubbleMessageMode() : false;
-            this._isBubbleMode = parsed.isBubble || isSystemBubble;
+            const inDialogScene = this.isDialogSceneActive();
+            this._isBubbleMode = parsed.isBubble || isSystemBubble || inDialogScene;
+            this._speakerType = parsed.speakerType || "none";
+            this._lastCleanBubbleText = parsed.cleanText;
 
             if (this._isBubbleMode) {
                 let target = parsed.target;
@@ -379,15 +558,23 @@
                 if (!target && this._mapTarget) {
                     target = this._mapTarget;
                 }
-                if (!target && $gameMap) {
+                if (!target && typeof $gameMap !== "undefined" && $gameMap) {
                     const eventId = ($gameMap._interpreter && $gameMap._interpreter.eventId)
                         ? $gameMap._interpreter.eventId()
                         : 0;
-                    target = eventId > 0 ? $gameMap.event(eventId) : $gamePlayer;
+                    if (eventId > 0 && typeof $gameMap.event === "function") {
+                        target = $gameMap.event(eventId);
+                    }
+                }
+                if (!target) {
+                    if (this._speakerType !== "player" && (this.effectiveMode() === 1 || this.isDialogSceneActive())) {
+                        target = this.subComHudFallbackTarget();
+                    } else if (typeof $gamePlayer !== "undefined") {
+                        target = $gamePlayer;
+                    }
                 }
                 this._mapTarget = target;
-                this.loadWindowskin();
-                this.updateBackOpacity();
+                this.applyBubbleModeVisuals();
                 this.adjustBubbleSize(parsed.cleanText);
                 this.updateBubblePlacement();
                 if (this.isClosing()) {
@@ -486,7 +673,7 @@
             const maxX = boxW - this.width - margin;
             this.x = Math.max(minX, Math.min(maxX, idealX));
 
-            const posType = $gameMessage.positionType();
+            const posType = this.resolveBubblePositionType();
             const targetHeadY = coords.isCoords ? targetY : (targetY - 48);
 
             let idealY;
@@ -594,8 +781,14 @@
 
         update() {
             super.update();
-            if (this._isBubbleMode && this._mapTarget && (this.isOpen() || this.isOpening())) {
-                this.updateBubblePlacement();
+            if (this._isBubbleMode) {
+                if (this.effectiveMode() !== this._appliedVisualMode) {
+                    this.applyBubbleModeVisuals();
+                    this.adjustBubbleSize(this._lastCleanBubbleText);
+                    this.updateBubblePlacement();
+                } else if (this._mapTarget && (this.isOpen() || this.isOpening())) {
+                    this.updateBubblePlacement();
+                }
             }
         }
 
@@ -623,8 +816,14 @@
         }
 
         resetToVanillaRect() {
+            this._speakerType = "none";
+            this._appliedVisualMode = 0;
+            this._lastCleanBubbleText = "";
             if (this._bubbleArrowSprite) {
                 this._bubbleArrowSprite.visible = false;
+                if (typeof ImageManager !== "undefined" && typeof ImageManager.loadSystem === "function") {
+                    this._bubbleArrowSprite.bitmap = ImageManager.loadSystem("WindowArrow");
+                }
             }
             if (this._vanillaRect) {
                 this.x = this._vanillaRect.x;
@@ -751,6 +950,9 @@
 
     window.Window_BubbleMsg = Window_BubbleMsg;
     Window_BubbleMsg.preloadConfiguredFonts();
+    if (typeof ColorManager !== "undefined" && typeof ColorManager.bindBubbleMessageContext === "function") {
+        ColorManager.bindBubbleMessageContext();
+    }
     if (typeof module !== "undefined" && module.exports) {
         module.exports = Window_BubbleMsg;
     }

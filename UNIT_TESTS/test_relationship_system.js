@@ -188,6 +188,9 @@ const RelationDialogManager = require("../js/plugins/SC4_RelationDialogManager")
 const Window_RelationStatus = require("../js/plugins/SC4_Window_RelationStatus");
 const Window_InteractionCommand = require("../js/plugins/SC4_Window_InteractionCommand");
 const Window_RingCommand = require("../js/plugins/SC4_Window_RingCommand");
+global.Window_RingCommand = Window_RingCommand;
+const Window_InteractionRingCommand = require("../js/plugins/SC4_Window_InteractionRingCommand");
+global.Window_InteractionRingCommand = Window_InteractionRingCommand;
 const Window_FactionInfo = require("../js/plugins/SC4_Window_FactionInfo");
 const Window_FactionStatus = require("../js/plugins/SC4_Window_FactionStatus");
 const Window_RelationList = require("../js/plugins/SC4_Window_RelationList");
@@ -196,7 +199,6 @@ const Scene_MenuRelations = require("../js/plugins/SC4_Scene_MenuRelations");
 
 global.Window_RelationStatus = Window_RelationStatus;
 global.Window_InteractionCommand = Window_InteractionCommand;
-global.Window_RingCommand = Window_RingCommand;
 global.Window_FactionInfo = Window_FactionInfo;
 global.Window_FactionStatus = Window_FactionStatus;
 global.Window_RelationList = Window_RelationList;

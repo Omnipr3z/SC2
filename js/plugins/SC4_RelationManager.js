@@ -64,12 +64,37 @@ class RelationManager {
             return this.currentSubScene._targetActorId;
     }
 
-    openRelationDialog(targetActorId = 2, targetEventId = null) {
-        if (typeof SubSceneManager !== "undefined") {
-            return SubSceneManager.open(SubScene_RelationDialog, targetActorId, targetEventId);
+    openRelationDialog(targetActorId = 2, targetEventId = null, modeOrOptions = 0, extraOptions = {}) {
+        let mode = 0;
+        let options = {};
+        if (typeof modeOrOptions === "object" && modeOrOptions !== null) {
+            options = Object.assign({}, modeOrOptions);
+            mode = (options.mode !== undefined && options.mode !== null)
+                ? Math.max(0, Math.floor(Number(options.mode) || 0))
+                : 0;
+        } else {
+            mode = (modeOrOptions !== undefined && modeOrOptions !== null)
+                ? Math.max(0, Math.floor(Number(modeOrOptions) || 0))
+                : 0;
+            options = (extraOptions && typeof extraOptions === "object")
+                ? Object.assign({}, extraOptions)
+                : {};
         }
-        if (SceneManager._scene && typeof SceneManager._scene.openSubScene === "function") {
-            return SceneManager._scene.openSubScene(SubScene_RelationDialog, targetActorId, targetEventId);
+        options.mode = mode;
+
+        if (typeof $guiManager !== "undefined" && $guiManager) {
+            if (mode === 0 && $guiManager.bubbleMode === 0 && $guiManager.lastBubbleMode !== 0) {
+                $guiManager._lastBubbleMode = 0;
+            } else if (typeof $guiManager.setBubbleMode === "function") {
+                $guiManager.setBubbleMode(mode);
+            }
+        }
+
+        if (typeof SubSceneManager !== "undefined") {
+            return SubSceneManager.open(SubScene_RelationDialog, targetActorId, targetEventId, options);
+        }
+        if (typeof SceneManager !== "undefined" && SceneManager._scene && typeof SceneManager._scene.openSubScene === "function") {
+            return SceneManager._scene.openSubScene(SubScene_RelationDialog, targetActorId, targetEventId, options);
         }
         return null;
     }

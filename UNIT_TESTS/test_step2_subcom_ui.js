@@ -418,6 +418,7 @@ require(path.join(pluginsDir, "SC4_Sprite_InterlocutorHUD.js"));
 require(path.join(pluginsDir, "SC4_Sprite_WeaponHUD.js"));
 require(path.join(pluginsDir, "SC4_Window_InteractionCommand.js"));
 require(path.join(pluginsDir, "SC4_Window_RingCommand.js"));
+require(path.join(pluginsDir, "SC4_Window_InteractionRingCommand.js"));
 require(path.join(pluginsDir, "SC4_SubScene_Base.js"));
 require(path.join(pluginsDir, "SC4_SubScene_RelationDialog.js"));
 require(path.join(pluginsDir, "SC4_BubbleMessage.js"));

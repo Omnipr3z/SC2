@@ -166,6 +166,7 @@ global.$relationDialogManager = {
 
 const baseDir = path.resolve(__dirname, "..");
 require(path.join(baseDir, "js/plugins/SC4_Window_RingCommand.js"));
+require(path.join(baseDir, "js/plugins/SC4_Window_InteractionRingCommand.js"));
 require(path.join(baseDir, "js/plugins/SC4_SubSceneManager.js"));
 require(path.join(baseDir, "js/plugins/SC4_SubScene_Base.js"));
 require(path.join(baseDir, "js/plugins/SC4_SubScene_Console.js"));

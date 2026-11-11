@@ -11,11 +11,11 @@
  * 
  * Orchestre l'échange social sur la carte sans décharger Scene_Map ni dimmer :
  * - HUD Interlocuteur + Allégeance Joueur pilotés directement par $guiManager / $relationManager
- * - Window_RingCommand centré sur le joueur, déployé en arc opposé à son regard
- * - Séquence de bulles de dialogue flottantes (Window_BubbleMsg)
+ * - Window_InteractionRingCommand centré sur le joueur, déployé en arc opposé à l'interlocuteur
+ * - Séquence de bulles de dialogue flottantes (Window_BubbleMsg) et restauration du mode visuel
  * 
  * Appel script :
- *   SceneManager._scene.openSubScene(SubScene_RelationDialog, [targetActorId, targetEventId]);
+ *   SceneManager._scene.openSubScene(SubScene_RelationDialog, [targetActorId, targetEventId, modeOrOptions]);
  */
 
 class SubScene_RelationDialog extends SubScene_Base {
@@ -26,9 +26,10 @@ class SubScene_RelationDialog extends SubScene_Base {
         }
     }
 
-    initMembers(targetActorId, targetEventId = null, options = {}) {
+    initMembers(targetActorId, targetEventId = null, modeOrOptions = undefined, extraOptions = {}) {
         if (Array.isArray(targetActorId)) {
-            options = targetActorId[2] || options;
+            if (targetActorId[2] !== undefined) modeOrOptions = targetActorId[2];
+            if (targetActorId[3] !== undefined) extraOptions = targetActorId[3];
             targetEventId = targetActorId[1];
             targetActorId = targetActorId[0];
         }
@@ -42,17 +43,49 @@ class SubScene_RelationDialog extends SubScene_Base {
             : 0;
 
         this._targetEventId = explicitId !== null ? explicitId : (interpreterId > 0 ? interpreterId : 0);
-        this._options = (options && typeof options === "object") ? options : {};
+
+        let options = {};
+        let hasExplicitMode = false;
+        if (typeof modeOrOptions === "number") {
+            options = (extraOptions && typeof extraOptions === "object") ? Object.assign({}, extraOptions) : {};
+            options.mode = Math.max(0, Math.floor(modeOrOptions || 0));
+            hasExplicitMode = true;
+        } else if (modeOrOptions && typeof modeOrOptions === "object") {
+            options = Object.assign({}, modeOrOptions);
+            hasExplicitMode = (options.mode !== undefined && options.mode !== null);
+        }
+
+        const guiMode = (typeof $guiManager !== "undefined" && $guiManager)
+            ? ($guiManager.bubbleMode || 0)
+            : 0;
+        const resolvedMode = hasExplicitMode
+            ? Math.max(0, Math.floor(Number(options.mode) || 0))
+            : guiMode;
+
+        this._options = options;
+        this._bubbleMode = resolvedMode;
+        this._bubbleModeRestored = false;
         this._canCancel = (this._options.canCancel !== undefined) ? Boolean(this._options.canCancel) : true;
         this._commandWindow = null;
         this._dialogueSequenceQueue = [];
         this._onDialogueSequenceComplete = null;
         this._waitingForMessage = false;
+
+        if (hasExplicitMode) {
+            this.syncBubbleMode();
+        }
     }
 
     get targetActorId() { return this._targetActorId; }
     get targetEventId() { return this._targetEventId; }
     set targetEventId(v) { this._targetEventId = Math.max(0, Number(v) || 0); }
+    get bubbleMode() { return this._bubbleMode; }
+
+    syncBubbleMode() {
+        if (typeof $guiManager !== "undefined" && $guiManager && typeof $guiManager.setBubbleMode === "function") {
+            $guiManager.setBubbleMode(this._bubbleMode);
+        }
+    }
 
     commandRingRect() {
         const size = 420;
@@ -86,8 +119,14 @@ class SubScene_RelationDialog extends SubScene_Base {
     }
 
     createCommandWindow(session) {
+        if (typeof Window_InteractionRingCommand === "undefined") {
+            if (typeof DEBUGTOOL !== "undefined" && DEBUGTOOL.error) {
+                DEBUGTOOL.error("SubScene_RelationDialog.createCommandWindow", "Window_InteractionRingCommand introuvable ! Vérifiez SC4_Window_InteractionRingCommand.js dans plugins.js.");
+            }
+            throw new Error("[SC4] Window_InteractionRingCommand introuvable.");
+        }
         const rect = this.commandRingRect();
-        this._commandWindow = new Window_RingCommand(rect);
+        this._commandWindow = new Window_InteractionRingCommand(rect);
         if (typeof this._commandWindow.setCanCancel === "function") {
             this._commandWindow.setCanCancel(this._canCancel);
         }
@@ -109,17 +148,27 @@ class SubScene_RelationDialog extends SubScene_Base {
 
     openCommandRing() {
         if (!this._commandWindow) return;
-        const facingDir = (typeof $gamePlayer !== "undefined" && $gamePlayer && typeof $gamePlayer.direction === "function")
-            ? $gamePlayer.direction()
-            : 2;
-        if (typeof this._commandWindow.setArcFromFacing === "function") {
+        const fallbackTarget = {
+            x: Math.floor(((typeof Graphics !== "undefined" ? Graphics.boxWidth : 1280) || 1280) / 2),
+            y: Math.floor(((typeof Graphics !== "undefined" ? Graphics.boxHeight : 720) || 720) / 2)
+        };
+        const playerTarget = (typeof $gamePlayer !== "undefined" && $gamePlayer) ? $gamePlayer : fallbackTarget;
+        const otherTarget = (
+            this._targetEventId > 0 &&
+            typeof $gameMap !== "undefined" &&
+            $gameMap &&
+            typeof $gameMap.event === "function"
+        ) ? $gameMap.event(this._targetEventId) : null;
+
+        if (typeof this._commandWindow.setArcFromTargets === "function") {
+            this._commandWindow.setArcFromTargets(playerTarget, otherTarget);
+        } else if (typeof this._commandWindow.setArcFromFacing === "function") {
+            const facingDir = (typeof playerTarget.direction === "function") ? playerTarget.direction() : 2;
             this._commandWindow.setArcFromFacing(facingDir);
         }
-        const target = (typeof $gamePlayer !== "undefined" && $gamePlayer)
-            ? $gamePlayer
-            : { x: Math.floor(((typeof Graphics !== "undefined" ? Graphics.boxWidth : 1280) || 1280) / 2), y: Math.floor(((typeof Graphics !== "undefined" ? Graphics.boxHeight : 720) || 720) / 2) };
+
         if (typeof this._commandWindow.openAtTarget === "function") {
-            this._commandWindow.openAtTarget(target);
+            this._commandWindow.openAtTarget(playerTarget);
         } else if (typeof this._commandWindow.activate === "function") {
             this._commandWindow.activate();
         }
@@ -136,6 +185,7 @@ class SubScene_RelationDialog extends SubScene_Base {
     }
 
     createDisplayObjects() {
+        this.syncBubbleMode();
         const session = $relationDialogManager.startExchange(this._targetActorId);
         this.createCommandWindow(session);
     }
@@ -225,7 +275,7 @@ class SubScene_RelationDialog extends SubScene_Base {
         }
 
         if (typeof $gameMessage !== "undefined" && $gameMessage) {
-            $gameMessage.add(`${targetTag}\\C[15]${rawText}\\C[0]`);
+            $gameMessage.add(`${targetTag}${rawText}`);
         }
         this._waitingForMessage = true;
     }
@@ -258,7 +308,10 @@ class SubScene_RelationDialog extends SubScene_Base {
     // ========================================================================
 
     resumeArgs() {
-        return [this._targetActorId, this._targetEventId, this._options];
+        const opts = (this._bubbleMode > 0 && this._options.mode === undefined)
+            ? Object.assign({}, this._options, { mode: this._bubbleMode })
+            : this._options;
+        return [this._targetActorId, this._targetEventId, opts];
     }
 
     onSuspend() {
@@ -266,10 +319,26 @@ class SubScene_RelationDialog extends SubScene_Base {
     }
 
     onResume(resumeData = null) {
+        this.syncBubbleMode();
         if (this._waitingForMessage) {
             this.hideCommandRing();
         } else {
             this.openCommandRing();
+        }
+    }
+
+    restoreBubbleModeOnce() {
+        if (this._bubbleModeRestored) return;
+        this._bubbleModeRestored = true;
+        if (typeof $guiManager !== "undefined" && $guiManager && typeof $guiManager.restoreLastBubbleMode === "function") {
+            $guiManager.restoreLastBubbleMode();
+        }
+    }
+
+    terminate() {
+        this.restoreBubbleModeOnce();
+        if (typeof super.terminate === "function") {
+            super.terminate();
         }
     }
 
@@ -280,6 +349,7 @@ class SubScene_RelationDialog extends SubScene_Base {
         if (typeof $relationDialogManager !== "undefined" && $relationDialogManager) {
             $relationDialogManager.endExchange();
         }
+        this.restoreBubbleModeOnce();
         this.close();
     }
 }
