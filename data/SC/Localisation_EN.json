@@ -92,7 +92,7 @@
     "slot_limit": "Slots full",
     "weight_limit": "Max weight reached",
     "restricted": "Item not allowed",
-    "player_bag": "🎒 Player Bag"
+    "player_bag": "🎒 Shared Inventory"
   },
   "---------DIALS---------": "DIALS",
   "dial_1": "Another day... another boring trip.",

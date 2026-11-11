@@ -131,6 +131,7 @@ class Game_ScActor extends Game_Actor {
             _inventory: { value: null, writable: true, configurable: true, enumerable: false },
             _combat:    { value: null, writable: true, configurable: true, enumerable: false },
             _social:    { value: null, writable: true, configurable: true, enumerable: false },
+            _subCom:    { value: null, writable: true, configurable: true, enumerable: false },
             _location:  { value: null, writable: true, configurable: true, enumerable: false },
             _character: { value: null, writable: true, configurable: true, enumerable: false },
         });
@@ -176,6 +177,16 @@ class Game_ScActor extends Game_Actor {
         return this._social;
     }
 
+    /** @returns {Game_ScActorSubCom} */
+    get subCom() {
+        if (!this._subCom && typeof Game_ScActorSubCom !== "undefined") {
+            this._subCom = new Game_ScActorSubCom(this);
+        } else if (this._subCom && typeof this._subCom.setActor === "function" && this._subCom.actor() !== this) {
+            this._subCom.setActor(this);
+        }
+        return this._subCom;
+    }
+
     /** @returns {Game_ScActorLocation} */
     get location() {
         if (!this._location && typeof Game_ScActorLocation !== "undefined") {
@@ -201,6 +212,7 @@ class Game_ScActor extends Game_Actor {
     hasInventory() { return Boolean(this._inventory); }
     hasCombat() { return Boolean(this._combat); }
     hasSocial() { return Boolean(this._social); }
+    hasSubCom() { return Boolean(this._subCom); }
     hasLocation() { return Boolean(this._location); }
     hasCharacter() { return Boolean(this._character); }
 
@@ -228,6 +240,9 @@ class Game_ScActor extends Game_Actor {
         }
         if (this._social && typeof this._social.makeSavefileData === "function") {
             data.social = this._social.makeSavefileData();
+        }
+        if (this._subCom && typeof this._subCom.makeSavefileData === "function") {
+            data.subCom = this._subCom.makeSavefileData();
         }
         if (this._location && typeof this._location.makeSavefileData === "function") {
             data.location = this._location.makeSavefileData();
@@ -258,6 +273,9 @@ class Game_ScActor extends Game_Actor {
         }
         if (data.social && this.social && typeof this.social.loadSavefileData === "function") {
             this.social.loadSavefileData(data.social);
+        }
+        if (data.subCom && this.subCom && typeof this.subCom.loadSavefileData === "function") {
+            this.subCom.loadSavefileData(data.subCom);
         }
         if (data.location && this.location && typeof this.location.loadSavefileData === "function") {
             this.location.loadSavefileData(data.location);

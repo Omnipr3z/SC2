@@ -86,13 +86,12 @@ body {
     z-index: 10;
 }
 #loadingSpinnerImage {
-    margin: 0px;
+    margin: 28px auto;
     padding: 0px;
-    border-radius: 50%;
-    width: 96px;
-    height: 96px;
-    border: 12px solid rgba(255, 255, 255, 0.25);
-    border-top: 12px solid rgba(255, 255, 255, 1);
+    width: 64px;
+    height: 64px;
+    background: url("../img/system/screwLoading.png") center / contain no-repeat;
+    image-rendering: pixelated;
     animation: fadein 2s ease, spin 1.5s linear infinite;
 }
 @keyframes fadein {

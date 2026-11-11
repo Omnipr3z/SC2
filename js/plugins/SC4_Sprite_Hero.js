@@ -119,10 +119,17 @@ class Sprite_Hero extends Sprite_Character {
             this._compositeEntry = hero.character.getCompositeEntry(this._currentAction);
 
             if (this._compositeEntry) {
-                this.bitmap = this._compositeEntry.bitmap;
-                // Si déjà composé, force rafraîchissement immédiat de la frame
-                if (this._compositeEntry.isComposed && this._frame) {
-                    this._frame.width = 0;
+                if (!this._compositeEntry.isComposed && this._compositeEntry.composer && this._compositeEntry.composer.isReady()) {
+                    this._compositeEntry.composer.bltComposite(this._compositeEntry.bitmap);
+                    this._compositeEntry.isComposed = true;
+                }
+                if (this._compositeEntry.isComposed) {
+                    this.bitmap = this._compositeEntry.bitmap;
+                    if (this._frame) {
+                        this._frame.width = 0;
+                    }
+                } else if (!this.bitmap) {
+                    this.bitmap = this._compositeEntry.bitmap;
                 }
             }
         } else {
@@ -149,9 +156,13 @@ class Sprite_Hero extends Sprite_Character {
             if (composer && composer.isReady()) {
                 composer.bltComposite(this._compositeEntry.bitmap);
                 this._compositeEntry.isComposed = true;
+                this.bitmap = this._compositeEntry.bitmap;
                 // Force le rafraîchissement immédiat de la frame
                 if (this._frame) {
                     this._frame.width = 0;
+                }
+                if (typeof this.updateFrame === "function") {
+                    this.updateFrame();
                 }
             }
         }

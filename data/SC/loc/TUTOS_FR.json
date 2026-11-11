@@ -17,11 +17,15 @@
   "tutoName_2": "Interagir",
   "tuto_2": "Pour interagir avec les éléments du décors, les personnages et les autres créatures, pressez la touche \\c[3]E\\c[0] ou \\c[3]Entrée\\c[0] en étant en contact ou faite un \\c[3]clic gauche\\c[0] en le pointant pour que \\n[1] se dirige à proximité et interagisse directement.",
   "tutoName_6": "Gestion d'Inventaires",
-  "tuto_inv_transfer": "L'interface affiche deux inventaires en vis-à-vis :\n• \\c[3]À gauche\\c[0] : Le sac de votre groupe avec sa jauge de charge en \\c[14]UM\\c[0].\n• \\c[3]À droite\\c[0] : Le conteneur inspecté (armoire, caisse, allié ou butin).\nPrenez garde à ne pas dépasser votre capacité d'emport sous peine de surpoids !",
+  "tuto_inv_transfer": "L'interface affiche deux inventaires en vis-à-vis :\n• \\c[3]À gauche\\c[0] : L'inventaire partagé de votre groupe avec sa jauge de charge en \\c[14]UM\\c[0].\n• \\c[3]À droite\\c[0] : Le conteneur inspecté (armoire, caisse, allié ou butin).\nPrenez garde à ne pas dépasser votre capacité d'emport sous peine de surpoids !",
   "tutoName_7": "Commandes & Tri",
   "tuto_inv_commands": "La barre inférieure offre des raccourcis rapides :\n• \\c[3]Prendre / Déposer\\c[0] : Naviguez directement dans la liste de droite ou de gauche.\n• \\c[3]Tout vider\\c[0] : Récupère l'intégralité du conteneur en un clic.\n• \\c[3]Tri [Catégorie]\\c[0] : Filtre simultanément les deux inventaires.",
   "tutoName_8": "Actions Contextuelles",
-  "tuto_inv_action": "Sélectionner un objet ouvre une modale d'action contextuelle :\n• Transférez \\c[3]1 exemplaire\\c[0] ou \\c[3]Tout le lot\\c[0].\n• Si un transfert provoque une surcharge, une alerte \\c[2]⚠️ rouge\\c[0] vous avertit.\n• Dans votre sac, vous pouvez également jeter des objets.",
+  "tuto_inv_action": "Sélectionner un objet ouvre une modale d'action contextuelle :\n• Transférez \\c[3]1 exemplaire\\c[0] ou \\c[3]Tout le lot\\c[0].\n• Si un transfert provoque une surcharge, une alerte \\c[2]⚠️ rouge\\c[0] vous avertit.\n• Dans l'inventaire partagé, vous pouvez également jeter des objets.",
   "tutoName_9": "Comparateur d'Équipement",
-  "tuto_inv_compare": "Lorsqu'une arme ou une armure est sélectionnée :\n• Le panneau supérieur compare ses statistiques avec la pièce actuellement portée.\n• Les gains apparaissent en \\c[11]+vert\\c[0] et les pertes en \\c[2]-rouge\\c[0].\n• L'impact sur votre charge en \\c[14]UM\\c[0] est calculé en direct."
+  "tuto_inv_compare": "Lorsqu'une arme ou une armure est sélectionnée :\n• Le panneau supérieur compare ses statistiques avec la pièce actuellement portée.\n• Les gains apparaissent en \\c[11]+vert\\c[0] et les pertes en \\c[2]-rouge\\c[0].\n• L'impact sur votre charge en \\c[14]UM\\c[0] est calculé en direct.",
+  "tutoName_10": "Équiper & Consommer",
+  "tuto_inv_interact": "Vous pouvez interagir directement avec les objets depuis cette interface :\n• Sélectionnez un objet dans l'\\c[3]inventaire partagé à gauche\\c[0] ou le \\c[3]conteneur de droite\\c[0] (au clic ou via \\c[3]Prendre / Déposer\\c[0]).\n• Un équipement compatible affiche l'option \\c[11]Équiper\\c[0] pour le revêtir immédiatement.\n• Un consommable utilisable affiche l'option \\c[14]Consommer\\c[0] pour l'appliquer sans fermer l'inventaire.",
+  "tutoName_11": "Jauge de Charge",
+  "tuto_inv_weight_gauge": "La jauge de l'inventaire partagé distingue deux sources de poids :\n• \\c[23]En cyan\\c[0] : Le poids partagé par les membres du groupe (inventaire partagé et équipements portés).\n• \\c[30]En violet\\c[0] : La proportion correspondant directement à votre inventaire personnel."
 }

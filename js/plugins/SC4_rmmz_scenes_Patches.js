@@ -85,8 +85,18 @@
 
     // SCENE BOOT
     //=============================================================================
+    const _Scene_Boot_loadSystemImages = Scene_Boot.prototype.loadSystemImages;
     const _Scene_Boot_loadCustomFonts = Scene_Boot.prototype.loadCustomFonts;
+    const _Scene_Boot_start = Scene_Boot.prototype.start;
 
+    Scene_Boot.prototype.loadSystemImages = function () {
+        if (_Scene_Boot_loadSystemImages) {
+            _Scene_Boot_loadSystemImages.call(this);
+        }
+        if (typeof ImageManager !== "undefined" && typeof ImageManager.loadSystem === "function") {
+            ImageManager.loadSystem("screwLoading");
+        }
+    };
     Scene_Boot.prototype.loadCustomFonts = function () {
         if (_Scene_Boot_loadCustomFonts) {
             _Scene_Boot_loadCustomFonts.call(this);
@@ -95,12 +105,17 @@
             Window_BubbleMsg.preloadConfiguredFonts();
         }
     };
-
-    const _Scene_Boot_start = Scene_Boot.prototype.start;
     Scene_Boot.prototype.start = function () {
         _Scene_Boot_start.call(this);
         if (typeof ConfigManager !== "undefined" && typeof ConfigManager.applyFullscreen === "function") {
             ConfigManager.applyFullscreen();
+        }
+        if (typeof Scene_Loading !== "undefined" && !Scene_Loading.hasPreloadedComposites()) {
+            const pendingSceneClass = (SceneManager._nextScene && SceneManager._nextScene.constructor)
+                ? SceneManager._nextScene.constructor
+                : (typeof Scene_Splash !== "undefined" ? Scene_Splash : Scene_Title);
+            Scene_Loading.setNextSceneClass(pendingSceneClass);
+            SceneManager.goto(Scene_Loading);
         }
     };
 
@@ -615,8 +630,8 @@
                         $gameTemp.clearDestination();
                     }
                 }
-                if (this._currentSubScene && this._currentSubScene.isActive()) {
-                    this._currentSubScene.update();
+                if (window.$subComManager && typeof window.$subComManager.update === "function") {
+                    window.$subComManager.update(time);
                 }
                 $relationManager.updateTick(time);
             }
@@ -792,6 +807,10 @@
         if (typeof Sprite_InterlocutorHUD !== "undefined") {
             this._interlocutorHud = new Sprite_InterlocutorHUD();
             this.addHudChild(this._interlocutorHud);
+        }
+        if (typeof Sprite_SubcomHUD !== "undefined" && !this._subcomHud) {
+            this._subcomHud = new Sprite_SubcomHUD();
+            this.addHudChild(this._subcomHud);
         }
     };
     Scene_Map.prototype.createWeaponHud = function () {

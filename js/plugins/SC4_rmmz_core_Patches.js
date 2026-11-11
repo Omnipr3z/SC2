@@ -20,21 +20,27 @@
  * 1. Utils & Number :
  *    - approach : interpolation pas-à-pas vers une cible.
  * 
- * 2. Bitmap :
+ * 2. Graphics :
+ *    - _createLoadingSpinner : adaptation du spinner vanilla avec img/system/screwLoading.png.
+ * 
+ * 3. Bitmap :
  *    - drawLine : tracé direct de segments sur le canvas du bitmap.
  * 
- * 3. TouchInput :
+ * 4. TouchInput :
  *    - Suivi du clic droit maintenu (_rightPressed) et des déclenchements.
  *    - Suivi continu des coordonnées du curseur et des positions de clic.
  * 
- * 4. ColorManager :
+ * 5. ColorManager :
  *    - Pile contextuelle de fenêtres appelantes (_callerStack) pour lire dynamiquement le windowskin actif de Window_BubbleMsg.
  * 
- * 5. ConfigManager :
+ * 6. ImageManager :
+ *    - Routage persistant de /characters/composite/ vers _system (préservé à travers ImageManager.clear()).
+ * 
+ * 7. ConfigManager :
  *    - Gestion de la disposition clavier (AZERTY / QWERTY), recharge auto et langue.
  *    - Configuration du keyMapper (ZQSD / WASD, E pour interagir, I pour inventaire).
  * 
- * 6. TextManager :
+ * 8. TextManager :
  *    - Traduction dynamique des libellés système et termes vanilla via SC4_Localization.
  * ============================================================================
  */
@@ -67,6 +73,42 @@
             writable: true,
             enumerable: false
         });
+    }
+
+    // GRAPHICS
+    //=============================================================================
+    if (typeof Graphics !== "undefined") {
+        const _Graphics_createLoadingSpinner = Graphics._createLoadingSpinner;
+
+        Graphics.applyScrewLoadingSpinnerStyle = function (spinnerElement) {
+            const root = spinnerElement || this._loadingSpinner;
+            if (!root || typeof root.querySelector !== "function") return;
+            const img = root.querySelector("#loadingSpinnerImage");
+            if (img && img.style) {
+                img.style.border = "none";
+                img.style.borderRadius = "0";
+                img.style.width = "64px";
+                img.style.height = "64px";
+                img.style.margin = "28px auto";
+                img.style.backgroundImage = 'url("img/system/screwLoading.png")';
+                img.style.backgroundSize = "contain";
+                img.style.backgroundRepeat = "no-repeat";
+                img.style.backgroundPosition = "center";
+                img.style.imageRendering = "pixelated";
+            }
+        };
+        if (typeof _Graphics_createLoadingSpinner === "function") {
+            Graphics._createLoadingSpinner = function () {
+                _Graphics_createLoadingSpinner.call(this);
+                this.applyScrewLoadingSpinnerStyle(this._loadingSpinner);
+            };
+        }
+        if (typeof document !== "undefined" && typeof document.getElementById === "function") {
+            const activeSpinner = document.getElementById("loadingSpinner");
+            if (activeSpinner) {
+                Graphics.applyScrewLoadingSpinnerStyle(activeSpinner);
+            }
+        }
     }
 
     // BITMAP
@@ -330,6 +372,33 @@
             }
         };
         ColorManager.bindBubbleMessageContext();
+    }
+
+    // IMAGE MANAGER
+    //=============================================================================
+    if (typeof ImageManager !== "undefined") {
+        const _ImageManager_loadBitmapFromUrl = ImageManager.loadBitmapFromUrl;
+
+        ImageManager.isCompositeUrl = function (url) {
+            return typeof url === "string" && url.includes("/characters/composite/");
+        };
+        ImageManager.loadBitmapFromUrl = function (url) {
+            if (this.isCompositeUrl(url)) {
+                this._system = this._system || {};
+                if (!this._system[url]) {
+                    this._system[url] = Bitmap.load(url);
+                }
+                return this._system[url];
+            }
+            if (typeof _ImageManager_loadBitmapFromUrl === "function") {
+                return _ImageManager_loadBitmapFromUrl.call(this, url);
+            }
+            const cache = (typeof url === "string" && url.includes("/system/")) ? this._system : this._cache;
+            if (!cache[url]) {
+                cache[url] = Bitmap.load(url);
+            }
+            return cache[url];
+        };
     }
 
     // CONFIG MANAGER

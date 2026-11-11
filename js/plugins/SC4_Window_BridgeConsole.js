@@ -29,6 +29,8 @@ class Window_BridgeConsole extends Window_Command {
         this._headerHeight = 70;
         this._shipId = null;
         this._mode = "main";
+        this._subcomBlinkTick = 0;
+        this._subcomBlinkOn = false;
         this.refresh();
     }
 
@@ -40,6 +42,8 @@ class Window_BridgeConsole extends Window_Command {
 
     close() {
         this._mode = "main";
+        this._subcomBlinkTick = 0;
+        this._subcomBlinkOn = false;
         if (typeof super.close === "function") {
             super.close();
         }
@@ -93,12 +97,49 @@ class Window_BridgeConsole extends Window_Command {
         return !!(ship && typeof ship.isLanded === "function" && ship.isLanded() !== null);
     }
 
-    get canLand() {
+    get shipStatus() {
         const ship = this.playerShip;
-        if (!ship) return false;
-        if (this.orbitingPlanetId === null || this.orbitingPlanetId === undefined) return false;
-        if (typeof ship.canLand === "function") return ship.canLand();
-        return true;
+        if (!ship) return null;
+        if (ship.status !== undefined) return ship.status;
+        if (ship._status !== undefined) return ship._status;
+        return null;
+    }
+
+    get isOrbiting() {
+        if (this.isLanded) return false;
+        const planetId = this.orbitingPlanetId;
+        if (planetId === null || planetId === undefined) return false;
+        const st = this.shipStatus;
+        return st === null || st === "Orbiting";
+    }
+
+    get isApproachingOrbit() {
+        if (this.isLanded) return false;
+        const planetId = this.orbitingPlanetId;
+        if (planetId === null || planetId === undefined) return false;
+        return this.shipStatus === "MoveToOrbit";
+    }
+
+    get isNavigationLocked() {
+        if (typeof $guiManager !== "undefined" && $guiManager && $guiManager.isNavigationLocked) {
+            return true;
+        }
+        if (typeof $subComManager !== "undefined" && $subComManager && typeof $subComManager.hasNavigationBlockingCall === "function") {
+            if ($subComManager.hasNavigationBlockingCall()) return true;
+        }
+        return false;
+    }
+
+    get activeSubComCall() {
+        return (typeof $subComManager !== "undefined" && $subComManager && $subComManager.activeCall)
+            ? $subComManager.activeCall
+            : null;
+    }
+
+    get unseenMissedSubComCount() {
+        return (typeof $subComManager !== "undefined" && $subComManager && typeof $subComManager.getUnseenMissedCount === "function")
+            ? $subComManager.getUnseenMissedCount()
+            : 0;
     }
 
     get orbitingPlanetId() {
@@ -188,12 +229,38 @@ class Window_BridgeConsole extends Window_Command {
     get canLand() {
         const ship = this.playerShip;
         if (!ship || this.isLanded) return false;
-        const planetId = this.orbitingPlanetId;
-        if (planetId === null || planetId === undefined) return false;
+        if (!this.isOrbiting) return false;
+        if (typeof ship.canLand === "function" && !ship.canLand()) return false;
 
         const planet = this.orbitingPlanet;
         if (planet && planet.landingAllowed === false) return false;
         return this.landingPois.length > 0;
+    }
+
+    getSubComCallerDisplayName(call) {
+        if (!call) return "";
+        if (call.masked) {
+            return call.maskedLabel || this.loc("subcom.masked_signal", "Signal Masqué");
+        }
+        const actor = (typeof $gameActors !== "undefined" && $gameActors && typeof $gameActors.actor === "function")
+            ? $gameActors.actor(call.actorId)
+            : null;
+        return actor ? actor.name() : `#${call.actorId}`;
+    }
+
+    buildSubComCommandLabel() {
+        const base = this.loc("bridge.cmd_subcom", "Subcom");
+        const activeCall = this.activeSubComCall;
+        if (activeCall) {
+            const incomingTag = this.loc("bridge.subcom_incoming_tag", "APPEL");
+            return `${base} — ${incomingTag}: ${this.getSubComCallerDisplayName(activeCall)}`;
+        }
+        const unseen = this.unseenMissedSubComCount;
+        if (unseen > 0) {
+            const missedTag = this.loc("bridge.subcom_missed_tag", "manqués");
+            return `${base} (${missedTag}: ${unseen})`;
+        }
+        return base;
     }
 
     loc(key, def) {
@@ -259,8 +326,10 @@ class Window_BridgeConsole extends Window_Command {
             this.contents.fontSize = 14;
             if (this.isLanded) {
                 this.contents.textColor = "#e5c07b";
-            } else if (this.orbitingPlanetId !== null && this.orbitingPlanetId !== undefined) {
+            } else if (this.isOrbiting) {
                 this.contents.textColor = "#98c379";
+            } else if (this.isApproachingOrbit) {
+                this.contents.textColor = "#56b6c2";
             } else {
                 this.contents.textColor = "#abb2bf";
             }
@@ -305,11 +374,15 @@ class Window_BridgeConsole extends Window_Command {
         if (this.isLanded) {
             const pId = this.playerShip.isLanded();
             statusText = this.loc("bridge.status_landed", `[STATUT] Amarré au sol / Spatioport (Astre #${pId})`);
-        } else if (this.orbitingPlanetId !== null && this.orbitingPlanetId !== undefined) {
+        } else if (this.isOrbiting) {
             const planet = this.orbitingPlanet;
             const pName = planet ? (planet.name || `Astre #${planet.id}`) : `Astre #${this.orbitingPlanetId}`;
             const authTag = this.isLandingAuthorized ? " [Atterrissage Autorisé]" : " [Autorisation Requise]";
             statusText = this.loc("bridge.status_orbiting", `[STATUT] En orbite stationnaire autour de ${pName}${authTag}`);
+        } else if (this.isApproachingOrbit) {
+            const planet = this.orbitingPlanet;
+            const pName = planet ? (planet.name || `Astre #${planet.id}`) : `Astre #${this.orbitingPlanetId}`;
+            statusText = this.loc("bridge.status_approaching_orbit", `[STATUT] En approche vers l'orbite de ${pName}`);
         } else {
             statusText = this.loc("bridge.status_space", "[STATUT] En vol libre dans l'espace sidéral");
         }
@@ -328,6 +401,21 @@ class Window_BridgeConsole extends Window_Command {
             this.changePaintOpacity(cmd.enabled);
         }
 
+        const isSubcomIncoming = (cmd.symbol === "subcom" && Boolean(this.activeSubComCall));
+        if (isSubcomIncoming && this.contents) {
+            if (this._subcomBlinkOn && typeof this.contents.fillRect === "function") {
+                const bgRect = this.itemRect(index);
+                this.contents.fillRect(
+                    bgRect.x + 2,
+                    bgRect.y + 2,
+                    Math.max(0, bgRect.width - 4),
+                    Math.max(0, bgRect.height - 4),
+                    "rgba(220, 38, 38, 0.28)"
+                );
+            }
+            this.contents.textColor = this._subcomBlinkOn ? "#ff4d4d" : "#ffaa80";
+        }
+
         const iconMap = {
             navigation: "🛰️",
             land: "🛬",
@@ -344,6 +432,53 @@ class Window_BridgeConsole extends Window_Command {
         if (typeof this.drawText === "function") {
             this.drawText(fullText, rect.x + 8, rect.y, rect.width - 16, "left");
         }
+    }
+
+    redrawSubcomItem() {
+        if (!Array.isArray(this._list)) return;
+        const idx = this._list.findIndex(c => c && c.symbol === "subcom");
+        if (idx < 0 || !this.contents) return;
+        const rect = this.itemRect(idx);
+        if (typeof this.contents.clearRect === "function") {
+            this.contents.clearRect(rect.x, rect.y, rect.width, rect.height);
+        }
+        if (typeof this.drawItemBackground === "function") {
+            this.drawItemBackground(idx);
+        }
+        this.drawItem(idx);
+    }
+
+    updateSubcomBlink() {
+        if (this._mode !== "main" || !this.visible) {
+            this._subcomBlinkTick = 0;
+            if (this._subcomBlinkOn) {
+                this._subcomBlinkOn = false;
+                this.redrawSubcomItem();
+            }
+            return;
+        }
+        const hasIncoming = Boolean(this.activeSubComCall);
+        if (!hasIncoming) {
+            this._subcomBlinkTick = 0;
+            if (this._subcomBlinkOn) {
+                this._subcomBlinkOn = false;
+                this.redrawSubcomItem();
+            }
+            return;
+        }
+        this._subcomBlinkTick++;
+        if (this._subcomBlinkTick >= 24) {
+            this._subcomBlinkTick = 0;
+            this._subcomBlinkOn = !this._subcomBlinkOn;
+            this.redrawSubcomItem();
+        }
+    }
+
+    update() {
+        if (typeof super.update === "function") {
+            super.update();
+        }
+        this.updateSubcomBlink();
     }
 
     // ========================================================================
@@ -372,22 +507,32 @@ class Window_BridgeConsole extends Window_Command {
         const landed = this.isLanded;
         const canLand = this.canLand;
         const authorized = this.isLandingAuthorized;
+        const navLocked = this.isNavigationLocked;
+        const navBase = this.loc("bridge.cmd_navigation", "Navigation Stellaire");
+        const navLabel = (!landed && navLocked)
+            ? `${navBase} ${this.loc("bridge.nav_locked_tag", "[Verrouillé]")}`
+            : navBase;
 
-        this.addCommand(this.loc("bridge.cmd_navigation", "Navigation Stellaire"), "navigation", !landed);
+        this.addCommand(navLabel, "navigation", !landed && !navLocked);
         this.addCommand(this.loc("bridge.cmd_land", "Atterrir"), "land", !landed && canLand && authorized);
         this.addCommand(this.loc("bridge.cmd_takeoff", "Décoller"), "takeoff", landed);
         this.addCommand(this.loc("bridge.cmd_dock", "Amarrage / Sas (WIP)"), "dock", false);
-        this.addCommand(this.loc("bridge.cmd_subcom", "Subcom (WIP)"), "subcom", false);
+        this.addCommand(this.buildSubComCommandLabel(), "subcom", true);
         this.addCommand(this.loc("bridge.cmd_quit", "Quitter la console"), "quit", true);
     }
 
     refresh() {
+        const prevIndex = (typeof this._index === "number") ? this._index : 0;
         if (typeof this.clearCommandList === "function") {
             this.clearCommandList();
         }
         this.makeCommandList();
         if (typeof super.refresh === "function") {
             super.refresh();
+        }
+        if (this._list && this._list.length > 0 && typeof this.select === "function") {
+            const clamped = Math.max(0, Math.min(prevIndex, this._list.length - 1));
+            this.select(clamped);
         }
         this.drawTitleBlock();
         this.drawStatusBlock();
@@ -554,7 +699,12 @@ if (typeof Game_Player !== "undefined") {
     };
 }
 
-window.Window_BridgeConsole = Window_BridgeConsole;
+if (typeof window !== "undefined") {
+    window.Window_BridgeConsole = Window_BridgeConsole;
+}
+if (typeof global !== "undefined") {
+    global.Window_BridgeConsole = Window_BridgeConsole;
+}
 if (typeof module !== "undefined" && module.exports) {
     module.exports = Window_BridgeConsole;
 }

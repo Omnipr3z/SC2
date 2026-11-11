@@ -187,7 +187,7 @@ class Scene_SpaceTravel extends Scene_Base {
         // Réinitialisation automatique en 1x dès qu'un objectif est atteint
         if (typeof $gameDate !== "undefined" && $gameDate && $gameDate.getScrollSpeedMode() > 1) {
             const playerShip = window.$gameSpaceships ? window.$gameSpaceships.playerShip() : null;
-            if (playerShip && (playerShip.orbitingPlanetId !== null || (playerShip.isLanded && playerShip.isLanded() !== null))) {
+            if (playerShip && (playerShip.status === "Orbiting" || (playerShip.isLanded && playerShip.isLanded() !== null))) {
                 $gameDate.setScrollSpeedMode(1);
                 if (this._timeControlsWindow) {
                     this._timeControlsWindow.refresh();

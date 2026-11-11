@@ -47,6 +47,10 @@ const testFiles = [
     'test_relationship_system.js',
     'test_step2_subcom_ui.js',
     'test_step3_subcom_visual_mode.js',
+    'test_step4_subcom_system.js',
+    'test_scene_loading_composite.js',
+    'test_inventory_layout.js',
+    'test_party_has_item.js',
     'test_galactic_repo_refactor.js'
 ];
 

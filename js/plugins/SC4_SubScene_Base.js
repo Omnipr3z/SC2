@@ -107,6 +107,9 @@ class SubScene_Base extends Scene_Base {
 
     update() {
         if (!this.isActive()) return;
+        if (typeof $tutoManager !== "undefined" && $tutoManager && typeof $tutoManager.isBusy === "function" && $tutoManager.isBusy()) {
+            return;
+        }
         if (typeof super.update === "function") {
             super.update();
         } else {

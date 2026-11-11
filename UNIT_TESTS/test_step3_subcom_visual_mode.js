@@ -971,6 +971,14 @@ test("SubComHologramFilter gère les presets, avertit sur preset inconnu et anim
     assert.strictEqual(filter.preset, "green");
     assert.ok(SubComHologramFilter.FRAGMENT_SRC.includes("uTintColor"));
     assert.ok(SubComHologramFilter.FRAGMENT_SRC.includes("inputClamp"));
+    assert.ok(SubComHologramFilter.FRAGMENT_SRC.includes("#ifdef GL_FRAGMENT_PRECISION_HIGH"));
+    assert.ok(SubComHologramFilter.FRAGMENT_SRC.includes("precision highp float;"));
+    assert.ok(SubComHologramFilter.FRAGMENT_SRC.includes("uniform highp vec4 inputSize;"),
+        "inputSize doit matcher la précision highp du vertex shader PixiJS");
+    assert.ok(SubComHologramFilter.FRAGMENT_SRC.includes("uniform highp vec4 outputFrame;"),
+        "outputFrame doit matcher la précision highp du vertex shader PixiJS");
+    assert.ok(!SubComHologramFilter.FRAGMENT_SRC.includes("pow("),
+        "Éviter pow(négatif, float) indéfini en GLSL ES 1.00");
     assert.strictEqual(filter.padding, 0);
 
     const t0 = filter.uniforms.uTime;
@@ -1025,6 +1033,15 @@ test("Sprite_InterlocutorHUD attache le filtre uniquement sur _faceSprite en mod
     assert.strictEqual(iHud.isHero(), false);
     assert.ok(Array.isArray(iHud._faceSprite.filters) && iHud._faceSprite.filters[0] instanceof SubComHologramFilter,
         "Le filtre hologramme fonctionne aussi sur les visages Vanilla");
+
+    // Test 3b : Tant que la bitmap Vanilla n'est pas prête (frame 0x0), syncHologramFilter diffère l'attache
+    const origReady = iHud._faceSprite.bitmap.isReady;
+    iHud._faceSprite.bitmap.isReady = () => false;
+    iHud.syncHologramFilter();
+    assert.strictEqual(iHud._faceSprite.filters, null, "Pas de filtre tant que le faceset n'est pas chargé");
+    iHud._faceSprite.bitmap.isReady = origReady;
+    iHud.syncHologramFilter();
+    assert.ok(Array.isArray(iHud._faceSprite.filters) && iHud._faceSprite.filters[0] instanceof SubComHologramFilter);
 
     mapScene.closeSubScene();
 });

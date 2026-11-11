@@ -33,11 +33,19 @@
         };
 
     const FRAGMENT_SRC = `
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
+        precision highp float;
+        uniform highp vec4 inputSize;
+        uniform highp vec4 outputFrame;
+        #else
+        precision mediump float;
+        uniform vec4 inputSize;
+        uniform vec4 outputFrame;
+        #endif
+
         varying vec2 vTextureCoord;
 
         uniform sampler2D uSampler;
-        uniform vec4 inputSize;
-        uniform vec4 outputFrame;
         uniform vec4 inputClamp;
 
         uniform float uTime;
@@ -99,7 +107,8 @@
             tinted *= 1.0 - (uScanlineIntensity * (1.0 - scanline));
 
             float sweepPos = fract(uTime * 0.35);
-            float sweepBand = exp(-pow((uvLocal.y - sweepPos) * 14.0, 2.0));
+            float sweepDelta = (uvLocal.y - sweepPos) * 14.0;
+            float sweepBand = exp(-(sweepDelta * sweepDelta));
             tinted += uTintColor * (sweepBand * uGlowStrength);
 
             float grain = (hash(uvLocal * 128.0 + vec2(uTime * 37.0, uTime * 19.0)) - 0.5) * uNoiseIntensity;

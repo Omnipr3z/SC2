@@ -15,6 +15,7 @@ class Window_InventoryAction extends Window_Command {
         this._mode = "target"; // "target" ou "party"
         this._canDeposit = true;
         this._canEquip = false;
+        this._canConsume = false;
         this._overloadOne = false;
         this._overloadAll = false;
         this._canAcceptOne = true;
@@ -37,6 +38,10 @@ class Window_InventoryAction extends Window_Command {
 
     get canEquip() {
         return this._canEquip;
+    }
+
+    get canConsume() {
+        return this._canConsume;
     }
 
     get isOverloadOne() {
@@ -69,7 +74,7 @@ class Window_InventoryAction extends Window_Command {
     // 2. CONFIGURATION & COMMANDES
     // ========================================================================
 
-    setup(mode, canDeposit = true, canEquip = false, overloadOne = false, overloadAll = false, canAcceptOne = true, canAcceptAll = true) {
+    setup(mode, canDeposit = true, canEquip = false, overloadOne = false, overloadAll = false, canAcceptOne = true, canAcceptAll = true, canConsume = false) {
         this._mode = mode;
         this._canDeposit = canDeposit;
         this._canEquip = canEquip;
@@ -77,6 +82,7 @@ class Window_InventoryAction extends Window_Command {
         this._overloadAll = Boolean(overloadAll);
         this._canAcceptOne = Boolean(canAcceptOne);
         this._canAcceptAll = Boolean(canAcceptAll);
+        this._canConsume = Boolean(canConsume);
         this.refresh();
         const numItems = this.maxItems();
         this.height = this.fittingHeight(numItems);
@@ -110,10 +116,16 @@ class Window_InventoryAction extends Window_Command {
             if (this._canEquip) {
                 this.addCommand(this.loc("inventory.equip", "Équiper"), "equip", true);
             }
+            if (this._canConsume) {
+                this.addCommand(this.loc("inventory.consume", "Consommer"), "consume", true);
+            }
             this.addCommand(this.loc("inventory.cancel", "Annuler"), "cancel", true);
         } else {
             if (this._canEquip) {
                 this.addCommand(this.loc("inventory.equip", "Équiper"), "equip", true);
+            }
+            if (this._canConsume) {
+                this.addCommand(this.loc("inventory.consume", "Consommer"), "consume", true);
             }
             const txtDepOne = !this._canAcceptOne
                 ? this.loc("inventory.deposit_one", "Déposer 1") + " (Plein !)"

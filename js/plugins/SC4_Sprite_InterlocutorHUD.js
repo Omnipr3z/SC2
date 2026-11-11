@@ -40,7 +40,13 @@ class Sprite_InterlocutorHUD extends Sprite_ActorHUD {
 
     syncHologramFilter() {
         if (!this._faceSprite) return;
-        const active = this.isSubComHologramActive() && this.visible && this._faceSprite.visible;
+        const bmp = this._faceSprite.bitmap;
+        const faceReady = Boolean(
+            bmp &&
+            (typeof bmp.isReady !== "function" || bmp.isReady()) &&
+            (typeof bmp.isError !== "function" || !bmp.isError())
+        );
+        const active = this.isSubComHologramActive() && this.visible && this._faceSprite.visible && faceReady;
         if (active) {
             if (!this._hologramFilter && typeof SubComHologramFilter !== "undefined") {
                 this._hologramFilter = new SubComHologramFilter("green");
@@ -195,6 +201,26 @@ class Sprite_InterlocutorHUD extends Sprite_ActorHUD {
         return Boolean(typeof $relationManager !== "undefined" && $relationManager && $relationManager.isActiveDialog());
     }
 
+    isMasked() {
+        return Boolean(
+            typeof $relationManager !== "undefined" &&
+            $relationManager &&
+            typeof $relationManager.isInterlocutorMasked === "function" &&
+            $relationManager.isInterlocutorMasked()
+        );
+    }
+
+    maskedDisplayName() {
+        if (
+            typeof $relationManager !== "undefined" &&
+            $relationManager &&
+            typeof $relationManager.getMaskedInterlocutorLabel === "function"
+        ) {
+            return String($relationManager.getMaskedInterlocutorLabel() || "Signal Masqué");
+        }
+        return this.loc("subcom.masked_signal", "Signal Masqué");
+    }
+
     hasValidData() {
         return Boolean(this.actor && this.relation);
     }
@@ -243,20 +269,23 @@ class Sprite_InterlocutorHUD extends Sprite_ActorHUD {
         const iconBlank = this.resolveRelationIconBitmap(`affinity_${type}_blank`);
         const currentTs = (typeof $gameDate !== "undefined" && $gameDate) ? $gameDate.timestamp : 0;
 
+        const masked = this.isMasked();
         return {
             actorId: actor.actorId(),
             name: actor.name(),
-            equipsKey: equips.map(e => e ? e.id : 0).join("-"),
+            masked: masked,
+            maskedLabel: masked ? this.maskedDisplayName() : "",
+            equipsKey: masked ? "masked" : equips.map(e => e ? e.id : 0).join("-"),
 
-            factionId: faction ? faction.id : 0,
-            factionBanner: faction ? faction.bannerName : "none",
-            bannerReady: Boolean(this.bitmapImageSource(bannerBitmap)),
+            factionId: masked ? -1 : (faction ? faction.id : 0),
+            factionBanner: masked ? "masked" : (faction ? faction.bannerName : "none"),
+            bannerReady: masked ? true : Boolean(this.bitmapImageSource(bannerBitmap)),
 
-            affinity: relation.affinity,
-            obedience: relation.calculateObedience(),
-            threat: relation.threat,
-            agacement: relation.getAgacement(currentTs),
-            threshold: relation.reactionThreshold(),
+            affinity: masked ? 0 : relation.affinity,
+            obedience: masked ? 0 : relation.calculateObedience(),
+            threat: masked ? 0 : relation.threat,
+            agacement: masked ? 0 : relation.getAgacement(currentTs),
+            threshold: masked ? "masked" : relation.reactionThreshold(),
 
             iconFullReady: Boolean(this.bitmapImageSource(iconFull)),
             iconBlankReady: Boolean(this.bitmapImageSource(iconBlank))
@@ -267,15 +296,90 @@ class Sprite_InterlocutorHUD extends Sprite_ActorHUD {
     // RENDU
     // ========================================================================
 
+    drawActorFace() {
+        if (this.isMasked()) {
+            if (this._faceSprite) {
+                this._faceSprite.visible = false;
+            }
+            this.drawMaskedFacePlaceholder();
+            return;
+        }
+        super.drawActorFace();
+    }
+
+    drawMaskedFacePlaceholder() {
+        const ctx = this.contentCtx;
+        if (!ctx) return;
+        const rect = this.faceRect();
+        ctx.save();
+        ctx.fillStyle = "rgba(6, 28, 20, 0.92)";
+        ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+        ctx.strokeStyle = "rgba(57, 255, 136, 0.72)";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.width - 1, rect.height - 1);
+        ctx.font = "bold 30px sans-serif";
+        ctx.fillStyle = "#39ff88";
+        ctx.textAlign = "center";
+        ctx.fillText("?", rect.x + rect.width / 2, rect.y + rect.height / 2 + 10);
+        ctx.restore();
+    }
+
+    drawName() {
+        if (!this.isMasked()) {
+            super.drawName();
+            return;
+        }
+        const ctx = this.contentCtx;
+        if (!ctx) return;
+        const maskedName = this.maskedDisplayName().toUpperCase();
+        ctx.save();
+        this.styleName(ctx);
+        ctx.fillStyle = "#39ff88";
+        const rect = this.nameRect(maskedName, ctx);
+        ctx.fillText(maskedName, Math.max(6, rect.x), rect.y);
+        ctx.restore();
+    }
+
     drawHudContents() {
         super.drawHudContents();
         this.drawRelation();
+        if (this._contentsLayer && this._contentsLayer.bitmap && this._contentsLayer.bitmap._baseTexture && typeof this._contentsLayer.bitmap._baseTexture.update === "function") {
+            this._contentsLayer.bitmap._baseTexture.update();
+        }
     }
 
     drawRelation() {
+        if (this.isMasked()) {
+            this.drawMaskedRelationInfo();
+            return;
+        }
         this.drawFaction();
         const data = this.getRelationData();
         this.drawRelationStats(data);
+    }
+
+    drawMaskedRelationInfo() {
+        const ctx = this.contentCtx;
+        if (!ctx) return;
+        const freqText = this.loc("subcom.masked_freq", "FRÉQUENCE CRYPTÉE");
+        const idText = this.loc("subcom.masked_identity", "IDENTITÉ INCONNUE");
+        const subText = this.loc("subcom.masked_sub", "Télémétrie sociale indisponible");
+
+        ctx.save();
+        ctx.font = "bold 12px sans-serif";
+        ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#39ff88";
+        ctx.fillText(freqText, 14, 72);
+
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillStyle = "#e2e8f0";
+        ctx.fillText(idText, 14, 114);
+
+        ctx.font = "normal 11px sans-serif";
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText(subText, 14, 142);
+        ctx.restore();
     }
 
     drawFaction() {

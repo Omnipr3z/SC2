@@ -26,10 +26,64 @@
 // 1. CLASSE SUBSCENE_CONSOLE
 // ========================================================================
 class SubScene_Console extends SubScene_Base {
-        initMembers(shipId) {
+        initMembers(shipId, targetEventId = null) {
+            if (Array.isArray(shipId)) {
+                targetEventId = shipId[1];
+                shipId = shipId[0];
+            }
             this._shipId = (shipId !== undefined && shipId !== null) ? Number(shipId) : null;
+            const explicitEv = (targetEventId !== undefined && targetEventId !== null && Number(targetEventId) > 0)
+                ? Number(targetEventId)
+                : null;
+            const interpEv = (typeof $gameMap !== "undefined" && $gameMap && $gameMap._interpreter && typeof $gameMap._interpreter.eventId === "function")
+                ? $gameMap._interpreter.eventId()
+                : 0;
+            this._targetEventId = explicitEv !== null ? explicitEv : (interpEv > 0 ? interpEv : 0);
             this._shipInfoWindow = null;
             this._consoleWindow = null;
+            this._lastSnapshot = null;
+        }
+
+        captureLiveSnapshot() {
+            const ship = this.targetShip;
+            const shipStatus = ship
+                ? (ship.status !== undefined ? ship.status : (ship._status !== undefined ? ship._status : null))
+                : null;
+            const orbitingPlanetId = (ship && ship.orbitingPlanetId !== undefined) ? ship.orbitingPlanetId : null;
+            const isLanded = (ship && typeof ship.isLanded === "function") ? ship.isLanded() : null;
+            const navLocked = Boolean(
+                (typeof $guiManager !== "undefined" && $guiManager && $guiManager.isNavigationLocked) ||
+                (typeof $subComManager !== "undefined" && $subComManager && typeof $subComManager.hasNavigationBlockingCall === "function" && $subComManager.hasNavigationBlockingCall())
+            );
+            const activeCall = (typeof $subComManager !== "undefined" && $subComManager) ? $subComManager.activeCall : null;
+            const unseenMissed = (typeof $subComManager !== "undefined" && $subComManager && typeof $subComManager.getUnseenMissedCount === "function")
+                ? $subComManager.getUnseenMissedCount()
+                : 0;
+
+            return {
+                shipStatus: shipStatus,
+                orbitingPlanetId: orbitingPlanetId,
+                isLanded: isLanded,
+                navLocked: navLocked,
+                activeCallId: activeCall ? activeCall.id : 0,
+                activeCallActorId: activeCall ? activeCall.actorId : 0,
+                activeCallMasked: activeCall ? Boolean(activeCall.masked) : false,
+                unseenMissed: unseenMissed
+            };
+        }
+
+        isSnapshotEqual(a, b) {
+            if (!a || !b) return false;
+            return (
+                a.shipStatus === b.shipStatus &&
+                a.orbitingPlanetId === b.orbitingPlanetId &&
+                a.isLanded === b.isLanded &&
+                a.navLocked === b.navLocked &&
+                a.activeCallId === b.activeCallId &&
+                a.activeCallActorId === b.activeCallActorId &&
+                a.activeCallMasked === b.activeCallMasked &&
+                a.unseenMissed === b.unseenMissed
+            );
         }
 
         get targetShip() {
@@ -97,16 +151,68 @@ class SubScene_Console extends SubScene_Base {
 
         onStart() {
             super.onStart();
+            if (this._shipInfoWindow) {
+                if (typeof this._shipInfoWindow.show === "function") this._shipInfoWindow.show();
+                this._shipInfoWindow.open();
+                if (typeof this._shipInfoWindow.deactivate === "function") this._shipInfoWindow.deactivate();
+            }
             if (this._consoleWindow) {
                 this._consoleWindow.setMode("main");
                 this._consoleWindow.refresh();
                 this._consoleWindow.select(0);
+                if (typeof this._consoleWindow.show === "function") this._consoleWindow.show();
                 this._consoleWindow.open();
                 this._consoleWindow.activate();
             }
-            if (this._shipInfoWindow) {
-                this._shipInfoWindow.open();
+            this._lastSnapshot = this.captureLiveSnapshot();
+        }
+
+        updateMain() {
+            super.updateMain();
+            const current = this.captureLiveSnapshot();
+            if (!this.isSnapshotEqual(current, this._lastSnapshot)) {
+                this._lastSnapshot = current;
+                if (this._shipInfoWindow && typeof this._shipInfoWindow.refresh === "function") {
+                    this._shipInfoWindow.refresh();
+                }
+                if (this._consoleWindow && typeof this._consoleWindow.refresh === "function") {
+                    this._consoleWindow.refresh();
+                }
             }
+        }
+
+        onDeactivate() {
+            super.onDeactivate();
+            if (this._shipInfoWindow) {
+                if (typeof this._shipInfoWindow.deactivate === "function") this._shipInfoWindow.deactivate();
+                if (typeof this._shipInfoWindow.hide === "function") this._shipInfoWindow.hide();
+            }
+            if (this._consoleWindow) {
+                if (typeof this._consoleWindow.deactivate === "function") this._consoleWindow.deactivate();
+                if (typeof this._consoleWindow.hide === "function") this._consoleWindow.hide();
+            }
+        }
+
+        onReactivate() {
+            super.onReactivate();
+            if (this._shipInfoWindow) {
+                if (typeof this._shipInfoWindow.show === "function") this._shipInfoWindow.show();
+                if (typeof this._shipInfoWindow.open === "function") this._shipInfoWindow.open();
+                if (typeof this._shipInfoWindow.deactivate === "function") this._shipInfoWindow.deactivate();
+                if (typeof this._shipInfoWindow.refresh === "function") this._shipInfoWindow.refresh();
+            }
+            if (this._consoleWindow) {
+                if (typeof this._consoleWindow.show === "function") this._consoleWindow.show();
+                if (typeof this._consoleWindow.open === "function") this._consoleWindow.open();
+                if (typeof this._consoleWindow.refresh === "function") this._consoleWindow.refresh();
+                this._consoleWindow.activate();
+            }
+            this._lastSnapshot = this.captureLiveSnapshot();
+        }
+
+        onSubSceneResume(childSubScene, result = null) {
+            super.onSubSceneResume(childSubScene, result);
+            this._lastSnapshot = this.captureLiveSnapshot();
         }
 
         onDestroy() {
@@ -119,7 +225,9 @@ class SubScene_Console extends SubScene_Base {
         // ====================================================================
 
         resumeArgs() {
-            return [this._shipId];
+            return (this._targetEventId && this._targetEventId > 0)
+                ? [this._shipId, this._targetEventId]
+                : [this._shipId];
         }
 
         onResume(resumeData) {
@@ -182,9 +290,16 @@ class SubScene_Console extends SubScene_Base {
         }
 
         onSubcom() {
-            if (this._consoleWindow) {
-                this._consoleWindow.activate();
+            if (typeof SubScene_Subcom === "undefined") {
+                if (typeof DEBUGTOOL !== "undefined" && typeof DEBUGTOOL.error === "function") {
+                    DEBUGTOOL.error("SubScene_Console.onSubcom", "SubScene_Subcom introuvable !");
+                }
+                if (this._consoleWindow) {
+                    this._consoleWindow.activate();
+                }
+                return;
             }
+            this.openChildSubScene(SubScene_Subcom, this._shipId, this._targetEventId);
         }
 
         onQuit() {
@@ -223,23 +338,22 @@ class SubScene_Console extends SubScene_Base {
     // 4. BINDING SUR SC4 & SCENE_MAP
     // ========================================================================
     if (typeof SC4 !== "undefined") {
-        SC4.openBridgeConsole = function (shipId) {
+        SC4.openBridgeConsole = function (shipId, targetEventId = null) {
             const scene = (typeof SceneManager !== "undefined") ? SceneManager._scene : null;
             if (scene && typeof scene.openSubScene === "function") {
-                return scene.openSubScene(SubScene_Console, shipId);
+                return scene.openSubScene(SubScene_Console, shipId, targetEventId);
             } else if (scene && typeof scene.openBridgeConsole === "function") {
-                return scene.openBridgeConsole(shipId);
+                return scene.openBridgeConsole(shipId, targetEventId);
             }
         };
     }
 
     if (typeof Scene_Map !== "undefined") {
-        Scene_Map.prototype.openBridgeConsole = function (shipId) {
-            return this.openSubScene(SubScene_Console, shipId);
+        Scene_Map.prototype.openBridgeConsole = function (shipId, targetEventId = null) {
+            return this.openSubScene(SubScene_Console, shipId, targetEventId);
         };
     }
 
-    window.SubScene_Console = SubScene_Console;
     if (typeof module !== "undefined" && module.exports) {
         module.exports = SubScene_Console;
     }

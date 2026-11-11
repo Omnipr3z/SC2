@@ -86,6 +86,7 @@
     "drop_one": "Drop 1",
     "drop_all": "Drop All",
     "use": "Use",
+    "consume": "Consume",
     "cancel": "Cancel",
     "weight": "Weight",
     "capacity": "Capacity",
@@ -94,7 +95,7 @@
     "slot_limit": "Slots full",
     "weight_limit": "Max weight reached",
     "restricted": "Item not allowed",
-    "player_bag": "🎒 Player Bag",
+    "player_bag": "🎒 Shared Inventory",
     "equip": "Equip"
   },
   "quest": {
@@ -253,5 +254,45 @@
     "cmd_intimidate": "Intimidate",
     "cmd_recruit": "Recruit",
     "cmd_leave": "Leave"
+  },
+  "bridge": {
+    "title_land_sites": "LANDING SITE SELECTION",
+    "status_space": "[STATUS] Free flight in deep space",
+    "no_sites": "(No landing sites available)",
+    "poi_authorized": "[Authorized]",
+    "poi_unauthorized": "[Clearance Required]",
+    "back": "◀ Back to menu",
+    "cmd_navigation": "Star Navigation",
+    "nav_locked_tag": "[Locked]",
+    "cmd_land": "Land",
+    "cmd_takeoff": "Take Off",
+    "cmd_dock": "Docking / Airlock (WIP)",
+    "cmd_subcom": "Subcom",
+    "subcom_incoming_tag": "INCOMING",
+    "subcom_missed_tag": "missed",
+    "cmd_quit": "Close Console"
+  },
+  "subcom": {
+    "hud_title": "SUBCOM // REAL-TIME LINK",
+    "incoming_banner": "INCOMING CALL",
+    "standby_banner": "● Link ready — Standing by",
+    "missed_header": "RECENT MISSED CALLS",
+    "unseen_badge": "new",
+    "no_missed_calls": "(No missed calls)",
+    "contacts_title": "📇 KNOWN CONTACTS",
+    "no_contacts": "(No contacts)",
+    "contact_unavailable": "(unavailable)",
+    "terminal_title": "SUBCOM TERMINAL",
+    "status_incoming": "INCOMING CALL:",
+    "status_idle": "Channel clear — Standing by",
+    "cmd_answer": "Answer",
+    "cmd_reject": "Reject",
+    "cmd_call": "Call",
+    "cmd_quit": "Quit",
+    "cmd_hangup": "Hang Up",
+    "masked_signal": "Masked Signal",
+    "masked_freq": "ENCRYPTED FREQUENCY",
+    "masked_identity": "UNKNOWN IDENTITY",
+    "masked_sub": "Social telemetry unavailable"
   }
 }

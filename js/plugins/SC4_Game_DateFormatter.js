@@ -58,9 +58,29 @@ class Game_DateFormatter {
         const year = gameDate.getYear();
         return `${day}/${month}/${year} - ${this.getHrWording(gameDate)}`;
     }
+
+    static fromTimestamp(timestamp) {
+        if (typeof Game_Date === "undefined") return null;
+        return new Game_Date(Number(timestamp) || 0);
+    }
+
+    static formatTimestamp(timestamp) {
+        const d = this.fromTimestamp(timestamp);
+        return d ? this.formatNeotori(d) : String(timestamp || 0);
+    }
+
+    static formatShortTimestamp(timestamp) {
+        const d = this.fromTimestamp(timestamp);
+        return d ? this.getShortDate(d) : String(timestamp || 0);
+    }
 }
 
-window.Game_DateFormatter = Game_DateFormatter;
+if (typeof window !== "undefined") {
+    window.Game_DateFormatter = Game_DateFormatter;
+}
+if (typeof global !== "undefined") {
+    global.Game_DateFormatter = Game_DateFormatter;
+}
 if (typeof module !== "undefined" && module.exports) {
     module.exports = Game_DateFormatter;
 }

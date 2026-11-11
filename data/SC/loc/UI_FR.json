@@ -86,6 +86,7 @@
     "drop_one": "Jeter 1",
     "drop_all": "Jeter Tout",
     "use": "Utiliser",
+    "consume": "Consommer",
     "cancel": "Annuler",
     "weight": "Poids",
     "capacity": "Capacité",
@@ -94,7 +95,7 @@
     "slot_limit": "Emplacements pleins",
     "weight_limit": "Poids maximum atteint",
     "restricted": "Objet non autorisé",
-    "player_bag": "🎒 Sac du joueur",
+    "player_bag": "🎒 Inventaire partagé",
     "equip": "Équiper"
   },
   "quest": {
@@ -253,5 +254,45 @@
     "cmd_intimidate": "Intimider",
     "cmd_recruit": "Recruter",
     "cmd_leave": "Quitter"
+  },
+  "bridge": {
+    "title_land_sites": "SÉLECTION DU SITE D'ATTERRISSAGE",
+    "status_space": "[STATUT] En vol libre dans l'espace sidéral",
+    "no_sites": "(Aucun site répertorié)",
+    "poi_authorized": "[Autorisé]",
+    "poi_unauthorized": "[Autorisation requise]",
+    "back": "◀ Retour au menu",
+    "cmd_navigation": "Navigation Stellaire",
+    "nav_locked_tag": "[Verrouillé]",
+    "cmd_land": "Atterrir",
+    "cmd_takeoff": "Décoller",
+    "cmd_dock": "Amarrage / Sas (WIP)",
+    "cmd_subcom": "Subcom",
+    "subcom_incoming_tag": "APPEL",
+    "subcom_missed_tag": "manqués",
+    "cmd_quit": "Quitter la console"
+  },
+  "subcom": {
+    "hud_title": "SUBCOM // FRÉQUENCE TEMPS RÉEL",
+    "incoming_banner": "APPEL ENTRANT",
+    "standby_banner": "● Liaison prête — Aucun appel entrant",
+    "missed_header": "APPELS MANQUÉS RÉCENTS",
+    "unseen_badge": "nouveau(x)",
+    "no_missed_calls": "(Aucun appel manqué)",
+    "contacts_title": "📇 CONTACTS ENREGISTRÉS",
+    "no_contacts": "(Aucun contact)",
+    "contact_unavailable": "(indisponible)",
+    "terminal_title": "TERMINAL SUBCOM",
+    "status_incoming": "APPEL ENTRANT :",
+    "status_idle": "Fréquence libre — En attente",
+    "cmd_answer": "Répondre",
+    "cmd_reject": "Rejeter",
+    "cmd_call": "Appeler",
+    "cmd_quit": "Quitter",
+    "cmd_hangup": "Raccrocher",
+    "masked_signal": "Signal Masqué",
+    "masked_freq": "FRÉQUENCE CRYPTÉE",
+    "masked_identity": "IDENTITÉ INCONNUE",
+    "masked_sub": "Télémétrie sociale indisponible"
   }
 }

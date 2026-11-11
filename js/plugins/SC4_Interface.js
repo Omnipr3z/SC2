@@ -397,6 +397,15 @@ SC4.setLandingAuthorized = function (planetOrPoiId, authorized = true) {
 SC4.performLandingSequence = function (targetPoiId) {
     const gal = (typeof window !== "undefined" && window.$gameGalaxy) ? window.$gameGalaxy : null;
     const ship = (typeof window !== "undefined" && window.$gameSpaceships) ? window.$gameSpaceships.playerShip() : null;
+    const shipStatus = ship
+        ? (ship.status !== undefined ? ship.status : (ship._status !== undefined ? ship._status : null))
+        : null;
+    if (ship && shipStatus !== null && shipStatus !== "Orbiting") {
+        if (typeof DEBUGTOOL !== "undefined" && typeof DEBUGTOOL.warn === "function") {
+            DEBUGTOOL.warn("SC4.performLandingSequence", `Atterrissage refusé : vaisseau non en orbite stationnaire (status=${shipStatus}).`);
+        }
+        return false;
+    }
     let poi = null;
 
     if (gal) {
@@ -577,9 +586,12 @@ SC4.performTakeoffSequence = function () {
             SC4.setCombatMode(active);
         });
 
-        PluginManager.registerCommand(target, "openBridgeConsole", (args) => {
+        PluginManager.registerCommand(target, "openBridgeConsole", function (args) {
             const shipId = args && args.shipId ? Number(args.shipId) : undefined;
-            SC4.openBridgeConsole(shipId);
+            const callingEventId = (this && typeof this.eventId === "function" && this.eventId() > 0)
+                ? this.eventId()
+                : null;
+            SC4.openBridgeConsole(shipId, callingEventId);
         });
 
         PluginManager.registerCommand(target, "performLanding", (args) => {

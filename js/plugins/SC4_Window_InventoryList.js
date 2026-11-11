@@ -21,6 +21,7 @@ class Window_InventoryList extends Window_Selectable {
         this._isParty = isParty;
         this._data = [];
         this._targetInventory = null;
+        this._excludeInventory = null;
         this._category = "all";
         this.refresh();
     }
@@ -41,6 +42,47 @@ class Window_InventoryList extends Window_Selectable {
     setTargetInventory(inv) {
         this._targetInventory = inv;
         this.refresh();
+    }
+
+    setExcludeInventory(inv) {
+        if (this._excludeInventory !== inv) {
+            this._excludeInventory = inv || null;
+            this.refresh();
+        }
+    }
+
+    leaderInventory(explicitExclude = null) {
+        if (typeof $gameParty === "undefined" || !$gameParty || typeof $gameParty.leader !== "function") {
+            return null;
+        }
+        const leader = $gameParty.leader();
+        if (!leader) return null;
+        let container = null;
+        if (leader.inventory && typeof leader.inventory.container === "function") {
+            container = leader.inventory.container();
+        } else if (typeof leader.actorId === "function" && typeof $inventories !== "undefined" && $inventories && typeof $inventories.inventory === "function") {
+            container = $inventories.inventory("A_" + leader.actorId());
+        }
+        if (!container || typeof container.items !== "function" || typeof container.numItems !== "function") {
+            return null;
+        }
+        const excluded = explicitExclude || this._excludeInventory || this._targetInventory;
+        if (excluded && container === excluded) {
+            return null;
+        }
+        return container;
+    }
+
+    itemIdentityKey(item) {
+        if (!item || typeof item !== "object") return null;
+        if (typeof DataManager !== "undefined") {
+            if (typeof DataManager.isItem === "function" && DataManager.isItem(item)) return "i_" + item.id;
+            if (typeof DataManager.isWeapon === "function" && DataManager.isWeapon(item)) return "w_" + item.id;
+            if (typeof DataManager.isArmor === "function" && DataManager.isArmor(item)) return "a_" + item.id;
+        }
+        if (item.wtypeId !== undefined) return "w_" + item.id;
+        if (item.etypeId !== undefined || item.atypeId !== undefined) return "a_" + item.id;
+        return "i_" + (item.id !== undefined ? item.id : item.name);
     }
 
     setTitle(title) {
@@ -79,9 +121,31 @@ class Window_InventoryList extends Window_Selectable {
     makeItemList() {
         let list = [];
         if (this._isParty) {
-            if (typeof $gameParty !== "undefined" && $gameParty) {
-                // Objets du sac (exclut naturellement les équipements portés qui sont dans actor._equips)
-                list = $gameParty.allItems().filter(item => item && $gameParty.numItems(item) > 0);
+            const seenKeys = new Set();
+            if (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.allItems === "function") {
+                // Objets du sac commun (exclut naturellement les équipements portés qui sont dans actor._equips)
+                for (const item of $gameParty.allItems()) {
+                    if (item && $gameParty.numItems(item) > 0) {
+                        const key = this.itemIdentityKey(item);
+                        if (key && !seenKeys.has(key)) {
+                            seenKeys.add(key);
+                        }
+                        list.push(item);
+                    }
+                }
+            }
+            // Agrégation avec l'inventaire personnel du leader uniquement (A_<leaderId>)
+            const lInv = this.leaderInventory();
+            if (lInv) {
+                for (const item of lInv.items()) {
+                    if (item && lInv.numItems(item) > 0) {
+                        const key = this.itemIdentityKey(item);
+                        if (!key || !seenKeys.has(key)) {
+                            if (key) seenKeys.add(key);
+                            list.push(item);
+                        }
+                    }
+                }
             }
         } else if (this._targetInventory) {
             list = this._targetInventory.items();
@@ -106,7 +170,10 @@ class Window_InventoryList extends Window_Selectable {
 
     get currentWeight() {
         if (this._isParty) {
-            return (typeof $gameParty !== "undefined" && typeof $gameParty.totalWeight === "function") ? $gameParty.totalWeight() : 0;
+            const baseW = (typeof $gameParty !== "undefined" && typeof $gameParty.totalWeight === "function") ? $gameParty.totalWeight() : 0;
+            const lInv = this.leaderInventory();
+            const extraW = (lInv && typeof lInv.totalWeight === "function") ? lInv.totalWeight() : 0;
+            return Math.round((baseW + extraW) * 100) / 100;
         }
         return this._targetInventory ? this._targetInventory.totalWeight() : 0;
     }
@@ -125,7 +192,12 @@ class Window_InventoryList extends Window_Selectable {
     itemQuantity(item) {
         if (!item) return 0;
         if (this._isParty) {
-            return $gameParty.numItems(item);
+            const partyQty = (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.numItems === "function")
+                ? $gameParty.numItems(item)
+                : 0;
+            const lInv = this.leaderInventory();
+            const leaderQty = lInv ? lInv.numItems(item) : 0;
+            return partyQty + leaderQty;
         } else if (this._targetInventory) {
             return this._targetInventory.numItems(item);
         }
@@ -292,7 +364,10 @@ class Window_InventoryList extends Window_Selectable {
         }
 
         if (!this._isParty && typeof $gameParty !== "undefined" && $gameParty) {
-            const curW = (typeof $gameParty.totalWeight === "function") ? $gameParty.totalWeight() : 0;
+            const baseW = (typeof $gameParty.totalWeight === "function") ? $gameParty.totalWeight() : 0;
+            const lInv = this.leaderInventory(this._targetInventory);
+            const extraW = (lInv && typeof lInv.totalWeight === "function") ? lInv.totalWeight() : 0;
+            const curW = Math.round((baseW + extraW) * 100) / 100;
             const maxW = (typeof $gameParty.maxWeight === "function") ? $gameParty.maxWeight() : 48;
             if (curW + weight > maxW) {
                 weightNotice = `\\c[2]⚠️ +${weight} UM (SURCHARGE !)\\c[0]`;

@@ -149,6 +149,12 @@ class SC_DataManager {
         if (typeof TutoManager !== "undefined") {
             window.$tutoManager = new TutoManager();
         }
+        if (typeof GuiManager !== "undefined") {
+            window.$guiManager = new GuiManager();
+        }
+        if (typeof SubComManager !== "undefined") {
+            window.$subComManager = new SubComManager();
+        }
     }
 
     /**
@@ -192,6 +198,12 @@ class SC_DataManager {
         if (window.$gameActors && typeof window.$gameActors.makeSavefileData === "function") {
             contents.sc_actors = window.$gameActors.makeSavefileData();
         }
+        if (window.$guiManager && typeof window.$guiManager.makeSavefileData === "function") {
+            contents.sc_guiManager = window.$guiManager.makeSavefileData();
+        }
+        if (window.$subComManager && typeof window.$subComManager.makeSavefileData === "function") {
+            contents.sc_subComManager = window.$subComManager.makeSavefileData();
+        }
     }
 
     /**
@@ -234,6 +246,12 @@ class SC_DataManager {
         }
         if (contents && contents.sc_mapOverlays && window.$mapOverlaysManager && typeof window.$mapOverlaysManager.loadSavefileData === "function") {
             window.$mapOverlaysManager.loadSavefileData(contents.sc_mapOverlays);
+        }
+        if (contents && contents.sc_guiManager && window.$guiManager && typeof window.$guiManager.loadSavefileData === "function") {
+            window.$guiManager.loadSavefileData(contents.sc_guiManager);
+        }
+        if (contents && contents.sc_subComManager && window.$subComManager && typeof window.$subComManager.loadSavefileData === "function") {
+            window.$subComManager.loadSavefileData(contents.sc_subComManager);
         }
     }
 }

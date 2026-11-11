@@ -55,13 +55,51 @@ class RelationManager {
     }
 
     isActiveDialog() {
-        if (!this.currentSubScene) return false;
-        return this.currentSubScene.constructor.name == "SubScene_RelationDialog";
+        const sub = this.currentSubScene;
+        if (!sub) return false;
+        if (typeof SubScene_RelationDialog !== "undefined" && sub instanceof SubScene_RelationDialog) {
+            return true;
+        }
+        return Boolean(sub.constructor && sub.constructor.name === "SubScene_RelationDialog");
     }
 
     getInterlocutorId() {
         if (this.isActiveDialog())
             return this.currentSubScene._targetActorId;
+    }
+
+    isInterlocutorMasked() {
+        if (!this.isActiveDialog()) return false;
+        const sub = this.currentSubScene;
+        if (sub && typeof sub.isMaskedInterlocutor === "function") {
+            return Boolean(sub.isMaskedInterlocutor());
+        }
+        return Boolean(
+            typeof $subComManager !== "undefined" &&
+            $subComManager &&
+            $subComManager.currentDialogCall &&
+            $subComManager.currentDialogCall.actorId === this.getInterlocutorId() &&
+            $subComManager.currentDialogCall.masked
+        );
+    }
+
+    getMaskedInterlocutorLabel() {
+        const sub = this.currentSubScene;
+        if (sub && typeof sub.maskedLabel === "function") {
+            const lbl = sub.maskedLabel();
+            if (lbl) return lbl;
+        }
+        if (
+            typeof $subComManager !== "undefined" &&
+            $subComManager &&
+            $subComManager.currentDialogCall &&
+            $subComManager.currentDialogCall.maskedLabel
+        ) {
+            return $subComManager.currentDialogCall.maskedLabel;
+        }
+        return (typeof SC4_Localization !== "undefined")
+            ? SC4_Localization.getText("subcom.masked_signal", "Signal Masqué")
+            : "Signal Masqué";
     }
 
     openRelationDialog(targetActorId = 2, targetEventId = null, modeOrOptions = 0, extraOptions = {}) {

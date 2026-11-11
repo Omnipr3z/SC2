@@ -36,6 +36,27 @@ class Window_InventoryCommand extends Window_HorzCommand {
         ];
     }
 
+    leaderInventory() {
+        if (typeof $gameParty === "undefined" || !$gameParty || typeof $gameParty.leader !== "function") {
+            return null;
+        }
+        const leader = $gameParty.leader();
+        if (!leader) return null;
+        let container = null;
+        if (leader.inventory && typeof leader.inventory.container === "function") {
+            container = leader.inventory.container();
+        } else if (typeof leader.actorId === "function" && typeof $inventories !== "undefined" && $inventories && typeof $inventories.inventory === "function") {
+            container = $inventories.inventory("A_" + leader.actorId());
+        }
+        if (!container || typeof container.items !== "function") {
+            return null;
+        }
+        if (this._targetInventory && container === this._targetInventory) {
+            return null;
+        }
+        return container;
+    }
+
     hasItemsOfCategory(catKey) {
         if (!catKey || catKey === "all") return true;
 
@@ -49,6 +70,19 @@ class Window_InventoryCommand extends Window_HorzCommand {
                 return info.key === catKey;
             });
             if (partyHas) return true;
+        }
+
+        const lInv = this.leaderInventory();
+        if (lInv) {
+            const leaderHas = lInv.items().some(item => {
+                if (!item) return false;
+                if (typeof lInv.numItems === "function" && lInv.numItems(item) <= 0) return false;
+                const info = (typeof DataManager !== "undefined" && typeof DataManager.itemScTypeInfo === "function")
+                    ? DataManager.itemScTypeInfo(item)
+                    : { key: "misc" };
+                return info.key === catKey;
+            });
+            if (leaderHas) return true;
         }
 
         if (this._targetInventory && typeof this._targetInventory.items === "function") {
@@ -113,7 +147,9 @@ class Window_InventoryCommand extends Window_HorzCommand {
         const targetW = (this._targetInventory && typeof this._targetInventory.totalWeight === "function")
             ? this._targetInventory.totalWeight()
             : 0;
-        return ($gameParty.totalWeight() + targetW) <= $gameParty.maxWeight();
+        const lInv = this.leaderInventory();
+        const extraW = (lInv && typeof lInv.totalWeight === "function") ? lInv.totalWeight() : 0;
+        return ($gameParty.totalWeight() + extraW + targetW) <= $gameParty.maxWeight();
     }
 
     get isTargetFull() {
@@ -127,7 +163,12 @@ class Window_InventoryCommand extends Window_HorzCommand {
     }
 
     get hasPartyItems() {
-        return (typeof $gameParty !== "undefined" && $gameParty) ? $gameParty.allItems().length > 0 : false;
+        const hasCommon = (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.allItems === "function")
+            ? $gameParty.allItems().length > 0
+            : false;
+        if (hasCommon) return true;
+        const lInv = this.leaderInventory();
+        return Boolean(lInv && (typeof lInv.isEmpty === "function" ? !lInv.isEmpty() : lInv.items().length > 0));
     }
 
     loc(key, def) {

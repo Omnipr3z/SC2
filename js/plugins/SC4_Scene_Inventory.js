@@ -52,6 +52,11 @@ class Scene_Inventory extends Scene_MenuBase {
         if (this._playerLiveSprite && typeof this._playerLiveSprite.update === "function") {
             this._playerLiveSprite.update();
         }
+        const isTutoBusy = Boolean(typeof $tutoManager !== "undefined" && $tutoManager && typeof $tutoManager.isBusy === "function" && $tutoManager.isBusy());
+        const actionOpen = Boolean(this._actionWindow && (this._actionWindow.active || this._actionWindow.openness > 0));
+        if (this._initialTutorialsChecked && !isTutoBusy && !actionOpen) {
+            this.checkWeightGaugeTutorial();
+        }
         if (typeof $tutoManager !== "undefined" && $tutoManager && typeof $tutoManager.update === "function") {
             $tutoManager.update();
         }
@@ -60,6 +65,7 @@ class Scene_Inventory extends Scene_MenuBase {
 
     create() {
         super.create();
+        this._initialTutorialsChecked = false;
         this._targetId = Scene_Inventory._preparedId || "C_1";
         this._options = Scene_Inventory._preparedOptions || {};
         this._targetInventory = (typeof $inventories !== "undefined" && $inventories)
@@ -83,6 +89,7 @@ class Scene_Inventory extends Scene_MenuBase {
         this._commandWindow.activate();
         this._commandWindow.select(0);
         this.checkInitialTutorials();
+        this._initialTutorialsChecked = true;
     }
 
     // ========================================================================
@@ -237,6 +244,16 @@ class Scene_Inventory extends Scene_MenuBase {
         return new Rectangle(wx, wy, ww, wh);
     }
 
+    loc(key, def) {
+        if (typeof SC4_Localization !== "undefined" && typeof SC4_Localization.getText === "function") {
+            return SC4_Localization.getText(key, def);
+        }
+        if (typeof LocalisationManager !== "undefined" && typeof LocalisationManager.getText === "function") {
+            return LocalisationManager.getText(key, def);
+        }
+        return def;
+    }
+
     createHeaders() {
         const m = this.margin();
         const colW = this.columnWidth();
@@ -244,10 +261,9 @@ class Scene_Inventory extends Scene_MenuBase {
 
         // 1. Header Joueur (Haut Gauche)
         const pRect = new Rectangle(m, m, colW, headerH);
-        const pTitle = (typeof LocalisationManager !== "undefined" && typeof LocalisationManager.getText === "function")
-            ? LocalisationManager.getText("inventory.player_bag", "Sac du joueur")
-            : "Sac du joueur";
+        const pTitle = this.loc("inventory.player_bag", "Inventaire partagé");
         this._partyHeaderWindow = new Window_InventoryHeader(pRect, pTitle, true);
+        this._partyHeaderWindow.setExcludeInventory(this._targetInventory);
         this.addWindow(this._partyHeaderWindow);
 
         // 2. Header Conteneur (Haut Droit)
@@ -260,10 +276,9 @@ class Scene_Inventory extends Scene_MenuBase {
 
     createPartyWindow() {
         const rect = this.partyWindowRect();
-        const title = (typeof LocalisationManager !== "undefined" && typeof LocalisationManager.getText === "function")
-            ? LocalisationManager.getText("inventory.player_bag", "Sac du joueur")
-            : "Sac du joueur";
+        const title = this.loc("inventory.player_bag", "Inventaire partagé");
         this._partyWindow = new Window_InventoryList(rect, title, true);
+        this._partyWindow.setExcludeInventory(this._targetInventory);
         this._partyWindow.setHeaderWindow(this._partyHeaderWindow);
         this._partyWindow.setHelpWindow(this._helpWindow);
         this._partyWindow.setHandler("ok", this.onPartyListOk.bind(this));
@@ -343,6 +358,7 @@ class Scene_Inventory extends Scene_MenuBase {
         this._actionWindow.setHandler("take_one", this.onActionTakeOne.bind(this));
         this._actionWindow.setHandler("take_all", this.onActionTakeAll.bind(this));
         this._actionWindow.setHandler("equip", this.onActionEquip.bind(this));
+        this._actionWindow.setHandler("consume", this.onActionConsume.bind(this));
         this._actionWindow.setHandler("deposit_one", this.onActionDepositOne.bind(this));
         this._actionWindow.setHandler("deposit_all", this.onActionDepositAll.bind(this));
         this._actionWindow.setHandler("drop_one", this.onActionDropOne.bind(this));
@@ -419,12 +435,46 @@ class Scene_Inventory extends Scene_MenuBase {
         return null;
     }
 
+    hasDifferentiatedWeight() {
+        if (this._partyHeaderWindow && typeof this._partyHeaderWindow.hasDifferentiatedWeight === "function") {
+            return this._partyHeaderWindow.hasDifferentiatedWeight();
+        }
+        const sharedW = (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.totalWeight === "function")
+            ? $gameParty.totalWeight()
+            : 0;
+        const lInv = this.leaderPersonalInventory();
+        const personalW = (lInv && typeof lInv.totalWeight === "function") ? lInv.totalWeight() : 0;
+        return sharedW > 0 && personalW > 0;
+    }
+
+    checkWeightGaugeTutorial() {
+        if (typeof $tutoManager === "undefined" || !$tutoManager) return false;
+        if (typeof ConfigManager !== "undefined" && ConfigManager.contextualHelp === false) return false;
+        if (typeof $tutoManager.isSeen !== "function" || $tutoManager.isSeen("tuto_inv_weight_gauge")) return false;
+        if (!this.hasDifferentiatedWeight()) return false;
+
+        const ph = this._partyHeaderWindow;
+        const gRect = (ph && typeof ph.weightGaugeScreenRect === "function") ? ph.weightGaugeScreenRect() : null;
+        const arrowX = gRect
+            ? gRect.x + Math.round(gRect.width / 2)
+            : (ph ? ph.x + Math.round(ph.width * 0.68) : 250);
+        const arrowY = gRect
+            ? gRect.y + gRect.height + 6
+            : (ph ? ph.y + Math.round(ph.height * 0.65) : 120);
+
+        return Boolean($tutoManager.show("tuto_inv_weight_gauge", {
+            position: "center",
+            arrow: { x: arrowX, y: arrowY, angle: 180 }
+        }));
+    }
+
     checkInitialTutorials() {
         if (typeof $tutoManager === "undefined" || !$tutoManager) return;
         if (typeof ConfigManager !== "undefined" && ConfigManager.contextualHelp === false) return;
+        if (typeof $tutoManager.isSeen !== "function") return;
 
-        // Tuto 6 : Découverte du diptyque Sac / Conteneur
-        if (typeof $tutoManager.isSeen === "function" && !$tutoManager.isSeen("tuto_inv_transfer")) {
+        // Tuto 6 : Découverte du diptyque Inventaire partagé / Conteneur
+        if (!$tutoManager.isSeen("tuto_inv_transfer")) {
             const tw = this._targetWindow;
             const arrowX = tw ? tw.x + Math.round(tw.width / 2) : 900;
             const arrowY = tw ? tw.y + 20 : 200;
@@ -433,8 +483,25 @@ class Scene_Inventory extends Scene_MenuBase {
                 position: "center",
                 arrow: { x: arrowX, y: arrowY, angle: 0 }
             });
+        }
 
-            // Tuto 7 : Commandes & Tri (enchaîné immédiatement à la suite dans la file)
+        // Tuto 11 : Explication de la double jauge partagée / perso juste après Tuto 6 (uniquement si différenciée)
+        this.checkWeightGaugeTutorial();
+
+        // Tuto 10 : Interaction directe avec les objets (Équiper / Consommer) à la suite
+        if (!$tutoManager.isSeen("tuto_inv_interact")) {
+            const pw = this._partyWindow;
+            const pArrowX = pw ? pw.x + Math.round(pw.width / 2) : 300;
+            const pArrowY = pw ? pw.y + 20 : 200;
+
+            $tutoManager.show("tuto_inv_interact", {
+                position: "center",
+                arrow: { x: pArrowX, y: pArrowY, angle: 0 }
+            });
+        }
+
+        // Tuto 7 : Commandes & Tri
+        if (!$tutoManager.isSeen("tuto_inv_commands")) {
             const cw = this._commandWindow;
             const cmdArrowX = cw ? cw.x + Math.round(cw.width / 2) : 640;
             const cmdArrowY = cw ? cw.y - 12 : 640;
@@ -521,6 +588,9 @@ class Scene_Inventory extends Scene_MenuBase {
         }
         this._commandWindow.activate();
         this.selectCommandAfterEmptied();
+        if (this._initialTutorialsChecked) {
+            this.checkWeightGaugeTutorial();
+        }
     }
 
     selectCommandAfterEmptied() {
@@ -607,6 +677,93 @@ class Scene_Inventory extends Scene_MenuBase {
     // 5. MODALE CONTEXTUELLE VOLANTE & FLÈCHE ANIMÉE
     // ========================================================================
 
+    leaderPersonalInventory() {
+        if (typeof $gameParty === "undefined" || !$gameParty || typeof $gameParty.leader !== "function") {
+            return null;
+        }
+        const leader = $gameParty.leader();
+        if (!leader) return null;
+        let container = null;
+        if (leader.inventory && typeof leader.inventory.container === "function") {
+            container = leader.inventory.container();
+        } else if (typeof leader.actorId === "function" && typeof $inventories !== "undefined" && $inventories && typeof $inventories.inventory === "function") {
+            container = $inventories.inventory("A_" + leader.actorId());
+        }
+        if (!container || typeof container.numItems !== "function" || typeof container.loseItem !== "function") {
+            return null;
+        }
+        if (this._targetInventory && container === this._targetInventory) {
+            return null;
+        }
+        return container;
+    }
+
+    playerBagWeight() {
+        const baseW = (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.totalWeight === "function")
+            ? $gameParty.totalWeight()
+            : 0;
+        const lInv = this.leaderPersonalInventory();
+        const extraW = (lInv && typeof lInv.totalWeight === "function") ? lInv.totalWeight() : 0;
+        return Math.round((baseW + extraW) * 100) / 100;
+    }
+
+    consumeFromPlayerContainers(item, amount) {
+        if (!item || amount <= 0) return 0;
+        let remaining = Number(amount) || 0;
+        if (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.numItems === "function" && typeof $gameParty.loseItem === "function") {
+            const inParty = $gameParty.numItems(item);
+            const fromParty = Math.min(remaining, inParty);
+            if (fromParty > 0) {
+                $gameParty.loseItem(item, fromParty);
+                remaining -= fromParty;
+            }
+        }
+        if (remaining > 0) {
+            const lInv = this.leaderPersonalInventory();
+            if (lInv) {
+                const inLeader = lInv.numItems(item);
+                const fromLeader = Math.min(remaining, inLeader);
+                if (fromLeader > 0) {
+                    lInv.loseItem(item, fromLeader);
+                    remaining -= fromLeader;
+                }
+            }
+        }
+        return (Number(amount) || 0) - remaining;
+    }
+
+    canConsumeItem(item) {
+        const leader = (typeof $gameParty !== "undefined" && $gameParty) ? $gameParty.leader() : null;
+        if (!leader || !item) return false;
+        const isWeapon = (typeof DataManager !== "undefined" && typeof DataManager.isWeapon === "function") ? DataManager.isWeapon(item) : (item.wtypeId !== undefined);
+        const isArmor = (typeof DataManager !== "undefined" && typeof DataManager.isArmor === "function") ? DataManager.isArmor(item) : (item.etypeId !== undefined && !isWeapon);
+        const isItem = (typeof DataManager !== "undefined" && typeof DataManager.isItem === "function")
+            ? DataManager.isItem(item)
+            : (item.itypeId !== undefined && !isWeapon && !isArmor);
+        if (!isItem || item.consumable !== true) return false;
+
+        if (typeof leader.meetsUsableItemConditions === "function") {
+            if (!leader.meetsUsableItemConditions(item)) return false;
+        } else if (item.occasion !== undefined && item.occasion !== 0 && item.occasion !== 2) {
+            return false;
+        }
+
+        if (typeof Game_Action !== "undefined") {
+            const action = new Game_Action(leader);
+            action.setItemObject(item);
+            if (typeof action.isForOpponent === "function" && action.isForOpponent()) {
+                return false;
+            }
+            if (typeof action.isForFriend === "function" && !action.isForFriend()) {
+                return Boolean(item.scope === 0 && Array.isArray(item.effects) && item.effects.length > 0);
+            }
+            if (typeof action.testApply === "function") {
+                return Boolean(action.testApply(leader));
+            }
+        }
+        return true;
+    }
+
     onPartyListOk() {
         const item = this._partyWindow.item();
         if (!item) {
@@ -630,10 +787,10 @@ class Scene_Inventory extends Scene_MenuBase {
 
         const actionX = originX + arrowW + 10;
         const actionY = Math.round(itemScreenY - 50);
-        this._actionWindow.reposition(actionX, actionY);
 
         const leader = (typeof $gameParty !== "undefined" && $gameParty) ? $gameParty.leader() : null;
         const canEquip = !!(leader && item && (DataManager.isWeapon(item) || DataManager.isArmor(item)) && (typeof leader.canEquip === "function" ? leader.canEquip(item) : true));
+        const canConsume = this.canConsumeItem(item);
         const canDeposit = this.isTargetPersistent();
 
         let canAcceptOne = canDeposit;
@@ -656,7 +813,8 @@ class Scene_Inventory extends Scene_MenuBase {
             if (this._helpWindow) this._helpWindow.show();
         }
 
-        this._actionWindow.setup("party", canDeposit, canEquip, false, false, canAcceptOne, canAcceptAll);
+        this._actionWindow.setup("party", canDeposit, canEquip, false, false, canAcceptOne, canAcceptAll, canConsume);
+        this._actionWindow.reposition(actionX, actionY);
         this.checkActionTutorials(canEquip);
     }
 
@@ -683,12 +841,12 @@ class Scene_Inventory extends Scene_MenuBase {
 
         const actionX = originX - arrowW - this._actionWindow.width - 10;
         const actionY = Math.round(itemScreenY - 50);
-        this._actionWindow.reposition(actionX, actionY);
 
         const leader = (typeof $gameParty !== "undefined" && $gameParty) ? $gameParty.leader() : null;
         const canEquip = !!(leader && item && (DataManager.isWeapon(item) || DataManager.isArmor(item)) && (typeof leader.canEquip === "function" ? leader.canEquip(item) : true));
+        const canConsume = this.canConsumeItem(item);
         const itemW = (typeof DataManager !== "undefined" && typeof DataManager.itemWeight === "function") ? DataManager.itemWeight(item) : 1;
-        const curW = (typeof $gameParty !== "undefined" && typeof $gameParty.totalWeight === "function") ? $gameParty.totalWeight() : 0;
+        const curW = this.playerBagWeight();
         const maxW = (typeof $gameParty !== "undefined" && typeof $gameParty.maxWeight === "function") ? $gameParty.maxWeight() : 48;
         const qty = (typeof this._targetWindow.itemQuantity === "function") ? this._targetWindow.itemQuantity(item) : 1;
         const isOverloadOne = (curW + itemW) > maxW;
@@ -706,7 +864,8 @@ class Scene_Inventory extends Scene_MenuBase {
             if (this._helpWindow) this._helpWindow.show();
         }
 
-        this._actionWindow.setup("target", this.isTargetPersistent(), canEquip, isOverloadOne, isOverloadAll);
+        this._actionWindow.setup("target", this.isTargetPersistent(), canEquip, isOverloadOne, isOverloadAll, true, true, canConsume);
+        this._actionWindow.reposition(actionX, actionY);
         this.checkActionTutorials(canEquip);
     }
 
@@ -768,15 +927,30 @@ class Scene_Inventory extends Scene_MenuBase {
 
         // Équipement via le sous-composant equipment s'il existe ou via RMMZ natif
         const equipComp = actor.equipment;
+        let equipSucceeded = true;
         if (equipComp && typeof equipComp.equip === "function") {
-            equipComp.equip(item);
+            equipSucceeded = equipComp.equip(item) !== false;
         } else {
+            const targetEtype = (typeof DataManager !== "undefined" && typeof DataManager.isWeapon === "function" && DataManager.isWeapon(item)) ? 1 : item.etypeId;
             const slotId = (equipComp && typeof equipComp.findSlotFor === "function")
                 ? equipComp.findSlotFor(item)
-                : ((typeof actor.equipSlots === "function") ? actor.equipSlots().indexOf(item.etypeId) : 0);
+                : ((typeof actor.equipSlots === "function") ? actor.equipSlots().indexOf(targetEtype) : 0);
             if (slotId >= 0 && typeof actor.changeEquip === "function") {
                 actor.changeEquip(slotId, item);
+            } else {
+                equipSucceeded = false;
             }
+        }
+
+        if (isTarget && !equipSucceeded) {
+            $gameParty.loseItem(item, 1);
+            this._targetInventory.gainItem(item, 1);
+            if (typeof SoundManager !== "undefined" && typeof SoundManager.playBuzzer === "function") {
+                SoundManager.playBuzzer();
+            }
+            this.refreshAll();
+            this.onActionCancel();
+            return;
         }
 
         // Rafraîchissement des entités cartographiques ($gamePlayer) et du sprite en arrière-plan
@@ -798,12 +972,113 @@ class Scene_Inventory extends Scene_MenuBase {
             if (this._arrowSprite) this._arrowSprite.hide();
             this._targetWindow.deactivate();
             this._actionWindow.close();
+            this._actionWindow.deactivate();
             this._commandWindow.activate();
             this.selectCommandAfterEmptied();
+            if (this._initialTutorialsChecked) {
+                this.checkWeightGaugeTutorial();
+            }
             return;
         }
 
         this.onActionCancel();
+        if (this._initialTutorialsChecked) {
+            this.checkWeightGaugeTutorial();
+        }
+    }
+
+    onActionConsume() {
+        const mode = this._actionWindow.mode;
+        const actor = (typeof $gameParty !== "undefined" && $gameParty) ? $gameParty.leader() : null;
+        const isTarget = (mode === "target");
+        const item = isTarget ? this._targetWindow.item() : this._partyWindow.item();
+
+        if (!actor || !item || !this.canConsumeItem(item)) {
+            if (typeof SoundManager !== "undefined" && typeof SoundManager.playBuzzer === "function") {
+                SoundManager.playBuzzer();
+            }
+            this.onActionCancel();
+            return;
+        }
+
+        if (isTarget) {
+            if (!this._targetInventory || (typeof this._targetInventory.numItems === "function" && this._targetInventory.numItems(item) <= 0)) {
+                if (typeof SoundManager !== "undefined" && typeof SoundManager.playBuzzer === "function") {
+                    SoundManager.playBuzzer();
+                }
+                this.onActionCancel();
+                return;
+            }
+            this._targetInventory.loseItem(item, 1);
+        } else {
+            const consumed = this.consumeFromPlayerContainers(item, 1);
+            if (consumed <= 0) {
+                if (typeof SoundManager !== "undefined" && typeof SoundManager.playBuzzer === "function") {
+                    SoundManager.playBuzzer();
+                }
+                this.onActionCancel();
+                return;
+            }
+        }
+
+        if (typeof SoundManager !== "undefined") {
+            if (typeof SoundManager.playUseItem === "function") SoundManager.playUseItem();
+            else if (typeof SoundManager.playOk === "function") SoundManager.playOk();
+        }
+
+        if (typeof Game_Action !== "undefined") {
+            const action = new Game_Action(actor);
+            action.setItemObject(item);
+            if (typeof action.isForFriend === "function" && action.isForFriend()) {
+                const repeats = (typeof action.numRepeats === "function") ? action.numRepeats() : 1;
+                for (let i = 0; i < repeats; i++) {
+                    action.apply(actor);
+                }
+            }
+            if (typeof action.applyGlobal === "function") {
+                action.applyGlobal();
+            }
+        }
+        if (typeof actor.refresh === "function") {
+            actor.refresh();
+        }
+
+        if (typeof $gameTemp !== "undefined" && $gameTemp && typeof $gameTemp.isCommonEventReserved === "function" && $gameTemp.isCommonEventReserved()) {
+            if (isTarget && this._targetInventory && this._targetInventory.isEmpty()) {
+                this.checkTargetEmptied();
+            } else {
+                this.updateContainerSelfSwitchB();
+            }
+            if (typeof SceneManager !== "undefined" && typeof Scene_Map !== "undefined" && typeof SceneManager.goto === "function") {
+                SceneManager.goto(Scene_Map);
+                return;
+            }
+        }
+
+        if (typeof $gamePlayer !== "undefined" && $gamePlayer && typeof $gamePlayer.refresh === "function") {
+            $gamePlayer.refresh();
+        }
+
+        this.refreshAll();
+
+        if (isTarget && this._targetInventory && this._targetInventory.isEmpty()) {
+            this.checkTargetEmptied();
+            if (this._arrowSprite) this._arrowSprite.hide();
+            this._targetWindow.deactivate();
+            this._actionWindow.close();
+            this._actionWindow.deactivate();
+            this._commandWindow.activate();
+            this.selectCommandAfterEmptied();
+            if (this._initialTutorialsChecked) {
+                this.checkWeightGaugeTutorial();
+            }
+            return;
+        }
+
+        this.onActionCancel();
+        if (this._initialTutorialsChecked) {
+            this.checkWeightGaugeTutorial();
+        }
     }
 
     onActionTakeOne() {
@@ -843,8 +1118,24 @@ class Scene_Inventory extends Scene_MenuBase {
             return;
         }
 
-        if (typeof $gameParty !== "undefined" && typeof $gameParty.canAcceptItem === "function") {
-            if (!$gameParty.canAcceptItem(item, amount)) {
+        if (typeof $gameParty !== "undefined" && $gameParty) {
+            let canAccept = true;
+            if (typeof $gameParty.canAcceptItem === "function" && !$gameParty.canAcceptItem(item, amount)) {
+                canAccept = false;
+            }
+            if (canAccept && typeof $gameParty.maxWeight === "function") {
+                const lInv = this.leaderPersonalInventory();
+                const extraW = (lInv && typeof lInv.totalWeight === "function") ? lInv.totalWeight() : 0;
+                if (extraW > 0) {
+                    const itemW = (typeof DataManager !== "undefined" && typeof DataManager.itemWeight === "function")
+                        ? DataManager.itemWeight(item)
+                        : 1;
+                    if ((this.playerBagWeight() + itemW * amount) > $gameParty.maxWeight()) {
+                        canAccept = false;
+                    }
+                }
+            }
+            if (!canAccept) {
                 if (typeof SoundManager !== "undefined" && typeof SoundManager.playBuzzer === "function") {
                     SoundManager.playBuzzer();
                 }
@@ -867,12 +1158,19 @@ class Scene_Inventory extends Scene_MenuBase {
             if (this._arrowSprite) this._arrowSprite.hide();
             this._targetWindow.deactivate();
             this._actionWindow.close();
+            this._actionWindow.deactivate();
             this._commandWindow.activate();
             this.selectCommandAfterEmptied();
+            if (this._initialTutorialsChecked) {
+                this.checkWeightGaugeTutorial();
+            }
             return;
         }
 
         this.onActionCancel();
+        if (this._initialTutorialsChecked) {
+            this.checkWeightGaugeTutorial();
+        }
     }
 
     executeDeposit(amount) {
@@ -896,8 +1194,15 @@ class Scene_Inventory extends Scene_MenuBase {
             }
         }
 
-        $gameParty.loseItem(item, amount);
-        this._targetInventory.gainItem(item, amount);
+        const moved = this.consumeFromPlayerContainers(item, amount);
+        if (moved <= 0) {
+            if (typeof SoundManager !== "undefined" && typeof SoundManager.playBuzzer === "function") {
+                SoundManager.playBuzzer();
+            }
+            this.onActionCancel();
+            return;
+        }
+        this._targetInventory.gainItem(item, moved);
 
         if (typeof SoundManager !== "undefined" && typeof SoundManager.playEquip === "function") {
             SoundManager.playEquip();
@@ -905,6 +1210,9 @@ class Scene_Inventory extends Scene_MenuBase {
 
         this.refreshAll();
         this.onActionCancel();
+        if (this._initialTutorialsChecked) {
+            this.checkWeightGaugeTutorial();
+        }
     }
 
     executeDrop(amount) {
@@ -914,7 +1222,11 @@ class Scene_Inventory extends Scene_MenuBase {
             return;
         }
 
-        $gameParty.loseItem(item, amount);
+        const dropped = this.consumeFromPlayerContainers(item, amount);
+        if (dropped <= 0) {
+            this.onActionCancel();
+            return;
+        }
         if (typeof SoundManager !== "undefined") {
             if (typeof SoundManager.playUseItem === "function") SoundManager.playUseItem();
             else if (typeof SoundManager.playCancel === "function") SoundManager.playCancel();
@@ -922,6 +1234,9 @@ class Scene_Inventory extends Scene_MenuBase {
 
         this.refreshAll();
         this.onActionCancel();
+        if (this._initialTutorialsChecked) {
+            this.checkWeightGaugeTutorial();
+        }
     }
 
     // ========================================================================
@@ -930,12 +1245,18 @@ class Scene_Inventory extends Scene_MenuBase {
 
     refreshAll() {
         if (this._partyHeaderWindow) {
+            if (typeof this._partyHeaderWindow.setExcludeInventory === "function") {
+                this._partyHeaderWindow.setExcludeInventory(this._targetInventory);
+            }
             this._partyHeaderWindow.refresh();
         }
         if (this._targetHeaderWindow) {
             this._targetHeaderWindow.setTitle(this.formatTargetTitle());
             this._targetHeaderWindow.setTargetInventory(this._targetInventory);
             this._targetHeaderWindow.refresh();
+        }
+        if (typeof this._partyWindow.setExcludeInventory === "function") {
+            this._partyWindow.setExcludeInventory(this._targetInventory);
         }
         this._partyWindow.refresh();
         this._targetWindow.refresh();

@@ -79,6 +79,7 @@
     const _Game_Actor_name = Game_Actor.prototype.name;
     const _Game_Actor_nickname = Game_Actor.prototype.nickname;
     const _Game_Actor_profile = Game_Actor.prototype.profile;
+    const _Game_Actor_tradeItemWithParty = Game_Actor.prototype.tradeItemWithParty;
 
     Game_Actors.prototype.actor = function (actorId) {
         if ($dataActors && $dataActors[actorId]) {
@@ -128,6 +129,26 @@
     };
     Game_Actor.prototype.profile = function () {
         return SC4_Localization.parse(_Game_Actor_profile.call(this));
+    };
+    Game_Actor.prototype.tradeItemWithParty = function (newItem, oldItem) {
+        if (!newItem || (typeof $gameParty !== "undefined" && $gameParty && $gameParty.numItems(newItem) > 0)) {
+            return _Game_Actor_tradeItemWithParty
+                ? _Game_Actor_tradeItemWithParty.call(this, newItem, oldItem)
+                : false;
+        }
+        if (typeof $gameParty !== "undefined" && $gameParty && typeof $gameParty.findMemberInventoryWithItem === "function") {
+            const memberBag = $gameParty.findMemberInventoryWithItem(newItem);
+            if (memberBag) {
+                $gameParty.gainItem(oldItem, 1);
+                if (typeof memberBag.loseItem === "function") {
+                    memberBag.loseItem(newItem, 1);
+                } else if (typeof memberBag.removeItem === "function") {
+                    memberBag.removeItem(newItem, 1);
+                }
+                return true;
+            }
+        }
+        return false;
     };
 
     // BATTLER BASE
@@ -2937,8 +2958,72 @@
     // GAME PARTY
     // ========================================================================
     const _Game_Party_addActor = Game_Party.prototype.addActor;
+    const _Game_Party_hasItem = Game_Party.prototype.hasItem;
+    const _Game_Party_consumeItem = Game_Party.prototype.consumeItem;
+
+    Game_Party.prototype.findMemberInventoryWithItem = function (item) {
+        if (!item || typeof item !== "object") return null;
+        const members = (typeof this.allMembers === "function")
+            ? this.allMembers()
+            : ((typeof this.members === "function") ? this.members() : []);
+        for (const actor of members) {
+            if (!actor) continue;
+            if (actor.inventory && typeof actor.inventory.numItems === "function") {
+                if (actor.inventory.numItems(item) > 0) {
+                    return typeof actor.inventory.container === "function"
+                        ? (actor.inventory.container() || actor.inventory)
+                        : actor.inventory;
+                }
+            } else if (typeof $inventories !== "undefined" && $inventories && typeof actor.actorId === "function") {
+                const inv = $inventories.inventory("A_" + actor.actorId());
+                if (inv && typeof inv.numItems === "function" && inv.numItems(item) > 0) {
+                    return inv;
+                }
+            }
+        }
+        return null;
+    };
+
+    Game_Party.prototype.hasItem = function (item, includeEquip) {
+        if (!item) return false;
+        if (typeof item === "number") {
+            if (typeof DEBUGTOOL !== "undefined" && typeof DEBUGTOOL.warn === "function") {
+                DEBUGTOOL.warn(
+                    `[Game_Party.hasItem] Identifiant numérique (${item}) passé au lieu d'un objet RMMZ ($dataItems[id] / $dataWeapons[id] / $dataArmors[id]).`,
+                    "INVENTORY"
+                );
+            }
+            return false;
+        }
+        if (_Game_Party_hasItem && _Game_Party_hasItem.call(this, item, includeEquip)) {
+            return true;
+        }
+        return Boolean(this.findMemberInventoryWithItem(item));
+    };
+
+    Game_Party.prototype.consumeItem = function (item) {
+        if (typeof DataManager !== "undefined" && DataManager.isItem(item) && item.consumable) {
+            if (this.numItems(item) > 0) {
+                if (_Game_Party_consumeItem) {
+                    _Game_Party_consumeItem.call(this, item);
+                } else {
+                    this.loseItem(item, 1);
+                }
+                return;
+            }
+            const memberBag = this.findMemberInventoryWithItem(item);
+            if (memberBag) {
+                if (typeof memberBag.loseItem === "function") {
+                    memberBag.loseItem(item, 1);
+                } else if (typeof memberBag.removeItem === "function") {
+                    memberBag.removeItem(item, 1);
+                }
+            }
+        }
+    };
 
     Game_Party.prototype.addActor = function (actorId) {
+        const alreadyInParty = Array.isArray(this._actors) && this._actors.includes(actorId);
         _Game_Party_addActor.call(this, actorId);
         if (typeof $inventories !== "undefined" && $inventories) {
             const invId = "A_" + actorId;
@@ -2951,6 +3036,22 @@
                     }
                 }
                 actorInv.clear();
+            }
+        }
+        // Ajout automatique des contacts SubCom mutuels lors de l'arrivée d'un nouveau membre
+        if (!alreadyInParty && typeof Game_ScActorSubCom !== "undefined" && typeof $gameActors !== "undefined" && $gameActors) {
+            const joinedActor = $gameActors.actor(actorId);
+            const members = (typeof this.allMembers === "function") ? this.allMembers() : (typeof this.members === "function" ? this.members() : []);
+            if (joinedActor && Array.isArray(members)) {
+                for (const member of members) {
+                    if (!member || typeof member.actorId !== "function" || member.actorId() === actorId) continue;
+                    if (member.subCom && typeof member.subCom.addContact === "function") {
+                        member.subCom.addContact(actorId);
+                    }
+                    if (joinedActor.subCom && typeof joinedActor.subCom.addContact === "function") {
+                        joinedActor.subCom.addContact(member.actorId());
+                    }
+                }
             }
         }
     }

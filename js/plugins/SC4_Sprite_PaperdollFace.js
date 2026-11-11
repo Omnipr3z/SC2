@@ -134,6 +134,10 @@ class Sprite_PaperdollFace extends Sprite {
             this._compositeEntry = Bitmap_Composite.getCompositeFaceEntry(act);
             this._lastCacheKey = this.currentCacheKey();
             if (this._compositeEntry && this._compositeEntry.bitmap) {
+                if (!this._compositeEntry.isComposed && this._compositeEntry.composer && this._compositeEntry.composer.isReady()) {
+                    this._compositeEntry.composer.bltComposite(this._compositeEntry.bitmap);
+                    this._compositeEntry.isComposed = true;
+                }
                 this.bitmap = this._compositeEntry.bitmap;
                 if (typeof this.setFrame === "function") {
                     this.setFrame(0, 0, 144, 144);

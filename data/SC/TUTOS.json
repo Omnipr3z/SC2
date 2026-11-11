@@ -53,5 +53,17 @@
     "key": "tuto_inv_compare",
     "name": "Comparateur d'Équipement",
     "img": null
+  },
+  {
+    "id": 10,
+    "key": "tuto_inv_interact",
+    "name": "Équiper & Consommer",
+    "img": null
+  },
+  {
+    "id": 11,
+    "key": "tuto_inv_weight_gauge",
+    "name": "Jauge de Charge",
+    "img": null
   }
 ]

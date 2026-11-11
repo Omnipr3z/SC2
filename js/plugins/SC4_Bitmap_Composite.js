@@ -114,6 +114,40 @@ class Bitmap_Composite {
     static _fileExistsCache = new Map();
 
     /**
+     * Seuils d'alerte mémoire pour le cache composite (entrees & RAM+VRAM estimées).
+     */
+    static CACHE_WARN_ENTRY_STEP = 150;
+    static CACHE_WARN_RAM_MB = 250;
+    static _nextWarnEntryThreshold = 150;
+    static _nextWarnRamMB = 250;
+
+    static checkCacheWeightAlert() {
+        let entryCount = 0;
+        let totalPixels = 0;
+        for (const entry of this._cache.values()) {
+            if (!entry || !entry.bitmap) continue;
+            entryCount++;
+            totalPixels += (entry.bitmap.width || 0) * (entry.bitmap.height || 0);
+        }
+        // Chaque entrée composée consomme ~RGBA CPU Canvas + texture WebGL GPU (~x2)
+        const estimatedMB = (totalPixels * 4 * 2) / 1048576;
+        if (entryCount >= this._nextWarnEntryThreshold || estimatedMB >= this._nextWarnRamMB) {
+            if (typeof DEBUGTOOL !== "undefined" && typeof DEBUGTOOL.warn === "function") {
+                DEBUGTOOL.warn(
+                    `[Bitmap_Composite] Cache composite lourd : ${entryCount} entrées (~${estimatedMB.toFixed(1)} Mo RAM+VRAM). Envisager un cache LRU si la consommation continue de croître.`,
+                    "CACHE"
+                );
+            }
+            while (this._nextWarnEntryThreshold <= entryCount) {
+                this._nextWarnEntryThreshold += 50;
+            }
+            while (this._nextWarnRamMB <= estimatedMB) {
+                this._nextWarnRamMB += 100;
+            }
+        }
+    }
+
+    /**
      * Vérifie si un fichier image existe sur le disque (NW.js) ou via serveur (navigateur).
      * @param {string} folder 
      * @param {string} filename 
@@ -344,6 +378,7 @@ class Bitmap_Composite {
         };
 
         this._cache.set(cacheKey, entry);
+        this.checkCacheWeightAlert();
         return entry;
     }
 
@@ -430,6 +465,7 @@ class Bitmap_Composite {
         };
 
         this._cache.set(cacheKey, entry);
+        this.checkCacheWeightAlert();
         return entry;
     }
 }
